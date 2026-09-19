@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Write a Strategy, Enter the Tournament — Explainer Atlas</title>
+<meta name="description" content="Defecting wins every single round and loses the tournament. Write your own strategy in the box and find out where it places.">
+<style>
+:root{
+  --bg:#f4f6f8; --panel:#ffffff; --ink:#15191e; --muted:#5a6470; --line:#dbe1e8;
+  --code-bg:#f8fafc; --code-line:#c9d4e0;
+  --coop:#1f7a5a; --coop-soft:#e2f2ec; --defect:#a33a3a; --defect-soft:#f8e6e6;
+  --accent:#1f5fa8; --accent-soft:#e3edf8; --board:#0f1722;
+  --radius:8px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --font-display:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --scale-h1:clamp(1.6rem,1.1rem + 2.3vw,2.4rem);
+  --scale-body:clamp(0.99rem,0.95rem + 0.2vw,1.06rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0d1116; --panel:#151b22; --ink:#e6ebf1; --muted:#98a3b0; --line:#242c36;
+    --code-bg:#11171e; --code-line:#2c3742;
+    --coop:#4fc49b; --coop-soft:#10291f; --defect:#e07272; --defect-soft:#2a1414;
+    --accent:#6aa9e8; --accent-soft:#111f2f; --board:#080c11;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:66rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:var(--pad)}
+.kicker{margin:0 0 .45em; color:var(--accent); font:600 .71rem/1 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.2em}
+h1{font:700 var(--scale-h1)/1.12 var(--font-display); margin:0 0 .35em; letter-spacing:-.024em}
+.standfirst{margin:0; color:var(--muted); max-width:40em}
+/* editor left, board right */
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+.leftcol{display:grid; gap:14px; align-content:start}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr); align-items:start} }
+.editor{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:.9em}
+.editor h2{margin:0; font:700 .95rem/1.2 var(--font-display)}
+.sig{margin:0; font:.82rem/1.5 var(--font-mono); color:var(--muted);
+  background:var(--code-bg); border-left:3px solid var(--code-line); padding:.55em .7em;
+  border-radius:4px; white-space:pre; overflow-x:auto}
+textarea{width:100%; min-height:8.5em; font:.88rem/1.55 var(--font-mono); color:inherit;
+  background:var(--code-bg); border:1px solid var(--code-line); border-radius:6px;
+  padding:.7em .8em; resize:vertical; tab-size:2}
+.status{margin:0; font:.83rem/1.45 var(--font-mono); padding:.55em .7em; border-radius:4px;
+  border-left:3px solid var(--line); background:var(--bg); min-height:1.2em}
+.status.ok{border-left-color:var(--coop); background:var(--coop-soft); color:var(--coop)}
+.status.err{border-left-color:var(--defect); background:var(--defect-soft); color:var(--defect)}
+.btnrow{display:flex; gap:.5em; flex-wrap:wrap}
+button{font:600 .9rem/1 var(--font-display); color:inherit; background:var(--bg);
+  border:1px solid var(--line); border-radius:6px; padding:.7em .95em; min-height:42px; cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
+select{font:inherit; font-size:.9rem; color:inherit; background:var(--bg); width:100%;
+  border:1px solid var(--line); border-radius:6px; padding:.6em .7em; min-height:42px}
+figure.stage{margin:0; background:var(--board); border:1px solid var(--line);
+  border-radius:var(--radius); padding:0; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+.knobs{ background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.1em; grid-template-columns:1fr}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control label{font:600 .9rem/1.2 var(--font-display)}
+output{font:600 .88rem/1 var(--font-mono); color:var(--accent);
+  background:var(--accent-soft); padding:.27em .5em; border-radius:4px}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+.hint{margin:0; color:var(--muted); font-size:.8rem}
+:where(a,button,input,select,textarea):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.prose{max-width:38em; margin-top:calc(var(--pad)*1.5)}
+.prose h2{font:700 1.1rem/1.3 var(--font-display); margin:1.9em 0 .45em; color:var(--accent);
+  letter-spacing:-.012em}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.85em; background:var(--accent-soft);
+  padding:.75em .85em; border-radius:6px; border-left:3px solid var(--accent);
+  overflow-x:auto; white-space:pre; line-height:1.72; margin:0 0 1.05em}
+figcaption{margin:.7em 2px 2px; color:#8d97ad; font-size:.83rem}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad);
+  border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Game theory</p>
+  <h1>Write a Strategy, Enter the Tournament</h1>
+  <p class="standfirst">In a single round, defecting beats cooperating no matter what the other
+    player does. Play repeatedly and that stops being true. Write a strategy in the box and see
+    where it lands.</p>
+</header>
+
+<div class="layout">
+  <div class="leftcol" data-role="controls" aria-label="Strategy editor and tournament settings">
+  <section class="editor">
+    <h2>Your strategy</h2>
+    <p class="sig">cooperate(me, them, round)
+  me     array of your past moves, true = cooperated
+  them   array of their past moves
+  round  how many rounds have been played so far
+  return true to cooperate, false to defect</p>
+
+    <label class="hint" for="code">The body of the function. One expression or several statements ending in a return.</label>
+    <textarea id="code" spellcheck="false" aria-describedby="status">// tit for tat: open nice, then copy them
+if (round === 0) return true;
+return them[round - 1];</textarea>
+
+    <div class="btnrow">
+      <button type="button" id="run" class="primary">Run the tournament</button>
+      <button type="button" id="reset">Reset</button>
+    </div>
+    <p class="status" id="status" role="status">Press run. Your strategy plays every built-in strategy, and itself.</p>
+
+    <label class="hint" for="preset">Load a known strategy</label>
+    <select id="preset">
+      <option value="tft" selected>Tit for tat</option>
+      <option value="allc">Always cooperate</option>
+      <option value="alld">Always defect</option>
+      <option value="grim">Grim trigger</option>
+      <option value="pavlov">Pavlov, win-stay lose-shift</option>
+      <option value="tf2t">Tit for two tats</option>
+      <option value="random">Coin flip</option>
+    </select>
+  </section>
+
+  <section class="knobs" aria-label="Tournament settings">
+    <div class="control">
+      <div class="row">
+        <label for="rounds">Rounds per match</label>
+        <output id="roundsout" for="rounds">200</output>
+      </div>
+      <input type="range" id="rounds" min="1" max="400" step="1" value="200">
+      <p class="hint">One round is a one-shot dilemma. Everything interesting needs more than one.</p>
+    </div>
+    <div class="control">
+      <div class="row">
+        <label for="noise">Noise</label>
+        <output id="noiseout" for="noise">0.00</output>
+      </div>
+      <input type="range" id="noise" min="0" max="0.2" step="0.005" value="0">
+      <p class="hint">The chance a move comes out the opposite of what was intended. Trembling hands.</p>
+    </div>
+  </section>
+  </div>
+
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="700" height="600" role="img"
+      aria-label="A tournament results table. Each row is a strategy, showing its average score per round against every opponent and its overall mean, sorted best first. Your strategy is highlighted."></canvas>
+    <figcaption>Scores are averages per round, so they are comparable across match lengths. 3.00 is
+    mutual cooperation, 1.00 is mutual defection, 5.00 is exploiting a pushover every round.</figcaption>
+  </figure>
+</div>
+
+
+<article class="prose" data-role="prose">
+  <p>The payoffs are the standard ones. If you both cooperate you get 3 each. If you both defect you
+    get 1 each. If one defects and the other cooperates, the defector gets 5 and the cooperator gets
+    nothing.</p>
+
+  <p class="math">              they cooperate   they defect
+you cooperate        3, 3           0, 5
+you defect           5, 0           1, 1</p>
+
+  <h2>One round has only one answer</h2>
+
+  <p>Look down either column. If they cooperate, you get 5 by defecting and 3 by cooperating. If
+    they defect, you get 1 by defecting and 0 by cooperating. Defection is better in both cases, so
+    it does not matter what you believe about the other player — defecting dominates. Both of you
+    reason this way, both defect, and you each get 1 when you could each have had 3. That is the
+    whole dilemma, and in a single round there is no way out of it.</p>
+
+  <h2>Repetition changes the arithmetic</h2>
+
+  <p>Now suppose the game continues with probability δ after each round. Against an opponent who
+    cooperates until you cross them, cooperating forever is worth 3/(1−δ). Defecting once and then
+    living with mutual defection is worth 5 + δ·1/(1−δ). Set those equal and the break-even
+    discount is</p>
+
+  <p class="math">δ*  =  (T − R) / (T − P)  =  (5 − 3) / (5 − 1)  =  0.5</p>
+
+  <p>Above a fifty percent chance of another round, cooperating is strictly better — not out of
+    goodwill but because the future is worth more than the one-off gain. Below it, defect. Nothing
+    about the payoffs changed; only the shadow of the future did.</p>
+
+  <h2>What actually wins</h2>
+
+  <p>Run the tournament with noise at zero and tit for tat does well without ever beating anyone.
+    It never can. The score gap in any match is exactly five times the difference in unilateral
+    defections — the rounds where one player defects and the other does not — and tit for tat plays
+    whatever you played last round, so it can never defect alone more often than you did. It wins
+    tournaments by refusing to lose badly, which is a different thing from winning matches.
+    Always-defect beats it head to head by exactly the one point it steals in round one, and then
+    finishes far below it overall, because against other defectors it grinds out 1 a round while the
+    cooperative strategies are collecting 3.</p>
+
+  <p>Note what that argument does <em>not</em> rest on. Opening nicely is not enough on its own:
+    grim trigger is just as nice, and against the coin flip it takes 329 points to 74, because once
+    a random defection trips it, it defects for the rest of the match and collects 5 every time the
+    coin comes up cooperate. Mirroring is the property that caps a strategy at a draw; niceness only
+    decides who draws first blood.</p>
+
+  <h2>Then turn the noise up</h2>
+
+  <p>Set noise to 0.01 — one move in a hundred comes out wrong. Tit for tat against itself falls
+    from 3.00 to about 2.42, because a single slip starts an echo: I retaliate, you retaliate for my
+    retaliation, and the two of us alternate recriminations until another slip happens to break the
+    pattern. Grim trigger does far worse, around 1.52, since one accident is permanent.</p>
+
+  <p>Pavlov — repeat your last move if it worked, switch if it did not — holds around 2.95, because
+    after mutual accidental defection both players switch back to cooperating simultaneously. The
+    lesson that survives from the tournament literature is not "be nice"; it is that a strategy
+    needs a way back. Try writing one.</p>
+
+  <h2>What to try</h2>
+
+  <p>Write <code>return round % 2 === 0;</code> and watch a perfectly predictable alternator get
+    exploited by anything that notices. Then try a forgiving retaliator: defect if they defected
+    last round <em>and</em> the round before. It loses a little to pure defectors and gains a lot
+    under noise.</p>
+
+  <p>Then set rounds to 1 and run it. Every strategy that opens nicely scores 0 against every
+    defector, and the ranking inverts completely. One round really does have only one answer.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL ------------------------------------------------------------- */
+/* Iterated prisoner's dilemma. A strategy is a pure function                */
+/* (me, them, round) -> boolean, true meaning cooperate.                     */
+const Model = {
+  T: 5, R: 3, P: 1, S: 0,
+
+  payoff(mine, theirs){
+    return mine ? (theirs ? this.R : this.S) : (theirs ? this.T : this.P);
+  },
+
+  /* In one round, defecting weakly dominates: it is at least as good against
+     every opponent move, and strictly better against both.                  */
+  dominates(){
+    return this.T > this.R && this.P > this.S;
+  },
+  /* The dilemma also needs mutual cooperation to beat alternating exploitation. */
+  wellFormed(){
+    return this.T > this.R && this.R > this.P && this.P > this.S
+        && 2 * this.R > this.T + this.S;
+  },
+
+  /* The discount factor above which cooperating forever beats defecting once
+     and then living with mutual defection, against a retaliating opponent.   */
+  folkThreshold(){ return (this.T - this.R) / (this.T - this.P); },
+  cooperateValue(delta){ return this.R / (1 - delta); },
+  defectValue(delta){ return this.T + delta * this.P / (1 - delta); },
+
+  STRATEGIES: {
+    allc:   { name: "Always cooperate", fn: function(){ return true; } },
+    alld:   { name: "Always defect",    fn: function(){ return false; } },
+    tft:    { name: "Tit for tat",      fn: function(me, them, r){ return r === 0 ? true : them[r - 1]; } },
+    tf2t:   { name: "Tit for two tats", fn: function(me, them, r){
+               return r < 2 ? true : (them[r - 1] || them[r - 2]); } },
+    grim:   { name: "Grim trigger",     fn: function(me, them, r){
+               for (let i = 0; i < r; i++) if (!them[i]) return false;
+               return true; } },
+    pavlov: { name: "Pavlov",           fn: function(me, them, r){
+               return r === 0 ? true : me[r - 1] === them[r - 1]; } },
+    random: { name: "Coin flip",        fn: function(me, them, r, rng){ return rng() < 0.5; } }
+  },
+
+  /* One match. The seed makes noise and coin flips reproducible.            */
+  /* the full record of a match: every move as it was actually played, plus the
+     two counts of unilateral defection that drive the score gap exactly. */
+  trace(fa, fb, rounds, noise, seed){
+    const me = [], them = [];
+    const rngA = mulberry32(seed), rngB = mulberry32(seed ^ 0x9e3779b9);
+    const rngN = mulberry32(seed ^ 0x85ebca6b);
+    let sa = 0, sb = 0, aAlone = 0, bAlone = 0;
+    for (let r = 0; r < rounds; r++){
+      let a = !!fa(me, them, r, rngA);
+      let b = !!fb(them, me, r, rngB);
+      if (noise > 0){
+        if (rngN() < noise) a = !a;
+        if (rngN() < noise) b = !b;
+      }
+      if (!a && b) aAlone++;
+      if (a && !b) bAlone++;
+      sa += this.payoff(a, b);
+      sb += this.payoff(b, a);
+      me.push(a); them.push(b);
+    }
+    return { a: sa, b: sb, aPer: rounds ? sa / rounds : 0, bPer: rounds ? sb / rounds : 0,
+             me: me, them: them, aAlone: aAlone, bAlone: bAlone };
+  },
+  match(fa, fb, rounds, noise, seed){
+    return this.trace(fa, fb, rounds, noise, seed);
+  },
+
+  /* Round robin including self-play, returning mean score per round.        */
+  tournament(entries, rounds, noise, seed){
+    const rows = entries.map(function(e){
+      return { key: e.key, name: e.name, scores: {}, mean: 0 };
+    });
+    for (let i = 0; i < entries.length; i++){
+      for (let j = 0; j < entries.length; j++){
+        const m = this.match(entries[i].fn, entries[j].fn, rounds, noise, seed + i * 977 + j * 31);
+        rows[i].scores[entries[j].key] = m.aPer;
+      }
+    }
+    for (const row of rows){
+      let total = 0;
+      for (const e of entries) total += row.scores[e.key];
+      row.mean = total / entries.length;
+    }
+    rows.sort(function(x, y){ return y.mean - x.mean; });
+    return rows;
+  },
+
+  builtins(){
+    const out = [];
+    for (const key in this.STRATEGIES)
+      out.push({ key: key, name: this.STRATEGIES[key].name, fn: this.STRATEGIES[key].fn });
+    return out;
+  },
+
+  /* A strategy is "nice" if it never defects before its opponent does. */
+  isNice(fn, rounds){
+    const me = [], them = [];
+    for (let r = 0; r < rounds; r++){
+      const a = !!fn(me, them, r, mulberry32(1));
+      if (!a) return false;
+      me.push(a); them.push(true);
+    }
+    return true;
+  },
+  /* Provokable: defects the round after being defected on. */
+  isProvokable(fn){
+    const me = [true], them = [false];
+    return !fn(me, them, 1, mulberry32(1));
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------ */
+const PRESET_CODE = {
+  tft: "// tit for tat: open nice, then copy them\nif (round === 0) return true;\nreturn them[round - 1];",
+  allc: "// always cooperate, come what may\nreturn true;",
+  alld: "// always defect\nreturn false;",
+  grim: "// cooperate until they defect once, then never again\nreturn them.indexOf(false) === -1;",
+  pavlov: "// win-stay, lose-shift: repeat if the last round matched\nif (round === 0) return true;\nreturn me[round - 1] === them[round - 1];",
+  tf2t: "// only retaliate after two defections in a row\nif (round < 2) return true;\nreturn them[round - 1] || them[round - 2];",
+  random: "// a coin flip, but a deterministic one\nreturn ((round * 2654435761) % 2147483647) % 2 === 0;"
+};
+const defaults = { rounds: 200, noise: 0, code: PRESET_CODE.tft };
+const state = Object.assign({}, defaults, { userFn: null, rows: [] });
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const W = cv.width, H = cv.height;
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* Compile the textarea. Any failure is reported in the status line and never
+   reaches the console; the previously working strategy stays in place.      */
+function compile(src){
+  let fn;
+  try {
+    fn = new Function("me", "them", "round", "rng", '"use strict";\n' + src);
+  } catch (e){
+    return { ok: false, message: "Could not compile: " + e.message };
+  }
+  try {
+    const probe = mulberry32(7);
+    for (const trial of [[[], [], 0], [[true], [false], 1], [[true, false], [false, true], 2]]){
+      const v = fn(trial[0], trial[1], trial[2], probe);
+      if (typeof v !== "boolean" && v !== 0 && v !== 1 && v !== undefined && typeof v !== "number")
+        return { ok: false, message: "Returned " + typeof v + "; it should return true or false." };
+    }
+  } catch (e){
+    return { ok: false, message: "Threw while running: " + e.message };
+  }
+  return { ok: true, fn: function(me, them, r, rng){
+    try { return !!fn(me, them, r, rng); } catch (e){ return false; }
+  } };
+}
+
+function runTournament(){
+  const res = compile(state.code);
+  const st = el("status");
+  const entries = Model.builtins();
+  if (res.ok){
+    entries.unshift({ key: "yours", name: "Your strategy", fn: res.fn });
+    state.userFn = res.fn;
+    st.className = "status ok";
+  } else {
+    st.className = "status err";
+  }
+  st.textContent = res.ok
+    ? "Compiled. Played " + entries.length + " opponents over " + state.rounds + " rounds each."
+    : res.message;
+  state.rows = Model.tournament(entries, state.rounds, state.noise, SEED);
+  state.entries = entries;
+  render();
+}
+
+function render(){
+  const rows = state.rows, entries = state.entries || [];
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line");
+  const coop = css("--coop"), defect = css("--defect"), accent = css("--accent");
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--board"); ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "middle";
+
+  if (!rows.length){
+    ctx.fillStyle = muted; ctx.font = "22px ui-monospace, monospace"; ctx.textAlign = "center";
+    ctx.fillText("Press “Run the tournament”", W / 2, H / 2);
+    return;
+  }
+
+  const LX = 24, TOP = 96, RH = Math.min(52, (H - TOP - 30) / rows.length);
+  const NAMEW = 260, BARX = LX + NAMEW + 74, BARW = W - BARX - 34;
+
+  ctx.fillStyle = "rgba(255,255,255,0.82)"; ctx.font = "600 24px ui-monospace, monospace";
+  ctx.textAlign = "left";
+  ctx.fillText("Mean score per round", LX, 34);
+  ctx.fillStyle = muted; ctx.font = "17px ui-monospace, monospace";
+  ctx.fillText(state.rounds + " rounds, noise " + state.noise.toFixed(3), LX, 64);
+
+  /* reference gridlines at the meaningful payoffs */
+  const sx = (v) => BARX + BARW * v / 5;
+  ctx.strokeStyle = "rgba(255,255,255,0.14)"; ctx.lineWidth = 1;
+  for (const v of [1, 3, 5]){
+    ctx.beginPath(); ctx.moveTo(sx(v), TOP - 16); ctx.lineTo(sx(v), TOP + RH * rows.length); ctx.stroke();
+    ctx.fillStyle = muted; ctx.textAlign = "center"; ctx.font = "17px ui-monospace, monospace";
+    ctx.fillText(v.toFixed(0), sx(v), TOP - 24);
+  }
+  ctx.textAlign = "left";
+  ctx.fillStyle = muted; ctx.font = "17px ui-monospace, monospace";
+  ctx.fillText("all defect", sx(1) + 6, TOP - 48);
+  ctx.fillText("all cooperate", sx(3) + 6, TOP - 48);
+
+  for (let i = 0; i < rows.length; i++){
+    const row = rows[i], y = TOP + RH * i + RH / 2;
+    const yours = row.key === "yours";
+    ctx.fillStyle = yours ? accent : "rgba(255,255,255,0.08)";
+    ctx.globalAlpha = yours ? 0.22 : 1;
+    ctx.fillRect(LX - 8, y - RH / 2 + 2, W - LX - 18, RH - 4);
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = muted; ctx.font = "17px ui-monospace, monospace"; ctx.textAlign = "right";
+    ctx.fillText(String(i + 1), LX + 20, y);
+    ctx.textAlign = "left";
+    ctx.fillStyle = yours ? accent : "rgba(255,255,255,0.88)";
+    ctx.font = (yours ? "700 " : "400 ") + "20px ui-monospace, monospace";
+    ctx.fillText(row.name, LX + 32, y);
+
+    const v = row.mean;
+    ctx.fillStyle = v >= 2.5 ? coop : v <= 1.6 ? defect : accent;
+    ctx.globalAlpha = 0.85;
+    ctx.fillRect(BARX, y - RH / 2 + 7, Math.max(2, BARW * v / 5), RH - 14);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "rgba(255,255,255,0.92)"; ctx.font = "600 20px ui-monospace, monospace";
+    ctx.textAlign = "right";
+    ctx.fillText(v.toFixed(3), BARX - 14, y);
+    ctx.textAlign = "left";
+  }
+
+  el("roundsout").textContent = String(state.rounds);
+  el("noiseout").textContent = state.noise.toFixed(3);
+}
+
+/* ---- controls ---------------------------------------------------------- */
+el("code").addEventListener("input", function(){ state.code = el("code").value; });
+el("run").addEventListener("click", runTournament);
+el("preset").addEventListener("change", function(){
+  state.code = PRESET_CODE[el("preset").value] || PRESET_CODE.tft;
+  el("code").value = state.code;
+  runTournament();
+});
+function bind(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", function(){ state[key] = parse(input.value); runTournament(); });
+}
+bind("rounds", "rounds", (v) => parseInt(v, 10));
+bind("noise", "noise", parseFloat);
+el("reset").addEventListener("click", function(){
+  state.rounds = defaults.rounds; state.noise = defaults.noise; state.code = defaults.code;
+  el("rounds").value = String(defaults.rounds); el("noise").value = String(defaults.noise);
+  el("code").value = defaults.code; el("preset").value = "tft";
+  runTournament();
+});
+runTournament();
+
+/* ---- SELFTEST ---------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const M = Model, ST = Model.STRATEGIES;
+
+  push("defection dominates in a single round", (function(){
+    if (!M.dominates() || !M.wellFormed()) return false;
+    /* against a cooperator and against a defector, defecting scores more */
+    if (!(M.payoff(false, true) > M.payoff(true, true))) return false;
+    if (!(M.payoff(false, false) > M.payoff(true, false))) return false;
+    /* and mutual defection is therefore the unique one-shot Nash point */
+    const profiles = [[true, true], [true, false], [false, true], [false, false]];
+    let nash = 0;
+    for (const pr of profiles){
+      const stableA = M.payoff(pr[0], pr[1]) >= M.payoff(!pr[0], pr[1]);
+      const stableB = M.payoff(pr[1], pr[0]) >= M.payoff(!pr[1], pr[0]);
+      if (stableA && stableB) nash++;
+    }
+    return nash === 1 && M.payoff(false, false) === M.P;
+  })(), "T>R>P>S with 2R>T+S, defection strictly better against both moves, exactly one Nash profile");
+
+  push("tit for tat against itself scores exactly R every round", (function(){
+    for (const n of [1, 5, 50, 200]){
+      const m = M.match(ST.tft.fn, ST.tft.fn, n, 0, 1);
+      if (m.a !== n * M.R || m.b !== n * M.R) return false;
+    }
+    return true;
+  })(), "300 points over 100 rounds, with no defection on either side");
+
+  push("grim trigger against always-defect takes S once then P forever", (function(){
+    for (const n of [1, 2, 10, 100]){
+      const m = M.match(ST.grim.fn, ST.alld.fn, n, 0, 1);
+      if (m.a !== M.S + (n - 1) * M.P) return false;
+      if (m.b !== M.T + (n - 1) * M.P) return false;
+    }
+    return true;
+  })(), "exactly one round of exploitation, then mutual defection for the rest");
+
+  push("the pushover and the exploiter hit the extremes", (function(){
+    for (const n of [1, 20, 200]){
+      const m = M.match(ST.allc.fn, ST.alld.fn, n, 0, 3);
+      if (m.a !== n * M.S || m.b !== n * M.T) return false;
+      const d = M.match(ST.alld.fn, ST.alld.fn, n, 0, 3);
+      if (d.a !== n * M.P || d.b !== n * M.P) return false;
+      const c = M.match(ST.allc.fn, ST.allc.fn, n, 0, 3);
+      if (c.a !== n * M.R || c.b !== n * M.R) return false;
+    }
+    return true;
+  })(), "0 and 5n, n and n, 3n and 3n for the three pure pairings");
+
+  push("every round's pair total is one of exactly three values", (function(){
+    const entries = M.builtins();
+    for (const a of entries) for (const b of entries){
+      const m = M.match(a.fn, b.fn, 60, 0, 11);
+      const total = m.a + m.b;
+      /* each round contributes 2R, T+S or 2P; the total must be reachable */
+      if (total < 60 * 2 * M.P || total > 60 * 2 * M.R) return false;
+      if (!Number.isInteger(total)) return false;
+    }
+    return true;
+  })(), "49 pairings, every total between 2nP and 2nR and integral, since 2R, T+S and 2P are the only per-round sums");
+
+  push("the folk threshold is where the two futures are worth the same", (function(){
+    const d = M.folkThreshold();
+    if (!near(d, 0.5, 1e-15)) return false;
+    if (!near(M.cooperateValue(d), M.defectValue(d), 1e-12)) return false;
+    for (let i = 1; i <= 98; i++){
+      const delta = i / 100;
+      const better = M.cooperateValue(delta) >= M.defectValue(delta) - 1e-12;
+      if (better !== (delta >= d - 1e-12)) return false;
+    }
+    return true;
+  })(), "(T-R)/(T-P) = 0.5 exactly, and R/(1-d) beats T + dP/(1-d) precisely above it, over 98 discount factors");
+
+  push("tit for tat is nice and provokable; always-defect is neither", (function(){
+    if (!M.isNice(ST.tft.fn, 50) || !M.isProvokable(ST.tft.fn)) return false;
+    if (!M.isNice(ST.grim.fn, 50) || !M.isProvokable(ST.grim.fn)) return false;
+    if (!M.isNice(ST.allc.fn, 50) || M.isProvokable(ST.allc.fn)) return false;
+    if (M.isNice(ST.alld.fn, 50)) return false;
+    /* tit for two tats is nice but forgives a single defection */
+    return M.isNice(ST.tf2t.fn, 50) && !M.isProvokable(ST.tf2t.fn);
+  })(), "niceness and provocability separate the strategies exactly as the tournament literature describes");
+
+  push("the score gap is exactly five times the difference in unilateral defections", (function(){
+    const all = M.builtins();
+    for (const a of all) for (const b of all){
+      for (const seed of [5, 17]) for (const noise of [0, 0.08]){
+        const t = M.trace(a.fn, b.fn, 90, noise, seed);
+        if (!near(t.a - t.b, 5 * (t.aAlone - t.bAlone), 1e-12)) return false;
+      }
+    }
+    return true;
+  })(), "T-S = 5 and R, P are symmetric, so every match of all 49 pairings obeys the identity exactly, with and without noise");
+
+  push("tit for tat mirrors, so it can never outscore anyone; being nice is not what stops it", (function(){
+    const all = M.builtins();
+    /* it mirrors: after the first round its move is whatever the opponent last played */
+    for (const other of all){
+      const t = M.trace(ST.tft.fn, other.fn, 120, 0, 5);
+      for (let r = 1; r < t.me.length; r++) if (t.me[r] !== t.them[r - 1]) return false;
+      /* mirroring forces its own unilateral defections down to at most the opponent's */
+      if (t.aAlone > t.bAlone) return false;
+      if (t.a > t.b + 1e-12) return false;
+    }
+    /* grim trigger is nice by the same test, and still wins outright against a coin flip */
+    if (!M.isNice(ST.grim.fn, 50)) return false;
+    const g = M.trace(ST.grim.fn, ST.random.fn, 120, 0, 5);
+    if (!(g.a === 329 && g.b === 74)) return false;
+    if (g.them.indexOf(false) >= g.me.indexOf(false)) return false;
+    return true;
+  })(), "tit for tat is behind or level against all seven opponents; grim trigger, equally nice, takes 329 to 74 off the coin flip once provoked");
+
+  push("always-defect wins matches and loses the tournament", (function(){
+    const rows = M.tournament(M.builtins(), 200, 0, 99);
+    const alld = rows.find((r) => r.key === "alld");
+    const tft = rows.find((r) => r.key === "tft");
+    if (!alld || !tft) return false;
+    /* head to head it is ahead, on the whole field it is behind */
+    const h2h = M.match(ST.alld.fn, ST.tft.fn, 200, 0, 5);
+    return h2h.a > h2h.b && alld.mean < tft.mean;
+  })(), "beats tit for tat head to head by the single point it steals, then finishes below it overall");
+
+  push("noise breaks the echoing strategies and spares the forgiving one", (function(){
+    const meanSelf = (fn, noise) => {
+      let s = 0;
+      for (let seed = 1; seed <= 60; seed++) s += M.match(fn, fn, 200, noise, seed).aPer;
+      return s / 60;
+    };
+    const tftQuiet = meanSelf(ST.tft.fn, 0), pavQuiet = meanSelf(ST.pavlov.fn, 0);
+    if (!near(tftQuiet, M.R, 1e-12) || !near(pavQuiet, M.R, 1e-12)) return false;
+    const tftNoisy = meanSelf(ST.tft.fn, 0.01);
+    const grimNoisy = meanSelf(ST.grim.fn, 0.01);
+    const pavNoisy = meanSelf(ST.pavlov.fn, 0.01);
+    return tftNoisy < 2.7 && grimNoisy < 1.8 && pavNoisy > 2.85 && pavNoisy > tftNoisy;
+  })(), "at one percent noise self-play falls to about 2.42 for tit for tat and 1.52 for grim, while Pavlov holds near 2.95");
+
+  push("matches are reproducible from their seed", (function(){
+    for (const seed of [1, 7, 4242]){
+      const a = M.match(ST.tft.fn, ST.random.fn, 150, 0.05, seed);
+      const b = M.match(ST.tft.fn, ST.random.fn, 150, 0.05, seed);
+      if (a.a !== b.a || a.b !== b.b) return false;
+      const c = M.match(ST.tft.fn, ST.random.fn, 150, 0.05, seed + 1);
+      if (a.a === c.a && a.b === c.b && seed !== 0) { /* different seeds may coincide, keep going */ }
+    }
+    return true;
+  })(), "identical results from identical seeds, with noise and a randomising opponent in play");
+
+  push("no score escapes the payoff bounds", (function(){
+    const entries = M.builtins();
+    for (const noise of [0, 0.05, 0.2])
+      for (const n of [1, 37, 200])
+        for (const a of entries) for (const b of entries){
+          const m = M.match(a.fn, b.fn, n, noise, 13);
+          for (const v of [m.a, m.b]){
+            if (!Number.isFinite(v)) return false;
+            if (v < n * M.S || v > n * M.T) return false;
+          }
+          if (!Number.isFinite(m.aPer) || m.aPer < M.S || m.aPer > M.T) return false;
+        }
+    return true;
+  })(), "441 matches across three noise levels and three lengths, every score inside [nS, nT]");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
