@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forty-Two Small Decisions — Explainer Atlas</title>
+<meta name="description" content="Edit distance is not clever. It is one grid of cells, each decided by looking at three neighbours, and you can step through every one of them.">
+<style>
+:root{
+  --bg:#fdfcf7; --panel:#ffffff; --ink:#1a1714; --muted:#6b635a; --line:#e0d9cb;
+  --accent:#96301f; --accent-soft:#f8e9e5; --keep:#2d6a4a; --keep-soft:#e3f1ea;
+  --edit:#96301f; --live:#b8860b; --live-soft:#fbf1d8;
+  --radius:3px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --scale-h1:clamp(1.45rem,1.05rem + 1.9vw,2.15rem);
+  --scale-body:clamp(0.97rem,0.94rem + 0.18vw,1.05rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#131110; --panel:#1b1917; --ink:#ece7df; --muted:#9b9287; --line:#2d2823;
+    --accent:#e2795f; --accent-soft:#2c1b16; --keep:#68c79b; --keep-soft:#132a20;
+    --edit:#e2795f; --live:#e8bd5a; --live-soft:#2e2611;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:62rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:var(--pad)}
+.kicker{margin:0 0 .45em; color:var(--muted); font:400 .74rem/1 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.2em}
+h1{font:500 var(--scale-h1)/1.14 var(--font-mono); margin:0 0 .4em; letter-spacing:-.02em}
+.standfirst{margin:0; color:var(--muted); max-width:40em}
+/* controls sit ABOVE the stage, as a single full-width bar */
+.bar{background:var(--panel); border:1px solid var(--line); border-top:3px solid var(--accent);
+  border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.1em; margin-bottom:14px}
+.words{display:grid; gap:1em; grid-template-columns:1fr}
+@media (min-width:36rem){ .words{grid-template-columns:1fr 1fr} }
+.field{display:grid; gap:.3em}
+.field label{font:600 .78rem/1.2 var(--font-mono); text-transform:uppercase; letter-spacing:.1em; color:var(--muted)}
+select,button{font:inherit; font-family:var(--font-mono); color:inherit; background:var(--bg);
+  border:1px solid var(--line); border-radius:var(--radius); padding:.55em .75em; min-height:42px}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+button[disabled]{opacity:.42; cursor:default}
+.stepper{display:grid; gap:.4em}
+.stepper .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.stepper label{font:600 .78rem/1.2 var(--font-mono); text-transform:uppercase; letter-spacing:.1em; color:var(--muted)}
+output{font:600 .95rem/1 var(--font-mono); color:var(--accent);
+  background:var(--accent-soft); padding:.28em .55em; border-radius:var(--radius)}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:28px}
+.hint{margin:0; color:var(--muted); font-size:.82rem}
+.btnrow{display:flex; gap:.5em; flex-wrap:wrap}
+:where(a,button,input,select):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; background:var(--panel); touch-action:pan-y}
+figcaption{margin-top:.7em; color:var(--muted); font-size:.84rem; max-width:44em}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:.55em; margin:14px 0 0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--line);
+  border-radius:var(--radius); padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font:.71rem/1.3 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.1em}
+.readout dd{margin:.2em 0 0; font:600 1.05rem/1.2 var(--font-mono)}
+.prose{max-width:38em; margin-top:calc(var(--pad)*1.5)}
+.prose h2{font:500 1.02rem/1.3 var(--font-mono); margin:1.9em 0 .45em; color:var(--accent);
+  letter-spacing:-.01em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.84em; background:var(--accent-soft);
+  padding:.75em .85em; border-radius:var(--radius); border-left:3px solid var(--accent);
+  overflow-x:auto; white-space:pre; line-height:1.7; margin:0 0 1em}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad);
+  border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Linguistics</p>
+  <h1>Forty-Two Small Decisions</h1>
+  <p class="standfirst">Turning <em>kitten</em> into <em>sitting</em> takes three edits. Finding that
+    out takes forty-two, each one a choice between three numbers you already have.</p>
+</header>
+
+<section class="bar" data-role="controls" aria-label="Table controls">
+  <div class="words">
+    <div class="field">
+      <label for="wa">Word down the side</label>
+      <select id="wa">
+        <option value="kitten" selected>kitten</option>
+        <option value="flour">flour</option>
+        <option value="sunday">sunday</option>
+        <option value="atlas">atlas</option>
+        <option value="recall">recall</option>
+        <option value="abacus">abacus</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="wb">Word across the top</label>
+      <select id="wb">
+        <option value="sitting" selected>sitting</option>
+        <option value="flower">flower</option>
+        <option value="saturday">saturday</option>
+        <option value="cellar">cellar</option>
+        <option value="abacus">abacus</option>
+        <option value="atlas">atlas</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="stepper">
+    <div class="row">
+      <label for="step">Cells decided</label>
+      <output id="stepout" for="step">0 of 42</output>
+    </div>
+    <input type="range" id="step" min="0" max="42" step="1" value="0">
+    <p class="hint">Drag to fill the table, or use the buttons. Arrow keys move one cell at a time.</p>
+  </div>
+
+  <div class="btnrow">
+    <button type="button" id="back">&#8592; Back</button>
+    <button type="button" id="fwd">Step &#8594;</button>
+    <button type="button" id="run">Fill the table</button>
+    <button type="button" id="reset">Reset</button>
+  </div>
+
+  <dl class="readout" aria-live="polite">
+    <div><dt>This cell</dt><dd id="r1">—</dd></div>
+    <div><dt>Chosen from</dt><dd id="r2">—</dd></div>
+    <div><dt>Operation</dt><dd id="r3">—</dd></div>
+    <div><dt>Edit distance</dt><dd id="r4">—</dd></div>
+  </dl>
+</section>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="920" height="470" role="img"
+    aria-label="A dynamic programming table with one word down the left edge and the other across the top. Filled cells show the edit distance between the two prefixes; the cell currently being decided is highlighted along with the three neighbours it chooses between."></canvas>
+  <figcaption>Each cell holds the edit distance between the two prefixes that meet there. The
+    highlighted cell is being decided now; the three outlined neighbours are its only candidates.
+    Once the table is full, the path traced back from the bottom-right corner is the alignment.</figcaption>
+</figure>
+
+<article class="prose" data-role="prose">
+  <p>The bottom-right cell says 3, and that is the answer: <em>kitten</em> becomes <em>sitting</em>
+    in three edits. Substitute the k for an s, substitute the e for an i, insert a g at the end.
+    What is worth watching is not the answer but the forty-two decisions that produced it,
+    because none of them required knowing anything about words.</p>
+
+  <h2>Every cell is the same question</h2>
+
+  <p>Number the rows by how much of the first word you have consumed and the columns by how much of
+    the second. The cell at row <em>i</em>, column <em>j</em> holds one number: the cheapest way to
+    turn the first <em>i</em> letters into the first <em>j</em> letters. The edges are free — turning
+    nothing into <em>sit</em> obviously costs three insertions — so row zero and column zero just
+    count upward.</p>
+
+  <p>Everything inside follows from three neighbours:</p>
+
+<p class="math">D[i][j] = min(
+    D[i-1][j]   + 1     delete a letter
+    D[i][j-1]   + 1     insert a letter
+    D[i-1][j-1] + c     substitute; c = 0 if the letters match
+)</p>
+
+  <p>Step through and watch the three outlined cells. The cell above means you already solved a
+    slightly shorter first word, so you delete one letter to catch up. The cell to the left means
+    you solved a shorter second word, so you insert. The diagonal means you solved both one letter
+    shorter, and now the two letters in question either match — costing nothing — or they do not,
+    costing one substitution. There is no fourth option, and no cell is ever revisited.</p>
+
+  <h2>Why it has to be filled in order</h2>
+
+  <p>The recurrence needs the cell above, the cell to the left, and the cell diagonally above-left.
+    Fill the table left to right and top to bottom and all three are always already there. That is
+    the whole trick of dynamic programming: not cleverness about the problem, but an order of
+    evaluation in which nothing is ever asked for before it exists.</p>
+
+  <p>It also explains the cost. There are (m+1)(n+1) cells and each takes constant work, so the
+    running time is the product of the two lengths. For two six-letter words that is forty-nine
+    cells; for two thousand-letter genomes it is a million, which is why sequence alignment on real
+    DNA needs something smarter.</p>
+
+  <h2>Reading the alignment back out</h2>
+
+  <p>The number alone does not tell you <em>which</em> three edits. For that, start at the
+    bottom-right and walk backwards, at each step moving to whichever neighbour the minimum came
+    from. The path is drawn once the table fills. A diagonal move on matching letters is a letter
+    kept; a diagonal on different letters is a substitution; vertical and horizontal moves are a
+    deletion and an insertion. Count the non-diagonal-match moves and you get the distance back,
+    which is a useful check that the table and the path agree.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set both words to <em>abacus</em> against <em>cellar</em>. They share almost nothing, and the
+    table fills with a near-perfect diagonal staircase — the distance is six, the length of the
+    longer word, which is the worst case. Then try <em>flour</em> against <em>flower</em>: the first
+    three letters match, so the top-left region stays at zero along the diagonal and the whole
+    answer is decided in the last two columns.</p>
+
+  <p>Finally, <em>atlas</em> against <em>abacus</em> gives four, and the back-traced path wanders
+    rather than running straight. When two words share letters but in the wrong places, the cheapest
+    alignment is rarely the one you would guess by eye.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL ------------------------------------------------------------- */
+/* Wagner-Fischer. Pure: takes two strings, returns numbers. No DOM here.    */
+const Model = {
+  table(a, b){
+    const n = a.length, m = b.length, T = [];
+    for (let i = 0; i <= n; i++){ T.push(new Array(m + 1).fill(0)); T[i][0] = i; }
+    for (let j = 0; j <= m; j++) T[0][j] = j;
+    for (let i = 1; i <= n; i++)
+      for (let j = 1; j <= m; j++){
+        const c = a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1;
+        T[i][j] = Math.min(T[i - 1][j] + 1, T[i][j - 1] + 1, T[i - 1][j - 1] + c);
+      }
+    return T;
+  },
+
+  distance(a, b){ return this.table(a, b)[a.length][b.length]; },
+
+  /* The three candidates considered at one interior cell. */
+  candidates(a, b, i, j){
+    const T = this.table(a, b);
+    const c = a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1;
+    return {
+      del: T[i - 1][j] + 1,
+      ins: T[i][j - 1] + 1,
+      sub: T[i - 1][j - 1] + c,
+      match: c === 0,
+      value: T[i][j]
+    };
+  },
+
+  /* Backtrace, preferring the diagonal so matches are kept where possible. */
+  alignment(a, b){
+    const T = this.table(a, b);
+    let i = a.length, j = b.length;
+    const ops = [];
+    while (i > 0 || j > 0){
+      if (i > 0 && j > 0){
+        const c = a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1;
+        if (T[i][j] === T[i - 1][j - 1] + c){
+          ops.push({ op: c === 0 ? "keep" : "substitute", i: i, j: j });
+          i--; j--; continue;
+        }
+      }
+      if (i > 0 && T[i][j] === T[i - 1][j] + 1){ ops.push({ op: "delete", i: i, j: j }); i--; continue; }
+      ops.push({ op: "insert", i: i, j: j }); j--;
+    }
+    ops.reverse();
+    return ops;
+  },
+
+  editCount(a, b){
+    return this.alignment(a, b).filter((o) => o.op !== "keep").length;
+  },
+
+  /* Row-major order over the interior cells, which is the fill order. */
+  cellAt(a, b, k){
+    const m = b.length;
+    if (k < 1 || k > a.length * m) return null;
+    return { i: Math.floor((k - 1) / m) + 1, j: ((k - 1) % m) + 1 };
+  },
+  totalCells(a, b){ return a.length * b.length; }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------ */
+const defaults = { a: "kitten", b: "sitting", step: 0 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const W = cv.width, H = cv.height;
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+let cache = null;
+function tableFor(a, b){
+  const key = a + "\u0000" + b;
+  if (!cache || cache.key !== key)
+    cache = { key: key, T: Model.table(a, b), path: Model.alignment(a, b) };
+  return cache;
+}
+
+function render(){
+  const a = state.a, b = state.b;
+  const { T, path } = tableFor(a, b);
+  const n = a.length, m = b.length;
+  const total = Model.totalCells(a, b);
+  const step = Math.min(state.step, total);
+  const cur = Model.cellAt(a, b, step);
+
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line");
+  const accent = css("--accent"), keep = css("--keep"), keepSoft = css("--keep-soft");
+  const live = css("--live"), liveSoft = css("--live-soft"), panel = css("--panel");
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, W, H);
+
+  /* grid geometry: (n+1) x (m+1) cells plus a header row and column */
+  const GX = 96, GY = 70;
+  const cell = Math.min(58, Math.floor((W - GX - 250) / (m + 1)), Math.floor((H - GY - 40) / (n + 1)));
+  const gw = cell * (m + 1), gh = cell * (n + 1);
+
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+
+  /* letter headers */
+  ctx.font = "600 15px ui-monospace, monospace"; ctx.fillStyle = accent;
+  for (let j = 1; j <= m; j++) ctx.fillText(b.charAt(j - 1), GX + cell * j + cell / 2, GY - 20);
+  for (let i = 1; i <= n; i++) ctx.fillText(a.charAt(i - 1), GX - 22, GY + cell * i + cell / 2);
+  ctx.font = "11px ui-monospace, monospace"; ctx.fillStyle = muted;
+  ctx.fillText(b, GX + gw / 2, GY - 46);
+  ctx.save(); ctx.translate(GX - 52, GY + gh / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText(a, 0, 0); ctx.restore();
+
+  /* cells */
+  for (let i = 0; i <= n; i++){
+    for (let j = 0; j <= m; j++){
+      const x = GX + cell * j, y = GY + cell * i;
+      const isBorder = (i === 0 || j === 0);
+      const index = isBorder ? 0 : (i - 1) * m + j;
+      const filled = isBorder || index <= step;
+      const isCur = cur && cur.i === i && cur.j === j;
+      const isSource = cur && !isBorder && !isCur &&
+        ((i === cur.i - 1 && j === cur.j) || (i === cur.i && j === cur.j - 1) || (i === cur.i - 1 && j === cur.j - 1));
+      const isSourceB = cur && isBorder &&
+        ((i === cur.i - 1 && j === cur.j) || (i === cur.i && j === cur.j - 1) || (i === cur.i - 1 && j === cur.j - 1));
+
+      ctx.fillStyle = isCur ? liveSoft : (isBorder ? css("--bg") : panel);
+      ctx.fillRect(x, y, cell, cell);
+      ctx.strokeStyle = line; ctx.lineWidth = 1;
+      ctx.strokeRect(x, y, cell, cell);
+      if (isSource || isSourceB){
+        ctx.strokeStyle = accent; ctx.lineWidth = 2;
+        ctx.strokeRect(x + 1.5, y + 1.5, cell - 3, cell - 3);
+      }
+      if (isCur){
+        ctx.strokeStyle = live; ctx.lineWidth = 3;
+        ctx.strokeRect(x + 1.5, y + 1.5, cell - 3, cell - 3);
+      }
+      if (filled){
+        ctx.fillStyle = isBorder ? muted : ink;
+        ctx.font = (isCur ? "700 " : "400 ") + Math.round(cell * 0.4) + "px ui-monospace, monospace";
+        ctx.fillText(String(T[i][j]), x + cell / 2, y + cell / 2 + 1);
+      }
+    }
+  }
+
+  /* backtrace path, once the table is full */
+  const complete = step >= total;
+  if (complete && total > 0){
+    ctx.lineWidth = 3; ctx.lineCap = "round";
+    let pi = n, pj = m;
+    const pts = [[pi, pj]];
+    for (let k = path.length - 1; k >= 0; k--){
+      const o = path[k];
+      if (o.op === "keep" || o.op === "substitute"){ pi--; pj--; }
+      else if (o.op === "delete") pi--;
+      else pj--;
+      pts.push([pi, pj]);
+    }
+    for (let k = 0; k < pts.length - 1; k++){
+      const o = path[path.length - 1 - k];
+      ctx.strokeStyle = (o && o.op === "keep") ? keep : accent;
+      ctx.globalAlpha = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(GX + cell * pts[k][1] + cell / 2, GY + cell * pts[k][0] + cell / 2);
+      ctx.lineTo(GX + cell * pts[k + 1][1] + cell / 2, GY + cell * pts[k + 1][0] + cell / 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  /* side panel: the decision at the current cell */
+  const SX = GX + gw + 40;
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.font = "600 13px ui-monospace, monospace"; ctx.fillStyle = ink;
+  let sy = GY + 4;
+  if (cur){
+    const c = Model.candidates(a, b, cur.i, cur.j);
+    ctx.fillText("Deciding cell (" + cur.i + ", " + cur.j + ")", SX, sy); sy += 26;
+    ctx.font = "12px ui-monospace, monospace"; ctx.fillStyle = muted;
+    ctx.fillText("comparing  " + a.charAt(cur.i - 1) + "  against  " + b.charAt(cur.j - 1), SX, sy); sy += 18;
+    ctx.fillText(c.match ? "they match, so no cost" : "they differ, so cost 1", SX, sy); sy += 26;
+    const rows = [
+      ["delete", c.del, "from above"],
+      ["insert", c.ins, "from the left"],
+      [c.match ? "keep" : "substitute", c.sub, "from the diagonal"]
+    ];
+    for (const r of rows){
+      const chosen = r[1] === c.value;
+      ctx.fillStyle = chosen ? (r[0] === "keep" ? keep : accent) : muted;
+      ctx.font = (chosen ? "600 " : "400 ") + "12px ui-monospace, monospace";
+      ctx.fillText((chosen ? "→ " : "   ") + r[0].padEnd(11) + String(r[1]).padStart(2) + "   " + r[2], SX, sy);
+      sy += 19;
+    }
+    sy += 12;
+    ctx.fillStyle = ink; ctx.font = "600 13px ui-monospace, monospace";
+    ctx.fillText("answer  " + c.value, SX, sy);
+  } else if (complete && total > 0){
+    ctx.fillText("Table complete", SX, sy); sy += 26;
+    ctx.font = "12px ui-monospace, monospace"; ctx.fillStyle = muted;
+    ctx.fillText("distance  " + T[n][m], SX, sy); sy += 24;
+    ctx.fillText("alignment:", SX, sy); sy += 20;
+    const label = { keep: "keep", substitute: "sub", "delete": "del", insert: "ins" };
+    for (const o of path){
+      const isKeep = o.op === "keep";
+      ctx.fillStyle = isKeep ? keep : accent;
+      const left = o.op === "insert" ? "–" : a.charAt(o.i - 1);
+      const right = o.op === "delete" ? "–" : b.charAt(o.j - 1);
+      ctx.fillText(left + "  →  " + right + "    " + label[o.op], SX, sy);
+      sy += 17;
+      if (sy > H - 20) break;
+    }
+  } else {
+    ctx.fillText("Borders filled", SX, sy); sy += 26;
+    ctx.font = "12px ui-monospace, monospace"; ctx.fillStyle = muted;
+    ctx.fillText("Turning nothing into a prefix of", SX, sy); sy += 17;
+    ctx.fillText("length k costs k insertions, so", SX, sy); sy += 17;
+    ctx.fillText("row 0 and column 0 count upward.", SX, sy); sy += 24;
+    ctx.fillText("Step forward to start deciding.", SX, sy);
+  }
+
+  /* readouts */
+  el("stepout").textContent = step + " of " + total;
+  if (cur){
+    const c = Model.candidates(a, b, cur.i, cur.j);
+    el("r1").textContent = "(" + cur.i + "," + cur.j + ") = " + c.value;
+    el("r2").textContent = c.del + " / " + c.ins + " / " + c.sub;
+    el("r3").textContent = c.value === c.sub ? (c.match ? "keep" : "substitute")
+                         : c.value === c.del ? "delete" : "insert";
+  } else {
+    el("r1").textContent = step === 0 ? "borders only" : "done";
+    el("r2").textContent = "—";
+    el("r3").textContent = "—";
+  }
+  el("r4").textContent = complete ? String(T[n][m]) : "not yet";
+  el("back").disabled = step <= 0;
+  el("fwd").disabled = step >= total;
+}
+
+/* ---- controls ---------------------------------------------------------- */
+function resizeStepper(){
+  const total = Model.totalCells(state.a, state.b);
+  const r = el("step");
+  r.max = String(total);
+  if (state.step > total) state.step = total;
+  r.value = String(state.step);
+}
+function setWord(key, id){
+  el(id).addEventListener("change", function(){
+    state[key] = el(id).value;
+    state.step = 0;
+    resizeStepper();
+    render();
+  });
+}
+setWord("a", "wa");
+setWord("b", "wb");
+el("step").addEventListener("input", function(){
+  state.step = parseInt(el("step").value, 10);
+  render();
+});
+function goto(k){
+  const total = Model.totalCells(state.a, state.b);
+  state.step = Math.max(0, Math.min(total, k));
+  el("step").value = String(state.step);
+  render();
+}
+el("fwd").addEventListener("click", function(){ goto(state.step + 1); });
+el("back").addEventListener("click", function(){ goto(state.step - 1); });
+el("run").addEventListener("click", function(){ goto(Model.totalCells(state.a, state.b)); });
+el("reset").addEventListener("click", function(){
+  state.a = defaults.a; state.b = defaults.b; state.step = 0;
+  el("wa").value = defaults.a; el("wb").value = defaults.b;
+  resizeStepper(); render();
+});
+resizeStepper();
+render();
+
+/* ---- SELFTEST ---------------------------------------------------------- */
+const rngT = mulberry32(SEED);
+const ALPHA = "abcde";
+function randWord(maxLen){
+  const L = 1 + Math.floor(rngT() * maxLen);
+  let s = "";
+  for (let i = 0; i < L; i++) s += ALPHA.charAt(Math.floor(rngT() * ALPHA.length));
+  return s;
+}
+const PAIRS = [], TRIPLES = [];
+for (let k = 0; k < 200; k++) PAIRS.push([randWord(7), randWord(7)]);
+for (let k = 0; k < 200; k++) TRIPLES.push([randWord(6), randWord(6), randWord(6)]);
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+
+  push("kitten to sitting is exactly 3", M.distance("kitten", "sitting") === 3, "the textbook example");
+
+  push("four published reference distances", (function(){
+    const cases = [["flour", "flower", 2], ["sunday", "saturday", 3],
+                   ["intention", "execution", 5], ["abacus", "cellar", 6]];
+    for (const c of cases) if (M.distance(c[0], c[1]) !== c[2]) return false;
+    return true;
+  })(), "flour/flower 2, sunday/saturday 3, intention/execution 5, abacus/cellar 6");
+
+  push("distance to the empty string is the length", (function(){
+    for (const w of ["", "a", "kitten", "saturday", "intention", "abacus"]){
+      if (M.distance(w, "") !== w.length) return false;
+      if (M.distance("", w) !== w.length) return false;
+    }
+    return true;
+  })(), "both directions, six words including the empty one");
+
+  push("identity of indiscernibles", (function(){
+    for (const p of PAIRS){
+      if (M.distance(p[0], p[0]) !== 0) return false;
+      if (p[0] !== p[1] && M.distance(p[0], p[1]) <= 0) return false;
+    }
+    return true;
+  })(), "d(x,x)=0 and d(x,y)>0 for x!=y over 200 seeded pairs");
+
+  push("symmetry over 200 seeded pairs", (function(){
+    for (const p of PAIRS) if (M.distance(p[0], p[1]) !== M.distance(p[1], p[0])) return false;
+    return true;
+  })(), "d(x,y) = d(y,x)");
+
+  push("triangle inequality over 200 seeded triples", (function(){
+    for (const q of TRIPLES)
+      if (M.distance(q[0], q[2]) > M.distance(q[0], q[1]) + M.distance(q[1], q[2])) return false;
+    return true;
+  })(), "d(x,z) <= d(x,y) + d(y,z)");
+
+  push("the backtraced alignment costs exactly the table's answer", (function(){
+    for (const p of PAIRS) if (M.editCount(p[0], p[1]) !== M.distance(p[0], p[1])) return false;
+    return true;
+  })(), "non-keep moves along the path equal the bottom-right cell, 200 pairs");
+
+  push("the alignment is a legal walk from corner to corner", (function(){
+    for (const p of PAIRS.slice(0, 60)){
+      const a = p[0], b = p[1];
+      let i = 0, j = 0;
+      for (const o of M.alignment(a, b)){
+        if (o.op === "keep" || o.op === "substitute"){ i++; j++; }
+        else if (o.op === "delete") i++;
+        else j++;
+        /* the cell the backtrace recorded must be the cell the forward walk
+           has just arrived at, so the path is contiguous and never jumps.   */
+        if (o.i !== i || o.j !== j) return false;
+        if (o.op === "keep" && a.charAt(i - 1) !== b.charAt(j - 1)) return false;
+      }
+      if (i !== a.length || j !== b.length) return false;
+    }
+    return true;
+  })(), "each recorded cell is the one the forward walk reaches, every keep is a genuine letter match, and the moves consume both words exactly, 60 pairs");
+
+  push("every cell equals the distance between its two prefixes", (function(){
+    for (const p of PAIRS.slice(0, 40)){
+      const a = p[0], b = p[1], T = M.table(a, b);
+      for (let i = 0; i <= a.length; i++)
+        for (let j = 0; j <= b.length; j++)
+          if (T[i][j] !== M.distance(a.slice(0, i), b.slice(0, j))) return false;
+    }
+    return true;
+  })(), "recomputed independently for every cell of 40 tables");
+
+  push("distance is bounded by the lengths", (function(){
+    for (const p of PAIRS){
+      const d = M.distance(p[0], p[1]);
+      if (d < Math.abs(p[0].length - p[1].length)) return false;
+      if (d > Math.max(p[0].length, p[1].length)) return false;
+    }
+    return true;
+  })(), "|len(x)-len(y)| <= d <= max(len), 200 pairs");
+
+  push("never worse than Hamming distance at equal lengths", (function(){
+    let checked = 0;
+    for (const p of PAIRS){
+      if (p[0].length !== p[1].length) continue;
+      let h = 0;
+      for (let i = 0; i < p[0].length; i++) if (p[0].charAt(i) !== p[1].charAt(i)) h++;
+      if (M.distance(p[0], p[1]) > h) return false;
+      checked++;
+    }
+    return checked >= 20;
+  })(), "substitution-only is one legal edit script, so Levenshtein cannot exceed it");
+
+  push("the fill order never reads a cell that is not yet decided", (function(){
+    const a = "kitten", b = "sitting", m = b.length;
+    for (let k = 1; k <= M.totalCells(a, b); k++){
+      const c = M.cellAt(a, b, k);
+      const idx = (i, j) => (i === 0 || j === 0) ? 0 : (i - 1) * m + j;
+      if (idx(c.i - 1, c.j) >= k) return false;
+      if (idx(c.i, c.j - 1) >= k) return false;
+      if (idx(c.i - 1, c.j - 1) >= k) return false;
+    }
+    return true;
+  })(), "row-major order puts all three predecessors strictly earlier, all 42 cells");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

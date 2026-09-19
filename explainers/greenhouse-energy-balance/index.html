@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thirty-Three Degrees — Explainer Atlas</title>
+<meta name="description" content="A planet's temperature is one equation balancing sunlight in against infrared out. Add one absorbing layer and the surface warms by a factor you can write down.">
+<style>
+:root{
+  --bg:#f7f8fb; --panel:#ffffff; --ink:#111823; --muted:#5b6678; --line:#dde2ec;
+  --space:#131c2e; --sun:#d98324; --surface:#b34a2b; --ir:#4a7fb5; --layer:#7ba7d0;
+  --accent:#1f4e79; --accent-soft:#e4edf6; --cold:#3d6fa8; --hot:#c04a26;
+  --radius:12px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Charter","Bitstream Charter",Cambria,Georgia,serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --font-display:"Avenir Next Condensed","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --scale-h1:clamp(1.9rem,1.2rem + 3.2vw,3.1rem);
+  --scale-body:clamp(1rem,0.95rem + 0.25vw,1.1rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0b0f16; --panel:#131a24; --ink:#e4eaf3; --muted:#93a0b4; --line:#222c3a;
+    --space:#070b12; --sun:#f0a24a; --surface:#e07a54; --ir:#7fb0dd; --layer:#4d7ba6;
+    --accent:#83b7e6; --accent-soft:#12202e; --cold:#6fa3dc; --hot:#e57a50;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.65 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:66rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:var(--pad)}
+.kicker{margin:0 0 .4em; color:var(--sun); font:700 .72rem/1 var(--font-display);
+  text-transform:uppercase; letter-spacing:.24em}
+h1{font:700 var(--scale-h1)/1 var(--font-display); margin:0 0 .3em; letter-spacing:-.03em}
+.standfirst{margin:0; color:var(--muted); max-width:36em; font-size:1.08em}
+/* portrait stage on the left, controls on the right */
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:50rem){ .layout{grid-template-columns:minmax(0,410px) minmax(0,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--space); border:1px solid var(--line);
+  border-radius:var(--radius); padding:0; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+.side{display:grid; gap:var(--pad)}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1.15em}
+.control{display:grid; gap:.32em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font:700 .95rem/1.2 var(--font-display); letter-spacing:.01em}
+output{font:600 .93rem/1 var(--font-mono); color:var(--accent);
+  background:var(--accent-soft); padding:.28em .55em; border-radius:6px}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:28px}
+.hint{margin:0; color:var(--muted); font-size:.82rem}
+button{font:600 .92rem/1 var(--font-display); color:inherit; background:var(--bg);
+  border:1px solid var(--line); border-radius:8px; padding:.7em .8em; min-height:42px; cursor:pointer}
+button:hover{border-color:var(--accent)}
+.presets{display:grid; grid-template-columns:1fr 1fr; gap:.5em}
+.presets button{font-size:.85rem; padding:.7em .5em}
+:where(a,button,input,select):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:.7em .85em}
+.readout dt{margin:0; color:var(--muted); font:.72rem/1.3 var(--font-display);
+  text-transform:uppercase; letter-spacing:.13em; font-weight:700}
+.readout dd{margin:.25em 0 0; font:600 1.35rem/1.1 var(--font-mono)}
+figcaption{margin:.7em 0 0; color:var(--muted); font-size:.84rem}
+.prose{max-width:41em; margin-top:calc(var(--pad)*1.6)}
+.prose h2{font:700 1.25rem/1.25 var(--font-display); margin:1.9em 0 .4em;
+  letter-spacing:-.01em; color:var(--accent)}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.85em; background:var(--accent-soft);
+  padding:.8em .9em; border-radius:8px; border-left:4px solid var(--accent);
+  overflow-x:auto; white-space:pre; line-height:1.75; margin:0 0 1em}
+.lede{font-size:1.12em; line-height:1.55}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad);
+  border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Earth science</p>
+  <h1>Thirty-Three Degrees</h1>
+  <p class="standfirst">Balance the sunlight a planet absorbs against the infrared it radiates and
+    you get a temperature. For Earth that temperature is 255 kelvin — thirty-three degrees colder
+    than the place you are sitting.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="640" height="900" role="img"
+      aria-label="A vertical energy budget diagram: sunlight arrives from space at the top, part is reflected, the rest is absorbed at the surface, and infrared radiation leaves the surface, is partly absorbed by an atmospheric layer, and is re-emitted both upward to space and downward to the surface. Arrow widths are proportional to energy flux."></canvas>
+  </figure>
+
+  <div class="side">
+    <section class="controls" data-role="controls" aria-label="Planet parameters">
+      <div class="control">
+        <div class="row">
+          <label for="alb">Albedo</label>
+          <output id="albout" for="alb">0.30</output>
+        </div>
+        <input type="range" id="alb" min="0" max="0.8" step="0.005" value="0.3">
+        <p class="hint">The fraction of sunlight reflected straight back. Earth is 0.30; fresh snow alone is 0.85.</p>
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="eps">Atmospheric emissivity</label>
+          <output id="epsout" for="eps">0.78</output>
+        </div>
+        <input type="range" id="eps" min="0" max="1" step="0.005" value="0.78">
+        <p class="hint">How opaque the air is to outgoing infrared. Zero is a bare rock; one is a perfectly absorbing blanket.</p>
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="sol">Solar flux</label>
+          <output id="solout" for="sol">1361 W/m&sup2;</output>
+        </div>
+        <input type="range" id="sol" min="400" max="2800" step="1" value="1361">
+        <p class="hint">What arrives at the top of the atmosphere. Mars gets 586, Venus 2601.</p>
+      </div>
+
+      <div class="presets">
+        <button type="button" id="p1">Earth today</button>
+        <button type="button" id="p2">No greenhouse</button>
+        <button type="button" id="p3">Snowball</button>
+        <button type="button" id="reset">Reset</button>
+      </div>
+    </section>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Surface</dt><dd id="r1">—</dd></div>
+      <div><dt>Without the layer</dt><dd id="r2">—</dd></div>
+      <div><dt>Greenhouse warming</dt><dd id="r3">—</dd></div>
+      <div><dt>Top-of-atmosphere imbalance</dt><dd id="r4">—</dd></div>
+    </dl>
+
+    <figcaption>Arrow widths are proportional to energy flux. Everything is in steady state: what
+      goes in at the top comes back out at the top, and every level balances separately.</figcaption>
+  </div>
+</div>
+
+<article class="prose" data-role="prose">
+  <p class="lede">A planet in sunlight has exactly one way to get rid of energy: glow. It absorbs
+    a disc's worth of sunlight and radiates from a whole sphere's worth of surface, and when those
+    two rates match, its temperature stops changing. That is the entire model, and for a bare rock
+    it is already accurate.</p>
+
+  <h2>The factor of four</h2>
+
+  <p>Sunlight arrives as a parallel beam, so a planet of radius r intercepts it across a disc of
+    area πr². It radiates from its whole surface, 4πr². The ratio is four, and it is pure geometry —
+    no physics in it at all. So the absorbed flux averaged over the planet is (1−α)S/4, where α is
+    the albedo, the fraction reflected straight back without ever being absorbed.</p>
+
+  <p>Set that equal to the Stefan–Boltzmann law and solve:</p>
+
+<p class="math">σ T⁴ = (1 − α) S / 4
+     T = ( (1 − α) S / 4σ )^(1/4)</p>
+
+  <p>With S = 1361 W/m² and α = 0.30, that gives 254.6 K, or −18 °C. Drag the albedo slider and
+    watch how little it moves: because temperature goes as the fourth root, doubling the absorbed
+    energy buys you only nineteen percent more kelvin. The fourth root is why planets are
+    stubborn.</p>
+
+  <h2>One layer changes everything</h2>
+
+  <p>Now put a thin layer above the surface that is transparent to sunlight but absorbs a fraction ε
+    of the infrared passing through it. The layer warms up and radiates too — but it radiates from
+    both faces, half up to space and half back down. That downward half is the greenhouse effect,
+    and it is not a trick of insulation. It is an additional energy source arriving at the surface.</p>
+
+  <p>Write the balance at the layer and at the top of the atmosphere, and the whole system collapses
+    to two clean results. The layer always sits at</p>
+
+  <p class="math">T_layer = T_surface / 2^(1/4) ≈ T_surface / 1.1892</p>
+
+  <p>whatever ε is — slide the emissivity and watch the ratio in the diagram refuse to budge. And
+    the surface sits at</p>
+
+  <p class="math">T_surface = T_bare / (1 − ε/2)^(1/4)</p>
+
+  <p>At ε = 0 the layer does nothing and you recover the bare rock. At ε = 1 the layer is opaque and
+    the surface is exactly 2^(1/4) times hotter — nineteen percent, about 48 K for Earth. Earth's
+    real surface sits at 288 K, which this model reproduces at ε ≈ 0.78. That number is doing a lot
+    of work: it stands in for water vapour, carbon dioxide, methane, clouds and the actual vertical
+    structure of the atmosphere, all compressed into one dial.</p>
+
+  <h2>What the single layer leaves out</h2>
+
+  <p>Quite a lot, and it is worth being honest about it. There is no convection, so the model cannot
+    produce a lapse rate and cannot tell you the temperature at any particular altitude. There is no
+    wavelength dependence, so it cannot distinguish a gas that absorbs in a narrow band from one that
+    absorbs everywhere. There is no latitude, no seasons, no ocean, and no ice that grows when it
+    gets cold and reflects more sunlight, which is the feedback that makes the snowball state
+    possible at all. What the model does get right is the sign, the rough size, and — importantly —
+    the structural reason: the surface must radiate more than the planet loses, because part of what
+    it radiates comes back.</p>
+
+  <h2>What to try</h2>
+
+  <p>Press <em>No greenhouse</em> and note 255 K. Press <em>Earth today</em> and note 288 K. The
+    difference is the thirty-three degrees in the title, and every bit of it comes from that
+    downward arrow.</p>
+
+  <p>Then set the solar flux to 2601, Venus's value, leaving emissivity at Earth's 0.78. You get
+    about 340 K — nowhere near Venus's actual 737 K. Venus is not hot because it is close to the
+    Sun; at its albedo of 0.77 it absorbs less sunlight per square metre than Earth does. It is hot
+    because its ε is effectively pinned against one. Push the emissivity slider to the top with
+    Venus's solar flux and albedo and you still fall short, which tells you a single layer is not
+    enough — Venus needs dozens of them stacked, and that is exactly what its atmosphere is.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL ------------------------------------------------------------- */
+/* Zero-dimensional planet with one grey absorbing layer. Transparent to     */
+/* shortwave, absorbs a fraction eps of longwave, radiates from both faces.  */
+const Model = {
+  SIGMA: 5.670374419e-8,      /* Stefan-Boltzmann, W m^-2 K^-4 */
+  S_EARTH: 1361,
+  GEOMETRY: 4,                /* sphere area / intercepting disc area */
+
+  flux(T){ return this.SIGMA * Math.pow(T, 4); },
+  temperature(F){ return Math.pow(F / this.SIGMA, 0.25); },
+
+  absorbed(albedo, solar){ return (1 - albedo) * solar / this.GEOMETRY; },
+
+  /* Bare rock: no layer at all. */
+  bareTemperature(albedo, solar){
+    return this.temperature(this.absorbed(albedo, solar));
+  },
+
+  /* With the layer. Layer balance gives Ta^4 = Ts^4 / 2 for any eps > 0;
+     top-of-atmosphere balance then gives Ts = Tbare / (1 - eps/2)^(1/4).    */
+  surfaceTemperature(albedo, eps, solar){
+    return this.bareTemperature(albedo, solar) / Math.pow(1 - eps / 2, 0.25);
+  },
+  layerTemperature(albedo, eps, solar){
+    return this.surfaceTemperature(albedo, eps, solar) / Math.pow(2, 0.25);
+  },
+
+  /* Every flux in the diagram, for a given setting. */
+  budget(albedo, eps, solar){
+    const inc = solar / this.GEOMETRY;
+    const abs = this.absorbed(albedo, solar);
+    const ts = this.surfaceTemperature(albedo, eps, solar);
+    const ta = this.layerTemperature(albedo, eps, solar);
+    const up = this.flux(ts);
+    const layerEmit = eps * this.flux(ta);
+    return {
+      incoming: inc,
+      reflected: inc - abs,
+      absorbed: abs,
+      surfaceTemp: ts,
+      layerTemp: ta,
+      surfaceUp: up,
+      throughWindow: (1 - eps) * up,
+      layerAbsorbs: eps * up,
+      layerUp: layerEmit,
+      layerDown: layerEmit,
+      toSpace: (1 - eps) * up + layerEmit,
+      greenhouse: ts - this.bareTemperature(albedo, solar)
+    };
+  },
+
+  /* Residuals. All three must vanish in steady state. */
+  toaImbalance(albedo, eps, solar){
+    const b = this.budget(albedo, eps, solar);
+    return b.absorbed - b.toSpace;
+  },
+  surfaceImbalance(albedo, eps, solar){
+    const b = this.budget(albedo, eps, solar);
+    return b.absorbed + b.layerDown - b.surfaceUp;
+  },
+  layerImbalance(albedo, eps, solar){
+    const b = this.budget(albedo, eps, solar);
+    return b.layerAbsorbs - (b.layerUp + b.layerDown);
+  },
+
+  /* Invert for the emissivity that produces a target surface temperature. */
+  emissivityFor(target, albedo, solar){
+    let lo = 0, hi = 1;
+    for (let i = 0; i < 80; i++){
+      const m = (lo + hi) / 2;
+      if (this.surfaceTemperature(albedo, m, solar) < target) lo = m; else hi = m;
+    }
+    return (lo + hi) / 2;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------ */
+const defaults = { albedo: 0.3, eps: 0.78, solar: 1361 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const W = cv.width, H = cv.height;
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const Y_SPACE = 92, Y_LAYER = 400, Y_SURF = 720;
+
+function arrow(x, yFrom, yTo, flux, colour, label, side){
+  const w = Math.max(3, Math.min(56, Math.sqrt(Math.max(flux, 0)) * 2.6));
+  const dir = yTo > yFrom ? 1 : -1;
+  const head = 22;
+  ctx.fillStyle = colour;
+  ctx.beginPath();
+  ctx.moveTo(x - w / 2, yFrom);
+  ctx.lineTo(x + w / 2, yFrom);
+  ctx.lineTo(x + w / 2, yTo - dir * head);
+  ctx.lineTo(x + w / 2 + 9, yTo - dir * head);
+  ctx.lineTo(x, yTo);
+  ctx.lineTo(x - w / 2 - 9, yTo - dir * head);
+  ctx.lineTo(x - w / 2, yTo - dir * head);
+  ctx.closePath();
+  ctx.fill();
+  if (label){
+    ctx.fillStyle = colour;
+    ctx.font = "600 21px ui-monospace, monospace";
+    ctx.textAlign = side === "left" ? "right" : "left";
+    const tx = side === "left" ? x - w / 2 - 16 : x + w / 2 + 16;
+    ctx.fillText(label, tx, (yFrom + yTo) / 2 + 4);
+  }
+}
+
+function render(){
+  const b = Model.budget(state.albedo, state.eps, state.solar);
+  const space = css("--space"), sun = css("--sun"), surface = css("--surface");
+  const ir = css("--ir"), layer = css("--layer"), muted = css("--muted");
+  const hot = css("--hot"), cold = css("--cold");
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = space; ctx.fillRect(0, 0, W, H);
+
+  /* stars, seeded so the picture is identical every load */
+  const r = mulberry32(SEED);
+  ctx.fillStyle = "rgba(255,255,255,0.55)";
+  for (let i = 0; i < 90; i++){
+    const x = r() * W, y = r() * (Y_LAYER - 30), s = 0.6 + r() * 1.1;
+    ctx.beginPath(); ctx.arc(x, y, s, 0, Math.PI * 2); ctx.fill();
+  }
+
+  /* ground */
+  const warmth = Math.max(0, Math.min(1, (b.surfaceTemp - 200) / 160));
+  const g = ctx.createLinearGradient(0, Y_SURF, 0, H);
+  g.addColorStop(0, warmth > 0.5 ? hot : cold);
+  g.addColorStop(1, space);
+  ctx.fillStyle = g; ctx.globalAlpha = 0.35 + 0.5 * warmth;
+  ctx.fillRect(0, Y_SURF, W, H - Y_SURF);
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = warmth > 0.5 ? hot : cold; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(0, Y_SURF); ctx.lineTo(W, Y_SURF); ctx.stroke();
+
+  /* the atmospheric layer, opacity showing emissivity */
+  ctx.fillStyle = layer; ctx.globalAlpha = 0.14 + 0.5 * state.eps;
+  ctx.fillRect(0, Y_LAYER - 26, W, 52);
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = layer; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(0, Y_LAYER - 26); ctx.lineTo(W, Y_LAYER - 26); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, Y_LAYER + 26); ctx.lineTo(W, Y_LAYER + 26); ctx.stroke();
+
+  /* arrows: shortwave on the left, longwave on the right */
+  arrow(72, Y_SPACE, Y_SURF - 6, b.incoming, sun, b.incoming.toFixed(0), "right");
+  arrow(168, Y_SURF - 6, Y_SPACE, b.reflected, sun, b.reflected.toFixed(0), "right");
+
+  arrow(330, Y_SURF - 6, Y_LAYER + 30, b.surfaceUp, surface, b.surfaceUp.toFixed(0), "left");
+  if (b.throughWindow > 0.5)
+    arrow(330, Y_LAYER - 30, Y_SPACE, b.throughWindow, surface, b.throughWindow.toFixed(0), "left");
+  if (b.layerUp > 0.5){
+    arrow(470, Y_LAYER - 30, Y_SPACE, b.layerUp, ir, b.layerUp.toFixed(0), "right");
+    arrow(570, Y_LAYER + 30, Y_SURF - 6, b.layerDown, ir, b.layerDown.toFixed(0), "right");
+  }
+
+  /* labels */
+  ctx.textAlign = "left"; ctx.fillStyle = "rgba(255,255,255,0.72)";
+  ctx.font = "600 20px ui-monospace, monospace";
+  ctx.fillText("SPACE", 20, 40);
+  ctx.fillText("ATMOSPHERE  ε = " + state.eps.toFixed(2), 20, Y_LAYER - 44);
+  ctx.fillText("SURFACE", 20, Y_SURF + 36);
+  ctx.textAlign = "right";
+  ctx.font = "700 30px ui-monospace, monospace";
+  ctx.fillText(b.layerTemp.toFixed(1) + " K", W - 20, Y_LAYER + 10);
+  ctx.fillText(b.surfaceTemp.toFixed(1) + " K", W - 20, Y_SURF + 46);
+  ctx.font = "17px ui-monospace, monospace"; ctx.fillStyle = "rgba(255,255,255,0.52)";
+  ctx.fillText("all fluxes in W/m²", W - 20, H - 20);
+  ctx.textAlign = "left";
+  ctx.fillText("shortwave", 20, Y_SPACE - 30);
+  ctx.fillText("longwave", 300, Y_SPACE - 30);
+
+  /* readouts */
+  el("albout").textContent = state.albedo.toFixed(3);
+  el("epsout").textContent = state.eps.toFixed(2);
+  el("solout").textContent = state.solar + " W/m²";
+  el("r1").textContent = b.surfaceTemp.toFixed(1) + " K";
+  el("r2").textContent = Model.bareTemperature(state.albedo, state.solar).toFixed(1) + " K";
+  el("r3").textContent = "+" + b.greenhouse.toFixed(1) + " K";
+  const imb = Model.toaImbalance(state.albedo, state.eps, state.solar);
+  el("r4").textContent = (Math.abs(imb) < 1e-9 ? "0" : imb.toExponential(1)) + " W/m²";
+}
+
+/* ---- controls ---------------------------------------------------------- */
+function bind(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", function(){ state[key] = parse(input.value); render(); });
+}
+bind("alb", "albedo", parseFloat);
+bind("eps", "eps", parseFloat);
+bind("sol", "solar", (v) => parseInt(v, 10));
+
+function apply(albedo, eps, solar){
+  state.albedo = albedo; state.eps = eps; state.solar = solar;
+  el("alb").value = String(albedo); el("eps").value = String(eps); el("sol").value = String(solar);
+  render();
+}
+el("p1").addEventListener("click", function(){ apply(0.3, 0.78, 1361); });
+el("p2").addEventListener("click", function(){ apply(0.3, 0, 1361); });
+el("p3").addEventListener("click", function(){ apply(0.6, 0.4, 1361); });
+el("reset").addEventListener("click", function(){ apply(defaults.albedo, defaults.eps, defaults.solar); });
+render();
+
+/* ---- SELFTEST ---------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+function rel(a, b){ return Math.abs(a - b) / Math.max(Math.abs(b), 1e-30); }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+
+  push("Earth's bare equilibrium temperature is 255 K", (function(){
+    const T = M.bareTemperature(0.3, 1361);
+    if (!near(T, 255, 1)) return false;
+    return near(T, Math.pow(0.7 * 1361 / (4 * M.SIGMA), 0.25), 1e-9);
+  })(), "254.58 K from the closed form, within 1 K of the published 255 K figure");
+
+  push("Stefan-Boltzmann round-trips exactly", (function(){
+    for (let T = 100; T <= 800; T += 7){
+      if (rel(M.flux(T), M.SIGMA * Math.pow(T, 4)) > 1e-15) return false;
+      if (rel(M.temperature(M.flux(T)), T) > 1e-12) return false;
+    }
+    return true;
+  })(), "flux and its inverse agree to 1e-12 relative over 100..800 K");
+
+  push("the geometric factor is exactly four", (function(){
+    if (M.GEOMETRY !== 4) return false;
+    /* sphere 4*pi*r^2 over intercepting disc pi*r^2, for any radius */
+    for (const r of [1, 6.371e6, 1e9]){
+      const sphere = 4 * Math.PI * r * r, disc = Math.PI * r * r;
+      if (rel(sphere / disc, M.GEOMETRY) > 1e-15) return false;
+    }
+    return true;
+  })(), "4*pi*r^2 / pi*r^2 = 4 independent of radius, matching the absorbed-flux divisor");
+
+  push("the layer always sits at the surface temperature over 2^(1/4)", (function(){
+    for (let a = 0; a <= 0.8; a += 0.05)
+      for (let e = 0.01; e <= 1; e += 0.03)
+        for (const S of [586, 1361, 2601]){
+          const ratio = M.surfaceTemperature(a, e, S) / M.layerTemperature(a, e, S);
+          if (rel(ratio, Math.pow(2, 0.25)) > 1e-14) return false;
+        }
+    return true;
+  })(), "Ts/Ta = 1.189207115... at every albedo, emissivity and solar flux");
+
+  push("top-of-atmosphere balance holds", (function(){
+    let worst = 0;
+    for (let a = 0; a <= 0.8; a += 0.04)
+      for (let e = 0; e <= 1; e += 0.02)
+        worst = Math.max(worst, Math.abs(M.toaImbalance(a, e, 1361)));
+    return worst < 1e-9;
+  })(), "absorbed sunlight equals outgoing longwave to 1e-9 W/m^2 over the whole grid");
+
+  push("the surface balances separately", (function(){
+    let worst = 0;
+    for (let a = 0; a <= 0.8; a += 0.05)
+      for (let e = 0; e <= 1; e += 0.025)
+        for (const S of [586, 1361, 2601])
+          worst = Math.max(worst, Math.abs(M.surfaceImbalance(a, e, S)));
+    return worst < 1e-9;
+  })(), "absorbed + back-radiation = surface emission to 1e-9 W/m^2");
+
+  push("the layer balances separately", (function(){
+    let worst = 0;
+    for (let a = 0; a <= 0.8; a += 0.05)
+      for (let e = 0.005; e <= 1; e += 0.025)
+        worst = Math.max(worst, Math.abs(M.layerImbalance(a, e, 1361)));
+    return worst < 1e-9;
+  })(), "what the layer absorbs equals what it emits from its two faces, to 1e-9 W/m^2");
+
+  push("zero emissivity reproduces the bare rock exactly", (function(){
+    for (let a = 0; a <= 0.8; a += 0.05)
+      for (const S of [586, 1361, 2601]){
+        if (rel(M.surfaceTemperature(a, 0, S), M.bareTemperature(a, S)) > 1e-15) return false;
+        if (Math.abs(M.budget(a, 0, S).greenhouse) > 1e-12) return false;
+      }
+    return true;
+  })(), "eps = 0 gives no warming at all, to 1e-12 K");
+
+  push("unit emissivity warms the surface by exactly 2^(1/4)", (function(){
+    for (let a = 0; a <= 0.8; a += 0.05)
+      for (const S of [586, 1361, 2601])
+        if (rel(M.surfaceTemperature(a, 1, S) / M.bareTemperature(a, S), Math.pow(2, 0.25)) > 1e-14)
+          return false;
+    return true;
+  })(), "an opaque layer is worth 18.92 percent, or 48.2 K for Earth");
+
+  push("temperature falls with albedo and rises with emissivity", (function(){
+    let prev = Infinity;
+    for (let a = 0; a <= 0.8; a += 0.005){
+      const T = M.surfaceTemperature(a, 0.78, 1361);
+      if (!(T < prev)) return false;
+      prev = T;
+    }
+    prev = -Infinity;
+    for (let e = 0; e <= 1; e += 0.005){
+      const T = M.surfaceTemperature(0.3, e, 1361);
+      if (!(T > prev)) return false;
+      prev = T;
+    }
+    return true;
+  })(), "strictly monotone in both directions over 161 and 201 steps");
+
+  push("the emissivity that gives Earth's 288 K inverts consistently", (function(){
+    const e = M.emissivityFor(288, 0.3, 1361);
+    if (!near(e, 0.7789, 5e-4)) return false;
+    return near(M.surfaceTemperature(0.3, e, 1361), 288, 1e-6);
+  })(), "bisection returns eps = 0.7789 and feeding it back reproduces 288 K to 1e-6");
+
+  push("nothing is non-finite or unphysical on the control grid", (function(){
+    for (let a = 0; a <= 0.8; a += 0.02)
+      for (let e = 0; e <= 1; e += 0.02)
+        for (let S = 400; S <= 2800; S += 200){
+          const b = M.budget(a, e, S);
+          for (const k in b) if (!Number.isFinite(b[k])) return false;
+          if (!(b.surfaceTemp > 0 && b.layerTemp > 0)) return false;
+          if (b.surfaceTemp < b.layerTemp) return false;
+          if (b.reflected < -1e-12 || b.throughWindow < -1e-12) return false;
+        }
+    return true;
+  })(), "every flux finite and non-negative, surface always warmer than the layer");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

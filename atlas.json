@@ -1,13 +1,19 @@
 {
   "generated_at": "2026-09-19",
-  "count": 13,
+  "count": 18,
   "domains": {
     "biology": [
       "population-logistic-chaos"
     ],
+    "chemistry": [
+      "ph-buffer-capacity"
+    ],
     "computer-science": [
       "dijkstra-vs-astar",
       "floating-point-precision"
+    ],
+    "earth-science": [
+      "greenhouse-energy-balance"
     ],
     "economics": [
       "supply-demand-tax-incidence"
@@ -19,7 +25,11 @@
       "monty-hall"
     ],
     "information-theory": [
-      "huffman-coding"
+      "huffman-coding",
+      "shannon-channel-capacity"
+    ],
+    "linguistics": [
+      "levenshtein-distance"
     ],
     "mathematics": [
       "fourier-series-square-wave",
@@ -30,7 +40,8 @@
       "equal-temperament"
     ],
     "physics": [
-      "damped-harmonic-oscillator"
+      "damped-harmonic-oscillator",
+      "special-relativity-time-dilation"
     ],
     "statistics": [
       "central-limit-theorem"
@@ -38,15 +49,15 @@
   },
   "interaction_patterns": {
     "build-from-parts": 2,
-    "compare-side-by-side": 1,
-    "drag-parameter": 1,
+    "compare-side-by-side": 2,
+    "drag-parameter": 2,
     "draw-input": 1,
-    "guess-then-reveal": 1,
+    "guess-then-reveal": 2,
     "perturb-and-observe": 2,
     "race-two-methods": 1,
     "spatial-explore": 1,
-    "step-through": 1,
-    "time-scrubber": 1,
+    "step-through": 2,
+    "time-scrubber": 2,
     "tune-to-match": 1
   },
   "explainers": [
@@ -234,6 +245,25 @@
       "assertions_count": 11
     },
     {
+      "slug": "greenhouse-energy-balance",
+      "title": "Thirty-Three Degrees",
+      "domain": "earth-science",
+      "difficulty": 3,
+      "summary": "Balance absorbed sunlight against emitted infrared, add one grey absorbing layer, and read off why Earth is thirty-three degrees warmer than a bare rock.",
+      "prerequisites": [],
+      "tags": [
+        "radiation",
+        "climate",
+        "stefan-boltzmann",
+        "equilibrium",
+        "greenhouse-effect"
+      ],
+      "interaction_pattern": "drag-parameter",
+      "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
       "slug": "huffman-coding",
       "title": "Building an Optimal Code, Two Symbols at a Time",
       "domain": "information-theory",
@@ -260,6 +290,25 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 9
+    },
+    {
+      "slug": "levenshtein-distance",
+      "title": "Forty-Two Small Decisions",
+      "domain": "linguistics",
+      "difficulty": 2,
+      "summary": "Step through the edit-distance table one cell at a time and see that every cell is the same three-way choice, then read the alignment back off the finished grid.",
+      "prerequisites": [],
+      "tags": [
+        "edit-distance",
+        "dynamic-programming",
+        "strings",
+        "alignment",
+        "metric"
+      ],
+      "interaction_pattern": "step-through",
+      "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
     },
     {
       "slug": "monty-hall",
@@ -353,6 +402,25 @@
       "assertions_count": 8
     },
     {
+      "slug": "ph-buffer-capacity",
+      "title": "The Flat Part of the Curve",
+      "domain": "chemistry",
+      "difficulty": 3,
+      "summary": "Titrate a weak acid and watch pH refuse to move, then give way all at once, and find the closed form for how much punishment a buffer absorbs.",
+      "prerequisites": [],
+      "tags": [
+        "acid-base",
+        "buffer",
+        "titration",
+        "equilibrium",
+        "logarithms"
+      ],
+      "interaction_pattern": "time-scrubber",
+      "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
       "slug": "pid-controller",
       "title": "Three Knobs, Three Different Ways to Be Wrong",
       "domain": "engineering",
@@ -419,6 +487,44 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 11
+    },
+    {
+      "slug": "shannon-channel-capacity",
+      "title": "The Line You Cannot Cross",
+      "domain": "information-theory",
+      "difficulty": 3,
+      "summary": "Guess whether a noisy channel can carry your message reliably at a chosen rate, then see the hard boundary that no code of any block length can get past.",
+      "prerequisites": [],
+      "tags": [
+        "entropy",
+        "capacity",
+        "coding",
+        "noise",
+        "shannon"
+      ],
+      "interaction_pattern": "guess-then-reveal",
+      "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
+      "slug": "special-relativity-time-dilation",
+      "title": "The Longer Way Round",
+      "domain": "physics",
+      "difficulty": 3,
+      "summary": "Put a light clock at rest beside the same clock in motion, drag the photon along both paths, and read the Lorentz factor straight off the triangle.",
+      "prerequisites": [],
+      "tags": [
+        "relativity",
+        "lorentz-factor",
+        "light-clock",
+        "muon",
+        "spacetime"
+      ],
+      "interaction_pattern": "compare-side-by-side",
+      "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
     },
     {
       "slug": "supply-demand-tax-incidence",

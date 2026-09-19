@@ -1,0 +1,19 @@
+{
+  "slug": "ph-buffer-capacity",
+  "title": "The Flat Part of the Curve",
+  "domain": "chemistry",
+  "difficulty": 3,
+  "summary": "Titrate a weak acid and watch pH refuse to move, then give way all at once, and find the closed form for how much punishment a buffer absorbs.",
+  "prerequisites": [],
+  "tags": [
+    "acid-base",
+    "buffer",
+    "titration",
+    "equilibrium",
+    "logarithms"
+  ],
+  "interaction_pattern": "time-scrubber",
+  "sources": [],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}
