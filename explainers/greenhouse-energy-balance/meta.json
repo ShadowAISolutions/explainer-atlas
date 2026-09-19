@@ -1,0 +1,19 @@
+{
+  "slug": "greenhouse-energy-balance",
+  "title": "Thirty-Three Degrees",
+  "domain": "earth-science",
+  "difficulty": 3,
+  "summary": "Balance absorbed sunlight against emitted infrared, add one grey absorbing layer, and read off why Earth is thirty-three degrees warmer than a bare rock.",
+  "prerequisites": [],
+  "tags": [
+    "radiation",
+    "climate",
+    "stefan-boltzmann",
+    "equilibrium",
+    "greenhouse-effect"
+  ],
+  "interaction_pattern": "drag-parameter",
+  "sources": [],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}
