@@ -1,0 +1,22 @@
+{
+  "slug": "epidemic-r0-herd-immunity",
+  "title": "Herd Immunity Is Not Where It Stops",
+  "domain": "biology",
+  "difficulty": 3,
+  "summary": "Guess how many people an unmitigated epidemic infects, then watch it sail past the herd immunity threshold and keep going.",
+  "prerequisites": [],
+  "tags": [
+    "epidemiology",
+    "sir-model",
+    "reproduction-number",
+    "herd-immunity",
+    "differential-equations"
+  ],
+  "interaction_pattern": "guess-then-reveal",
+  "sources": [
+    { "title": "Kermack and McKendrick, A Contribution to the Mathematical Theory of Epidemics, Proc. R. Soc. A 115, 1927", "url": "https://royalsocietypublishing.org/doi/10.1098/rspa.1927.0118" },
+    { "title": "Miller, A Note on the Derivation of Epidemic Final Sizes, Bull. Math. Biol. 74(9), 2012", "url": "https://link.springer.com/article/10.1007/s11538-012-9749-6" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}
