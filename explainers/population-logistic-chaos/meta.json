@@ -1,0 +1,17 @@
+{
+  "slug": "population-logistic-chaos",
+  "title": "One Number Decides Whether a Population Settles",
+  "domain": "biology",
+  "difficulty": 3,
+  "summary": "Raise the growth rate of a one-line population model and watch it settle, split, split again, and then stop repeating altogether.",
+  "prerequisites": [],
+  "tags": ["logistic-map", "chaos", "bifurcation", "feigenbaum", "population-dynamics", "lyapunov-exponent"],
+  "interaction_pattern": "time-scrubber",
+  "sources": [
+    { "title": "Logistic map — Wikipedia", "url": "https://en.wikipedia.org/wiki/Logistic_map" },
+    { "title": "May, R. M. (1976), Simple mathematical models with very complicated dynamics", "url": "https://www.nature.com/articles/261459a0" },
+    { "title": "Feigenbaum constants — Wikipedia", "url": "https://en.wikipedia.org/wiki/Feigenbaum_constants" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 11
+}

@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One Number Decides Whether a Population Settles — Explainer Atlas</title>
+<meta name="description" content="Raise the growth rate of a simple population model and watch it settle, then oscillate, then split again, then stop repeating altogether.">
+<style>
+:root{
+  --bg:#f4f1ea; --panel:#fffdf8; --ink:#1b1a17; --muted:#6b675d; --line:#ddd7c9;
+  --accent:#3b3b8f; --accent-soft:#e6e6f4; --hot:#a33b1f; --hot-soft:#f6e3dc; --olive:#6b7d3a;
+  --radius:4px; --pad:clamp(13px,2.6vw,24px);
+  --font-body:"Inter","Helvetica Neue",Arial,system-ui,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.5rem,1.05rem + 2.1vw,2.15rem);
+  --scale-body:clamp(0.95rem,0.92rem + 0.18vw,1.02rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#15150f; --panel:#1d1d16; --ink:#ece9df; --muted:#9b978a; --line:#2f2f24;
+    --accent:#8f8fe8; --accent-soft:#1c1c33; --hot:#e87a56; --hot-soft:#2e1a12; --olive:#a7bd63;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:62rem; margin:0 auto; padding:var(--pad)}
+header.page{display:grid; gap:.3em; padding-bottom:calc(var(--pad)*.9); border-bottom:2px solid var(--ink)}
+h1{font-size:var(--scale-h1); line-height:1.12; margin:0; letter-spacing:-.022em; font-weight:800}
+.kicker{margin:0; color:var(--olive); font:700 .68rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.17em}
+.standfirst{margin:.25em 0 0; color:var(--muted); max-width:42em}
+.controls{margin-top:var(--pad); background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1em var(--pad);
+  grid-template-columns:repeat(auto-fit,minmax(12.5rem,1fr)); align-items:end}
+.control{display:grid; gap:.3em; min-width:0}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.5em}
+.control label{font:700 .8rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.07em}
+.control output{font:700 .95rem/1 var(--font-mono); color:var(--hot)}
+.control .hint{margin:0; color:var(--muted); font-size:.76rem; line-height:1.45}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+button{font:700 .85rem/1 var(--font-mono); color:inherit; background:var(--bg); border:1px solid var(--ink);
+  border-radius:var(--radius); padding:.75em .8em; min-height:42px; width:100%; cursor:pointer; text-transform:uppercase; letter-spacing:.06em}
+button:hover{background:var(--accent-soft); border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--hot); outline-offset:2px}
+figure.stage{margin:var(--pad) 0 0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.8rem; line-height:1.5}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:1px; margin:var(--pad) 0 0; padding:0;
+  background:var(--line); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden}
+.readout div{background:var(--panel); padding:.65em .8em}
+.readout dt{margin:0; color:var(--muted); font-size:.68rem; text-transform:uppercase; letter-spacing:.1em}
+.readout dd{margin:.2em 0 0; font:700 1.02rem/1.2 var(--font-mono); color:var(--accent)}
+.prose{max-width:38em; margin:calc(var(--pad)*1.6) 0 0}
+.prose h2{font:800 .82rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.14em; color:var(--hot); margin:2.1em 0 .6em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.9em; background:var(--accent-soft); padding:.75em .85em; border-radius:var(--radius); border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.8); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.82rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">biology</p>
+  <h1>One Number Decides Whether a Population Settles</h1>
+  <p class="standfirst">A rabbit population with no weather, no predators and no luck. Just one growth rate, one crowding term, and the same arithmetic every year. It still refuses to settle down.</p>
+</header>
+
+<section class="controls" data-role="controls" aria-label="Simulation controls">
+  <div class="control">
+    <div class="row">
+      <label for="r">Growth rate r</label>
+      <output id="rout" for="r">2.800</output>
+    </div>
+    <input type="range" id="r" min="1" max="4" step="0.001" value="2.8">
+    <p class="hint">The one parameter. Drag slowly through 3.0, 3.45 and 3.57 and watch the orbit split, split again, then stop repeating.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="x0">Starting population</label>
+      <output id="x0out" for="x0">0.37</output>
+    </div>
+    <input type="range" id="x0" min="0.02" max="0.98" step="0.01" value="0.37">
+    <p class="hint">Where year zero begins, as a fraction of the maximum the habitat can hold.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="year">Year shown</label>
+      <output id="yearout" for="year">60</output>
+    </div>
+    <input type="range" id="year" min="1" max="120" step="1" value="60">
+    <p class="hint">Scrub through time. The upper chart draws the population only up to this year.</p>
+  </div>
+
+  <div class="control">
+    <button type="button" id="reset">Reset</button>
+  </div>
+</section>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="960" height="680" role="img"
+          aria-label="Upper chart: the population year by year up to the selected year. Lower chart: the bifurcation diagram showing which populations the model visits for every growth rate, with a marker at the current one."></canvas>
+  <figcaption>Above: this run, year by year. Below: every long-run population the model visits, for every growth rate, with a vertical marker at yours. The single line splits into two, then four, then a smear.</figcaption>
+</figure>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Long-run behaviour</dt><dd id="r1">&mdash;</dd></div>
+  <div><dt>Population this year</dt><dd id="r2">&mdash;</dd></div>
+  <div><dt>Lyapunov exponent</dt><dd id="r3">&mdash;</dd></div>
+  <div><dt>Two starts 1e-9 apart, after 60 years</dt><dd id="r4">&mdash;</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>The rule is one line long. Take this year's population as a fraction of what the habitat can hold, call it x. Next year's is r times x times the room left over:</p>
+
+  <p class="math">x&#8342;&#8330;&#8321; = r &middot; x&#8342; &middot; (1 &minus; x&#8342;)</p>
+
+  <p>Growth is proportional to how many there are, and to how much space is left. Nothing else happens. No noise, no immigration, no bad winters. Given r and a starting value, every future year is already determined.</p>
+
+  <p>Set r to 2.8. The population wanders for a decade and then locks onto a single number and stays there forever. That number is (r&nbsp;&minus;&nbsp;1)/r, the size at which births exactly cancel crowding. Move r to 2.5, to 1.8, to 1.2 &mdash; same story, different level. Below r&nbsp;=&nbsp;1 the population simply dies out.</p>
+
+  <h2>Where it starts to break</h2>
+
+  <p>Push r past 3. The single value splits in two: the population alternates high, low, high, low, and never settles between them. The steady state has not vanished &mdash; it is still there, still a solution &mdash; but it has become repelling. Nudge the population off it and it leaves.</p>
+
+  <p>You can see exactly where that happens. Near the steady state the model multiplies any small deviation by r(1&nbsp;&minus;&nbsp;2x*)&nbsp;=&nbsp;2&nbsp;&minus;&nbsp;r each year. While that number is smaller than 1 in size, deviations shrink. At r&nbsp;=&nbsp;3 it reaches &minus;1 and deviations stop shrinking. The two-year cycle that takes over then has its own stability number, 4&nbsp;+&nbsp;2r&nbsp;&minus;&nbsp;r&sup2;, which hits &minus;1 at r&nbsp;=&nbsp;1&nbsp;+&nbsp;&radic;6&nbsp;&#8776;&nbsp;3.4495. Two becomes four.</p>
+
+  <p>Then four becomes eight at about 3.5441, eight becomes sixteen at 3.5644, and the splits arrive so fast that they run out of room. The gaps between them shrink by very nearly the same factor every time:</p>
+
+  <p class="math">&delta; = 4.669201&hellip;</p>
+
+  <p>Mitchell Feigenbaum found that ratio in 1975 and then found it again in other models with different equations. It is not a fact about rabbits. It belongs to the shape of the fold, not to the formula, and it shows up in dripping taps and driven circuits too.</p>
+
+  <h2>Deterministic, and still unpredictable</h2>
+
+  <p>At r&nbsp;&#8776;&nbsp;3.5699 the doublings finish and the orbit stops repeating at all. Set r to 3.9 and read the last two boxes. The Lyapunov exponent is positive, which means nearby populations pull apart by a constant factor every year; two starts a billionth apart are visibly different within sixty years.</p>
+
+  <p>That is the whole content of the word chaos here. It does not mean random: run it twice from the same number and you get the same sequence to the last digit. It does not mean complicated: the rule is one multiplication and one subtraction. It means that knowing the population to nine decimal places tells you nothing useful about it sixty years out &mdash; and no better measurement fixes that, it only buys a few more years.</p>
+
+  <h2>What to try</h2>
+
+  <p>Drag r very slowly from 3.54 to 3.58 and watch the lower chart. Then jump to 3.83: out of the smear, a clean three-year cycle appears from nowhere, and doubles into six and twelve as you push further. Finally set r to 4 exactly and try starting populations of 0.5 and 0.51. One of them collapses to zero in two years; the other never repeats.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL: the logistic map and everything derivable from it ----------- */
+const Model = {
+  FEIGENBAUM: 4.669201609102990,
+
+  step(r, x){ return r * x * (1 - x); },
+
+  iterate(r, x, n){ for (let i = 0; i < n; i++) x = this.step(r, x); return x; },
+
+  orbit(r, x0, n){
+    const out = new Array(n + 1); out[0] = x0;
+    for (let i = 1; i <= n; i++) out[i] = this.step(r, out[i - 1]);
+    return out;
+  },
+
+  /* the non-zero steady state, and the factor by which it scales a nudge */
+  fixedPoint(r){ return (r - 1) / r; },
+  fixedMultiplier(r){ return 2 - r; },
+  /* the two-cycle's stability factor; equals -1 at r = 1 + sqrt(6) */
+  twoCycleMultiplier(r){ return 4 + 2 * r - r * r; },
+
+  /* smallest p <= maxP that the orbit repeats with, or 0 if it never does */
+  period(r, x0, maxP, burn, tol){
+    let x = x0;
+    for (let i = 0; i < burn; i++) x = this.step(r, x);
+    const v = new Array(2 * maxP + 2);
+    for (let i = 0; i < v.length; i++){ v[i] = x; x = this.step(r, x); }
+    for (let p = 1; p <= maxP; p++){
+      let ok = true;
+      for (let i = maxP; i < v.length; i++) if (Math.abs(v[i] - v[i - p]) > tol){ ok = false; break; }
+      if (ok) return p;
+    }
+    return 0;
+  },
+
+  /* average log stretching factor. Positive means nearby starts pull apart. */
+  lyapunov(r, x0, burn, n){
+    let x = x0;
+    for (let i = 0; i < burn; i++) x = this.step(r, x);
+    let s = 0, used = 0;
+    for (let i = 0; i < n; i++){
+      const d = Math.abs(r * (1 - 2 * x));
+      if (d > 0){ s += Math.log(d); used++; }
+      x = this.step(r, x);
+    }
+    return used ? s / used : -Infinity;
+  },
+
+  /* r values where the 2^k cycle passes exactly through x = 1/2.
+     Found by scanning for a sign change then bisecting -- no value assumed. */
+  superstable(K){
+    const h = (r, m) => this.iterate(r, 0.5, m) - 0.5;
+    const s = [2];                                  /* period 1: f_2(1/2) = 1/2 */
+    let gap = 1;
+    for (let k = 1; k < K; k++){
+      const m = Math.pow(2, k);
+      const from = s[k - 1] + gap * 1e-4, dr = gap / 400;
+      let a = from, fa = h(a, m), lo = null, hi = null;
+      for (let r = from + dr; r <= 4; r += dr){
+        const fr = h(r, m);
+        if ((fa < 0) !== (fr < 0)){ lo = a; hi = r; break; }
+        a = r; fa = fr;
+      }
+      if (lo === null) break;
+      let flo = h(lo, m);
+      for (let i = 0; i < 90; i++){
+        const mid = (lo + hi) / 2, fm = h(mid, m);
+        if ((flo < 0) === (fm < 0)){ lo = mid; flo = fm; } else hi = mid;
+      }
+      const root = (lo + hi) / 2;
+      s.push(root); gap = root - s[k - 1];
+    }
+    return s;
+  },
+
+  /* successive gap ratios of the cascade, which tend to Feigenbaum's delta */
+  cascadeRatios(K){
+    const s = this.superstable(K), out = [];
+    for (let i = 0; i + 2 < s.length; i++) out.push((s[i + 1] - s[i]) / (s[i + 2] - s[i + 1]));
+    return out;
+  },
+
+  /* the smallest r at which the detected period exceeds `below` */
+  doublingPoint(lo, hi, below){
+    for (let i = 0; i < 40; i++){
+      const m = (lo + hi) / 2;
+      const p = this.period(m, 0.4, 16, 40000, 1e-6);
+      if (p > 0 && p <= below) lo = m; else hi = m;
+    }
+    return (lo + hi) / 2;
+  },
+
+  /* long-run populations visited, for the bifurcation chart */
+  attractor(r, keep){
+    let x = 0.4;
+    for (let i = 0; i < 400; i++) x = this.step(r, x);
+    const out = new Array(keep);
+    for (let i = 0; i < keep; i++){ out[i] = x; x = this.step(r, x); }
+    return out;
+  },
+
+  /* how far apart two starts a hair apart end up */
+  separation(r, x0, eps, n){
+    return Math.abs(this.iterate(r, x0, n) - this.iterate(r, x0 + eps, n));
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { r: 2.8, x0: 0.37, year: 60 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+/* the bifurcation chart does not depend on any control, so build it once */
+const BIF_COLS = 620, BIF_KEEP = 110, R_MIN = 1, R_MAX = 4;
+const bifurcation = (function(){
+  const cols = new Array(BIF_COLS);
+  for (let i = 0; i < BIF_COLS; i++){
+    const r = R_MIN + (R_MAX - R_MIN) * i / (BIF_COLS - 1);
+    cols[i] = Model.attractor(r, BIF_KEEP);
+  }
+  return cols;
+})();
+
+const TOP_Y = 26, TOP_H = 250, BOT_Y = 350, BOT_H = 290, LEFT = 54, RIGHT = 22;
+
+function render(){
+  const W = cv.width, H = cv.height;
+  const muted = css("--muted"), line = css("--line"), panel = css("--panel"),
+        accent = css("--accent"), hot = css("--hot"), olive = css("--olive"), ink = css("--ink");
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, W, H);
+  ctx.font = "12px ui-monospace, monospace";
+
+  const x1 = W - RIGHT;
+
+  /* ---------- upper: the orbit, year by year ---------- */
+  const N = 120;
+  const series = Model.orbit(state.r, state.x0, N);
+  const tx = (n) => LEFT + (n / N) * (x1 - LEFT);
+  const ty = (v) => TOP_Y + TOP_H - v * TOP_H;
+
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.textAlign = "right"; ctx.fillStyle = muted;
+  for (const v of [0, 0.25, 0.5, 0.75, 1]){
+    ctx.beginPath(); ctx.moveTo(LEFT, ty(v)); ctx.lineTo(x1, ty(v)); ctx.stroke();
+    ctx.fillText(v.toFixed(2), LEFT - 8, ty(v) + 4);
+  }
+  ctx.textAlign = "left";
+  ctx.fillText("population, year 0 to " + N, LEFT, TOP_Y - 9);
+
+  /* the steady state, where one exists and is meaningful */
+  if (state.r > 1){
+    const fp = Model.fixedPoint(state.r);
+    ctx.strokeStyle = olive; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(LEFT, ty(fp)); ctx.lineTo(x1, ty(fp)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = olive; ctx.textAlign = "left";
+    ctx.fillText("(r−1)/r", LEFT + 4, ty(fp) - 6);
+  }
+
+  /* drawn only up to the scrubbed year */
+  ctx.strokeStyle = accent; ctx.lineWidth = 1.6; ctx.beginPath();
+  for (let n = 0; n <= state.year; n++){
+    const X = tx(n), Y = ty(series[n]);
+    if (n === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y);
+  }
+  ctx.stroke();
+  ctx.fillStyle = accent;
+  for (let n = 0; n <= state.year; n++) ctx.fillRect(tx(n) - 1.4, ty(series[n]) - 1.4, 2.8, 2.8);
+
+  ctx.strokeStyle = hot; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(tx(state.year), TOP_Y); ctx.lineTo(tx(state.year), TOP_Y + TOP_H); ctx.stroke();
+  ctx.fillStyle = hot;
+  ctx.beginPath(); ctx.arc(tx(state.year), ty(series[state.year]), 4, 0, Math.PI * 2); ctx.fill();
+
+  /* ---------- lower: the bifurcation chart ---------- */
+  const bx = (r) => LEFT + ((r - R_MIN) / (R_MAX - R_MIN)) * (x1 - LEFT);
+  const by = (v) => BOT_Y + BOT_H - v * BOT_H;
+
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(LEFT, by(0)); ctx.lineTo(x1, by(0)); ctx.stroke();
+  ctx.fillStyle = muted; ctx.textAlign = "left";
+  ctx.fillText("every long-run population, for every r", LEFT, BOT_Y - 9);
+  ctx.textAlign = "center";
+  for (const r of [1, 1.5, 2, 2.5, 3, 3.5, 4]){
+    ctx.strokeStyle = line;
+    ctx.beginPath(); ctx.moveTo(bx(r), by(0)); ctx.lineTo(bx(r), by(0) + 5); ctx.stroke();
+    ctx.fillStyle = muted; ctx.fillText(r.toFixed(1), bx(r), by(0) + 20);
+  }
+  ctx.textAlign = "right"; ctx.fillStyle = muted;
+  for (const v of [0.5, 1]){ ctx.fillText(v.toFixed(1), LEFT - 8, by(v) + 4); }
+
+  ctx.fillStyle = ink; ctx.globalAlpha = 0.5;
+  for (let i = 0; i < BIF_COLS; i++){
+    const X = bx(R_MIN + (R_MAX - R_MIN) * i / (BIF_COLS - 1));
+    const col = bifurcation[i];
+    for (let j = 0; j < col.length; j++) ctx.fillRect(X, by(col[j]), 1.1, 1.1);
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.strokeStyle = hot; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(bx(state.r), BOT_Y); ctx.lineTo(bx(state.r), by(0)); ctx.stroke();
+  ctx.fillStyle = hot; ctx.textAlign = "center";
+  ctx.fillText("r = " + state.r.toFixed(3), bx(state.r), BOT_Y - 9);
+
+  /* ---------- readouts ---------- */
+  const p = Model.period(state.r, state.x0, 16, 4000, 1e-7);
+  const lam = Model.lyapunov(state.r, state.x0, 2000, 6000);
+  const sep = Model.separation(state.r, state.x0, 1e-9, 60);
+
+  let verdict;
+  if (state.r < 1) verdict = "dies out";
+  else if (p === 1) verdict = "settles";
+  else if (p > 1) verdict = "cycles, period " + p;
+  else verdict = "never repeats";
+
+  el("rout").textContent = state.r.toFixed(3);
+  el("x0out").textContent = state.x0.toFixed(2);
+  el("yearout").textContent = String(state.year);
+  el("r1").textContent = verdict;
+  el("r2").textContent = series[state.year].toFixed(5);
+  el("r3").textContent = Number.isFinite(lam) ? lam.toFixed(4) : "minus infinity";
+  el("r4").textContent = sep < 1e-6 ? "still together" : sep.toFixed(4) + " apart";
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  const handler = () => { state[key] = parse(input); render(); };
+  input.addEventListener("input", handler);
+  input.addEventListener("change", handler);
+}
+bind("r", "r", (i) => parseFloat(i.value));
+bind("x0", "x0", (i) => parseFloat(i.value));
+bind("year", "year", (i) => parseInt(i.value, 10));
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("r").value = String(defaults.r);
+  el("x0").value = String(defaults.x0);
+  el("year").value = String(defaults.year);
+  render();
+});
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+
+  push("(r−1)/r is a fixed point, and it attracts for 1 < r < 3", (function(){
+    for (let r = 1.01; r <= 4; r += 0.01){
+      const xs = M.fixedPoint(r);
+      if (!near(M.step(r, xs), xs, 1e-12)) return false;
+    }
+    for (let r = 1.2; r <= 2.9; r += 0.1)
+      if (!near(M.iterate(r, 0.31, 4000), M.fixedPoint(r), 1e-10)) return false;
+    return true;
+  })(), "f(x*) = x* to 1e-12 across r; orbits land on x* to 1e-10 for 1.2 ≤ r ≤ 2.9");
+
+  push("the first doubling is at r = 3", (function(){
+    if (!near(M.fixedMultiplier(3), -1, 1e-15)) return false;
+    if (!(Math.abs(M.fixedMultiplier(2.99)) < 1 && Math.abs(M.fixedMultiplier(3.01)) > 1)) return false;
+    return near(M.doublingPoint(2.5, 3.3, 1), 3, 0.001);
+  })(), "multiplier 2−r hits −1 exactly at 3; a period search brackets it to 0.001");
+
+  push("the second doubling is at r = 1 + √6", (function(){
+    const r2 = 1 + Math.sqrt(6);
+    if (!near(M.twoCycleMultiplier(r2), -1, 1e-12)) return false;
+    if (!near(M.twoCycleMultiplier(3), 1, 1e-12)) return false;
+    return near(M.doublingPoint(3.1, 3.6, 2), r2, 0.001);
+  })(), "4 + 2r − r² = −1 at 3.4494897; the period search agrees to 0.001");
+
+  push("the superstable cascade matches its published values", (function(){
+    const s = M.superstable(6);
+    const want = [2, 1 + Math.sqrt(5), 3.4985616993, 3.5546408628, 3.5666673798, 3.5692435316];
+    if (s.length < want.length) return false;
+    for (let i = 0; i < want.length; i++) if (!near(s[i], want[i], 1e-6)) return false;
+    return true;
+  })(), "r where the 2^k cycle passes through x = 1/2, found by search, to 1e-6");
+
+  push("the gap ratios approach Feigenbaum's 4.6692 within 2%", (function(){
+    const q = M.cascadeRatios(8);
+    if (q.length < 4) return false;
+    for (let i = 2; i < q.length; i++)
+      if (!(Math.abs(q[i] - M.FEIGENBAUM) / M.FEIGENBAUM < 0.02)) return false;
+    return q[0] > q[q.length - 1];
+  })(), "every ratio from the third onward is within 2% of δ, converging from above");
+
+  push("the Lyapunov exponent is exact where it can be checked", (function(){
+    if (!near(M.lyapunov(2.5, 0.2, 3000, 20000), -Math.LN2, 1e-9)) return false;
+    if (!near(M.lyapunov(3.2, 0.2, 6000, 20000), 0.5 * Math.log(0.16), 1e-7)) return false;
+    return near(M.lyapunov(4, 0.2, 2000, 200000), Math.LN2, 2e-3);
+  })(), "−ln2 at r=2.5, ½ln(0.16) at r=3.2, ln2 at r=4");
+
+  push("at r = 4 the orbit follows the closed form sin²(2ⁿπθ)", (function(){
+    const th = 0.1234567;
+    let x = Math.pow(Math.sin(Math.PI * th), 2);
+    for (let n = 1; n <= 12; n++){
+      x = M.step(4, x);
+      if (!near(x, Math.pow(Math.sin(Math.PI * Math.pow(2, n) * th), 2), 1e-8)) return false;
+    }
+    return true;
+  })(), "12 steps of the conjugacy to the doubling map, to 1e-8");
+
+  push("the period-3 window opens at r = 1 + √8", (function(){
+    const rc = 1 + Math.sqrt(8);
+    if (!(rc > 3.828 && rc < 3.8285)) return false;
+    if (M.period(3.8280, 0.4, 12, 40000, 1e-6) !== 0) return false;
+    if (M.period(3.8290, 0.4, 12, 40000, 1e-6) !== 3) return false;
+    return M.period(3.83, 0.4, 12, 40000, 1e-6) === 3;
+  })(), "aperiodic at 3.8280, period 3 at 3.8290; 1+√8 = 3.8284271 lies between");
+
+  push("the population never leaves [0, 1]", (function(){
+    const rng = mulberry32(SEED);
+    for (let k = 0; k < 200; k++){
+      const r = 4 * rng(); let x = rng();
+      for (let i = 0; i < 400; i++){
+        x = M.step(r, x);
+        if (!(x >= 0 && x <= 1) || !Number.isFinite(x)) return false;
+      }
+    }
+    return true;
+  })(), "200 seeded (r, x0) pairs over r in [0,4], 400 years each");
+
+  push("chaos is not randomness: same start, same orbit", (function(){
+    const a = M.orbit(3.9, 0.37, 200), b = M.orbit(3.9, 0.37, 200);
+    for (let i = 0; i <= 200; i++) if (a[i] !== b[i]) return false;
+    return true;
+  })(), "two runs at r=3.9 agree bit for bit over 200 years");
+
+  push("but a billionth of a difference blows up only past the threshold", (function(){
+    if (!(M.separation(3.9, 0.37, 1e-9, 70) > 0.05)) return false;
+    if (!(M.separation(4.0, 0.37, 1e-9, 70) > 0.05)) return false;
+    if (!(M.separation(2.9, 0.37, 1e-9, 70) < 1e-9)) return false;
+    return M.separation(3.4, 0.37, 1e-9, 70) < 1e-8;
+  })(), "starts 1e-9 apart diverge at r=3.9 and 4, stay together at r=2.9 and 3.4");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
