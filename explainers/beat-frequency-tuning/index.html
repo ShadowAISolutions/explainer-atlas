@@ -1,0 +1,920 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tuning by the Wobble — Explainer Atlas</title>
+<meta name="description" content="Two close tones pulse at exactly their frequency difference. Slide the second string until the pulsing stops and you have tuned by ear, without knowing either pitch.">
+<style>
+:root{
+  --bg:#f7f4ee; --panel:#fffdf8; --ink:#1d1a16; --muted:#6b6157; --line:#e3dccf;
+  --accent:#a8531c; --accent-soft:#f6e9dd; --tone-a:#b0325e; --tone-b:#12707f;
+  --lamp:#3f8f4e; --grid:rgba(29,26,22,0.07);
+  --radius:12px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.6rem,1.05rem + 2.4vw,2.5rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.06rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#14120f; --panel:#1c1916; --ink:#ece7de; --muted:#a49a8c; --line:#2f2922;
+    --accent:#e0954d; --accent-soft:#2b2015; --tone-a:#f2799f; --tone-b:#57c3d4;
+    --lamp:#6fcf85; --grid:rgba(236,231,222,0.07);
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:62rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:2px solid var(--line); padding-bottom:calc(var(--pad)*0.8)}
+h1{font-size:var(--scale-h1); line-height:1.1; margin:0 0 .35em; letter-spacing:-.022em}
+.kicker{margin:0 0 .4em; color:var(--accent); font:700 .72rem/1.3 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.16em}
+.standfirst{margin:0; color:var(--muted); max-width:44em}
+
+/* controls sit ABOVE the display, like the panel on a bench tuner */
+.deck{margin-top:var(--pad); background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:calc(var(--pad)*0.85);
+  display:grid; gap:1em 1.6em; grid-template-columns:repeat(auto-fit,minmax(13.5rem,1fr))}
+.control{display:grid; gap:.26em; align-content:start}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font-weight:650; font-size:.94rem}
+.control output{font:700 .86rem/1 var(--font-mono); color:var(--accent);
+  background:var(--accent-soft); padding:.26em .5em; border-radius:5px; white-space:nowrap}
+.control .hint{margin:0; color:var(--muted); font-size:.8rem; line-height:1.45}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line);
+  border-radius:8px; padding:.5em .7em; min-height:40px}
+button{cursor:pointer; font-weight:650}
+button:hover{border-color:var(--accent)}
+.check{display:flex; align-items:flex-start; gap:.55em}
+.check input{margin-top:.25em; width:1.05em; height:1.05em; accent-color:var(--accent)}
+.btns{display:flex; gap:.6em; flex-wrap:wrap; align-items:flex-start}
+.btns button{flex:1 1 8rem}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+
+figure.stage{margin:calc(var(--pad)*0.7) 0 0; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.55em; color:var(--muted); font-size:.85rem}
+
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:.55em;
+  margin:.7em 0 0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.5em .65em}
+.readout dt{margin:0; color:var(--muted); font-size:.7rem; text-transform:uppercase; letter-spacing:.09em}
+.readout dd{margin:.2em 0 0; font:700 1.02rem/1.2 var(--font-mono)}
+
+.prose{max-width:38em; margin-top:calc(var(--pad)*1.3)}
+.prose h2{font:700 .82rem/1.4 var(--font-mono); text-transform:uppercase; letter-spacing:.13em;
+  color:var(--accent); margin:2em 0 .6em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.9rem; background:var(--accent-soft);
+  padding:.75em .9em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto; white-space:pre}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line);
+  color:var(--muted); font-size:.85rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Music theory · acoustics</p>
+  <h1>Tuning by the Wobble</h1>
+  <p class="standfirst">Sound two near-identical notes together and the loudness pulses. The pulse rate is
+  exactly the gap between the two pitches, in hertz, which is why a tuner can work without knowing either
+  one. Slide the second string until the wobble stops.</p>
+</header>
+
+<section class="deck" data-role="controls" aria-label="Tuning controls">
+  <div class="control">
+    <div class="row"><label for="ref">Reference string</label></div>
+    <select id="ref">
+      <option value="220">A3 &mdash; 220 Hz</option>
+      <option value="261.6255653005986">C4 &mdash; 261.63 Hz</option>
+      <option value="329.6275569128699">E4 &mdash; 329.63 Hz</option>
+      <option value="440" selected>A4 &mdash; 440 Hz</option>
+      <option value="880">A5 &mdash; 880 Hz</option>
+    </select>
+    <p class="hint">The string you are tuning to. Its pitch never changes.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="det">Your string, coarse</label><output id="detout" for="det">+11.0 c</output></div>
+    <input type="range" id="det" min="-50" max="50" step="0.5" value="11">
+    <p class="hint">Cents away from the reference. A hundred cents is one semitone.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="fine">Your string, fine</label><output id="fineout" for="fine">+0.00 c</output></div>
+    <input type="range" id="fine" min="-2.5" max="2.5" step="0.01" value="0">
+    <p class="hint">Added to the coarse setting. This is the last turn of the peg.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="amp">Your string, loudness</label><output id="ampout" for="amp">1.00</output></div>
+    <input type="range" id="amp" min="0.1" max="1" step="0.01" value="1">
+    <p class="hint">Relative to the reference. Unequal loudness stops the wobble reaching silence.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="win">Seconds shown</label><output id="winout" for="win">3.0 s</output></div>
+    <input type="range" id="win" min="0.5" max="6" step="0.1" value="3">
+    <p class="hint">Width of the middle trace. Widen it to count slow beats.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="cursor">Listening point</label><output id="cursorout" for="cursor">0.36 s</output></div>
+    <input type="range" id="cursor" min="0" max="1" step="0.002" value="0.12">
+    <p class="hint">Where the bottom trace zooms in. Drag it from a loud moment into a quiet one.</p>
+  </div>
+
+  <div class="control">
+    <div class="check">
+      <input type="checkbox" id="mystery">
+      <label for="mystery">Mystery string: hide the answer</label>
+    </div>
+    <p class="hint">Detunes the reference by a fixed hidden amount and blanks the cents readouts.
+    Tune by the beat count alone, then reveal.</p>
+  </div>
+
+  <div class="control">
+    <div class="btns">
+      <button type="button" id="reveal">Reveal the offset</button>
+      <button type="button" id="reset">Reset</button>
+    </div>
+    <p class="hint" id="revealout">Hidden offset not revealed.</p>
+  </div>
+</section>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="1840" height="1080" role="img"
+    aria-label="A tuning meter over two traces: the pulsing loudness of the combined tone across several seconds, and a close-up of the two individual waves drifting in and out of step."></canvas>
+  <figcaption>Top: the meter, reading beats per second. Middle: the combined loudness across the
+  window, with a tick at every moment of silence. Bottom: a few thousandths of a second at the
+  listening point, showing the two waves themselves.</figcaption>
+</figure>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Beats per second</dt><dd id="rBeat">&mdash;</dd></div>
+  <div><dt>Slow factor</dt><dd id="rGap">&mdash;</dd></div>
+  <div><dt>Time between beats</dt><dd id="rPeriod">&mdash;</dd></div>
+  <div><dt>Your string</dt><dd id="rYours">&mdash;</dd></div>
+  <div><dt>Reference</dt><dd id="rRef">&mdash;</dd></div>
+  <div><dt>Quietest moment</dt><dd id="rNull">&mdash;</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>Set the coarse slider to eleven cents and look at the middle trace. The combined sound does not
+  hold steady; it swells and dies away, over and over, a little under three times a second. Nothing about
+  either string is changing. The pulsing is what two steady tones do when they are close but not equal,
+  and it is the single most useful thing a tuner has, because the rate of it depends on the gap between
+  the two pitches and on nothing else at all.</p>
+
+  <h2>Why two steady tones pulse</h2>
+
+  <p>Add two cosines of equal strength and a schoolbook identity rearranges them into a product:</p>
+
+  <p class="math">cos(2&pi;f&#8321;t) + cos(2&pi;f&#8322;t)
+  =  2 &middot; cos(&pi;&Delta;f&middot;t) &middot; cos(2&pi;f&#773;&middot;t)
+
+    &Delta;f = f&#8321; &minus; f&#8322;        f&#773; = (f&#8321; + f&#8322;) / 2</p>
+
+  <p>The right-hand side is one fast wave at the average of the two pitches, multiplied by one slow wave
+  at half their difference. Your ear cannot hear a wave at half a hertz as a pitch, so it hears the slow
+  factor as loudness instead: a single tone, at the average pitch, getting louder and softer. That is the
+  bottom trace. Drag the listening point across a swell and watch the two waves march into step; drag it
+  into a dip and they are pointing opposite ways, cancelling each other on the way past.</p>
+
+  <h2>The factor of two that catches people</h2>
+
+  <p>The slow factor runs at &Delta;f/2 cycles a second &mdash; half the difference, exactly as the identity
+  says. But loudness does not care about sign. A trough where the slow factor is
+  &minus;1 sounds exactly as loud as a peak where it is +1, so the ear counts twice as many swells as the
+  factor has cycles, and the beat rate comes out at the full &Delta;f. Two strings a hertz apart beat once
+  a second. The readout above tracks both numbers separately so you can watch the doubling happen.</p>
+
+  <h2>Unequal strings never go quiet</h2>
+
+  <p>Pull the loudness slider down and the dips stop reaching the floor. With different amplitudes the
+  envelope runs between a&#8321; + a&#8322; at its loudest and the absolute difference at its quietest, so
+  only a perfectly matched pair falls all the way to silence. The rate is untouched &mdash; still exactly
+  &Delta;f &mdash; which is why this works on real instruments, where no two strings ever speak at the same
+  volume. It is the depth of the wobble, not its speed, that tells you the strings are matched in loudness.</p>
+
+  <h2>Why tuners count beats instead of pitches</h2>
+
+  <p>Hearing that one note is fifteen cents sharp is a trained skill. Counting three pulses a second is
+  not. And the count is far more precise than the ear is: at A4, one single cent of error is a quarter of
+  a hertz, a beat every four seconds, plainly visible. That precision is also how the awkward intervals get
+  set. An equal-tempered fifth above A4 sits at 659.26 Hz while the pure fifth is 660, so a tuner setting
+  that fifth listens for about three beats in four seconds and stops there deliberately, leaving it
+  slightly impure on purpose.</p>
+
+  <h2>What to try</h2>
+
+  <p>Start at eleven cents and widen the window to six seconds to count the swells against the ticks on
+  the baseline. Walk the coarse slider down toward zero and watch the swells stretch out until the trace
+  goes flat. Then halve the remaining error with the fine slider and notice the beat rate halving with it.
+  Finally turn on the mystery string, tune it by the meter alone until the wobble stops, and reveal how
+  close you got.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+const TAU = Math.PI * 2;
+
+/* ---- MODEL: pure, no DOM ------------------------------------------------ */
+const Model = {
+  /* a pitch a given number of cents away from a reference */
+  freq(ref, cents){ return ref * Math.pow(2, cents / 1200); },
+  cents(f1, f2){ return 1200 * Math.log2(f2 / f1); },
+
+  /* the two strings, summed */
+  y(t, f1, f2, a1, a2){
+    return a1 * Math.cos(TAU * f1 * t) + a2 * Math.cos(TAU * f2 * t);
+  },
+  /* the product form, valid only when the two are equally loud */
+  productForm(t, f1, f2, a){
+    return 2 * a * Math.cos(Math.PI * (f1 - f2) * t) * Math.cos(TAU * ((f1 + f2) / 2) * t);
+  },
+  /* the signed slow factor, which is what has period 2/|df| */
+  slowFactor(t, f1, f2, a){ return 2 * a * Math.cos(Math.PI * (f1 - f2) * t); },
+
+  /* the envelope for any pair of amplitudes:
+     |a1 e^{i w1 t} + a2 e^{i w2 t}| = sqrt(a1^2 + a2^2 + 2 a1 a2 cos(2 pi df t)) */
+  envelope(t, f1, f2, a1, a2){
+    const c = a1 * a1 + a2 * a2 + 2 * a1 * a2 * Math.cos(TAU * (f1 - f2) * t);
+    return Math.sqrt(Math.max(0, c));
+  },
+  extremes(a1, a2){ return { hi: a1 + a2, lo: Math.abs(a1 - a2) }; },
+
+  beatRate(f1, f2){ return Math.abs(f1 - f2); },
+  slowRate(f1, f2){ return Math.abs(f1 - f2) / 2; },
+
+  /* mean of y^2 over one beat period. Exact whenever both 2*f/|df| are whole
+     numbers, because the trapezoid rule is spectrally accurate on a periodic
+     band-limited integrand sampled over a whole number of periods. */
+  meanSquare(f1, f2, a1, a2){
+    const df = Math.abs(f1 - f2);
+    if (!(df > 0)) return (a1 * a1 + a2 * a2) / 2 + a1 * a2;
+    const T = 1 / df, N = 4096;
+    let s = 0;
+    for (let i = 0; i < N; i++){ const v = Model.y(i * T / N, f1, f2, a1, a2); s += v * v; }
+    return s / N;
+  },
+
+  /* SECOND, INDEPENDENT ROUTE to the beat rate. Nothing below knows the
+     closed form: it samples the summed waveform, takes the peak of each
+     carrier period, and counts how often that peak sequence rises back
+     through its own midline. The limit on accuracy is the one-carrier-period
+     quantisation of each crossing time, which is a few parts in 10^4. */
+  measureBeatRate(f1, f2, a1, a2, seconds, perPeriod){
+    const favg = (f1 + f2) / 2, P = perPeriod || 32, sr = P * favg;
+    const blocks = Math.floor(seconds * favg);
+    if (!(blocks > 4) || !Number.isFinite(sr)) return 0;
+    const e = new Float64Array(blocks);
+    for (let b = 0; b < blocks; b++){
+      let mx = 0;
+      for (let i = 0; i < P; i++){
+        const v = Math.abs(Model.y((b * P + i) / sr, f1, f2, a1, a2));
+        if (v > mx) mx = v;
+      }
+      e[b] = mx;
+    }
+    let lo = Infinity, hi = -Infinity;
+    for (let b = 0; b < blocks; b++){ if (e[b] < lo) lo = e[b]; if (e[b] > hi) hi = e[b]; }
+    const mid = (lo + hi) / 2;
+    let first = -1, last = -1, n = 0;
+    for (let b = 1; b < blocks; b++){
+      if (e[b-1] <= mid && e[b] > mid){ const t = b / favg; if (first < 0) first = t; last = t; n++; }
+    }
+    return (n > 1 && last > first) ? (n - 1) / (last - first) : 0;
+  },
+
+  /* the times at which the combined tone falls silent, within a window */
+  nulls(f1, f2, window){
+    const df = Math.abs(f1 - f2), out = [];
+    if (!(df > 1e-9)) return out;
+    for (let k = 0; ; k++){
+      const t = (k + 0.5) / df;
+      if (t > window || out.length > 400) break;
+      out.push(t);
+    }
+    return out;
+  }
+};
+
+/* ---- STATE --------------------------------------------------------------- */
+const rng = mulberry32(SEED);
+const HIDDEN = Math.round((rng() * 2 - 1) * 2400) / 100;   /* cents, fixed by the seed */
+
+const defaults = { ref: 440, det: 11, fine: 0, amp: 1, win: 3, cursor: 0.12,
+                   mystery: false };
+const state = Object.assign({}, defaults);
+let revealed = false;
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+/* the two strings as the state currently sets them */
+function strings(){
+  const off = state.mystery ? HIDDEN : 0;
+  const f1 = Model.freq(state.ref, off);          /* the reference string */
+  const f2 = Model.freq(state.ref, state.det + state.fine);   /* yours */
+  return { f1: f1, f2: f2, a1: 1, a2: state.amp, off: off };
+}
+
+const SS = 2;
+let W = 900, NARROW = false, G = {};
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(240, cv.parentNode.clientWidth - 20) : 900);
+  NARROW = avail < 470;
+  W = Math.max(280, Math.min(1080, Math.round(avail)));
+
+  const g = {};
+  g.mx     = NARROW ? 8 : 12;
+  g.padL   = NARROW ? 30 : 42;
+  g.padR   = NARROW ? 12 : 18;
+  g.plotW  = W - g.padL - g.padR;
+
+  g.meterY = 8;
+  g.meterH = NARROW ? 120 : 92;
+  if (NARROW){
+    /* one line of reading across the top, the scale across the bottom */
+    g.bigX = g.mx + 14; g.bigY = g.meterY + 34; g.lampInline = true;
+    g.sx0 = g.mx + 18; g.sx1 = W - g.mx - 18; g.labelY = g.meterY + 56;
+  } else {
+    /* scale on the left, reading stacked on the right */
+    g.sx0 = g.mx + 16; g.sx1 = g.mx + (W - 2 * g.mx) * 0.60;
+    g.bigX = g.mx + (W - 2 * g.mx) * 0.66; g.bigY = g.meterY + 44; g.lampInline = false;
+    g.labelY = g.meterY + 20;
+  }
+  g.scaleY = g.meterY + g.meterH - 30;
+
+  g.envTitleY = g.meterY + g.meterH + (NARROW ? 24 : 26);
+  g.envY      = g.envTitleY + 8;
+  g.envH      = Math.round(Math.max(96, Math.min(250, W * (NARROW ? 0.56 : 0.27))));
+  g.envAxisY  = g.envY + g.envH + (NARROW ? 22 : 24);
+
+  g.zoomTitleY = g.envAxisY + (NARROW ? 30 : 32);
+  g.zoomY      = g.zoomTitleY + 8;
+  g.zoomH      = Math.round(Math.max(84, Math.min(210, W * (NARROW ? 0.48 : 0.23))));
+  g.legendY    = g.zoomY + g.zoomH + (NARROW ? 16 : 17);
+
+  const H = g.legendY + 10;
+  if (cv.width !== W * SS || cv.height !== Math.round(H) * SS){
+    cv.width = W * SS; cv.height = Math.round(H) * SS;
+  }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+  g.H = Math.round(H);
+  G = g;
+}
+
+function roundRect(x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+/* ---- DRAW ---------------------------------------------------------------- */
+const DEG = String.fromCharCode(0x00B0);
+
+function drawMeter(S, beat, MONO, BODY){
+  const ink = css("--ink"), muted = css("--muted"), accent = css("--accent"),
+        soft = css("--accent-soft"), line = css("--line"), toneB = css("--tone-b"),
+        lamp = css("--lamp");
+  const fs = NARROW ? -1 : 0;
+
+  ctx.fillStyle = soft; ctx.strokeStyle = line; ctx.lineWidth = 1;
+  roundRect(G.mx + .5, G.meterY + .5, W - 2 * G.mx - 1, G.meterH - 1, 10);
+  ctx.fill(); ctx.stroke();
+
+  /* the cents scale */
+  const cx = (c) => G.sx0 + (c + 50) / 100 * (G.sx1 - G.sx0);
+  ctx.strokeStyle = muted; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(G.sx0, G.scaleY + .5); ctx.lineTo(G.sx1, G.scaleY + .5); ctx.stroke();
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let c = -50; c <= 50; c += 10){
+    const big = (c % 25 === 0);
+    ctx.strokeStyle = big ? ink : muted; ctx.lineWidth = big ? 1.4 : 1;
+    ctx.beginPath(); ctx.moveTo(cx(c) + .5, G.scaleY); ctx.lineTo(cx(c) + .5, G.scaleY + (big ? 8 : 5)); ctx.stroke();
+    if (big){
+      ctx.fillStyle = muted; ctx.font = "600 " + (10 + fs) + "px " + MONO;
+      ctx.fillText((c > 0 ? "+" : "") + c, cx(c), G.scaleY + 10);
+    }
+  }
+  ctx.fillStyle = muted; ctx.font = "600 " + (10 + fs) + "px " + MONO;
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("cents from " + nameOf(state.ref), G.sx0, G.labelY);
+
+  /* the reference string's own marker, hidden until revealed in mystery mode */
+  const showRef = (!state.mystery || revealed);
+  if (showRef){
+    const x = cx(Math.max(-50, Math.min(50, S.off)));
+    ctx.strokeStyle = toneB; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, G.scaleY - 9); ctx.lineTo(x, G.scaleY + 9); ctx.stroke();
+  }
+
+  /* your string: the needle */
+  const yc = state.det + state.fine;
+  const nx = cx(Math.max(-50, Math.min(50, yc)));
+  ctx.fillStyle = accent;
+  ctx.beginPath();
+  ctx.moveTo(nx, G.scaleY - 6);
+  ctx.lineTo(nx - 6, G.scaleY - 19);
+  ctx.lineTo(nx + 6, G.scaleY - 19);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = accent; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(nx, G.scaleY - 19); ctx.lineTo(nx, G.scaleY - 30); ctx.stroke();
+
+  /* the big reading */
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = ink; ctx.font = "700 " + (NARROW ? 24 : 28) + "px " + MONO;
+  ctx.fillText(beat.toFixed(2), G.bigX, G.bigY);
+  const wNum = ctx.measureText(beat.toFixed(2)).width;
+  ctx.fillStyle = muted; ctx.font = "600 " + (11 + fs) + "px " + MONO;
+  ctx.fillText(" beats/s", G.bigX + wNum + 3, G.bigY);
+
+  const tuned = beat < 0.05;
+  const wUnit = ctx.measureText(" beats/s").width;
+  const lampX = G.lampInline ? (G.bigX + wNum + wUnit + 16) : (G.bigX + 6);
+  const lampY = G.lampInline ? (G.bigY - 5) : (G.bigY + 17);
+  ctx.beginPath(); ctx.arc(lampX, lampY, 5, 0, TAU);
+  ctx.fillStyle = tuned ? lamp : line; ctx.fill();
+  ctx.strokeStyle = tuned ? lamp : muted; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = tuned ? lamp : muted; ctx.font = "700 " + (10 + fs) + "px " + MONO;
+  ctx.fillText(tuned ? "IN TUNE" : "BEATING", lampX + 11, lampY + 4);
+}
+
+function nameOf(ref){
+  if (ref === 220) return "A3";
+  if (ref === 880) return "A5";
+  if (Math.abs(ref - 261.6255653005986) < 1e-9) return "C4";
+  if (Math.abs(ref - 329.6275569128699) < 1e-9) return "E4";
+  return "A4";
+}
+
+function drawEnvelope(S, beat, MONO){
+  const ink = css("--ink"), muted = css("--muted"), accent = css("--accent"), line = css("--line");
+  const fs = NARROW ? -1 : 0;
+  const x0 = G.padL, x1 = W - G.padR, mid = G.envY + G.envH / 2;
+  const half = G.envH / 2 - 4, amax = S.a1 + S.a2, k = half / amax;
+  const tAt = (x) => (x - x0) / G.plotW * state.win;
+
+  /* frame */
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, mid + .5); ctx.lineTo(x1, mid + .5); ctx.stroke();
+
+  /* the band the sound lives inside */
+  const N = Math.max(60, Math.round(G.plotW));
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++){
+    const x = x0 + i / N * G.plotW;
+    const r = Model.envelope(tAt(x), S.f1, S.f2, S.a1, S.a2);
+    if (i === 0) ctx.moveTo(x, mid - k * r); else ctx.lineTo(x, mid - k * r);
+  }
+  for (let i = N; i >= 0; i--){
+    const x = x0 + i / N * G.plotW;
+    const r = Model.envelope(tAt(x), S.f1, S.f2, S.a1, S.a2);
+    ctx.lineTo(x, mid + k * r);
+  }
+  ctx.closePath();
+  ctx.fillStyle = accent; ctx.globalAlpha = 0.20; ctx.fill(); ctx.globalAlpha = 1;
+  ctx.strokeStyle = accent; ctx.lineWidth = 1.5; ctx.stroke();
+
+  /* the floor the dips cannot get below when the strings differ in loudness */
+  const lo = Math.abs(S.a1 - S.a2);
+  if (lo > 1e-9){
+    ctx.strokeStyle = muted; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x0, mid - k * lo); ctx.lineTo(x1, mid - k * lo);
+    ctx.moveTo(x0, mid + k * lo); ctx.lineTo(x1, mid + k * lo);
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  /* a tick at every silence */
+  const nl = Model.nulls(S.f1, S.f2, state.win);
+  if (nl.length && nl.length <= 140){
+    ctx.strokeStyle = ink; ctx.lineWidth = 1;
+    for (const t of nl){
+      const x = x0 + t / state.win * G.plotW;
+      ctx.beginPath(); ctx.moveTo(x + .5, G.envY + G.envH - 7); ctx.lineTo(x + .5, G.envY + G.envH + 1); ctx.stroke();
+    }
+    /* measure the gap between the first two */
+    if (nl.length >= 2){
+      const xa = x0 + nl[0] / state.win * G.plotW, xb = x0 + nl[1] / state.win * G.plotW;
+      const yb = G.envY + G.envH + 1;
+      if (xb - xa > 34){
+        ctx.strokeStyle = ink; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(xa, yb + 5); ctx.lineTo(xb, yb + 5); ctx.stroke();
+        ctx.fillStyle = ink; ctx.font = "700 " + (9 + fs) + "px " + MONO;
+        ctx.textAlign = "center"; ctx.textBaseline = "top";
+        ctx.fillText((1 / beat).toFixed(3) + " s", (xa + xb) / 2, yb + 7);
+      }
+    }
+  }
+
+  /* the listening point */
+  const tc = state.cursor * state.win;
+  const xc = x0 + state.cursor * G.plotW;
+  ctx.strokeStyle = css("--tone-a"); ctx.lineWidth = 1.6; ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(xc, G.envY); ctx.lineTo(xc, G.envY + G.envH); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = css("--tone-a");
+  ctx.beginPath(); ctx.moveTo(xc, G.envY + 7); ctx.lineTo(xc - 5, G.envY); ctx.lineTo(xc + 5, G.envY); ctx.closePath(); ctx.fill();
+
+  /* titles and the time axis */
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = muted; ctx.font = "600 " + (10 + fs) + "px " + MONO;
+  ctx.fillText(NARROW ? "loudness" : "combined loudness, whole window", x0, G.envTitleY);
+  ctx.textAlign = "right";
+  ctx.fillText(beat > 1e-9 ? (NARROW ? "gap " + (1 / beat).toFixed(2) + " s"
+                                     : "one beat every " + (1 / beat).toFixed(3) + " s")
+                           : "no beats: the two match", x1, G.envTitleY);
+  ctx.fillStyle = muted; ctx.font = "600 " + (9 + fs) + "px " + MONO;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("0 s", x0, G.envAxisY + 6);
+  ctx.textAlign = "right";
+  ctx.fillText(state.win.toFixed(1) + " s", x1, G.envAxisY + 6);
+  return tc;
+}
+
+function drawZoom(S, tc, MONO){
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line"),
+        tA = css("--tone-a"), tB = css("--tone-b");
+  const fs = NARROW ? -1 : 0;
+  const x0 = G.padL, x1 = W - G.padR, mid = G.zoomY + G.zoomH / 2;
+  const half = G.zoomH / 2 - 4, amax = S.a1 + S.a2, k = half / amax;
+  const favg = (S.f1 + S.f2) / 2;
+  const span = (NARROW ? 3 : 4.5) / favg;            /* a few carrier periods */
+  const t0 = Math.max(0, tc - span / 2), t1 = t0 + span;
+
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, mid + .5); ctx.lineTo(x1, mid + .5); ctx.stroke();
+
+  const N = Math.max(120, Math.round(G.plotW * 2));
+  const trace = (fn, colour, width, alpha) => {
+    ctx.beginPath();
+    for (let i = 0; i <= N; i++){
+      const t = t0 + i / N * span, x = x0 + i / N * G.plotW;
+      const v = fn(t);
+      if (i === 0) ctx.moveTo(x, mid - k * v); else ctx.lineTo(x, mid - k * v);
+    }
+    ctx.globalAlpha = alpha; ctx.strokeStyle = colour; ctx.lineWidth = width;
+    ctx.lineJoin = "round"; ctx.stroke(); ctx.globalAlpha = 1;
+  };
+  trace((t) => S.a1 * Math.cos(TAU * S.f1 * t), tB, 1.3, 0.85);
+  trace((t) => S.a2 * Math.cos(TAU * S.f2 * t), tA, 1.3, 0.85);
+  trace((t) => Model.y(t, S.f1, S.f2, S.a1, S.a2), ink, 2.1, 1);
+
+  /* how far out of step the two are, right here */
+  let phase = ((S.f1 - S.f2) * tc) % 1;
+  if (phase < 0) phase += 1;
+  const degrees = phase * 360;
+  const apart = Math.min(degrees, 360 - degrees);
+
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = muted; ctx.font = "600 " + (10 + fs) + "px " + MONO;
+  ctx.fillText(NARROW ? "close-up at " + tc.toFixed(2) + " s"
+                      : "close-up: " + (span * 1000).toFixed(1) + " ms at " + tc.toFixed(3) + " s",
+               x0, G.zoomTitleY);
+  ctx.textAlign = "right";
+  ctx.fillText(apart.toFixed(0) + DEG + " out of step", x1, G.zoomTitleY);
+
+  /* legend */
+  ctx.textBaseline = "top"; ctx.textAlign = "left";
+  const items = [["reference", tB], ["your string", tA], ["what you hear", ink]];
+  let lx = x0;
+  for (const it of items){
+    ctx.strokeStyle = it[1]; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.moveTo(lx, G.legendY + 5); ctx.lineTo(lx + 14, G.legendY + 5); ctx.stroke();
+    ctx.fillStyle = muted; ctx.font = "600 " + (9 + fs) + "px " + MONO;
+    ctx.fillText(it[0], lx + 18, G.legendY);
+    lx += 18 + ctx.measureText(it[0]).width + (NARROW ? 12 : 22);
+  }
+}
+
+function render(){
+  fitCanvas();
+  const S = strings();
+  const beat = Model.beatRate(S.f1, S.f2);
+  const MONO = css("--font-mono"), BODY = css("--font-body");
+
+  ctx.clearRect(0, 0, W, G.H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, G.H);
+
+  drawMeter(S, beat, MONO, BODY);
+  const tc = drawEnvelope(S, beat, MONO);
+  drawZoom(S, tc, MONO);
+
+  /* control outputs */
+  const sign = (v, d) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d);
+  el("detout").textContent = sign(state.det, 1) + " c";
+  el("fineout").textContent = sign(state.fine, 2) + " c";
+  el("ampout").textContent = state.amp.toFixed(2);
+  el("winout").textContent = state.win.toFixed(1) + " s";
+  el("cursorout").textContent = tc.toFixed(2) + " s";
+
+  /* readouts */
+  const ex = Model.extremes(S.a1, S.a2);
+  const hidden = state.mystery && !revealed;
+  el("rBeat").textContent = beat.toFixed(3) + " Hz";
+  el("rGap").textContent = Model.slowRate(S.f1, S.f2).toFixed(3) + " Hz";
+  el("rPeriod").textContent = beat > 1e-9 ? (1 / beat).toFixed(3) + " s" : "never";
+  el("rYours").textContent = sign(state.det + state.fine, 2) + " c";
+  el("rRef").textContent = hidden ? "hidden" : S.f1.toFixed(3) + " Hz";
+  el("rNull").textContent = ex.lo < 1e-12 ? "silence" : ex.lo.toFixed(2) + " of " + ex.hi.toFixed(2);
+}
+
+/* ---- WIRING -------------------------------------------------------------- */
+function bind(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parse(input.value); render(); });
+}
+bind("det", "det", parseFloat);
+bind("fine", "fine", parseFloat);
+bind("amp", "amp", parseFloat);
+bind("win", "win", parseFloat);
+bind("cursor", "cursor", parseFloat);
+el("ref").addEventListener("change", () => { state.ref = parseFloat(el("ref").value); render(); });
+el("mystery").addEventListener("change", () => {
+  state.mystery = el("mystery").checked;
+  revealed = false;
+  el("revealout").textContent = state.mystery
+    ? "Hidden offset in play. Tune by the meter, then reveal."
+    : "Hidden offset not revealed.";
+  render();
+});
+el("reveal").addEventListener("click", () => {
+  revealed = true;
+  const s = (HIDDEN >= 0 ? "+" : "−") + Math.abs(HIDDEN).toFixed(2);
+  el("revealout").textContent = state.mystery
+    ? "The reference sits " + s + " cents from " + nameOf(state.ref) + "."
+    : "Nothing hidden right now. Tick the mystery box first.";
+  render();
+});
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  revealed = false;
+  el("det").value = defaults.det; el("fine").value = defaults.fine;
+  el("amp").value = defaults.amp; el("win").value = defaults.win;
+  el("cursor").value = defaults.cursor; el("ref").value = String(defaults.ref);
+  el("mystery").checked = false;
+  el("revealout").textContent = "Hidden offset not revealed.";
+  render();
+});
+
+let resizeTimer = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(render, 90);
+});
+render();
+
+/* ---- SELFTEST ------------------------------------------------------------ */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+  const r = mulberry32(4242);
+
+  /* 1. the sum-to-product identity, over the pitches and the window the page
+        uses. The tolerance is not a magic number: it is derived from the size
+        of the phase being handed to cos. At f*t near 5400 the argument is
+        ~3.4e4 radians, and one unit in the last place of a number that size is
+        already 3.6e-12, so no implementation can do better than a few of those. */
+  const PHASE_TOL = (fmax, tmax) => 4 * Number.EPSILON * TAU * fmax * tmax;
+  let w1 = 0;
+  for (let k = 0; k < 60; k++){
+    const f1 = 200 + r() * 700, f2 = f1 + (r() * 2 - 1) * 30;
+    for (let i = 0; i < 400; i++){
+      const tt = i * 0.015;
+      w1 = Math.max(w1, Math.abs(Model.y(tt, f1, f2, 1, 1) - Model.productForm(tt, f1, f2, 1)));
+    }
+  }
+  const tol1 = PHASE_TOL(930, 6);
+  push("sum of two cosines equals the product form", w1 < tol1,
+       "worst gap over 60 pairs x 400 times, t up to 6 s: " + w1.toExponential(2)
+       + " against a phase-size limit of " + tol1.toExponential(2));
+
+  /* 2. and the residual is the phase, not the model: shrink t by a factor of
+        125 and the gap must shrink with it, not stay put. */
+  let w2 = 0;
+  for (let k = 0; k < 40; k++){
+    const f1 = 200 + r() * 700, f2 = f1 + (r() * 2 - 1) * 30;
+    for (let i = 0; i < 300; i++){
+      const tt = i * 0.00016;
+      w2 = Math.max(w2, Math.abs(Model.y(tt, f1, f2, 1, 1) - Model.productForm(tt, f1, f2, 1)));
+    }
+  }
+  const tol2 = PHASE_TOL(930, 0.048);
+  push("the residual tracks the phase, not the model", w2 < tol2 && w2 < w1 / 50,
+       "t up to 0.048 s gives " + w2.toExponential(2) + ", limit " + tol2.toExponential(2)
+       + ", and " + (w1 / w2).toFixed(0) + " times smaller than the 6 s figure");
+
+  /* 3. the general envelope collapses to 2a|cos(pi df t)| when the two match.
+        Compared as squares: taking the square root of a1^2+a2^2+2a1a2cos loses
+        half the digits right at a null, where that sum is near zero, and the
+        loss is the square root's, not the identity's. */
+  let w3 = 0, w3sq = 0;
+  for (let k = 0; k < 40; k++){
+    const f1 = 200 + r() * 700, f2 = f1 + (r() * 2 - 1) * 20;
+    for (let i = 0; i < 400; i++){
+      const tt = i * 0.015;
+      const e = Model.envelope(tt, f1, f2, 1, 1), sf = Model.slowFactor(tt, f1, f2, 1);
+      w3 = Math.max(w3, Math.abs(e - Math.abs(sf)));
+      w3sq = Math.max(w3sq, Math.abs(e * e - sf * sf));
+    }
+  }
+  push("equal-amplitude envelope is the slow factor", w3sq < 1e-14 && w3 < 1e-12,
+       "squared forms agree to " + w3sq.toExponential(2)
+       + "; the square roots to " + w3.toExponential(2) + ", the wider figure being "
+       + "cancellation at the nulls");
+
+  /* 4. the envelope's own extremes are a1+a2 and |a1-a2|, so only a matched
+        pair ever reaches silence */
+  function extremum(f, a, b, dir){
+    for (let i = 0; i < 70; i++){
+      const m1 = a + (b - a) / 3, m2 = b - (b - a) / 3;
+      if (dir * f(m1) < dir * f(m2)) a = m1; else b = m2;
+    }
+    return f((a + b) / 2);
+  }
+  let w4 = 0;
+  for (let k = 0; k < 40; k++){
+    const a1 = 0.2 + r() * 0.8, a2 = 0.2 + r() * 0.8;
+    const f1 = 300 + r() * 400, f2 = f1 + 0.5 + r() * 6;
+    const dt = 0.0005, n = 4000;
+    const E = (tt) => Model.envelope(tt, f1, f2, a1, a2);
+    let iLo = 0, iHi = 0, lo = Infinity, hi = -Infinity;
+    for (let i = 0; i < n; i++){
+      const v = E(i * dt);
+      if (v < lo){ lo = v; iLo = i; }
+      if (v > hi){ hi = v; iHi = i; }
+    }
+    /* polish each one so the answer is not limited by the sampling step */
+    lo = extremum(E, Math.max(0, (iLo - 1) * dt), (iLo + 1) * dt, -1);
+    hi = extremum(E, Math.max(0, (iHi - 1) * dt), (iHi + 1) * dt, +1);
+    const ex = Model.extremes(a1, a2);
+    w4 = Math.max(w4, Math.abs(hi - ex.hi), Math.abs(lo - ex.lo));
+  }
+  push("envelope runs between a1+a2 and |a1-a2|", w4 < 1e-9,
+       "worst gap over 40 amplitude pairs, extremes polished by ternary search: "
+       + w4.toExponential(2));
+
+  /* 5. THE INDEPENDENT ROUTE. measureBeatRate never touches the closed form:
+        it samples the summed waveform and counts crossings. It must land on
+        |f1 - f2| anyway. */
+  const cases = [[440, 1, 1, 1], [440, 3, 1, 1], [440, 0.7448861742601594, 1, 1],
+                 [440, 5, 1, 0.4], [220, 2, 1, 1], [329.6275569128699, 4, 0.8, 0.6]];
+  let w5 = 0, detail5 = [];
+  for (const c of cases){
+    const m = Model.measureBeatRate(c[0], c[0] + c[1], c[2], c[3], 6, 32);
+    w5 = Math.max(w5, Math.abs(m - c[1]) / c[1]);
+    detail5.push(c[1] + "->" + m.toFixed(5));
+  }
+  push("beat rate measured from samples equals |f1-f2|", w5 < 1.5e-3,
+       "worst relative error " + w5.toExponential(2) + "; " + detail5.join(", "));
+
+  /* 6. and that measurement doubles when the gap doubles */
+  let w6 = 0, detail6 = [];
+  for (const df of [0.8, 1.5, 2.5]){
+    const a = Model.measureBeatRate(440, 440 + df, 1, 1, 6, 32);
+    const b = Model.measureBeatRate(440, 440 + 2 * df, 1, 1, 6, 32);
+    const ratio = a > 0 ? b / a : 0;
+    w6 = Math.max(w6, Math.abs(ratio - 2));
+    detail6.push(df + " Hz -> " + ratio.toFixed(5));
+  }
+  push("measured rate doubles when the gap doubles", w6 < 2e-3,
+       "worst departure from 2: " + w6.toExponential(2) + "; " + detail6.join(", "));
+
+  /* 7. at unison there is no envelope at all */
+  let sum = 0, sq = 0;
+  for (let i = 0; i < 4000; i++){
+    const v = Model.envelope(i * 0.001, 440, 440, 1, 1); sum += v; sq += v * v;
+  }
+  const mean = sum / 4000, variance = sq / 4000 - mean * mean;
+  push("at unison the envelope is dead flat", variance < 1e-24 && near(mean, 2, 1e-12),
+       "variance " + variance.toExponential(2) + " about a mean of " + mean.toFixed(12));
+
+  /* 8. the two periods the page keeps separate: loudness repeats every 1/|df|,
+        the signed slow factor only every 2/|df| because it flips sign first */
+  let w8a = 0, w8b = 0, w8c = 0;
+  for (let k = 0; k < 30; k++){
+    const f1 = 200 + r() * 700, df = 0.4 + r() * 8, f2 = f1 + df;
+    const P = 1 / df;
+    for (let i = 0; i < 60; i++){
+      const tt = i * 0.004;
+      w8a = Math.max(w8a, Math.abs(Model.envelope(tt + P, f1, f2, 1, 0.6)
+                                 - Model.envelope(tt, f1, f2, 1, 0.6)));
+      w8b = Math.max(w8b, Math.abs(Model.slowFactor(tt + P, f1, f2, 1)
+                                 + Model.slowFactor(tt, f1, f2, 1)));
+      w8c = Math.max(w8c, Math.abs(Model.slowFactor(tt + 2 * P, f1, f2, 1)
+                                 - Model.slowFactor(tt, f1, f2, 1)));
+    }
+  }
+  push("loudness repeats at 1/|df|, the signed factor only at 2/|df|",
+       w8a < 1e-12 && w8b < 1e-12 && w8c < 1e-12,
+       "envelope " + w8a.toExponential(2) + ", sign flip at 1/|df| " + w8b.toExponential(2)
+       + ", return at 2/|df| " + w8c.toExponential(2));
+
+  /* 9. silences per second, counted rather than derived */
+  let ok9 = true, detail9 = [];
+  for (const df of [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 5, 7, 9, 11]){
+    const f1 = 440, f2 = 440 + df, T = 20;
+    let count = 0, prev = Math.cos(Math.PI * df * 0);
+    const steps = 20000;
+    for (let i = 1; i <= steps; i++){
+      const v = Math.cos(Math.PI * df * (i * T / steps));
+      if ((prev <= 0) !== (v <= 0)) count++;
+      prev = v;
+    }
+    const expected = Math.floor(df * T + 0.5);
+    if (count !== expected) ok9 = false;
+    detail9.push(df + ":" + count);
+    if (f2 !== 440 + df) ok9 = false;
+  }
+  push("silences in 20 s equal round(20 |df|) exactly", ok9,
+       "counted from sign changes: " + detail9.join(" "));
+
+  /* 10. power is conserved: the average of the squared signal is the sum of
+         the two strings' own averages, with the cross term averaging away */
+  let w10 = 0, detail10 = [];
+  for (const c of [[440, 1, 1, 1], [440, 2, 1, 0.4], [440, 4, 0.8, 0.5], [220, 5, 1, 0.25]]){
+    const m = Model.meanSquare(c[0], c[0] + c[1], c[2], c[3]);
+    const e = (c[2] * c[2] + c[3] * c[3]) / 2;
+    w10 = Math.max(w10, Math.abs(m - e));
+    detail10.push(m.toFixed(12));
+  }
+  push("mean power is (a1^2 + a2^2)/2", w10 < 1e-12,
+       "worst gap " + w10.toExponential(2) + "; " + detail10.join(", "));
+
+  /* 11. published interval sizes and the beat rates a tuner actually counts */
+  const et5 = Model.freq(440, 700);
+  const ok11 = near(Model.cents(440, 880), 1200, 1e-12)
+            && near(Model.cents(2, 3), 701.9550008653874, 1e-9)
+            && near(Model.cents(80, 81), 21.506289596715, 1e-9)
+            && near(Model.beatRate(660, et5), 0.7448861742601594, 1e-12)
+            && near(Model.freq(440, 1) - 440, 0.2542273828841335, 1e-12)
+            && near(Model.beatRate(440, Model.freq(440, 0)), 0, 0);
+  push("matches published interval sizes and tuning beat rates", ok11,
+       "octave 1200 c, pure fifth 701.955 c, syntonic comma 21.506 c; "
+       + "equal-tempered fifth above A4 is " + et5.toFixed(4)
+       + " Hz and beats against the pure 660 Hz at " + Model.beatRate(660, et5).toFixed(6) + " Hz");
+
+  /* 12. nothing in the reachable control space produces a non-number */
+  let ok12 = true;
+  outer:
+  for (const ref of [220, 261.6255653005986, 329.6275569128699, 440, 880])
+    for (let det = -50; det <= 50; det += 5)
+      for (const fine of [-2.5, 0, 2.5])
+        for (const amp of [0.1, 0.55, 1])
+          for (const off of [0, HIDDEN]){
+            const f1 = Model.freq(ref, off), f2 = Model.freq(ref, det + fine);
+            const vals = [Model.beatRate(f1, f2), Model.slowRate(f1, f2),
+                          Model.envelope(0.37, f1, f2, 1, amp),
+                          Model.y(0.37, f1, f2, 1, amp),
+                          Model.extremes(1, amp).lo, Model.nulls(f1, f2, 6).length];
+            for (const v of vals) if (!Number.isFinite(v)) { ok12 = false; break outer; }
+          }
+  push("finite everywhere the controls can reach", ok12,
+       "5 references x 21 coarse x 3 fine x 3 loudness x 2 hidden offsets");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED), HIDDEN };
+
+})();
+</script>
+</body>
+</html>
