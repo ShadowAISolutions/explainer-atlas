@@ -27,6 +27,34 @@ page is written — it is where a failing audit trend gets escalated.)*
 
 ## Batches
 
+### batch/003 — 2026-09-19
+- merged: ph-buffer-capacity, levenshtein-distance, greenhouse-energy-balance, shannon-channel-capacity, special-relativity-time-dilation
+- blocked: none
+- patterns: time-scrubber, step-through, drag-parameter, guess-then-reveal, compare-side-by-side
+- learned: All thirteen domains now have at least one page, so from here topic
+  choice is free rather than driven by coverage. Four of this batch's five task
+  files suggested drag-parameter; taking the suggestions literally would have
+  put it at five uses in twenty pages, over the variety limit. Treat the queue's
+  suggested pattern as a default to override, and record the override in the
+  claim commit.
+  The strongest assertion in each page this batch was the one that derived the
+  page's headline quantity a SECOND way and compared: gamma bisected out of the
+  light-clock triangle against 1/sqrt(1-b^2); channel capacity as a maximum of
+  mutual information over input distributions against 1-H(p); buffer capacity's
+  closed form against a full charge-balance equilibrium solve. That pattern is
+  worth reaching for deliberately on every page — it catches sign errors and
+  algebra slips that a self-consistent formula never will.
+  Three practical traps, all of which cost a cycle here. (1) A multi-line
+  equation inside a <p class="math"> collapses to one line, because HTML eats
+  whitespace; the block needs white-space:pre. (2) Writing a patch script in a
+  quoted bash heredoc turns \uXXXX escapes into the literal character, so a
+  Python pattern written with a doubled backslash will never match the file —
+  write the single-backslash escape and let Python decode it. (3) Numbers in
+  prose must be read back off the rendered readout before committing: this batch
+  shipped a title claiming sixty-three decisions where the page itself displayed
+  42, and a hint claiming gamma is exactly 2 at a slider position that cannot
+  express sqrt(3)/2. Both were caught in the screenshot, not the verifier.
+
 ### batch/002 — 2026-09-19
 - merged: dijkstra-vs-astar, equal-temperament, pid-controller, newton-raphson-basins, supply-demand-tax-incidence
 - blocked: none
