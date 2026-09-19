@@ -1,0 +1,16 @@
+{
+  "slug": "damped-harmonic-oscillator",
+  "title": "One Number Decides How a Thing Stops Shaking",
+  "domain": "physics",
+  "difficulty": 2,
+  "summary": "Move the damping ratio and find the boundary where a system stops ringing and starts creeping, and why more damping past that point makes things worse.",
+  "prerequisites": [],
+  "tags": ["oscillation", "damping", "differential-equations", "control", "resonance"],
+  "interaction_pattern": "perturb-and-observe",
+  "sources": [
+    { "title": "Feynman Lectures on Physics, Vol. I Ch. 24 — Transients", "url": "https://www.feynmanlectures.caltech.edu/I_24.html" },
+    { "title": "Ogata, Modern Control Engineering — second-order system response", "url": "https://archive.org/details/moderncontroleng0000ogat" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 9
+}
