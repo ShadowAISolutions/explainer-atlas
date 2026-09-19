@@ -1,0 +1,23 @@
+{
+  "slug": "compound-interest-doubling",
+  "title": "The Rule of 72 Is Only Honest at One Rate",
+  "domain": "economics",
+  "difficulty": 2,
+  "summary": "Scrub through sixty years of compound growth, watch the doublings arrive on a fixed clock, and see where the rule of 72 stops telling the truth.",
+  "prerequisites": [],
+  "tags": [
+    "compound-interest",
+    "exponential-growth",
+    "doubling-time",
+    "rule-of-72",
+    "continuous-compounding"
+  ],
+  "interaction_pattern": "time-scrubber",
+  "sources": [
+    { "title": "Rule of 72", "url": "https://en.wikipedia.org/wiki/Rule_of_72" },
+    { "title": "Compound interest", "url": "https://en.wikipedia.org/wiki/Compound_interest" },
+    { "title": "Doubling time", "url": "https://en.wikipedia.org/wiki/Doubling_time" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}
