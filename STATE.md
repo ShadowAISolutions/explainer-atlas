@@ -33,6 +33,37 @@ files in `AUDIT/` before starting any batch.
 
 ## Batches
 
+### batch/008 — 2026-09-19
+- merged: hamming-code, regression-to-the-mean, sound-change-chain-shift, tragedy-of-the-commons, plus the last two batch/001 pages of the legacy canvas repair (fourier-series-square-wave, population-logistic-chaos)
+- blocked: none
+- patterns: perturb-and-observe, guess-then-reveal, step-through, drag-parameter (the repair carries no pattern)
+- learned: Four things worth carrying forward.
+  - **Nothing inside the controls landmark may carry `disabled`.** The verifier's
+    control sweep calls `setChecked` on every `input`/`select` it finds there,
+    and Playwright waits for a disabled one to become enabled until a 30 second
+    timeout crashes the run. The symptom is a verifier that hangs rather than a
+    failure message. If a control is meaningless in some mode, hide it or let it
+    do nothing — do not disable it.
+  - **`meta.json` tags must be kebab-case.** The schema holds `tags` to the same
+    `^[a-z0-9]+(-[a-z0-9]+)*$` pattern as `prerequisites`, so a human-readable
+    tag with spaces fails validation before the browser ever opens.
+  - **A guess-then-reveal page must not draw the answer before the reveal.**
+    `regression-to-the-mean` split its shortlist into a coached and an uncoached
+    half and plotted both from the start — but where the uncoached half lands in
+    round two is exactly what the reader is being asked to guess. The control
+    group now stays folded into the shortlist until the reveal. Two rules fell
+    out of this: a matched control must be drawn from the *same* extreme pool
+    (splitting it at random), not from the next-best cases left over, or the
+    difference-in-differences does not recover the effect; and any reveal-style
+    page should be read once with the question in mind, not just for defects.
+  - **Do not accept a task file's numeric tolerance if the arithmetic cannot
+    reach it.** `079` asked for a derivative-free peak search within 1e-9 of the
+    closed form. A quadratic is flat at its peak, so a search that never
+    differentiates cannot beat the square root of machine precision — about
+    2.6e-6 at this page's scale. The assertion states that floor and explains
+    why, which is more honest than a fudged constant and more useful than
+    weakening the search.
+
 ### batch/007 — 2026-09-19
 - merged: simpsons-paradox, map-projection-distortion, gear-train-ratio, beat-frequency-tuning, plus two more pages of the legacy canvas repair (central-limit-theorem, monty-hall)
 - blocked: none
