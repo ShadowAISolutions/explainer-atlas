@@ -1,0 +1,17 @@
+{
+  "slug": "ideal-gas-law",
+  "title": "Where The Ideal Gas Law Quietly Stops Working",
+  "domain": "chemistry",
+  "difficulty": 3,
+  "summary": "On a log-log chart PV = nRT is a straight line. Squeeze a real gas and it peels away: below the line while attraction wins, above it once the molecules run out of room.",
+  "prerequisites": [],
+  "tags": ["thermodynamics", "van-der-waals", "gas-laws", "critical-point", "compressibility"],
+  "interaction_pattern": "perturb-and-observe",
+  "sources": [
+    { "title": "Van der Waals equation", "url": "https://en.wikipedia.org/wiki/Van_der_Waals_equation" },
+    { "title": "Critical point (thermodynamics)", "url": "https://en.wikipedia.org/wiki/Critical_point_(thermodynamics)" },
+    { "title": "CODATA 2018 value of the molar gas constant", "url": "https://physics.nist.gov/cgi-bin/cuu/Value?r" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}

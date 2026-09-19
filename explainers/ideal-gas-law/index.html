@@ -1,0 +1,781 @@
+<!doctype html>
+<!--
+  Interactive Explainer Atlas — page skeleton.
+  Start EVERY new explainer from this file. Never copy a previous page.
+  Replace every {{PLACEHOLDER}}. Delete the demo model and write your own.
+  Contract: FOUNDATION.md. Rules: CLAUDE.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where The Ideal Gas Law Quietly Stops Working &#8212; Explainer Atlas</title>
+<meta name="description" content="PV = nRT is a straight line on a log-log chart. Squeeze a real gas and watch it peel away from that line, first below it and then above.">
+<style>
+/* ---- tokens: restate these per page to vary the collection's feel ------- */
+:root{
+  --bg:#faf7fa; --panel:#ffffff; --ink:#1b131a; --muted:#6b5c67; --line:#e8dde6;
+  --accent:#7b2d5e; --accent-soft:#f5eaf1; --alt:#1f6f8b; --warn:#a8531c;
+  --quiet:#c9bcc5; --radius:20px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.6rem,1.12rem + 2.1vw,2.4rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.06rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#140f13; --panel:#1c161b; --ink:#eee4ea; --muted:#ab99a5; --line:#33262f;
+    --accent:#e07ab0; --accent-soft:#2a1a24; --alt:#63b6d2; --warn:#e2a06a;
+    --quiet:#4a3b44;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.15; margin:0 0 .4em; letter-spacing:-.01em}
+.kicker{margin:0 0 .35em; color:var(--accent); font:600 .78rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.09em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas, figure.stage svg{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.86rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.83rem}
+.ledger{margin:0; background:var(--accent-soft); border-radius:14px; padding:.65em .8em; font-size:.87rem}
+.bumps{display:flex; gap:.5em; flex-wrap:wrap}
+.bumps button{flex:1 1 auto}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .7em; min-height:40px}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.06em}
+.readout dd{margin:.18em 0 0; font:600 1.05rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.16rem; margin:1.8em 0 .45em; letter-spacing:-.005em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); background:var(--accent-soft); padding:.7em .85em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">chemistry</p>
+  <h1>Where The Ideal Gas Law Quietly Stops Working</h1>
+  <p class="standfirst">On a log&#8211;log chart, PV&nbsp;=&nbsp;nRT is a perfectly straight line. Squeeze a
+  real gas and it peels away from that line &#8212; downwards first, because the molecules pull on each
+  other, then upwards, because they take up room. Push the sliders until you find the crossing.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="620" role="img"
+            aria-label="A log-log chart of pressure against volume. A straight line is the ideal gas law; a curve is the van der Waals prediction for the chosen gas, with the area between them shaded. A dot marks the current volume on each. Below the chart, a narrow strip is coloured along the same volume axis by the compressibility factor: one shade where the gas is easier to compress than ideal, another where it is harder."></canvas>
+    <figcaption>The straight line is PV&nbsp;=&nbsp;nRT. The curve is van der Waals. The strip beneath
+    the axis is the compressibility factor Z along the same volume scale: one colour below one, the
+    other above.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row">
+        <label for="gas">Gas</label>
+      </div>
+      <select id="gas">
+        <option value="0">helium</option>
+        <option value="1">hydrogen</option>
+        <option value="2">nitrogen</option>
+        <option value="3" selected>carbon dioxide</option>
+        <option value="4">ammonia</option>
+        <option value="5">water vapour</option>
+      </select>
+      <p class="hint">Each gas brings its own van der Waals constants, measured in the laboratory
+      rather than derived.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="temp">Temperature</label>
+        <output id="tempout" for="temp">300 K</output>
+      </div>
+      <input type="range" id="temp" min="50" max="1000" step="5" value="300">
+      <p class="hint">Below the gas's critical temperature the curve grows a wiggle: that is the gas
+      trying to condense. Arrow keys step; Home and End jump to the ends.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="vol">Volume</label>
+        <output id="volout" for="vol">2.00 L</output>
+      </div>
+      <input type="range" id="vol" min="0" max="400" step="1" value="200">
+      <p class="hint">Twenty millilitres to two hundred litres, on a logarithmic scale so four decades
+      fit on one slider.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="mol">Amount</label>
+        <output id="molout" for="mol">1.00 mol</output>
+      </div>
+      <input type="range" id="mol" min="25" max="400" step="25" value="100">
+      <p class="hint">How much gas is in there, in moles.</p>
+    </div>
+
+    <p class="ledger" id="ledger">Press one of the buttons below and watch what the ideal law gets
+    wrong.</p>
+
+    <div class="bumps">
+      <button type="button" id="halve">Halve the volume</button>
+      <button type="button" id="warm">Double the temperature</button>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Ideal pressure</dt><dd id="oPi">&#8212;</dd></div>
+      <div><dt>Van der Waals</dt><dd id="oPv">&#8212;</dd></div>
+      <div><dt>Error of PV=nRT</dt><dd id="oErr">&#8212;</dd></div>
+      <div><dt>Z = PV/nRT</dt><dd id="oZ">&#8212;</dd></div>
+      <div><dt>Critical point</dt><dd id="oCrit">&#8212;</dd></div>
+      <div><dt>State</dt><dd id="oPhase">&#8212;</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>An ideal gas is a gas whose molecules have no size and no interest in each other. Neither is true,
+  and the surprise is how little it matters. At room temperature and ordinary pressure, carbon dioxide
+  obeys PV&nbsp;=&nbsp;nRT to within a per cent or so. Squeeze it into a tenth of the volume and the
+  error is no longer small.</p>
+
+  <p class="math">ideal: P = nRT/V &#160;&#160;&#160; van der Waals: P = nRT/(V &#8722; nb) &#8722; an&#178;/V&#178;</p>
+
+  <p>Van der Waals patched the two false assumptions one at a time. Molecules occupy space, so the
+  volume they can move in is not <em>V</em> but <em>V</em>&#8722;<em>nb</em>; the correction makes the
+  pressure higher. Molecules attract one another, so a molecule about to strike the wall is tugged
+  back by the ones behind it; that term is proportional to the square of the density and makes the
+  pressure lower. The two corrections fight, and which one wins is the whole shape of the curve.</p>
+
+  <h2>Reading the shaded area</h2>
+
+  <p>At large volume both terms vanish and the curve lies on the line. Squeeze, and the attraction
+  term grows as 1/<em>V</em>&#178; while the repulsion term only matters once <em>V</em> approaches
+  <em>nb</em>, so attraction gets there first: the real pressure falls below ideal and the compressibility
+  factor Z&nbsp;=&nbsp;PV/nRT drops under one. Squeeze further and the excluded volume takes over,
+  Z climbs back through one and keeps going. The strip under the axis is that story in one dimension,
+  and the crossing point is where the two corrections exactly cancel.</p>
+
+  <h2>The critical point falls out of the algebra</h2>
+
+  <p>Cool the gas and the curve develops a wiggle &#8212; a stretch where squeezing the gas
+  <em>lowers</em> its pressure, which nothing stable can do. That is the model telling you the gas is
+  condensing. The temperature at which the wiggle first appears is the critical temperature, and it
+  can be read straight off the constants: T<sub>c</sub>&nbsp;=&nbsp;8a/27Rb, with
+  P<sub>c</sub>&nbsp;=&nbsp;a/27b&#178; and V<sub>c</sub>&nbsp;=&nbsp;3nb. For carbon dioxide those
+  give 304.0&nbsp;K and 74.0&nbsp;bar, against measured values of 304.1 and 73.8. The page also finds
+  the same point numerically, by bisecting on the temperature at which the wiggle disappears, and
+  asserts the two routes agree.</p>
+
+  <p>The combination P<sub>c</sub>V<sub>c</sub>/RT<sub>c</sub> comes out as exactly three eighths for
+  every gas, which is the model's most obvious failure: real gases cluster around 0.27. Van der Waals
+  gets the shape right and the details wrong, which is roughly what you should expect from two
+  correction terms and no adjustable curve-fitting.</p>
+
+  <h2>What to try</h2>
+
+  <p>Leave carbon dioxide at 300&nbsp;K and press <em>halve the volume</em> four times in a row. The
+  first press moves the pressure by slightly less than the ideal law predicts; by the fourth it moves
+  by more, and the strip beneath the axis has changed colour under your marker. Then set the
+  temperature to 250&nbsp;K, below the critical 304&nbsp;K, and look for the wiggle at the left-hand
+  end. Helium at the same settings will not show one until you get below about five kelvin.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG. Never use bare Math.random(). ------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+
+/* ---- MODEL: pure functions of the parameters. No DOM in here. ----------- */
+/* R in L bar / (mol K), from the 2019 SI definition of the joule.           */
+const RGAS = 0.08314462618;
+
+/* a in L^2 bar / mol^2, b in L / mol. Laboratory values, not fitted here.
+   Tlit and Plit are the measured critical constants, for comparison only.   */
+const GASES = [
+  { key: "helium",         a: 0.0346, b: 0.02380, Tlit: 5.195,  Plit: 2.275  },
+  { key: "hydrogen",       a: 0.2476, b: 0.02661, Tlit: 33.0,   Plit: 12.93  },
+  { key: "nitrogen",       a: 1.3700, b: 0.03870, Tlit: 126.2,  Plit: 33.90  },
+  { key: "carbon dioxide", a: 3.6400, b: 0.04267, Tlit: 304.13, Plit: 73.75  },
+  { key: "ammonia",        a: 4.2250, b: 0.03707, Tlit: 405.5,  Plit: 113.5  },
+  { key: "water vapour",   a: 5.5360, b: 0.03049, Tlit: 647.1,  Plit: 220.64 }
+];
+
+const Model = {
+  pIdeal(n, T, V){ return n * RGAS * T / V; },
+
+  pVdw(g, n, T, V){
+    const free = V - n * g.b;
+    if (free <= 0) return Infinity;
+    return n * RGAS * T / free - g.a * n * n / (V * V);
+  },
+
+  z(g, n, T, V){ return Model.pVdw(g, n, T, V) * V / (n * RGAS * T); },
+
+  /* dP/dV for one mole, which is what decides whether the isotherm wiggles  */
+  slope(g, T, V){
+    const f = V - g.b;
+    return -RGAS * T / (f * f) + 2 * g.a / (V * V * V);
+  },
+
+  /* the closed forms */
+  critT(g){ return 8 * g.a / (27 * RGAS * g.b); },
+  critP(g){ return g.a / (27 * g.b * g.b); },
+  critV(g, n){ return 3 * n * g.b; },
+  boyleT(g){ return g.a / (RGAS * g.b); },
+
+  /* the second route: the largest value dP/dV reaches on the isotherm.
+     dP/dV is not unimodal -- it climbs from minus infinity to a maximum,
+     falls to a minimum near 3a/RT and then creeps back up to zero -- so a
+     bare ternary search walks off to the wrong stationary point. Grid the
+     region where the wiggle can live, then refine inside one cell.         */
+  peakSlope(g, T){
+    const lo0 = g.b * 1.0005, hi0 = g.b * 30, N = 1500;
+    let bi = 0, bv = -Infinity;
+    for (let i = 0; i <= N; i++){
+      const V = lo0 + (hi0 - lo0) * i / N, sl = Model.slope(g, T, V);
+      if (sl > bv){ bv = sl; bi = i; }
+    }
+    let lo = lo0 + (hi0 - lo0) * Math.max(0, bi - 1) / N;
+    let hi = lo0 + (hi0 - lo0) * Math.min(N, bi + 1) / N;
+    for (let i = 0; i < 120; i++){
+      const m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;
+      if (Model.slope(g, T, m1) < Model.slope(g, T, m2)) lo = m1; else hi = m2;
+    }
+    const V = (lo + hi) / 2;
+    return { V: V, value: Model.slope(g, T, V) };
+  },
+
+  /* cached, because three assertions want the same numerical critical point */
+  critNumeric(g){
+    if (!Model._cache) Model._cache = {};
+    if (Model._cache[g.key]) return Model._cache[g.key];
+    const T = Model.critTNumeric(g), pk = Model.peakSlope(g, T);
+    const out = { T: T, V: pk.V, P: Model.pVdw(g, 1, T, pk.V) };
+    Model._cache[g.key] = out;
+    return out;
+  },
+
+  /* bisect on the temperature at which that peak first stops being positive */
+  critTNumeric(g){
+    let lo = 1e-6, hi = 1;
+    while (Model.peakSlope(g, hi).value > 0 && hi < 1e7) hi *= 2;
+    for (let i = 0; i < 80; i++){
+      const m = (lo + hi) / 2;
+      if (Model.peakSlope(g, m).value > 0) lo = m; else hi = m;
+    }
+    return (lo + hi) / 2;
+  },
+
+  wiggles(g, T){ return Model.peakSlope(g, T).value > 0; }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { gas: 3, temp: 300, vol: 200, mol: 100 };
+const state = Object.assign({}, defaults);
+state.note = "";
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function volOf(i){ return 0.02 * Math.pow(10, i / 100); }   /* 0.02 L to 200 L */
+function sig(x, d){ return x.toFixed(d); }
+function bar(x){
+  if (!Number.isFinite(x)) return "off the scale";
+  if (x >= 1000) return Math.round(x).toLocaleString("en-GB");
+  if (x >= 100) return x.toFixed(0);
+  if (x >= 10) return x.toFixed(1);
+  return x.toFixed(2);
+}
+
+const SS = 2;
+let CW = 900, CH = 620, NARROW = false, FS = 13, G_ = null;
+
+function wid(t){ return ctx.measureText(t).width; }
+function pick(sets, room){
+  for (let i = 0; i < sets.length; i++) if (wid(sets[i]) <= room) return sets[i];
+  return sets[sets.length - 1];
+}
+
+/* the chart's fixed decades */
+const VLO = -1.7, VHI = 2.3;      /* log10 litres: 0.02 to 200            */
+const PLO = -2.0, PHI = 3.6;      /* log10 bar:    0.01 to about 4,000    */
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 20) : 900);
+  NARROW = avail < 470;
+  CW = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+
+  const pad = NARROW ? 10 : 14;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.font = FS + "px " + css("--font-body");
+  const axw = Math.ceil(ctx.measureText("1,000").width) + 9;
+
+  const L = pad + axw, R = CW - pad;
+  const plotTop = Math.round(pad + FS + 12);
+  const plotH = Math.round(CW * (NARROW ? 0.88 : 0.50));
+  const plotBot = plotTop + plotH;
+  const xlabY = plotBot + FS + 7;
+  const rugTitle = Math.round(xlabY + FS + 15);
+  const rugTop = rugTitle + 7;
+  const rugH = NARROW ? 15 : 19;
+  const rugBot = rugTop + rugH;
+  const rugLab = rugBot + FS + 8;
+  CH = rugLab + 8;
+
+  G_ = { pad: pad, L: L, R: R, plotTop: plotTop, plotBot: plotBot, xlabY: xlabY,
+         rugTitle: rugTitle, rugTop: rugTop, rugBot: rugBot, rugH: rugH, rugLab: rugLab };
+
+  if (cv.width !== CW * SS || cv.height !== CH * SS){ cv.width = CW * SS; cv.height = CH * SS; }
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function render(){
+  fitCanvas();
+  const G = G_;
+  const g = GASES[state.gas];
+  const T = state.temp, n = state.mol / 100, V = volOf(state.vol);
+
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line"),
+        accent = css("--accent"), alt = css("--alt"), quiet = css("--quiet"),
+        soft = css("--accent-soft"), panel = css("--panel");
+
+  const pi = Model.pIdeal(n, T, V), pv = Model.pVdw(g, n, T, V);
+  const zz = Model.z(g, n, T, V);
+  const Tc = Model.critT(g), Pc = Model.critP(g), Vc = Model.critV(g, n);
+
+  ctx.clearRect(0, 0, CW, CH);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, CW, CH);
+  ctx.textBaseline = "alphabetic";
+
+  const PW = G.R - G.L, PH = G.plotBot - G.plotTop;
+  const X = (v) => G.L + PW * (Math.log(v) / Math.LN10 - VLO) / (VHI - VLO);
+  const Y = (p) => G.plotBot - PH * (Math.log(p) / Math.LN10 - PLO) / (PHI - PLO);
+  const clampY = (y) => Math.max(G.plotTop - 40, Math.min(G.plotBot + 40, y));
+
+  /* ---------------- title row, with the gap on the right ---------------- */
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  const dev = (pv - pi) / pi;
+  const dlab = Number.isFinite(dev)
+    ? (Math.abs(dev) < 0.0005 ? "the two agree here"
+       : "real is " + Math.abs(100 * dev).toFixed(1) + "% " + (dev < 0 ? "below" : "above") + " ideal")
+    : "past the hard-sphere limit";
+  const dw = wid(dlab) + 16;
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["Pressure in bar against volume in litres at " + T + " K",
+                     "Bar against litres at " + T + " K",
+                     "bar v litres, " + T + " K", T + " K", ""], PW - dw),
+               G.L, G.plotTop - 9);
+  ctx.textAlign = "right"; ctx.fillStyle = dev < 0 ? alt : accent;
+  ctx.fillText(dlab, G.R, G.plotTop - 9);
+
+  ctx.fillStyle = soft; ctx.fillRect(G.L, G.plotTop, PW, PH);
+
+  /* ---------------- decade grid ----------------------------------------- */
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.fillStyle = muted; ctx.textAlign = "right";
+  for (let d = Math.ceil(PLO); d <= PHI; d++){
+    const y = Math.round(Y(Math.pow(10, d))) + 0.5;
+    ctx.beginPath(); ctx.moveTo(G.L, y); ctx.lineTo(G.R, y); ctx.stroke();
+    const p10 = Math.pow(10, d);
+    ctx.fillText(p10 >= 1 ? p10.toLocaleString("en-GB") : p10.toFixed(-d), G.L - 7, y + FS * 0.36);
+  }
+  ctx.textAlign = "center";
+  for (let d = Math.ceil(VLO); d <= VHI; d++){
+    const x = Math.round(X(Math.pow(10, d))) + 0.5;
+    ctx.beginPath(); ctx.moveTo(x, G.plotTop); ctx.lineTo(x, G.plotBot); ctx.stroke();
+    const v10 = Math.pow(10, d);
+    ctx.fillStyle = muted;
+    ctx.fillText(v10 >= 1 ? v10.toLocaleString("en-GB") : v10.toFixed(-d), x, G.xlabY);
+  }
+
+  /* ---------------- the two curves, and the area between them ----------- */
+  const STEPS = 300;
+  const vs = [], pIs = [], pVs = [];
+  for (let i = 0; i <= STEPS; i++){
+    const lv = VLO + (VHI - VLO) * i / STEPS, vv = Math.pow(10, lv);
+    vs.push(vv);
+    pIs.push(Model.pIdeal(n, T, vv));
+    pVs.push(Model.pVdw(g, n, T, vv));
+  }
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(G.L, G.plotTop, PW, PH); ctx.clip();
+
+  /* shaded gap */
+  ctx.beginPath();
+  for (let i = 0; i <= STEPS; i++){
+    const x = X(vs[i]), y = clampY(Y(pIs[i]));
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  for (let i = STEPS; i >= 0; i--){
+    const p = pVs[i];
+    ctx.lineTo(X(vs[i]), clampY(p > 0 ? Y(p) : G.plotBot + 40));
+  }
+  ctx.closePath();
+  ctx.globalAlpha = 0.22; ctx.fillStyle = accent; ctx.fill(); ctx.globalAlpha = 1;
+
+  /* the ideal line */
+  ctx.strokeStyle = alt; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  for (let i = 0; i <= STEPS; i++){
+    const x = X(vs[i]), y = clampY(Y(pIs[i]));
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  /* the van der Waals curve; it leaves the chart where P goes negative */
+  ctx.strokeStyle = accent; ctx.lineWidth = 2.6;
+  ctx.beginPath();
+  let pen = false;
+  for (let i = 0; i <= STEPS; i++){
+    const p = pVs[i];
+    if (!(p > 0) || !Number.isFinite(p)){ pen = false; continue; }
+    const x = X(vs[i]), y = clampY(Y(p));
+    if (!pen){ ctx.moveTo(x, y); pen = true; } else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  /* the critical point of this gas, at this amount */
+  const cx = X(Vc), cy = Y(Pc * 1);
+  ctx.strokeStyle = ink; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(cx, cy, 5, 0, 6.2832); ctx.stroke();
+
+  /* where the reader is: a filled dot on each curve, joined */
+  const xv = X(V);
+  ctx.strokeStyle = quiet; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(xv, clampY(Y(pi)));
+  ctx.lineTo(xv, clampY(pv > 0 ? Y(pv) : G.plotBot + 40)); ctx.stroke();
+  ctx.fillStyle = alt;
+  ctx.beginPath(); ctx.arc(xv, clampY(Y(pi)), 4, 0, 6.2832); ctx.fill();
+  if (pv > 0 && Number.isFinite(pv)){
+    ctx.fillStyle = accent;
+    ctx.beginPath(); ctx.arc(xv, clampY(Y(pv)), 5, 0, 6.2832); ctx.fill();
+  }
+  ctx.restore();
+
+  /* legend, in the empty bottom-left corner of a log-log P-V chart */
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.textAlign = "left";
+  const rows = [[accent, "van der Waals"], [alt, "ideal gas law"],
+                [ink, "critical point of " + g.key]];
+  for (let i = 0; i < rows.length; i++){
+    const y = G.plotBot - 10 - (rows.length - 1 - i) * (FS + 5);
+    ctx.fillStyle = rows[i][0];
+    ctx.fillRect(G.L + 9, y - FS * 0.42, 13, 3);
+    ctx.fillText(pick([rows[i][1], rows[i][1].split(" of ")[0], ""], PW * 0.55),
+                 G.L + 28, y);
+  }
+
+  /* ---------------- the rug: Z along the same volume axis --------------- */
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  const zlab = "Z = " + (Number.isFinite(zz) ? zz.toFixed(3) : "\u2014") + " here";
+  const zw = wid(zlab) + 16;
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["How compressible the gas is, along the same axis",
+                     "Compressibility along the same axis",
+                     "Compressibility", ""], PW - zw),
+               G.L, G.rugTitle);
+  ctx.textAlign = "right"; ctx.fillStyle = zz < 1 ? alt : accent;
+  ctx.fillText(zlab, G.R, G.rugTitle);
+
+  const CELLS = Math.max(40, Math.round(PW / 3));
+  for (let i = 0; i < CELLS; i++){
+    const lv = VLO + (VHI - VLO) * (i + 0.5) / CELLS, vv = Math.pow(10, lv);
+    const zc = Model.z(g, n, T, vv);
+    const x0 = G.L + PW * i / CELLS, x1 = G.L + PW * (i + 1) / CELLS;
+    if (!Number.isFinite(zc) || zc <= 0){
+      ctx.fillStyle = quiet; ctx.globalAlpha = 0.5;
+    } else {
+      ctx.fillStyle = zc < 1 ? alt : accent;
+      ctx.globalAlpha = Math.min(1, 0.08 + Math.abs(zc - 1) / 0.2);
+    }
+    ctx.fillRect(x0, G.rugTop, x1 - x0 + 0.6, G.rugH);
+    ctx.globalAlpha = 1;
+  }
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.strokeRect(G.L + 0.5, G.rugTop + 0.5, PW - 1, G.rugH - 1);
+
+  /* the reader's marker, and the crossing where Z passes through one */
+  ctx.strokeStyle = ink; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(Math.round(xv) + 0.5, G.rugTop - 4);
+  ctx.lineTo(Math.round(xv) + 0.5, G.rugBot + 4);
+  ctx.stroke();
+
+  let cross = 0;
+  for (let i = 1; i <= 600; i++){
+    const va = Math.pow(10, VLO + (VHI - VLO) * (i - 1) / 600);
+    const vb = Math.pow(10, VLO + (VHI - VLO) * i / 600);
+    const za = Model.z(g, n, T, va), zb = Model.z(g, n, T, vb);
+    if (Number.isFinite(za) && Number.isFinite(zb) && (za - 1) * (zb - 1) < 0){ cross = vb; break; }
+  }
+
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.fillStyle = muted; ctx.textAlign = "left";
+  const rlab = cross > 0
+    ? pick(["attraction wins to the right of " + sig(cross, 3) + " L, size to the left",
+            "the two corrections cancel at " + sig(cross, 3) + " L",
+            "crossover at " + sig(cross, 3) + " L"], PW)
+    : pick(["no crossover on this axis: one correction wins everywhere",
+            "no crossover on this axis"], PW);
+  ctx.fillText(rlab, G.L, G.rugLab);
+
+  /* ---------------- the numbers ----------------------------------------- */
+  el("tempout").textContent = T + " K";
+  el("volout").textContent = (V >= 10 ? V.toFixed(1) : V.toFixed(2)) + " L";
+  el("molout").textContent = n.toFixed(2) + " mol";
+  el("oPi").textContent = bar(pi) + " bar";
+  el("oPv").textContent = Number.isFinite(pv) && pv > 0 ? bar(pv) + " bar" : "no solution";
+  el("oErr").textContent = Number.isFinite(dev) ? (100 * dev).toFixed(2) + "%" : "\u2014";
+  el("oZ").textContent = Number.isFinite(zz) ? zz.toFixed(3) : "\u2014";
+  el("oCrit").textContent = Tc.toFixed(1) + " K, " + Pc.toFixed(1) + " bar";
+  el("oPhase").textContent = Model.wiggles(g, T) ? "below critical" : "above critical";
+  el("ledger").textContent = state.note ||
+    "Press one of the buttons below and watch what the ideal law gets wrong.";
+}
+
+function readState(){
+  state.gas = parseInt(el("gas").value, 10);
+  state.temp = parseInt(el("temp").value, 10);
+  state.vol = parseInt(el("vol").value, 10);
+  state.mol = parseInt(el("mol").value, 10);
+}
+["gas", "temp", "vol", "mol"].forEach((id) => {
+  el(id).addEventListener("input", () => { readState(); state.note = ""; render(); });
+  el(id).addEventListener("change", () => { readState(); state.note = ""; render(); });
+});
+
+function bump(label, apply){
+  const g = GASES[state.gas];
+  const n0 = state.mol / 100, T0 = state.temp, V0 = volOf(state.vol);
+  const p0 = Model.pVdw(g, n0, T0, V0);
+  apply();
+  readState();
+  const n1 = state.mol / 100, T1 = state.temp, V1 = volOf(state.vol);
+  const p1 = Model.pVdw(g, n1, T1, V1), pIdealAfter = Model.pIdeal(n1, T1, V1);
+  state.note = label + ": " + sig(V0, 2) + " \u2192 " + sig(V1, 2) + " L at "
+             + T0 + " \u2192 " + T1 + " K. Pressure " + bar(p0) + " \u2192 " + bar(p1)
+             + " bar; the ideal law says " + bar(pIdealAfter) + " bar.";
+  render();
+}
+
+el("halve").addEventListener("click", () => bump("Halved the volume", () => {
+  el("vol").value = String(Math.max(0, state.vol - 30));
+}));
+el("warm").addEventListener("click", () => bump("Doubled the temperature", () => {
+  el("temp").value = String(Math.min(1000, state.temp * 2));
+}));
+el("reset").addEventListener("click", () => {
+  el("gas").value = String(defaults.gas);
+  el("temp").value = String(defaults.temp);
+  el("vol").value = String(defaults.vol);
+  el("mol").value = String(defaults.mol);
+  readState(); state.note = ""; render();
+});
+
+let rt = null;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 90); });
+const dark = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+if (dark && dark.addEventListener) dark.addEventListener("change", render);
+
+render();
+
+/* ---- SELFTEST: minimum 5 numeric assertions against known values. ------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+  const CO2 = GASES[3], N2 = GASES[2];
+
+  /* 1. the ideal law, as an identity, across the whole grid */
+  let w1 = 0;
+  for (let n = 0.25; n <= 4.001; n += 0.25)
+    for (let T = 50; T <= 1000; T += 25)
+      for (let i = 0; i <= 400; i += 20){
+        const V = volOf(i), P = Model.pIdeal(n, T, V);
+        const r = Math.abs(P * V / (n * RGAS * T) - 1);
+        if (r > w1) w1 = r;
+      }
+  push("PV = nRT holds as an identity across the grid", w1 < 1e-12,
+       "worst relative departure " + w1.toExponential(3) + " over 16 x 39 x 21 settings");
+
+  /* 2. the molar volume, by asking the model what one mole at 22.414 L does */
+  const p1atm = Model.pIdeal(1, 273.15, 22.414);
+  const p1bar = Model.pIdeal(1, 273.15, 22.711);
+  push("one mole occupies 22.414 L at 0 C and one atmosphere",
+       near(p1atm, 1.01325, 5e-5) && near(p1bar, 1.0, 5e-5),
+       "22.414 L gives " + p1atm.toFixed(7) + " bar against one atmosphere of 1.01325; "
+       + "22.711 L gives " + p1bar.toFixed(7) + " bar");
+
+  /* 3. Boyle, at fixed temperature */
+  let w3 = 0;
+  for (let T = 100; T <= 1000; T += 50)
+    for (let i = 0; i <= 380; i += 20){
+      const Va = volOf(i), Vb = volOf(i + 20);
+      const d = Math.abs(Model.pIdeal(1, T, Va) * Va - Model.pIdeal(1, T, Vb) * Vb);
+      if (d > w3) w3 = d;
+    }
+  push("Boyle: P1V1 equals P2V2 at fixed temperature", w3 < 1e-12,
+       "worst gap " + w3.toExponential(3) + " bar litres");
+
+  /* 4. Charles and Gay-Lussac, the other two faces of the same law */
+  let w4 = 0;
+  for (let i = 0; i <= 400; i += 25){
+    const V = volOf(i);
+    for (let T = 100; T <= 950; T += 50){
+      const r1 = Model.pIdeal(1, T, V) / T, r2 = Model.pIdeal(1, T + 50, V) / (T + 50);
+      if (Math.abs(r1 - r2) > w4) w4 = Math.abs(r1 - r2);
+    }
+  }
+  push("pressure over temperature is constant at fixed volume", w4 < 1e-13,
+       "worst gap " + w4.toExponential(3) + " bar per kelvin");
+
+  /* 5. van der Waals collapses onto the ideal law as a and b vanish, and
+        the departure is exactly first order in the scale factor: dividing
+        it by that factor gives the same number over four decades of eps.   */
+  const ratio = (eps) => {
+    const g = { a: CO2.a * eps, b: CO2.b * eps };
+    let w = 0;
+    for (let T = 100; T <= 900; T += 100)
+      for (let i = 100; i <= 400; i += 50){
+        const V = volOf(i);
+        const r = Math.abs(Model.pVdw(g, 1, T, V) / Model.pIdeal(1, T, V) - 1) / eps;
+        if (r > w) w = r;
+      }
+    return w;
+  };
+  const r3 = ratio(1e-3), r5 = ratio(1e-5), r7 = ratio(1e-7);
+  push("van der Waals becomes the ideal law as a and b go to zero, linearly",
+       Math.abs(r5 / r3 - 1) < 0.01 && Math.abs(r7 / r5 - 1) < 0.01 && r7 < 2.5,
+       "departure divided by the scale factor is " + r3.toFixed(5) + ", " + r5.toFixed(5)
+       + " and " + r7.toFixed(5) + " at eps = 1e-3, 1e-5 and 1e-7, so the error is "
+       + "proportional to eps and vanishes with it");
+
+  /* 6. the critical point, closed form against the numerical bisection */
+  const rows6 = GASES.map((g) => Math.abs(Model.critNumeric(g).T / Model.critT(g) - 1));
+  push("the critical temperature found numerically matches 8a/27Rb",
+       Math.max.apply(null, rows6) < 1e-6,
+       "bisecting on where the isotherm stops wiggling agrees to "
+       + Math.max.apply(null, rows6).toExponential(2) + " for all six gases");
+
+  /* 7. and the critical volume, likewise: 3b */
+  const rows7 = GASES.map((g) => Math.abs(Model.critNumeric(g).V / (3 * g.b) - 1));
+  push("the volume where the wiggle appears is 3b",
+       Math.max.apply(null, rows7) < 1e-4,
+       "worst relative gap " + Math.max.apply(null, rows7).toExponential(2));
+
+  /* 8. the critical pressure, a/27b^2, evaluated on the curve itself */
+  const rows8 = GASES.map((g) => Math.abs(Model.critNumeric(g).P / Model.critP(g) - 1));
+  push("the pressure at that point is a/27b squared",
+       Math.max.apply(null, rows8) < 1e-5,
+       "worst relative gap " + Math.max.apply(null, rows8).toExponential(2));
+
+  /* 9. against the measured critical constants, which the model never saw */
+  const errT = GASES.map((g) => Math.abs(Model.critT(g) / g.Tlit - 1));
+  const errP = GASES.map((g) => Math.abs(Model.critP(g) / g.Plit - 1));
+  push("predicted critical constants match the laboratory values",
+       Math.max.apply(null, errT) < 0.01 && Math.max.apply(null, errP) < 0.01,
+       "worst temperature error " + (100 * Math.max.apply(null, errT)).toFixed(2)
+       + "%, worst pressure error " + (100 * Math.max.apply(null, errP)).toFixed(2)
+       + "%; carbon dioxide predicted " + Model.critT(CO2).toFixed(1) + " K and "
+       + Model.critP(CO2).toFixed(1) + " bar against 304.13 and 73.75");
+
+  /* 10. the model's own famous failure: Zc is three eighths for everything */
+  const zc = GASES.map((g) => Model.critP(g) * 3 * g.b / (RGAS * Model.critT(g)));
+  push("the model forces PcVc/RTc to exactly three eighths",
+       Math.max.apply(null, zc.map((z) => Math.abs(z - 0.375))) < 1e-12,
+       "all six give " + zc[0].toFixed(12) + "; real gases sit near 0.27, so this is where "
+       + "van der Waals is plainly wrong");
+
+  /* 11. Z tends to one as the gas is let out */
+  const far = GASES.map((g) => Math.abs(Model.z(g, 1, 300, 1e6) - 1));
+  push("Z goes to one as the volume grows", Math.max.apply(null, far) < 1e-4,
+       "at a million litres the worst departure is "
+       + Math.max.apply(null, far).toExponential(2));
+
+  /* 12. attraction first, then size: Z dips below one and comes back */
+  const zs = [];
+  for (let i = 400; i >= 0; i -= 10) zs.push(Model.z(CO2, 1, 300, volOf(i)));
+  const minZ = Math.min.apply(null, zs);
+  let back = false;
+  for (let i = zs.indexOf(minZ); i < zs.length; i++) if (zs[i] > 1) back = true;
+  push("carbon dioxide at 300 K dips under one then climbs back through it",
+       minZ < 0.6 && back,
+       "Z bottoms out at " + minZ.toFixed(4) + " and rises past one again as the volume "
+       + "approaches nb");
+
+  /* 13. the Boyle temperature, where the dip disappears entirely */
+  const TB = Model.boyleT(N2);
+  const dipAt = (T) => {
+    let m = 1;
+    for (let i = 400; i >= 120; i -= 4) m = Math.min(m, Model.z(N2, 1, T, volOf(i)));
+    return m;
+  };
+  push("above a/Rb nitrogen never becomes easier to compress than ideal",
+       dipAt(TB * 0.5) < 0.995 && dipAt(TB * 1.4) > 0.9999,
+       "the model puts nitrogen's Boyle temperature at " + TB.toFixed(0)
+       + " K; the measured value is near 327 K, another place the two corrections "
+       + "are only qualitatively right");
+
+  return t;
+};
+
+/* exposed for the verifier's control sweep */
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
