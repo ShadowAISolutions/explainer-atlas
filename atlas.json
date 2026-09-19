@@ -1,16 +1,19 @@
 {
   "generated_at": "2026-09-19",
-  "count": 18,
+  "count": 23,
   "domains": {
     "biology": [
-      "population-logistic-chaos"
+      "population-logistic-chaos",
+      "predator-prey-cycles"
     ],
     "chemistry": [
-      "ph-buffer-capacity"
+      "ph-buffer-capacity",
+      "reaction-rate-order"
     ],
     "computer-science": [
       "dijkstra-vs-astar",
-      "floating-point-precision"
+      "floating-point-precision",
+      "quicksort-pivot-choice"
     ],
     "earth-science": [
       "greenhouse-energy-balance"
@@ -22,7 +25,8 @@
       "pid-controller"
     ],
     "game-theory": [
-      "monty-hall"
+      "monty-hall",
+      "prisoners-dilemma-iterated"
     ],
     "information-theory": [
       "huffman-coding",
@@ -33,6 +37,7 @@
     ],
     "mathematics": [
       "fourier-series-square-wave",
+      "matrix-determinant-area",
       "newton-raphson-basins",
       "numerical-integration-error"
     ],
@@ -51,14 +56,15 @@
     "build-from-parts": 2,
     "compare-side-by-side": 2,
     "drag-parameter": 2,
-    "draw-input": 1,
+    "draw-input": 2,
     "guess-then-reveal": 2,
+    "live-code": 1,
     "perturb-and-observe": 2,
-    "race-two-methods": 1,
-    "spatial-explore": 1,
+    "race-two-methods": 2,
+    "spatial-explore": 2,
     "step-through": 2,
     "time-scrubber": 2,
-    "tune-to-match": 1
+    "tune-to-match": 2
   },
   "explainers": [
     {
@@ -311,6 +317,25 @@
       "assertions_count": 12
     },
     {
+      "slug": "matrix-determinant-area",
+      "title": "Draw Anything. It Grows by ad − bc.",
+      "domain": "mathematics",
+      "difficulty": 2,
+      "summary": "Draw a shape, push the four entries of a 2x2 matrix around, and watch every area multiply by the same number — the determinant — going negative when the plane turns over and zero when it collapses.",
+      "prerequisites": [],
+      "tags": [
+        "determinant",
+        "linear-algebra",
+        "area",
+        "orientation",
+        "singular-matrix"
+      ],
+      "interaction_pattern": "draw-input",
+      "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
       "slug": "monty-hall",
       "title": "The Host Knows, and That Is the Whole Trick",
       "domain": "game-theory",
@@ -487,6 +512,82 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 11
+    },
+    {
+      "slug": "predator-prey-cycles",
+      "title": "Kill Both Sides, Help the Pest",
+      "domain": "biology",
+      "difficulty": 3,
+      "summary": "Explore the Lotka-Volterra phase plane, find that every orbit averages to the equilibrium it never sits at, and see why culling predator and prey together makes the prey more common.",
+      "prerequisites": [],
+      "tags": [
+        "lotka-volterra",
+        "phase-plane",
+        "conserved-quantity",
+        "ecology",
+        "oscillation"
+      ],
+      "interaction_pattern": "spatial-explore",
+      "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
+      "slug": "prisoners-dilemma-iterated",
+      "title": "Write a Strategy, Enter the Tournament",
+      "domain": "game-theory",
+      "difficulty": 3,
+      "summary": "Write your own iterated prisoners dilemma strategy in the page and watch it play a round robin, then turn on noise and see which strategies can recover from a mistake.",
+      "prerequisites": [],
+      "tags": [
+        "prisoners-dilemma",
+        "cooperation",
+        "tournament",
+        "folk-theorem",
+        "noise"
+      ],
+      "interaction_pattern": "live-code",
+      "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
+      "slug": "quicksort-pivot-choice",
+      "title": "Sorted Input Is Quicksort's Worst Case",
+      "domain": "computer-science",
+      "difficulty": 3,
+      "summary": "Race a last-element, random and median-of-three pivot on the same list and watch the textbook version go quadratic on data that is merely already sorted.",
+      "prerequisites": [],
+      "tags": [
+        "quicksort",
+        "pivot",
+        "worst-case",
+        "recursion-depth",
+        "algorithm-analysis"
+      ],
+      "interaction_pattern": "race-two-methods",
+      "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
+      "slug": "reaction-rate-order",
+      "title": "The Balanced Equation Will Not Tell You This",
+      "domain": "chemistry",
+      "difficulty": 3,
+      "summary": "Four unlabelled vials of decaying reactant. Tune an order and a rate constant until your law lies on the measurements, and learn to read the order off the shape of the curve.",
+      "prerequisites": [],
+      "tags": [
+        "reaction-order",
+        "rate-law",
+        "half-life",
+        "curve-fitting",
+        "kinetics"
+      ],
+      "interaction_pattern": "tune-to-match",
+      "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
     },
     {
       "slug": "shannon-channel-capacity",

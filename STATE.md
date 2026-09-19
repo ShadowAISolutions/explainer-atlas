@@ -27,6 +27,44 @@ page is written — it is where a failing audit trend gets escalated.)*
 
 ## Batches
 
+### batch/004 — 2026-09-19
+- merged: predator-prey-cycles, prisoners-dilemma-iterated, matrix-determinant-area, quicksort-pivot-choice, reaction-rate-order
+- blocked: none
+- patterns: spatial-explore, live-code, draw-input, race-two-methods, tune-to-match
+- learned: Deliberately took the five least-used patterns, including live-code,
+  which no page had used in eighteen. Three of the five queue files suggested a
+  pattern that would have deepened an existing groove and were overridden, as
+  batch/003 recommended; that recommendation now looks like the default rather
+  than the exception.
+  Every assertion that failed this batch was again mine rather than the
+  model's, and each replacement was stronger. "A nice strategy can never
+  outscore its opponent" is simply false — grim trigger is nice and takes 329
+  to 74 off a coin flip once provoked. What actually caps a strategy at a draw
+  is MIRRORING, so the replacement asserts the exact identity that the score
+  gap is five times the difference in unilateral defections, plus the fact that
+  tit for tat's move always equals the opponent's previous one. The kinetics
+  page demanded R-squared above 0.99 from a diagnostic plot while following
+  each reaction to near exhaustion, where the signal sinks into the noise and
+  the logarithm goes wild; the fix was better chemistry (follow about three
+  half-lives, as a kineticist does) plus an assertion of the discriminating
+  property — the winning plot clears the field by a margin — rather than an
+  absolute threshold.
+  Two practical notes. (1) The 390px screenshot caught an unreadable canvas on
+  three of the five pages. A wide canvas scaled into a phone is a strip of
+  illegible pixels, and enlarging fonts only goes so far; the real fix is a
+  layout() that picks a different canvas size and arrangement below about
+  620px — panes stacked rather than side by side — and a debounced resize
+  listener. Budget for it on any page whose stage is wider than it is tall.
+  (2) The batch/003 heredoc trap recurred twice in a new form: a patch script
+  matching on a string containing a non-ASCII character written as a \uXXXX
+  escape will not match, because the file already holds the decoded character.
+  Build the character with a named Python variable and concatenate.
+  The "derive the headline quantity a second, independent way" practice held
+  on all five: RK4 against the closed integrated rate law, Gaussian
+  elimination against ad - bc, the balanced-recursion count against a run of
+  quicksort, the conserved Lotka-Volterra quantity against the orbit, and the
+  unilateral-defection identity against the tournament scores.
+
 ### batch/003 — 2026-09-19
 - merged: ph-buffer-capacity, levenshtein-distance, greenhouse-energy-balance, shannon-channel-capacity, special-relativity-time-dilation
 - blocked: none
