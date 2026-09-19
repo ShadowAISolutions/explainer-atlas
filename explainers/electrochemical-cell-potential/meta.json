@@ -1,0 +1,18 @@
+{
+  "slug": "electrochemical-cell-potential",
+  "title": "A Flat Battery Is Not Empty",
+  "domain": "chemistry",
+  "difficulty": 3,
+  "summary": "Drag the concentrations in a two-beaker cell and watch its voltage move, then follow the free-energy curve down to the bottom where the voltage is exactly zero.",
+  "prerequisites": [],
+  "tags": ["nernst-equation", "electrochemistry", "gibbs-free-energy", "equilibrium-constant", "galvanic-cell"],
+  "interaction_pattern": "drag-parameter",
+  "sources": [
+    { "title": "Nernst equation", "url": "https://en.wikipedia.org/wiki/Nernst_equation" },
+    { "title": "Galvanic cell", "url": "https://en.wikipedia.org/wiki/Galvanic_cell" },
+    { "title": "Standard electrode potential (data page)", "url": "https://en.wikipedia.org/wiki/Standard_electrode_potential_(data_page)" },
+    { "title": "Concentration cell", "url": "https://en.wikipedia.org/wiki/Concentration_cell" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}
