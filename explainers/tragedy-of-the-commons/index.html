@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Everyone Is Right and the Field Is Ruined — Explainer Atlas</title>
+<meta name="description" content="Every herder's own best move is one more animal, and the common ends up carrying nearly twice what it should. Drag the number of herders and watch the gap open.">
+<style>
+:root{
+  --bg:#f4f5f2; --panel:#ffffff; --ink:#191c1a; --muted:#5c635e; --line:#dde0d9;
+  --accent:#3f6b57; --accent-soft:#e6efea; --mine:#1f5f86; --nash:#b3421f;
+  --social:#3f6b57; --ruin:#8d1f38; --grid:#c9cfc7;
+  --radius:12px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.5rem,1.05rem + 2.1vw,2.25rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.05rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#101210; --panel:#181b19; --ink:#e7eae6; --muted:#98a09a; --line:#262b27;
+    --accent:#6fbb96; --accent-soft:#16291f; --mine:#6fb2de; --nash:#e4855d;
+    --social:#6fbb96; --ruin:#e0708e; --grid:#39403a;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:60rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.13; margin:0 0 .35em; letter-spacing:-.015em}
+.kicker{margin:0 0 .4em; color:var(--nash); font:700 .72rem/1.3 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.14em}
+.standfirst{margin:0; color:var(--muted); max-width:45em}
+.layout{display:grid; gap:calc(var(--pad)*.75); grid-template-columns:1fr; margin-top:var(--pad)}
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y; cursor:ew-resize}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.85rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1em}
+@media (min-width:44rem){ .controls{grid-template-columns:repeat(2,minmax(0,1fr)); gap:1em 1.6em} }
+@media (min-width:64rem){ .controls{grid-template-columns:repeat(3,minmax(0,1fr))} }
+.control{display:grid; gap:.3em; align-content:start}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control label{font-weight:600}
+.control output{font:600 .88rem/1 var(--font-mono); color:var(--accent);
+  background:var(--accent-soft); padding:.26em .48em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.81rem; line-height:1.5}
+.wide{grid-column:1/-1; display:flex; gap:.6em; flex-wrap:wrap}
+.wide button{flex:1 1 12rem}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line);
+  border-radius:8px; padding:.5em .7em; min-height:40px}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8rem,1fr)); gap:.55em;
+  margin:calc(var(--pad)*.75) 0 0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.5em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.73rem; text-transform:uppercase; letter-spacing:.06em}
+.readout dd{margin:.2em 0 0; font:600 1.02rem/1.2 var(--font-mono)}
+.prose{max-width:39em; margin-top:var(--pad)}
+.prose h2{font-size:1.1rem; margin:1.85em 0 .45em; color:var(--accent)}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.85rem; background:var(--accent-soft);
+  padding:.75em .9em; border-radius:9px; white-space:pre; overflow-x:auto; line-height:1.55}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line);
+  color:var(--muted); font-size:.85rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Game theory &middot; Externalities</p>
+  <h1>Everyone Is Right and the Field Is Ruined</h1>
+  <p class="standfirst">Each herder should add one more animal. Every one of them is correct, and the
+  common ends up carrying nearly twice what it can profitably bear. Drag the number of herders and
+  watch the gap open.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1240" height="1360" role="img"
+      aria-label="Three charts. The top one plots total profit from the common against the total number of animals, marking the socially best herd, the equilibrium herd, and the point where all profit is gone. The middle one plots one herder's own profit against their own animals, with a draggable handle. The bottom one plots how much the equilibrium overshoots against the number of herders."></canvas>
+    <figcaption>Drag anywhere on the middle chart to change your own herd, or on the bottom chart to
+    change how many herders share the common. The controls do the same thing with the keyboard.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Commons parameters">
+    <div class="control">
+      <div class="row"><label for="n">Herders sharing the common</label><output id="nout" for="n">8</output></div>
+      <input type="range" id="n" min="1" max="40" step="1" value="8">
+      <p class="hint">One herder owns the whole problem and solves it. Two already do not.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="you">Your own animals</label><output id="youout" for="you">3.7</output></div>
+      <input type="range" id="you" min="0" max="40" step="0.1" value="3.7">
+      <p class="hint">What you put on the common. The middle chart is your profit as this changes.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="others">What everyone else does</label></div>
+      <select id="others">
+        <option value="nash" selected>their own best move</option>
+        <option value="fair">their share of the best total</option>
+        <option value="mirror">whatever you do</option>
+      </select>
+      <p class="hint">The middle chart is drawn against this. Restraint by the others is exactly what
+      makes adding one more animal pay.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="a">Value of the first animal</label><output id="aout" for="a">24</output></div>
+      <input type="range" id="a" min="12" max="40" step="1" value="24">
+      <p class="hint">What an animal is worth on an empty common.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="b">Crowding</label><output id="bout" for="b">0.60</output></div>
+      <input type="range" id="b" min="0.1" max="2" step="0.05" value="0.6">
+      <p class="hint">How much each extra animal takes off the value of every other animal.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="c">Cost of keeping one</label><output id="cout" for="c">4.0</output></div>
+      <input type="range" id="c" min="0" max="10" step="0.5" value="4">
+      <p class="hint">Feed, labour, everything the animal costs you whatever the common is like.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="tax">Charge per animal</label><output id="taxout" for="tax">0.0</output></div>
+      <input type="range" id="tax" min="0" max="15" step="0.1" value="0">
+      <p class="hint">A fee for putting an animal out. Set to the right number it closes the gap
+      exactly, and the money is still there to hand back.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="curves">Show on the top chart</label></div>
+      <select id="curves">
+        <option value="total" selected>total profit from the common</option>
+        <option value="each">what each animal earns</option>
+      </select>
+      <p class="hint">The second view shows why nobody stops: the last animal still earns something
+      long after the herd as a whole has passed its best size.</p>
+    </div>
+
+    <div class="wide">
+      <button type="button" id="setTax">Set the charge to the damage done</button>
+      <button type="button" id="beBest">Put me at my own best move</button>
+      <button type="button" id="reset">Reset to defaults</button>
+    </div>
+  </section>
+</div>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Best total herd</dt><dd id="rSoc">&mdash;</dd></div>
+  <div><dt>Where it settles</dt><dd id="rNash">&mdash;</dd></div>
+  <div><dt>Overshoot</dt><dd id="rRatio">&mdash;</dd></div>
+  <div><dt>Profit kept</dt><dd id="rEff">&mdash;</dd></div>
+  <div><dt>Your profit</dt><dd id="rMine">&mdash;</dd></div>
+  <div><dt>Your best move</dt><dd id="rBest">&mdash;</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>Eight herders share a field. Between them they are grazing about thirty animals, and the field
+  would earn more if they grazed seventeen. Nobody is being greedy or stupid. Every one of them has
+  worked out, correctly, that adding one more animal makes them money, and every one of them is right,
+  and the result is a field carrying nearly twice what it should.</p>
+
+  <h2>Why the arithmetic does this</h2>
+
+  <p>An animal on an empty common is worth a lot. Each extra animal takes a little off what every
+  animal is worth, because they are all eating the same grass. So the value of an animal falls as the
+  herd grows, and at some size the herd as a whole stops gaining. That size is the peak of the top
+  chart, and it is where a single owner of the whole field would stop.</p>
+
+  <p>A herder who owns one animal in twenty does not see that peak. When they add an animal they take
+  the whole of what it earns, and they carry only their own twentieth of the damage it does. The other
+  nineteen twentieths land on their neighbours. So they keep adding long after the field has passed
+  its best size, and they stop only when the animal earns nothing for <em>them</em> &mdash; not when it
+  costs the field more than it makes.</p>
+
+  <p class="math">value of an animal when X are grazing  =  a - bX
+one herder's profit                   =  x ( a - bX ) - cx
+best for the field    X*  =  (a - c) / 2b
+where it settles      X#  =  n (a - c) / b(n + 1)
+overshoot   X# / X*  =  2n / (n + 1)</p>
+
+  <p>That last line is the whole parable as a number, and it does not mention the grass, the cost, or
+  the price. With one herder the overshoot is exactly 1: sole ownership solves the problem completely.
+  With two it is 1.33. With eight, 1.78. It climbs toward 2 and never passes it, so the common is
+  never grazed more than twice as hard as it should be &mdash; which is either reassuring or not,
+  depending on the field. The profit actually kept is worse news: it falls as 4n/(n+1)&sup2;, so eight
+  herders keep under forty per cent of what one would have made.</p>
+
+  <h2>Nobody has to be shortsighted</h2>
+
+  <p>Switch the top chart to what each animal earns. The line is still above zero well past the peak
+  of the total, and that is the trap in one picture. Every herder standing at the settled herd size
+  is making money on their last animal. Taking it off the field would cost them. They are not failing
+  to see the future; they are seeing their own arithmetic clearly, and their own arithmetic is not
+  the field's.</p>
+
+  <p>You can check this on yourself. Set everyone else to their share of the best total, so the field
+  is exactly where it should be, and then look at your own curve. Your profit still rises if you add
+  animals. The efficient outcome is not an equilibrium: it is a place everyone would rather be and
+  nobody will stay.</p>
+
+  <h2>Closing the gap</h2>
+
+  <p>Charge for it. The damage one animal does to everyone else is real and it can be priced, and if
+  the charge equals the damage, the herder's arithmetic becomes the field's arithmetic and they stop
+  in the right place on their own. Press the button and the settled herd lands exactly on the peak.
+  The charge that does it is (a - c)(n - 1) / 2n &mdash; zero for a single owner, rising toward half
+  the value of the first animal as the crowd grows.</p>
+
+  <p>Two other things close it, and the chart shows why. Reduce the number of herders and the
+  overshoot shrinks on its own, which is what enclosure did and what a fishing quota does by another
+  route. Or let them agree among themselves: nothing in the arithmetic forbids seventeen animals, it
+  only says no one will get there alone. Elinor Ostrom's work is a catalogue of commons where the
+  people using them did exactly that, with rules of their own making, and kept the field.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+const TAU = Math.PI * 2;
+
+/* ---- MODEL: pure, no DOM ------------------------------------------------ */
+/* An animal on a common carrying X head is worth a - bX, and costs c to keep,
+   plus any charge t. Nothing below knows about the page. */
+const Model = {
+  value(X, a, b){ return a - b * X; },
+  netEach(X, a, b, c, t){ return a - b * X - c - (t || 0); },
+  payoff(xi, Xoth, a, b, c, t){
+    return xi * (a - b * (xi + Xoth)) - (c + (t || 0)) * xi;
+  },
+  welfare(X, a, b, c){ return X * (a - b * X) - c * X; },
+
+  /* closed forms */
+  nashEach(n, a, b, c, t){ return Math.max(0, (a - c - (t || 0)) / (b * (n + 1))); },
+  nashTotal(n, a, b, c, t){ return n * Model.nashEach(n, a, b, c, t); },
+  socialTotal(a, b, c){ return Math.max(0, (a - c) / (2 * b)); },
+  openAccess(a, b, c){ return Math.max(0, (a - c) / b); },
+  pigou(n, a, b, c){ return Math.max(0, (a - c) * (n - 1) / (2 * n)); },
+  overshoot(n){ return 2 * n / (n + 1); },
+  kept(n){ return 4 * n / ((n + 1) * (n + 1)); },
+
+  /* the one animal a herder would add or remove given what the rest are doing */
+  best(Xoth, a, b, c, t){ return Math.max(0, (a - c - (t || 0) - b * Xoth) / (2 * b)); },
+
+  /* Naive tit-for-tat adjustment: everyone jumps straight to their best reply.
+     The map has slope -(n-1)/2, so it only converges for two herders. */
+  naive(n, a, b, c, t, x0, rounds){
+    let x = x0;
+    for (let r = 0; r < rounds; r++) x = Model.best((n - 1) * x, a, b, c, t);
+    return x;
+  },
+  /* INDEPENDENT ROUTE to the equilibrium: the same adjustment, damped. Moving
+     a fraction 1/(n+1) of the way to the best reply makes the map a contraction
+     with factor exactly 1/2 for every n, so the error halves every round and
+     nothing here uses the closed form. */
+  settle(n, a, b, c, t, rounds){
+    const lam = 1 / (n + 1);
+    let x = 0;
+    for (let r = 0; r < rounds; r++) x = (1 - lam) * x + lam * Model.best((n - 1) * x, a, b, c, t);
+    return x;
+  },
+  /* INDEPENDENT ROUTE to the best total: hunt for the peak of the welfare curve
+     without ever differentiating it. */
+  huntSocial(a, b, c, rounds){
+    let lo = 0, hi = Model.openAccess(a, b, c) * 1.2 + 1;
+    for (let r = 0; r < rounds; r++){
+      const m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;
+      if (Model.welfare(m1, a, b, c) < Model.welfare(m2, a, b, c)) lo = m1; else hi = m2;
+    }
+    return (lo + hi) / 2;
+  },
+  /* and the same by brute force, to within its own grid */
+  scanSocial(a, b, c, steps){
+    const hi = Model.openAccess(a, b, c) * 1.2 + 1;
+    let bx = 0, bw = -Infinity;
+    for (let i = 0; i <= steps; i++){
+      const X = hi * i / steps, w = Model.welfare(X, a, b, c);
+      if (w > bw){ bw = w; bx = X; }
+    }
+    return bx;
+  }
+};
+
+/* ---- STATE + VIEW -------------------------------------------------------- */
+const defaults = { n: 8, you: 3.7, others: "nash", a: 24, b: 0.6, c: 4, tax: 0, curves: "total" };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const SS = 2;
+let W = 900, H = 700, NARROW = false, G = {};
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(240, cv.parentNode.clientWidth - 24) : 900);
+  NARROW = avail < 480;
+  W = Math.max(280, Math.min(1000, Math.round(avail)));
+  const g = {};
+  g.padL = NARROW ? 36 : 52;
+  g.padR = NARROW ? 14 : 22;
+  g.plotW = W - g.padL - g.padR;
+  const unit = NARROW ? 0.56 : 0.34;
+
+  g.aTitle = NARROW ? 15 : 17;
+  g.aTop = g.aTitle + (NARROW ? 10 : 12);
+  g.aH = Math.round(Math.max(130, Math.min(300, g.plotW * unit)));
+  g.aFoot = g.aTop + g.aH + (NARROW ? 20 : 22);
+
+  g.bTitle = g.aFoot + (NARROW ? 26 : 30);
+  g.bTop = g.bTitle + (NARROW ? 10 : 12);
+  g.bH = Math.round(Math.max(120, Math.min(260, g.plotW * unit * 0.82)));
+  g.bFoot = g.bTop + g.bH + (NARROW ? 20 : 22);
+
+  g.cTitle = g.bFoot + (NARROW ? 26 : 30);
+  g.cTop = g.cTitle + (NARROW ? 10 : 12);
+  g.cH = Math.round(Math.max(88, Math.min(150, g.plotW * unit * 0.44)));
+  g.cFoot = g.cTop + g.cH + (NARROW ? 20 : 22);
+
+  H = Math.round(g.cFoot + (NARROW ? 12 : 14));
+  if (cv.width !== W * SS || cv.height !== H * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+  G = g;
+}
+
+function frame(top, h, MONO, title, right){
+  const line = css("--line"), muted = css("--muted");
+  const fs = NARROW ? -1 : 0;
+  ctx.fillStyle = muted; ctx.font = "600 " + (10 + fs) + "px " + MONO;
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(title, G.padL, top - (NARROW ? 10 : 12));
+  if (right){ ctx.textAlign = "right"; ctx.fillText(right, W - G.padR, top - (NARROW ? 10 : 12)); }
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(G.padL + .5, top); ctx.lineTo(G.padL + .5, top + h);
+  ctx.lineTo(G.padL + G.plotW, top + h);
+  ctx.stroke();
+}
+
+/* a vertical marker with a label that leans away from the plot edge */
+function marker(x, top, h, colour, label, MONO, dash, up, row){
+  ctx.strokeStyle = colour; ctx.lineWidth = 1.6;
+  ctx.setLineDash(dash || []);
+  ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + h); ctx.stroke();
+  ctx.setLineDash([]);
+  if (!label) return;
+  ctx.fillStyle = colour;
+  ctx.font = "700 " + (NARROW ? 8 : 9) + "px " + MONO;
+  const right = x > G.padL + G.plotW * 0.62;
+  ctx.textAlign = right ? "right" : "left";
+  ctx.textBaseline = "top";
+  /* Two markers can land on the same herd size - the current total sits on the
+     settled total by default - so each label keeps its own row. */
+  const lh = NARROW ? 11 : 12, r = row || 0;
+  const y = up ? top + 3 + r * lh : top + h - (NARROW ? 12 : 13) - r * lh;
+  ctx.fillText(label, x + (right ? -4 : 4), y);
+}
+
+function computeAll(){
+  const s = state;
+  const XS = Model.socialTotal(s.a, s.b, s.c);
+  const XN = Model.nashTotal(s.n, s.a, s.b, s.c, s.tax);
+  const XO = Model.openAccess(s.a, s.b, s.c);
+  const nashEach = Model.nashEach(s.n, s.a, s.b, s.c, s.tax);
+  let Xoth;
+  if (s.others === "nash") Xoth = (s.n - 1) * nashEach;
+  else if (s.others === "fair") Xoth = (s.n - 1) * XS / s.n;
+  else Xoth = (s.n - 1) * s.you;
+  const mine = Model.payoff(s.you, Xoth, s.a, s.b, s.c, s.tax);
+  const myBest = Model.best(Xoth, s.a, s.b, s.c, s.tax);
+  return { XS: XS, XN: XN, XO: XO, nashEach: nashEach, Xoth: Xoth, mine: mine, myBest: myBest,
+           total: s.you + Xoth };
+}
+
+function drawCommons(R, MONO){
+  const s = state, muted = css("--muted"), grid = css("--grid"), ink = css("--ink");
+  const top = G.aTop, h = G.aH, x0 = G.padL, w = G.plotW;
+  const XMAX = Math.max(1, R.XO * 1.18);
+  const px = (X) => x0 + Math.max(0, Math.min(1, X / XMAX)) * w;
+  const showTotal = s.curves === "total";
+
+  const wmax = Math.max(1e-9, Model.welfare(R.XS, s.a, s.b, s.c));
+  const vmax = Math.max(1e-9, s.a - s.c);
+  /* -0.17 is the lowest fraction that still lands inside the frame, given the
+     0.78 scale and the 0.14 lift below it */
+  const py = (v) => showTotal
+    ? top + h - Math.max(-0.17, Math.min(1, v / wmax)) * h * 0.78 - h * 0.14
+    : top + h - Math.max(-0.17, Math.min(1, v / vmax)) * h * 0.78 - h * 0.14;
+  const zero = py(0);
+
+  frame(top, h, MONO,
+    showTotal ? (NARROW ? "profit from the common" : "total profit the common yields")
+              : (NARROW ? "profit per animal" : "what one animal earns its keeper"),
+    NARROW ? "" : "against total animals grazing");
+
+  ctx.strokeStyle = grid; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+  ctx.beginPath(); ctx.moveTo(x0, zero); ctx.lineTo(x0 + w, zero); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = muted; ctx.font = "600 " + (NARROW ? 8 : 9) + "px " + MONO;
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText("0", x0 - 5, zero);
+
+  /* the curve, filled where it is still adding something */
+  const N = 220, pts = [];
+  for (let i = 0; i <= N; i++){
+    const X = XMAX * i / N;
+    pts.push([px(X), py(showTotal ? Model.welfare(X, s.a, s.b, s.c)
+                                  : Model.netEach(X, s.a, s.b, s.c, 0))]);
+  }
+  /* clipped above the zero line, so the losses past the break-even herd are not
+     shaded as though they were still earnings */
+  ctx.save();
+  ctx.beginPath(); ctx.rect(G.padL, top, w, Math.max(0, zero - top)); ctx.clip();
+  ctx.fillStyle = css("--accent-soft");
+  ctx.beginPath(); ctx.moveTo(pts[0][0], zero);
+  for (const p of pts) ctx.lineTo(p[0], p[1]);
+  ctx.lineTo(pts[pts.length - 1][0], zero); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = ink; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i < pts.length; i++) i ? ctx.lineTo(pts[i][0], pts[i][1]) : ctx.moveTo(pts[i][0], pts[i][1]);
+  ctx.stroke();
+
+  marker(px(R.XS), top, h, css("--social"), "best " + R.XS.toFixed(1), MONO, [], true, 0);
+  marker(px(R.XO), top, h, css("--ruin"), NARROW ? "ruin" : "nothing left", MONO, [4, 4], true, 1);
+  marker(px(R.XN), top, h, css("--nash"),
+         (NARROW ? "settles " : "settles at ") + R.XN.toFixed(1), MONO, [], false, 0);
+  marker(px(R.total), top, h, css("--mine"),
+         (NARROW ? "now " : "right now ") + R.total.toFixed(1), MONO, [2, 3], false, 1);
+
+  ctx.fillStyle = muted; ctx.font = "600 " + (NARROW ? 8 : 9) + "px " + MONO;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("0 animals", x0, top + h + 5);
+  ctx.textAlign = "right";
+  ctx.fillText(XMAX.toFixed(0) + " animals", x0 + w, top + h + 5);
+}
+
+function drawMine(R, MONO){
+  const s = state, muted = css("--muted"), grid = css("--grid");
+  const mineC = css("--mine"), socialC = css("--social"), nashC = css("--nash");
+  const top = G.bTop, h = G.bH, x0 = G.padL, w = G.plotW;
+  const XI = Math.max(1, Math.max(R.myBest, s.you, R.XS / s.n) * 2.1);
+  const px = (x) => x0 + Math.max(0, Math.min(1, x / XI)) * w;
+
+  let pmax = 1e-9;
+  const N = 200, pts = [];
+  for (let i = 0; i <= N; i++){
+    const xi = XI * i / N;
+    const oth = s.others === "mirror" ? (s.n - 1) * xi : R.Xoth;
+    const p = Model.payoff(xi, oth, s.a, s.b, s.c, s.tax);
+    pts.push([xi, p]);
+    if (p > pmax) pmax = p;
+  }
+  /* the curve is framed by its own peak with room for a slice of the losses
+     underneath, and everything is clipped so nothing is drawn as a flat line
+     along the bottom of the frame */
+  const hi = Math.max(pmax, 1e-9), lo = pmax > 0 ? -0.55 * pmax : pmax - 1;
+  const py = (p) => top + h - ((Math.max(lo, Math.min(hi, p)) - lo) / (hi - lo)) * h * 0.9 - h * 0.05;
+  const zero = py(0);
+
+  frame(top, h, MONO, NARROW ? "your own profit" : "your profit against your own herd",
+        NARROW ? "" : (s.others === "mirror" ? "everyone matching you"
+                     : s.others === "fair" ? "the others showing restraint" : "the others at their best move"));
+
+  ctx.strokeStyle = grid; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+  ctx.beginPath(); ctx.moveTo(x0, zero); ctx.lineTo(x0 + w, zero); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = muted; ctx.font = "600 " + (NARROW ? 8 : 9) + "px " + MONO;
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText("0", x0 - 5, zero);
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x0, top, w, h); ctx.clip();
+  ctx.strokeStyle = mineC; ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  for (let i = 0; i < pts.length; i++){
+    const X = px(pts[i][0]), Y = top + h - ((pts[i][1] - lo) / (hi - lo)) * h * 0.9 - h * 0.05;
+    i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
+  }
+  ctx.stroke();
+  ctx.restore();
+
+  /* the fair share, and the move you would actually make from there */
+  const fair = R.XS / s.n;
+  marker(px(fair), top, h, socialC, NARROW ? "fair " + fair.toFixed(1)
+         : "your share of the best total", MONO, [5, 4], false, 1);
+  if (s.others !== "mirror")
+    marker(px(R.myBest), top, h, nashC, NARROW ? "best " + R.myBest.toFixed(1)
+           : "what you would actually do", MONO, [], false, 0);
+
+  /* the handle you drag */
+  const hx = px(s.you), hy = py(R.mine);
+  ctx.strokeStyle = mineC; ctx.lineWidth = 1.4; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx, top + h); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = mineC;
+  ctx.beginPath(); ctx.arc(hx, hy, NARROW ? 6 : 7, 0, TAU); ctx.fill();
+  ctx.fillStyle = css("--panel");
+  ctx.beginPath(); ctx.arc(hx, hy, NARROW ? 2.4 : 2.8, 0, TAU); ctx.fill();
+  /* the handle sits on the curve, so its label needs a backing or the curve
+     runs straight through the text */
+  ctx.font = "700 " + (NARROW ? 9 : 10) + "px " + MONO;
+  const tag = s.you.toFixed(1) + " head, " + R.mine.toFixed(1);
+  const tw = ctx.measureText(tag).width, th = NARROW ? 11 : 12;
+  const rightSide = hx > x0 + w * 0.6;
+  const tx = hx + (rightSide ? -11 - tw : 11);
+  const ty = Math.max(top + 2, hy - 7 - th);
+  ctx.fillStyle = css("--panel"); ctx.globalAlpha = 0.86;
+  ctx.fillRect(tx - 3, ty - 2, tw + 6, th + 4);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = mineC;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText(tag, tx, ty);
+
+  ctx.fillStyle = muted; ctx.font = "600 " + (NARROW ? 8 : 9) + "px " + MONO;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("none", x0, top + h + 5);
+  ctx.textAlign = "right";
+  ctx.fillText(XI.toFixed(0) + " of your own", x0 + w, top + h + 5);
+}
+
+function drawGap(MONO){
+  const s = state, muted = css("--muted"), grid = css("--grid");
+  const nashC = css("--nash"), socialC = css("--social"), mineC = css("--mine");
+  const top = G.cTop, h = G.cH, x0 = G.padL, w = G.plotW;
+  const NMAX = 40;
+  const px = (n) => x0 + (n - 1) / (NMAX - 1) * w;
+  const py = (v) => top + h - Math.max(0, Math.min(1, v / 2)) * h;
+
+  frame(top, h, MONO, NARROW ? "as the crowd grows" : "what changes as the crowd grows",
+        NARROW ? "" : "herders sharing the common");
+
+  ctx.strokeStyle = grid; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+  for (const v of [1, 2]){
+    ctx.beginPath(); ctx.moveTo(x0, py(v)); ctx.lineTo(x0 + w, py(v)); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.fillStyle = muted; ctx.font = "600 " + (NARROW ? 8 : 9) + "px " + MONO;
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText("2x", x0 - 5, py(2)); ctx.fillText("1x", x0 - 5, py(1));
+
+  const line = (fn, colour, wid) => {
+    ctx.strokeStyle = colour; ctx.lineWidth = wid;
+    ctx.beginPath();
+    for (let n = 1; n <= NMAX; n += 0.25){
+      const X = px(n), Y = py(fn(n));
+      n === 1 ? ctx.moveTo(X, Y) : ctx.lineTo(X, Y);
+    }
+    ctx.stroke();
+  };
+  line(Model.overshoot, nashC, 2.2);
+  line((n) => Model.kept(n) * 2, socialC, 2.2);
+
+  const hx = px(s.n);
+  ctx.strokeStyle = mineC; ctx.lineWidth = 1.6; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(hx, top); ctx.lineTo(hx, top + h); ctx.stroke();
+  ctx.setLineDash([]);
+  for (const [fn, colour] of [[Model.overshoot, nashC], [(n) => Model.kept(n) * 2, socialC]]){
+    ctx.fillStyle = colour;
+    ctx.beginPath(); ctx.arc(hx, py(fn(s.n)), 4.4, 0, TAU); ctx.fill();
+  }
+
+  ctx.font = "700 " + (NARROW ? 8 : 9) + "px " + MONO;
+  ctx.textAlign = "right";
+  /* each label clears its own curve rather than sitting on it */
+  ctx.fillStyle = nashC; ctx.textBaseline = "top";
+  ctx.fillText(NARROW ? "overshoot" : "how far the herd overshoots",
+               x0 + w - 4, py(Model.overshoot(NMAX)) + 6);
+  ctx.fillStyle = socialC; ctx.textBaseline = "bottom";
+  ctx.fillText(NARROW ? "profit kept" : "share of the best profit kept",
+               x0 + w - 4, py(Model.kept(NMAX) * 2) - 6);
+  ctx.textBaseline = "top";
+
+  ctx.fillStyle = muted; ctx.font = "600 " + (NARROW ? 8 : 9) + "px " + MONO;
+  ctx.textAlign = "left";
+  ctx.fillText("1 herder", x0, top + h + 5);
+  ctx.textAlign = "right";
+  ctx.fillText(NMAX + " herders", x0 + w, top + h + 5);
+  ctx.textAlign = "center";
+  ctx.fillStyle = mineC;
+  ctx.fillText(String(s.n), Math.max(x0 + 12, Math.min(x0 + w - 12, hx)), top + h + 5);
+}
+
+function render(){
+  fitCanvas();
+  const R = computeAll();
+  const MONO = css("--font-mono");
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+  drawCommons(R, MONO);
+  drawMine(R, MONO);
+  drawGap(MONO);
+
+  el("nout").textContent = String(state.n);
+  el("youout").textContent = state.you.toFixed(1);
+  el("aout").textContent = String(state.a);
+  el("bout").textContent = state.b.toFixed(2);
+  el("cout").textContent = state.c.toFixed(1);
+  el("taxout").textContent = state.tax.toFixed(1);
+
+  el("rSoc").textContent = R.XS.toFixed(1) + " head";
+  el("rNash").textContent = R.XN.toFixed(1) + " head";
+  el("rRatio").textContent = R.XS > 1e-9 ? (R.XN / R.XS).toFixed(3) + " times" : "nothing to graze";
+  const wS = Model.welfare(R.XS, state.a, state.b, state.c);
+  const wN = Model.welfare(R.XN, state.a, state.b, state.c);
+  el("rEff").textContent = wS > 1e-9 ? (100 * wN / wS).toFixed(1) + "%" : "nothing to keep";
+  el("rMine").textContent = R.mine.toFixed(2);
+  el("rBest").textContent = R.myBest.toFixed(2) + " head";
+}
+
+/* ---- WIRING -------------------------------------------------------------- */
+function bind(id, key, parse){
+  const node = el(id);
+  node.addEventListener("input", () => { state[key] = parse(node.value); render(); });
+}
+bind("n", "n", (v) => parseInt(v, 10));
+bind("you", "you", parseFloat);
+bind("a", "a", parseFloat);
+bind("b", "b", parseFloat);
+bind("c", "c", parseFloat);
+bind("tax", "tax", parseFloat);
+el("others").addEventListener("change", () => { state.others = el("others").value; render(); });
+el("curves").addEventListener("change", () => { state.curves = el("curves").value; render(); });
+
+function setYou(v){
+  const lo = 0, hi = 40;
+  state.you = Math.max(lo, Math.min(hi, Math.round(v * 10) / 10));
+  el("you").value = String(state.you);
+  render();
+}
+el("setTax").addEventListener("click", () => {
+  const t = Math.min(15, Math.round(Model.pigou(state.n, state.a, state.b, state.c) * 10) / 10);
+  state.tax = t; el("tax").value = String(t); render();
+});
+el("beBest").addEventListener("click", () => setYou(computeAll().myBest));
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  for (const k of ["n", "you", "a", "b", "c", "tax"]) el(k).value = String(defaults[k]);
+  el("others").value = defaults.others;
+  el("curves").value = defaults.curves;
+  render();
+});
+
+/* dragging: the middle chart sets your herd, the bottom one sets the crowd */
+let dragging = null;
+function localPoint(ev){
+  const r = cv.getBoundingClientRect();
+  const sc = W / r.width;
+  return [(ev.clientX - r.left) * sc, (ev.clientY - r.top) * sc];
+}
+function applyDrag(px, py){
+  const R = computeAll();
+  if (dragging === "you"){
+    const XI = Math.max(1, Math.max(R.myBest, state.you, R.XS / state.n) * 2.1);
+    setYou((px - G.padL) / G.plotW * XI);
+  } else if (dragging === "n"){
+    const raw = 1 + (px - G.padL) / G.plotW * 39;
+    const v = Math.max(1, Math.min(40, Math.round(raw)));
+    if (v !== state.n){ state.n = v; el("n").value = String(v); render(); }
+  }
+}
+cv.addEventListener("pointerdown", (ev) => {
+  const p = localPoint(ev);
+  if (p[1] >= G.bTop - 8 && p[1] <= G.bTop + G.bH + 8) dragging = "you";
+  else if (p[1] >= G.cTop - 8 && p[1] <= G.cTop + G.cH + 8) dragging = "n";
+  else return;
+  cv.setPointerCapture(ev.pointerId);
+  applyDrag(p[0], p[1]);
+  ev.preventDefault();
+});
+cv.addEventListener("pointermove", (ev) => {
+  if (!dragging) return;
+  const p = localPoint(ev);
+  applyDrag(p[0], p[1]);
+});
+for (const t of ["pointerup", "pointercancel"])
+  cv.addEventListener(t, () => { dragging = null; });
+
+let rt = 0;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 90); });
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+
+render();
+
+/* ---- SELFTEST ------------------------------------------------------------ */
+const NS = [1, 2, 3, 5, 8, 13, 20, 40];
+const AS = [12, 24, 40], BS = [0.15, 0.6, 1.8], CS = [0, 4, 9];
+
+function eachCase(fn){
+  let cases = 0;
+  for (const n of NS) for (const a of AS) for (const b of BS) for (const c of CS){ fn(n, a, b, c); cases++; }
+  return cases;
+}
+
+function selftest(){
+  const out = [], push = (name, pass, detail) => out.push({ name, pass: !!pass, detail });
+
+  /* ---- 1. the equilibrium really is one: nobody can gain by moving -------- */
+  let foc = 0, gain = 0;
+  const cases = eachCase((n, a, b, c) => {
+    const x = Model.nashEach(n, a, b, c, 0), X = n * x;
+    foc = Math.max(foc, Math.abs(a - b * X - b * x - c));
+    const oth = (n - 1) * x, base = Model.payoff(x, oth, a, b, c, 0);
+    for (let i = 0; i <= 200; i++){
+      const xi = x * 3 * i / 200;
+      gain = Math.max(gain, Model.payoff(xi, oth, a, b, c, 0) - base);
+    }
+  });
+  push("no herder can do better by changing their own herd at the settled point",
+       foc < 1e-12 && gain < 1e-9,
+       cases + " parameter sets: the first-order condition holds to " + foc.toExponential(2)
+       + " and the best gain from deviating over a 201-point scan is " + gain.toExponential(2));
+
+  /* ---- 2. INDEPENDENT ROUTE: let them adjust instead of solving ----------- */
+  let adj = 0;
+  eachCase((n, a, b, c) => {
+    adj = Math.max(adj, Math.abs(Model.settle(n, a, b, c, 0, 140) - Model.nashEach(n, a, b, c, 0)));
+  });
+  push("herders feeling their way to a best reply land on the same equilibrium",
+       adj < 1e-12,
+       "damped adjustment from an empty common, 140 rounds, differs from the closed form by "
+       + adj.toExponential(2));
+
+  /* ---- 3. and the undamped version does not even settle ------------------- */
+  let naiveFails = 0, naiveWorks = 0;
+  eachCase((n, a, b, c) => {
+    const x = Model.nashEach(n, a, b, c, 0);
+    const got = Model.naive(n, a, b, c, 0, x * 1.05, 60);
+    if (n >= 3){ if (Math.abs(got - x) > 1e-6) naiveFails++; }
+    else if (Math.abs(got - x) < 1e-9) naiveWorks++;
+  });
+  push("jumping straight to the best reply only settles when there are one or two herders",
+       naiveFails === 6 * AS.length * BS.length * CS.length
+       && naiveWorks === 2 * AS.length * BS.length * CS.length,
+       "undamped adjustment runs away or cycles in all " + naiveFails
+       + " cases with three or more herders and converges in all " + naiveWorks + " below that");
+
+  /* ---- 4. INDEPENDENT ROUTE to the best total: hunt for the peak ---------- */
+  let hunt = 0, scale = 0;
+  eachCase((n, a, b, c) => {
+    if (n !== 1) return;
+    const XS = Model.socialTotal(a, b, c);
+    hunt = Math.max(hunt, Math.abs(Model.huntSocial(a, b, c, 200) - XS));
+    scale = Math.max(scale, Model.openAccess(a, b, c) * 1.2 + 1);
+  });
+  const floor = Math.sqrt(Number.EPSILON) * scale;
+  push("hunting for the peak of the profit curve finds the same best total",
+       hunt < 4 * floor,
+       "a search that never differentiates lands " + hunt.toExponential(2)
+       + " from the closed form, against the " + floor.toExponential(2)
+       + " that the square root of machine precision allows for a peak this wide");
+
+  /* ---- 5. and so does an exhaustive sweep, to its own resolution ---------- */
+  let sweep = 0;
+  eachCase((n, a, b, c) => {
+    if (n !== 1) return;
+    const hi = Model.openAccess(a, b, c) * 1.2 + 1, step = hi / 20000;
+    sweep = Math.max(sweep, Math.abs(Model.scanSocial(a, b, c, 20000) - Model.socialTotal(a, b, c)) / step);
+  });
+  push("an exhaustive sweep of every herd size agrees within its own grid",
+       sweep < 0.51, "the worst sweep result sits " + sweep.toFixed(3) + " of a grid step out");
+
+  /* ---- 6. the overshoot is 2n/(n+1), whatever the field is like ---------- */
+  let ratio = 0;
+  eachCase((n, a, b, c) => {
+    ratio = Math.max(ratio, Math.abs(Model.nashTotal(n, a, b, c, 0) / Model.socialTotal(a, b, c)
+                                     - Model.overshoot(n)));
+  });
+  push("the overshoot is 2n over n plus 1, and does not depend on the field at all",
+       ratio < 1e-12,
+       "worst gap to 2n/(n+1) across " + cases + " sets is " + ratio.toExponential(2)
+       + "; the value, cost and crowding all cancel");
+
+  /* ---- 7. one owner has no problem to solve ------------------------------ */
+  let solo = 0;
+  eachCase((n, a, b, c) => {
+    if (n !== 1) return;
+    solo = Math.max(solo, Math.abs(Model.nashTotal(1, a, b, c, 0) - Model.socialTotal(a, b, c)));
+  });
+  push("a single owner grazes exactly the right number",
+       solo === 0 && Model.overshoot(1) === 1,
+       "the settled and the best totals agree exactly, and 2n/(n+1) is exactly 1 at n = 1");
+
+  /* ---- 8. the profit kept is 4n/(n+1) squared ---------------------------- */
+  let eff = 0;
+  eachCase((n, a, b, c) => {
+    const wN = Model.welfare(Model.nashTotal(n, a, b, c, 0), a, b, c);
+    const wS = Model.welfare(Model.socialTotal(a, b, c), a, b, c);
+    eff = Math.max(eff, Math.abs(wN / wS - Model.kept(n)));
+  });
+  push("the profit that survives is 4n over n plus 1, squared",
+       eff < 1e-12, "worst gap across " + cases + " sets is " + eff.toExponential(2)
+       + ", so eight herders keep " + (100 * Model.kept(8)).toFixed(1) + " per cent");
+
+  /* ---- 9. the charge that closes the gap --------------------------------- */
+  let tax = 0, taxAdj = 0;
+  eachCase((n, a, b, c) => {
+    const t = Model.pigou(n, a, b, c);
+    tax = Math.max(tax, Math.abs(Model.nashTotal(n, a, b, c, t) - Model.socialTotal(a, b, c)));
+    taxAdj = Math.max(taxAdj, Math.abs(n * Model.settle(n, a, b, c, t, 140) - Model.socialTotal(a, b, c)));
+  });
+  push("a charge equal to the damage done puts the settled herd on the best total",
+       tax < 1e-10 && taxAdj < 1e-10,
+       "closed form out by " + tax.toExponential(2) + " and the adjusting herders out by "
+       + taxAdj.toExponential(2) + " over " + cases + " sets");
+
+  /* ---- 10. that charge really is the damage one animal does -------------- */
+  let dmg = 0;
+  eachCase((n, a, b, c) => {
+    const XS = Model.socialTotal(a, b, c), share = XS / n;
+    /* what one more animal of mine takes off the other n-1 herders' animals */
+    const harm = b * (XS - share);
+    dmg = Math.max(dmg, Math.abs(harm - Model.pigou(n, a, b, c)));
+  });
+  push("the charge is exactly what one extra animal costs everybody else",
+       dmg < 1e-12,
+       "the crowding one animal imposes on the other herders matches the charge to "
+       + dmg.toExponential(2));
+
+  /* ---- 11. the best total is not an equilibrium, which is the whole thing - */
+  let restraintPays = true, deviationPays = true, worstGain = Infinity;
+  eachCase((n, a, b, c) => {
+    if (n === 1) return;
+    const XS = Model.socialTotal(a, b, c), share = XS / n, oth = (n - 1) * share;
+    const x = Model.nashEach(n, a, b, c, 0);
+    const atShare = Model.payoff(share, oth, a, b, c, 0);
+    const atNash = Model.payoff(x, (n - 1) * x, a, b, c, 0);
+    const br = Model.best(oth, a, b, c, 0);
+    if (!(atShare > atNash)) restraintPays = false;
+    const g = Model.payoff(br, oth, a, b, c, 0) - atShare;
+    if (!(g > 0)) deviationPays = false;
+    worstGain = Math.min(worstGain, g);
+  });
+  push("everyone does better under restraint, and everyone still gains by breaking it",
+       restraintPays && deviationPays,
+       "in every multi-herder case the restrained payoff beats the settled one, yet breaking "
+       + "ranks always pays, by at least " + worstGain.toExponential(2));
+
+  /* ---- 12. open access dissipates the lot -------------------------------- */
+  let open = 0, zero = 0;
+  eachCase((n, a, b, c) => {
+    if (n !== 1) return;
+    const XO = Model.openAccess(a, b, c);
+    open = Math.max(open, Math.abs(XO - 2 * Model.socialTotal(a, b, c)));
+    zero = Math.max(zero, Math.abs(Model.welfare(XO, a, b, c)));
+  });
+  push("grazed until the last animal breaks even, the common earns nothing at all",
+       open < 1e-12 && zero < 1e-12,
+       "the break-even herd is exactly twice the best one (out by " + open.toExponential(2)
+       + ") and the profit there is " + zero.toExponential(2));
+
+  /* ---- 13. the crowd effect is monotone and bounded ---------------------- */
+  let mono = true;
+  for (let n = 1; n < 400; n++){
+    if (!(Model.overshoot(n + 1) > Model.overshoot(n))) mono = false;
+    if (!(Model.kept(n + 1) < Model.kept(n))) mono = false;
+    if (!(Model.overshoot(n) < 2)) mono = false;
+  }
+  push("more herders always means more overshoot and less profit, but never worse than double",
+       mono, "checked every crowd from 1 to 400: overshoot rises toward 2 without reaching it ("
+       + Model.overshoot(400).toFixed(5) + " at 400) while the profit kept falls to "
+       + (100 * Model.kept(400)).toFixed(2) + " per cent");
+
+  return out;
+}
+
+window.__SELFTEST = selftest;
+
+})();
+</script>
+</body>
+</html>

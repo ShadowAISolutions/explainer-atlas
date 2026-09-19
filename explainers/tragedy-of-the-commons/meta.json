@@ -1,0 +1,18 @@
+{
+  "slug": "tragedy-of-the-commons",
+  "title": "Everyone Is Right and the Field Is Ruined",
+  "domain": "game-theory",
+  "difficulty": 3,
+  "summary": "Every herder's own best move is one more animal, and the common ends up carrying nearly twice what it should. Drag the number of herders and watch the gap open.",
+  "prerequisites": [],
+  "tags": ["tragedy-of-the-commons", "nash-equilibrium", "externality", "pigouvian-tax", "common-pool-resource"],
+  "interaction_pattern": "drag-parameter",
+  "sources": [
+    { "title": "Tragedy of the commons", "url": "https://en.wikipedia.org/wiki/Tragedy_of_the_commons" },
+    { "title": "Cournot competition, the same first-order condition", "url": "https://en.wikipedia.org/wiki/Cournot_competition" },
+    { "title": "Pigouvian tax", "url": "https://en.wikipedia.org/wiki/Pigouvian_tax" },
+    { "title": "Elinor Ostrom, Governing the Commons", "url": "https://en.wikipedia.org/wiki/Elinor_Ostrom" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}
