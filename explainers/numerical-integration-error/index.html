@@ -70,7 +70,7 @@ footer.page a{color:var(--accent)}
 
 <div class="layout">
   <figure class="stage" data-role="stage">
-    <canvas id="view" width="920" height="580" role="img"
+    <canvas id="view" width="1240" height="900" role="img"
             aria-label="A curve with the area beneath it approximated by strips: straight-topped trapezoids on the left of each pair, parabola-topped strips for Simpson's rule, with the error of each method plotted below on logarithmic axes."></canvas>
     <figcaption>Top: the curve and the strips each rule actually adds up. Bottom: absolute error against the number of strips, on log–log axes, where a straight line's slope is the convergence order.</figcaption>
   </figure>
@@ -211,6 +211,20 @@ const cv = el("view"), ctx = cv.getContext("2d");
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const fmt = (v) => Math.abs(v) < 1e-13 ? "0" : (Math.abs(v) < 1e-3 ? v.toExponential(3) : v.toFixed(8));
 
+/* The canvas tracks its container, so one canvas unit is one CSS pixel and a
+   13px label is drawn at 13px whatever the column width. Presentation only:
+   the model, the assertions and the prose are untouched. */
+const SS = 2;
+let W = 620, H = 440, NARROW = false;
+function layout(){
+  const avail = cv.parentNode ? (cv.parentNode.clientWidth || 620) : 620;
+  NARROW = avail < 470;
+  W = Math.max(300, Math.min(940, Math.round(avail)));
+  H = NARROW ? Math.round(W * 1.30) : Math.round(Math.min(620, Math.max(400, W * 0.74)));
+  if (cv.width !== W * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
 function render(){
   const cfg = FNS[state.fn];
   const { f, a, b, exact } = cfg;
@@ -218,13 +232,13 @@ function render(){
   const tv = Model.trapezoid(f, a, b, n);
   const sv = Model.simpson(f, a, b, n);
 
-  const W = cv.width, H = cv.height;
-  const splitY = Math.round(H * 0.56);
+  layout();
+  const splitY = Math.round(H * (NARROW ? 0.48 : 0.54));
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
 
   /* ---- upper panel: the curve and the strips ---- */
-  const padL = 46, padR = 18, padT = 18, padB = 26;
+  const padL = NARROW ? 44 : 54, padR = 16, padT = 24, padB = 28;
   const px = (x) => padL + ((x - a) / (b - a)) * (W - padL - padR);
   let lo = Infinity, hi = -Infinity;
   for (let i = 0; i <= 400; i++){ const v = f(a + (b-a)*i/400); if (v<lo) lo=v; if (v>hi) hi=v; }
@@ -235,6 +249,8 @@ function render(){
   /* axes */
   ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(padL, py(0)); ctx.lineTo(W - padR, py(0)); ctx.stroke();
+  ctx.fillStyle = css("--ink"); ctx.font = "600 13px ui-monospace, monospace"; ctx.textAlign = "left";
+  ctx.fillText("the curve and the strips", padL, padT - 7);
 
   /* trapezoid strips (left half of plot area is fine — draw all, hollow) */
   const h = (b - a) / n;
@@ -275,7 +291,9 @@ function render(){
   ctx.stroke();
 
   /* ---- lower panel: log-log error ---- */
-  const ly0 = splitY + 12, ly1 = H - 30;
+  ctx.fillStyle = css("--ink"); ctx.font = "600 13px ui-monospace, monospace"; ctx.textAlign = "left";
+  ctx.fillText(NARROW ? "error against strips, log\u2013log" : "error against strip count, both axes logarithmic", padL, splitY + 6);
+  const ly0 = splitY + (NARROW ? 26 : 30), ly1 = H - 42;
   const floor = Math.pow(10, -state.zoom);
   const lpx = (k) => padL + ((Math.log2(k) - 1) / (Math.log2(4096) - 1)) * (W - padL - padR);
   const lpy = (e) => {
@@ -284,12 +302,21 @@ function render(){
   };
 
   ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
-  ctx.font = "11px ui-monospace, monospace"; ctx.fillStyle = css("--muted");
-  for (let d = 0; d >= -state.zoom; d -= Math.max(1, Math.round(state.zoom/6))){
+  ctx.font = "13px ui-monospace, monospace"; ctx.fillStyle = css("--muted");
+  ctx.textAlign = "right";
+  for (let d = 0; d >= -state.zoom; d -= Math.max(1, Math.round(state.zoom/5))){
     const y = lpy(Math.pow(10, d));
     ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
-    ctx.fillText("1e" + d, 4, y + 3);
+    ctx.fillText(d === 0 ? "1" : "1e" + d, padL - 7, y + 4);
   }
+  ctx.textAlign = "center";
+  ctx.strokeStyle = css("--line");
+  for (let k = 2; k <= 4096; k *= 4){
+    const x = lpx(k);
+    ctx.beginPath(); ctx.moveTo(x, ly1); ctx.lineTo(x, ly1 + 4); ctx.stroke();
+    ctx.fillText(String(k), x, ly1 + 18);
+  }
+  ctx.textAlign = "left";
 
   for (const [rule, colour] of [["trapezoid", css("--accent")], ["simpson", css("--alt")]]){
     ctx.strokeStyle = colour; ctx.lineWidth = 2; ctx.beginPath();
@@ -305,8 +332,12 @@ function render(){
     ctx.fillStyle = colour;
     ctx.beginPath(); ctx.arc(lpx(n), lpy(e), 4.5, 0, Math.PI*2); ctx.fill();
   }
-  ctx.fillStyle = css("--muted");
-  ctx.fillText("strips →", W - padR - 56, ly1 + 18);
+  ctx.fillStyle = css("--muted"); ctx.font = "13px ui-monospace, monospace";
+  ctx.fillText("strips →", padL, H - 6);
+  ctx.textAlign = "right";
+  ctx.fillStyle = css("--accent"); ctx.fillText("trapezoid", W - padR - 74, ly0 + 2);
+  ctx.fillStyle = css("--alt"); ctx.fillText("Simpson", W - padR, ly0 + 2);
+  ctx.textAlign = "left";
 
   /* ---- readouts ---- */
   el("nout").textContent = String(n);
@@ -326,6 +357,9 @@ el("reset").addEventListener("click", () => {
   el("fn").value = defaults.fn; el("n").value = defaults.n; el("zoom").value = defaults.zoom;
   render();
 });
+
+let __rt = 0;
+window.addEventListener("resize", () => { clearTimeout(__rt); __rt = setTimeout(render, 90); });
 render();
 
 /* ---------------- SELFTEST ---------------- */
