@@ -317,36 +317,69 @@ const state = Object.assign({}, defaults);
 
 const el = (id) => document.getElementById(id);
 const cv = el("view"), ctx = cv.getContext("2d");
-const W = cv.width, H = cv.height;
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
-const Y_SPACE = 92, Y_LAYER = 400, Y_SURF = 720;
-
+/* The canvas tracks its container instead of being a fixed 640x900 drawing
+   scaled into whatever space is left: at 390px that put the flux numbers at
+   about eleven effective pixels and pushed the layer-down label off the right
+   edge entirely.                                                            */
+const SS = 2;
+let W, H, NARROW, FSN, FSB, FST, FSS, HEAD, MAXW, Y_SPACE, Y_LAYER, Y_SURF, BAND;
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth - 24;
+  W = Math.max(280, Math.min(760, avail || 620));
+  NARROW = W < 470;
+  FSN = NARROW ? 12 : 15;
+  FSB = NARROW ? 12 : 15;
+  FST = NARROW ? 18 : 24;
+  FSS = NARROW ? 10 : 13;
+  HEAD = NARROW ? 13 : 18;
+  MAXW = Math.round(W * 0.075);
+  H = Math.round(W * (NARROW ? 1.52 : 1.3));
+  Y_SPACE = Math.round(H * 0.125);
+  Y_LAYER = Math.round(H * 0.46);
+  Y_SURF  = Math.round(H * 0.80);
+  BAND    = NARROW ? 16 : 22;
+  cv.width = Math.round(W * SS); cv.height = Math.round(H * SS);
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+/* the flux number goes inside the shaft when the shaft is wide enough for it,
+   and otherwise on whichever side of the arrow still has room on the canvas */
 function arrow(x, yFrom, yTo, flux, colour, label, side){
-  const w = Math.max(3, Math.min(56, Math.sqrt(Math.max(flux, 0)) * 2.6));
+  const w = Math.max(2.5, Math.min(MAXW, Math.sqrt(Math.max(flux, 0)) * (MAXW / 21.5)));
   const dir = yTo > yFrom ? 1 : -1;
-  const head = 22;
+  const wing = Math.max(4, w * 0.4 + 4);
   ctx.fillStyle = colour;
   ctx.beginPath();
   ctx.moveTo(x - w / 2, yFrom);
   ctx.lineTo(x + w / 2, yFrom);
-  ctx.lineTo(x + w / 2, yTo - dir * head);
-  ctx.lineTo(x + w / 2 + 9, yTo - dir * head);
+  ctx.lineTo(x + w / 2, yTo - dir * HEAD);
+  ctx.lineTo(x + w / 2 + wing, yTo - dir * HEAD);
   ctx.lineTo(x, yTo);
-  ctx.lineTo(x - w / 2 - 9, yTo - dir * head);
-  ctx.lineTo(x - w / 2, yTo - dir * head);
+  ctx.lineTo(x - w / 2 - wing, yTo - dir * HEAD);
+  ctx.lineTo(x - w / 2, yTo - dir * HEAD);
   ctx.closePath();
   ctx.fill();
-  if (label){
-    ctx.fillStyle = colour;
-    ctx.font = "600 21px ui-monospace, monospace";
-    ctx.textAlign = side === "left" ? "right" : "left";
-    const tx = side === "left" ? x - w / 2 - 16 : x + w / 2 + 16;
-    ctx.fillText(label, tx, (yFrom + yTo) / 2 + 4);
+  if (!label) return;
+  ctx.font = "600 " + FSN + "px ui-monospace, monospace";
+  const tw = ctx.measureText(label).width, gap = NARROW ? 5 : 8;
+  const my = (yFrom + yTo) / 2 + FSN * 0.36;
+  if (tw + 6 <= w){
+    ctx.fillStyle = css("--space"); ctx.textAlign = "center";
+    ctx.fillText(label, x, my);
+    return;
   }
+  ctx.fillStyle = colour;
+  const rightX = x + w / 2 + gap, leftX = x - w / 2 - gap;
+  const fitsRight = rightX + tw <= W - 4, fitsLeft = leftX - tw >= 4;
+  const useRight = side === "left" ? (fitsLeft ? false : fitsRight) : (fitsRight ? true : !fitsLeft);
+  ctx.textAlign = useRight ? "left" : "right";
+  ctx.fillText(label, useRight ? rightX : leftX, my);
 }
 
 function render(){
+  fitCanvas();
   const b = Model.budget(state.albedo, state.eps, state.solar);
   const space = css("--space"), sun = css("--sun"), surface = css("--surface");
   const ir = css("--ir"), layer = css("--layer"), muted = css("--muted");
@@ -359,7 +392,7 @@ function render(){
   const r = mulberry32(SEED);
   ctx.fillStyle = "rgba(255,255,255,0.55)";
   for (let i = 0; i < 90; i++){
-    const x = r() * W, y = r() * (Y_LAYER - 30), s = 0.6 + r() * 1.1;
+    const x = r() * W, y = r() * (Y_LAYER - BAND - 6), s = 0.6 + r() * 1.1;
     ctx.beginPath(); ctx.arc(x, y, s, 0, Math.PI * 2); ctx.fill();
   }
 
@@ -376,39 +409,58 @@ function render(){
 
   /* the atmospheric layer, opacity showing emissivity */
   ctx.fillStyle = layer; ctx.globalAlpha = 0.14 + 0.5 * state.eps;
-  ctx.fillRect(0, Y_LAYER - 26, W, 52);
+  ctx.fillRect(0, Y_LAYER - BAND, W, BAND * 2);
   ctx.globalAlpha = 1;
   ctx.strokeStyle = layer; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(0, Y_LAYER - 26); ctx.lineTo(W, Y_LAYER - 26); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0, Y_LAYER + 26); ctx.lineTo(W, Y_LAYER + 26); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, Y_LAYER - BAND); ctx.lineTo(W, Y_LAYER - BAND); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, Y_LAYER + BAND); ctx.lineTo(W, Y_LAYER + BAND); ctx.stroke();
 
-  /* arrows: shortwave on the left, longwave on the right */
-  arrow(72, Y_SPACE, Y_SURF - 6, b.incoming, sun, b.incoming.toFixed(0), "right");
-  arrow(168, Y_SURF - 6, Y_SPACE, b.reflected, sun, b.reflected.toFixed(0), "right");
+  /* arrows: shortwave on the left, longwave on the right. Columns are
+     fractions of the width so they hold at any canvas size.               */
+  const CX = (f) => Math.round(W * f);
+  const above = Y_LAYER - BAND - 4, below = Y_LAYER + BAND + 4;
+  arrow(CX(0.115), Y_SPACE, Y_SURF - 5, b.incoming, sun, b.incoming.toFixed(0), "right");
+  arrow(CX(0.275), Y_SURF - 5, Y_SPACE, b.reflected, sun, b.reflected.toFixed(0), "right");
 
-  arrow(330, Y_SURF - 6, Y_LAYER + 30, b.surfaceUp, surface, b.surfaceUp.toFixed(0), "left");
+  arrow(CX(0.52), Y_SURF - 5, below, b.surfaceUp, surface, b.surfaceUp.toFixed(0), "left");
   if (b.throughWindow > 0.5)
-    arrow(330, Y_LAYER - 30, Y_SPACE, b.throughWindow, surface, b.throughWindow.toFixed(0), "left");
+    arrow(CX(0.52), above, Y_SPACE, b.throughWindow, surface, b.throughWindow.toFixed(0), "left");
   if (b.layerUp > 0.5){
-    arrow(470, Y_LAYER - 30, Y_SPACE, b.layerUp, ir, b.layerUp.toFixed(0), "right");
-    arrow(570, Y_LAYER + 30, Y_SURF - 6, b.layerDown, ir, b.layerDown.toFixed(0), "right");
+    arrow(CX(0.73), above, Y_SPACE, b.layerUp, ir, b.layerUp.toFixed(0), "right");
+    arrow(CX(0.90), below, Y_SURF - 5, b.layerDown, ir, b.layerDown.toFixed(0), "left");
   }
 
-  /* labels */
+  /* labels, each in a row that belongs to nobody else */
+  const PADL = NARROW ? 10 : 16;
+  const fit = (list, room) => { for (const t of list){ if (ctx.measureText(t).width <= room) return t; } return ""; };
   ctx.textAlign = "left"; ctx.fillStyle = "rgba(255,255,255,0.72)";
-  ctx.font = "600 20px ui-monospace, monospace";
-  ctx.fillText("SPACE", 20, 40);
-  ctx.fillText("ATMOSPHERE  ε = " + state.eps.toFixed(2), 20, Y_LAYER - 44);
-  ctx.fillText("SURFACE", 20, Y_SURF + 36);
+  ctx.font = "600 " + FSB + "px ui-monospace, monospace";
+  ctx.fillText("SPACE", PADL, PADL + FSB);
+  /* the two shortwave arrows cross this row, so the label gets a plate --
+     without it the shaft runs straight through the middle of the word */
+  const atm = fit(["ATMOSPHERE  ε = " + state.eps.toFixed(2),
+                   "ATMOSPHERE ε=" + state.eps.toFixed(2),
+                   "ε = " + state.eps.toFixed(2)], W * 0.66);
+  const atmY = Y_LAYER - BAND - (NARROW ? 7 : 9);
+  if (atm){
+    const aw = ctx.measureText(atm).width;
+    ctx.save();
+    ctx.fillStyle = space; ctx.globalAlpha = 0.9;
+    ctx.fillRect(PADL - 5, atmY - FSB - 3, aw + 10, FSB + 8);
+    ctx.restore();
+    ctx.fillStyle = "rgba(255,255,255,0.72)";
+    ctx.fillText(atm, PADL, atmY);
+  }
+  ctx.fillText("SURFACE", PADL, Y_SURF + FSB + (NARROW ? 9 : 12));
   ctx.textAlign = "right";
-  ctx.font = "700 30px ui-monospace, monospace";
-  ctx.fillText(b.layerTemp.toFixed(1) + " K", W - 20, Y_LAYER + 10);
-  ctx.fillText(b.surfaceTemp.toFixed(1) + " K", W - 20, Y_SURF + 46);
-  ctx.font = "17px ui-monospace, monospace"; ctx.fillStyle = "rgba(255,255,255,0.52)";
-  ctx.fillText("all fluxes in W/m²", W - 20, H - 20);
+  ctx.font = "700 " + FST + "px ui-monospace, monospace";
+  ctx.fillText(b.layerTemp.toFixed(1) + " K", W - PADL, Y_LAYER + FST * 0.36);
+  ctx.fillText(b.surfaceTemp.toFixed(1) + " K", W - PADL, Y_SURF + FST + (NARROW ? 7 : 9));
+  ctx.font = FSS + "px ui-monospace, monospace"; ctx.fillStyle = "rgba(255,255,255,0.52)";
+  ctx.fillText("all fluxes in W/m²", W - PADL, H - (NARROW ? 8 : 11));
   ctx.textAlign = "left";
-  ctx.fillText("shortwave", 20, Y_SPACE - 30);
-  ctx.fillText("longwave", 300, Y_SPACE - 30);
+  ctx.fillText("shortwave", PADL, Y_SPACE - (NARROW ? 8 : 12));
+  ctx.fillText("longwave", Math.round(W * 0.47), Y_SPACE - (NARROW ? 8 : 12));
 
   /* readouts */
   el("albout").textContent = state.albedo.toFixed(3);
@@ -439,6 +491,11 @@ el("p1").addEventListener("click", function(){ apply(0.3, 0.78, 1361); });
 el("p2").addEventListener("click", function(){ apply(0.3, 0, 1361); });
 el("p3").addEventListener("click", function(){ apply(0.6, 0.4, 1361); });
 el("reset").addEventListener("click", function(){ apply(defaults.albedo, defaults.eps, defaults.solar); });
+
+let raf = 0;
+addEventListener("resize", function(){ cancelAnimationFrame(raf); raf = requestAnimationFrame(render); });
+const mq = matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
 render();
 
 /* ---- SELFTEST ---------------------------------------------------------- */

@@ -106,8 +106,20 @@ batch/003.
       `levenshtein-distance` (the table filled only the left half so a
       commentary column could sit beside it; below 470 the commentary now
       stacks underneath and the grid takes the full width).
-- [ ] batch/003 pages — `greenhouse-energy-balance` and
-      `special-relativity-time-dilation` remain.
+- [x] `greenhouse-energy-balance` — batch/013. Container-tracking `fitCanvas()`
+      with every column a fraction of the width; the flux number now sits inside
+      the arrow shaft when the shaft is wide enough for it and otherwise on
+      whichever side still has canvas, which fixes the layer-down label that ran
+      off the right edge at every width. The ATMOSPHERE label gained a plate,
+      since the two shortwave arrows cross that row.
+- [x] `special-relativity-time-dilation` — batch/013. Container-tracking
+      `fitCanvas()`; below 560px the two clock panels stack so each keeps the
+      full width, and the ruler block's type is derived from the width — its
+      captions had been at about four effective pixels at 390. The moving
+      triangle's `L` flips to the inside of the right mirror when the outside
+      would leave the canvas.
+
+**Task complete — the list is exhausted.**
 
 **Use the container-tracking pattern, not the two-fixed-sizes one.** Clamp the
 container width, set the backing store to twice it, scale the context by two,

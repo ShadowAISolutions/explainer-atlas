@@ -292,19 +292,56 @@ const state = Object.assign({}, defaults);
 
 const el = (id) => document.getElementById(id);
 const cv = el("view"), ctx = cv.getContext("2d");
-const W = cv.width, H = cv.height;
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
-function panel(x0, w, title, colour){
+/* The canvas tracks its container rather than being a fixed 920x560 drawing
+   scaled into whatever is left: at 390px that put the ruler captions at about
+   four effective pixels. Below 560 the two panels stack instead of sitting
+   side by side, so each keeps the full width.                               */
+const SS = 2;
+let W, H, NARROW, PAD, FS, FSB, FST, MIRROR, INSET, MW, PH, A, B, RY0;
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth;
+  W = Math.max(280, Math.min(920, avail || 880));
+  NARROW = W < 560;
+  PAD = NARROW ? 10 : 18;
+  FS  = NARROW ? 10 : 13;
+  FSB = NARROW ? 11 : 14;
+  FST = NARROW ? 12 : 16;
+  INSET = NARROW ? 26 : 38;
+  if (NARROW){
+    const w = W - PAD * 2;
+    MIRROR = Math.round(Math.min(132, w * 0.42));
+    MW = Math.round(Math.min(38, w * 0.13));
+    PH = MIRROR + INSET * 2 + 18;
+    A = { x: PAD, w: w, top: FST + 12, h: PH };
+    B = { x: PAD, w: w, top: FST + 12 + PH + FST + 16, h: PH };
+  } else {
+    const gap = 26, left = Math.round((W - PAD * 2 - gap) * 0.40);
+    MIRROR = Math.round(Math.min(210, (W - PAD * 2) * 0.26));
+    MW = Math.round(Math.min(56, W * 0.055));
+    PH = MIRROR + INSET * 2 + 22;
+    A = { x: PAD, w: left, top: FST + 14, h: PH };
+    B = { x: PAD + left + gap, w: W - PAD * 2 - left - gap, top: FST + 14, h: PH };
+  }
+  RY0 = B.top + B.h + (NARROW ? 32 : 38);
+  H = RY0 + FS + 22 + (FSB + 14) + 26 + (FSB + 14) + 14;
+  cv.width = Math.round(W * SS); cv.height = Math.round(H * SS);
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function panel(p, title, colour){
   ctx.strokeStyle = colour; ctx.globalAlpha = 0.35; ctx.lineWidth = 1;
-  ctx.strokeRect(x0, 40, w, 330);
+  ctx.strokeRect(p.x + 0.5, p.top + 0.5, p.w - 1, p.h - 1);
   ctx.globalAlpha = 1;
-  ctx.fillStyle = colour; ctx.font = "600 17px ui-monospace, monospace";
+  ctx.fillStyle = colour; ctx.font = "600 " + FST + "px ui-monospace, monospace";
   ctx.textAlign = "center";
-  ctx.fillText(title, x0 + w / 2, 28);
+  ctx.fillText(title, p.x + p.w / 2, p.top - (NARROW ? 5 : 7));
 }
 
 function render(){
+  fitCanvas();
   const beta = state.beta, ph = state.phase;
   const g = Model.gamma(beta);
   const rest = css("--rest"), moving = css("--moving"), photon = css("--photon");
@@ -312,74 +349,90 @@ function render(){
 
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = css("--void"); ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "alphabetic";
 
-  const MIRROR = 210;                 /* mirror separation on screen, pixels */
-  const TOP = 90, BOT = TOP + MIRROR;
+  const TOP = A.top + INSET, BOT = TOP + MIRROR;
 
-  /* ---- left panel: the clock at rest ---- */
-  panel(40, 340, "AT REST", rest);
-  const lx = 210;
-  ctx.strokeStyle = rest; ctx.lineWidth = 5;
-  ctx.beginPath(); ctx.moveTo(lx - 62, TOP); ctx.lineTo(lx + 62, TOP); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(lx - 62, BOT); ctx.lineTo(lx + 62, BOT); ctx.stroke();
+  /* ---- the clock at rest ---- */
+  panel(A, "AT REST", rest);
+  const lx = A.x + A.w / 2;
+  ctx.strokeStyle = rest; ctx.lineWidth = NARROW ? 4 : 5;
+  ctx.beginPath(); ctx.moveTo(lx - MW, TOP); ctx.lineTo(lx + MW, TOP); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(lx - MW, BOT); ctx.lineTo(lx + MW, BOT); ctx.stroke();
   ctx.strokeStyle = photon; ctx.lineWidth = 2; ctx.globalAlpha = 0.5;
   ctx.beginPath(); ctx.moveTo(lx, BOT); ctx.lineTo(lx, TOP); ctx.stroke();
   ctx.globalAlpha = 1;
-  const ly = BOT - MIRROR * ph;
   ctx.fillStyle = photon;
-  ctx.beginPath(); ctx.arc(lx, ly, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(lx, BOT - MIRROR * ph, NARROW ? 5.5 : 7, 0, Math.PI * 2); ctx.fill();
+  ctx.font = FS + "px ui-monospace, monospace"; ctx.fillStyle = muted; ctx.textAlign = "right";
+  ctx.fillText("L", lx - MW - 6, (TOP + BOT) / 2 + FS * 0.36);
 
-  /* ---- right panel: the same clock, moving ---- */
-  panel(420, 460, "MOVING", moving);
-  /* the diagonal, drawn to the same vertical scale, base = beta * gamma * L */
-  const baseFull = Math.min(360, MIRROR * beta * g);
-  const rx0 = 470;
-  ctx.strokeStyle = moving; ctx.lineWidth = 5; ctx.globalAlpha = 0.3;
-  ctx.beginPath(); ctx.moveTo(rx0 - 50, BOT); ctx.lineTo(rx0 + 50, BOT); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(rx0 - 50, TOP); ctx.lineTo(rx0 + 50, TOP); ctx.stroke();
+  /* ---- the same clock, moving ---- */
+  panel(B, "MOVING", moving);
+  const TOP2 = B.top + INSET, BOT2 = TOP2 + MIRROR;
+  const rx0 = B.x + MW + (NARROW ? 12 : 16);
+  const room = B.w - MW * 2 - (NARROW ? 24 : 32);
+  const baseFull = Math.min(room, MIRROR * beta * g);
+  ctx.strokeStyle = moving; ctx.lineWidth = NARROW ? 4 : 5; ctx.globalAlpha = 0.3;
+  ctx.beginPath(); ctx.moveTo(rx0 - MW, BOT2); ctx.lineTo(rx0 + MW, BOT2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(rx0 - MW, TOP2); ctx.lineTo(rx0 + MW, TOP2); ctx.stroke();
   ctx.globalAlpha = 1;
-  ctx.beginPath(); ctx.moveTo(rx0 + baseFull - 50, TOP); ctx.lineTo(rx0 + baseFull + 50, TOP); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(rx0 + baseFull - 50, BOT); ctx.lineTo(rx0 + baseFull + 50, BOT); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(rx0 + baseFull - MW, TOP2); ctx.lineTo(rx0 + baseFull + MW, TOP2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(rx0 + baseFull - MW, BOT2); ctx.lineTo(rx0 + baseFull + MW, BOT2); ctx.stroke();
 
   /* the triangle */
   ctx.strokeStyle = photon; ctx.lineWidth = 2; ctx.globalAlpha = 0.5;
-  ctx.beginPath(); ctx.moveTo(rx0, BOT); ctx.lineTo(rx0 + baseFull, TOP); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(rx0, BOT2); ctx.lineTo(rx0 + baseFull, TOP2); ctx.stroke();
   ctx.globalAlpha = 1;
   ctx.strokeStyle = rule; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
-  ctx.beginPath(); ctx.moveTo(rx0, BOT); ctx.lineTo(rx0 + baseFull, BOT); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(rx0 + baseFull, BOT); ctx.lineTo(rx0 + baseFull, TOP); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(rx0, BOT2); ctx.lineTo(rx0 + baseFull, BOT2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(rx0 + baseFull, BOT2); ctx.lineTo(rx0 + baseFull, TOP2); ctx.stroke();
   ctx.setLineDash([]);
   ctx.fillStyle = photon;
-  ctx.beginPath(); ctx.arc(rx0 + baseFull * ph, BOT - MIRROR * ph, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(rx0 + baseFull * ph, BOT2 - MIRROR * ph, NARROW ? 5.5 : 7, 0, Math.PI * 2); ctx.fill();
 
-  /* triangle side labels */
-  ctx.font = "13px ui-monospace, monospace"; ctx.fillStyle = muted; ctx.textAlign = "center";
-  ctx.fillText("v t", rx0 + baseFull / 2, BOT + 22);
-  ctx.save(); ctx.translate(rx0 + baseFull + 20, (TOP + BOT) / 2); ctx.rotate(Math.PI / 2);
-  ctx.fillText("L", 0, 0); ctx.restore();
-  ctx.fillStyle = photon;
-  ctx.fillText("c t", rx0 + baseFull / 2 - 26, (TOP + BOT) / 2 - 10);
-  ctx.fillStyle = muted; ctx.textAlign = "center";
-  ctx.fillText("L", lx - 20, (TOP + BOT) / 2);
+  /* triangle side labels, each clear of the line it names */
+  ctx.font = FS + "px ui-monospace, monospace"; ctx.textAlign = "center";
+  ctx.fillStyle = muted;
+  if (baseFull > ctx.measureText("v t").width + 10)
+    ctx.fillText("v t", rx0 + baseFull / 2, BOT2 + FS + (NARROW ? 7 : 9));
+  const lw = ctx.measureText("L").width;
+  const outside = rx0 + baseFull + MW + 5;
+  if (outside + lw <= W - 3){
+    ctx.textAlign = "left";
+    ctx.fillText("L", outside, (TOP2 + BOT2) / 2 + FS * 0.36);
+  } else {
+    ctx.textAlign = "right";
+    ctx.fillText("L", rx0 + baseFull - MW - 5, (TOP2 + BOT2) / 2 + FS * 0.36);
+  }
+  ctx.fillStyle = photon; ctx.textAlign = "right";
+  ctx.fillText("c t", rx0 + baseFull / 2 - 6, (TOP2 + BOT2) / 2 - 4);
 
   /* ---- the comparison rulers ---- */
-  const RY = 430, RX = 70, RW = W - 2 * RX;
-  ctx.fillStyle = muted; ctx.font = "13px ui-monospace, monospace"; ctx.textAlign = "left";
-  ctx.fillText("ticks accumulated over the same span of your time", RX, RY - 16);
+  const RX = PAD, RW = W - 2 * PAD;
+  ctx.fillStyle = muted; ctx.font = FS + "px ui-monospace, monospace"; ctx.textAlign = "left";
+  const cap = (function(list){ for (const t of list){ if (ctx.measureText(t).width <= RW) return t; } return ""; })(
+    ["ticks accumulated over the same span of your time",
+     "ticks over the same span of your time", "over the same span of your time", "ticks"]);
+  ctx.fillText(cap, RX, RY0 + FS);
 
   const drawRuler = (y, n, colour, label) => {
     ctx.strokeStyle = colour; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(RX, y); ctx.lineTo(RX + RW, y); ctx.stroke();
+    const tick = NARROW ? 7 : 9;
     const shown = Math.min(n, 48);
     for (let i = 0; i <= shown; i++){
       const x = RX + RW * i / 48;
-      ctx.beginPath(); ctx.moveTo(x, y - 9); ctx.lineTo(x, y + 9); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, y - tick); ctx.lineTo(x, y + tick); ctx.stroke();
     }
-    ctx.fillStyle = colour; ctx.font = "600 14px ui-monospace, monospace"; ctx.textAlign = "left";
-    ctx.fillText(label, RX, y + 32);
+    ctx.fillStyle = colour; ctx.font = "600 " + FSB + "px ui-monospace, monospace";
+    ctx.textAlign = "left";
+    ctx.fillText(label, RX, y + tick + FSB + 5);
   };
-  drawRuler(RY + 14, 48, rest, "your clock:  48 ticks");
-  drawRuler(RY + 76, 48 / g, moving, "moving clock:  " + (48 / g).toFixed(2) + " ticks");
+  const r1y = RY0 + FS + 22 + (NARROW ? 7 : 9);
+  const r2y = r1y + (NARROW ? 7 : 9) + FSB + 5 + 26 + (NARROW ? 7 : 9);
+  drawRuler(r1y, 48, rest, "your clock:  48 ticks");
+  drawRuler(r2y, 48 / g, moving, "moving clock:  " + (48 / g).toFixed(2) + " ticks");
 
   /* readouts */
   el("betaout").textContent = beta < 1e-4 ? beta.toExponential(2) : beta.toFixed(3);
@@ -417,6 +470,10 @@ el("reset").addEventListener("click", function(){
   el("scenehint").textContent = SCENES.clock.note;
   render();
 });
+let raf = 0;
+addEventListener("resize", function(){ cancelAnimationFrame(raf); raf = requestAnimationFrame(render); });
+const mq = matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
 render();
 
 /* ---- SELFTEST ---------------------------------------------------------- */
