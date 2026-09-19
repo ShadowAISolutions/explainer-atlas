@@ -1,0 +1,729 @@
+<!doctype html>
+<!--
+  Interactive Explainer Atlas — page skeleton.
+  Start EVERY new explainer from this file. Never copy a previous page.
+  Replace every {{PLACEHOLDER}}. Delete the demo model and write your own.
+  Contract: FOUNDATION.md. Rules: CLAUDE.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Hash Is Half As Wide As You Think &#8212; Explainer Atlas</title>
+<meta name="description" content="A 32-bit hash has four billion slots and starts colliding at seventy-seven thousand items. The square root eats half your bits, and every table size has the same curve.">
+<style>
+/* ---- tokens: restate these per page to vary the collection's feel ------- */
+:root{
+  --bg:#f4f6f5; --panel:#ffffff; --ink:#101815; --muted:#54655f; --line:#d8e0dd;
+  --accent:#12665c; --accent-soft:#e0efeb; --warn:#a33a2e; --quiet:#b4c2bd;
+  --radius:2px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.45rem,1.05rem + 1.8vw,2.05rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.06rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0c1211; --panel:#131b19; --ink:#e4ece9; --muted:#93a6a0; --line:#23302d;
+    --accent:#4ec2b1; --accent-soft:#102422; --warn:#e8806f; --quiet:#3a4a46;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.15; margin:0 0 .4em; letter-spacing:-.01em}
+.kicker{margin:0 0 .35em; color:var(--accent); font:600 .78rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.09em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas, figure.stage svg{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.86rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.83rem}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .7em; min-height:40px}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.06em}
+.readout dd{margin:.18em 0 0; font:600 1.05rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.16rem; margin:1.8em 0 .45em; letter-spacing:-.005em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); background:var(--accent-soft); padding:.7em .85em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">computer science</p>
+  <h1>Your Hash Is Half As Wide As You Think</h1>
+  <p class="standfirst">A 32-bit hash has four billion slots. It reaches a coin flip's chance of a
+  collision after seventy-seven thousand items. Drag the table size across eight orders of magnitude
+  and watch every curve land on top of the same one.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="600" role="img"
+            aria-label="Above, the probability of at least one collision plotted against the number of items, measured in units of the square root of the table size. Eight curves for eight table sizes lie almost exactly on top of each other. A horizontal line marks fifty per cent and a vertical line marks 1.1774 square roots. Below, a grid of small squares, one per simulated run, filled where that run produced a collision."></canvas>
+    <figcaption>Above: the chance of at least one collision. The horizontal axis counts items in units
+    of the square root of the table size, which is what makes all eight curves coincide. Below: one
+    square per simulated run, filled if that run collided.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row">
+        <label for="size">Table size</label>
+        <output id="sizeout" for="size">2<sup>32</sup></output>
+      </div>
+      <input type="range" id="size" min="0" max="7" step="1" value="7">
+      <p class="hint">How many slots the hash can land in, from sixty-four to four billion. Arrow keys
+      step; Home and End jump to the ends.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="load">Items inserted</label>
+        <output id="loadout" for="load">77,164</output>
+      </div>
+      <input type="range" id="load" min="0" max="300" step="2" value="118">
+      <p class="hint">Counted in square roots of the table size, from none to three. The actual number
+      of items is shown above and changes with the table.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="trials">Simulated runs</label>
+        <output id="trialsout" for="trials">200</output>
+      </div>
+      <input type="range" id="trials" min="24" max="600" step="24" value="192">
+      <p class="hint">Each run inserts the items afresh and records whether any two landed in the same
+      slot. Large item counts reduce the runs automatically to keep the page responsive.</p>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Collision chance</dt><dd id="oP">&#8212;</dd></div>
+      <div><dt>Measured</dt><dd id="oSim">&#8212;</dd></div>
+      <div><dt>Coin flip at</dt><dd id="oHalf">&#8212;</dd></div>
+      <div><dt>Expected pairs</dt><dd id="oPairs">&#8212;</dd></div>
+      <div><dt>Effective bits</dt><dd id="oBits">&#8212;</dd></div>
+      <div><dt>Runs used</dt><dd id="oRuns">&#8212;</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Four billion slots sounds like a lot of room. Hand a 32-bit hash seventy-seven thousand items and
+  it is already a coin flip whether two of them share a slot. That is not a bad hash function; a
+  perfectly uniform one behaves exactly this way. The reason is that collisions are not about items
+  meeting slots, they are about items meeting each other, and a pile of <em>k</em> items contains
+  <em>k</em>(<em>k</em>&#8722;1)/2 pairs.</p>
+
+  <p>Every pair gets an independent shot at landing together, with probability one in <em>N</em>. Once
+  the number of pairs reaches the number of slots, you should expect a collision, and the number of
+  pairs reaches <em>N</em> when <em>k</em> is around the square root of <em>N</em>. The square root is
+  the whole story, and in a world where table sizes are powers of two, a square root is a halving of
+  the exponent. A 64-bit digest gives you the collision resistance of a 32-bit counter.</p>
+
+  <h2>Why the exact curve is a product</h2>
+
+  <p class="math">P(collision) = 1 &#8722; &#928;(1 &#8722; i/N) for i = 1..k&#8722;1 &#8776; 1 &#8722; exp(&#8722;k(k&#8722;1)/2N)</p>
+
+  <p>Go the other way round and ask for the probability that everything misses. The first item lands
+  anywhere. The second must avoid one occupied slot, which it does with probability
+  (<em>N</em>&#8722;1)/<em>N</em>. The third must avoid two. Multiply the terms together and subtract
+  from one. The exponential on the right is what you get by replacing each log(1&#8722;i/N) with
+  &#8722;i/N. Its error is not uniform: it is three and a half per cent at sixty-four slots, one
+  per cent at a thousand, and a tenth of a per cent at sixty-five thousand. That pattern is exact
+  &#8212; the relative error shrinks as one over the square root of the table, so the same square
+  root that governs the answer also governs how well the shortcut works.</p>
+
+  <h2>Every table is the same table</h2>
+
+  <p>The horizontal axis here is not a count of items. It is a count of square roots. Rescaled that
+  way, the eight curves for eight table sizes lie on top of one another to within the width of the
+  line, because the exponential above depends only on the ratio <em>k</em>/&#8730;<em>N</em>. At one
+  square root exactly, the chance of a collision is 1&#8722;<em>e</em><sup>&#8722;1/2</sup>, which is
+  39.3 per cent, whether the table holds a thousand slots or four billion. The fifty per cent crossing
+  sits at 1.1774 square roots, a number that is &#8730;(2&nbsp;ln&nbsp;2) and has nothing to do with
+  any particular table.</p>
+
+  <p>The collapse is not perfect at the small end. At sixty-four slots the crossing is six per cent
+  above 1.1774&#8730;<em>N</em>, because the asymptotic argument throws away terms that only become
+  negligible when the table is large. By one thousand slots the error is under one per cent, and by
+  sixty-five thousand it is under a fifth of a per cent.</p>
+
+  <h2>What to try</h2>
+
+  <p>Put the table at three hundred and sixty-five slots and the items at 1.18 square roots: twenty-three
+  people, fifty-one per cent, the birthday problem exactly. Now drag the table all the way to
+  2<sup>32</sup> without touching the second slider. The item count leaps from twenty-three to
+  seventy-seven thousand and the probability does not move at all &#8212; the curve has simply been
+  stretched along an axis you are not looking at. Finally push the items to three square roots and
+  watch the measured squares below go almost entirely dark: at three square roots the chance of
+  getting away with it is under two per cent, for every table on the slider.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG. Never use bare Math.random(). ------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+
+/* ---- MODEL: pure functions of the parameters. No DOM in here. ----------- */
+const SIZES  = [64, 365, 1024, 4096, 65536, 1000000, 16777216, 4294967296];
+const SLOTS  = ["64", "365", "1,024", "4,096", "65,536", "1,000,000", "2^24", "2^32"];
+const SHORT  = ["64", "365", "1k", "4k", "65k", "1e6", "2^24", "2^32"];
+const BUDGET = 1500000;   /* insertions per render, so the page stays live */
+
+const Model = {
+  /* log of the probability that all k items miss each other.
+     Exact product for small k; a five-term power series for large k, where
+     the exact loop would cost two hundred thousand iterations per pixel.    */
+  logMiss(N, k){
+    if (k < 2) return 0;
+    if (k > N) return -Infinity;
+    if (k <= 4096){
+      let s = 0;
+      for (let i = 1; i < k; i++) s += Math.log1p(-i / N);
+      return s;
+    }
+    const n = k - 1;
+    const S1 = n * (n + 1) / 2;
+    const S2 = n * (n + 1) * (2 * n + 1) / 6;
+    const S3 = S1 * S1;
+    const S4 = n * (n + 1) * (2 * n + 1) * (3 * n * n + 3 * n - 1) / 30;
+    const S5 = n * n * (n + 1) * (n + 1) * (2 * n * n + 2 * n - 1) / 12;
+    return -(S1 / N + S2 / (2 * N * N) + S3 / (3 * Math.pow(N, 3))
+           + S4 / (4 * Math.pow(N, 4)) + S5 / (5 * Math.pow(N, 5)));
+  },
+
+  /* route one: one minus the product, via the log sum                       */
+  pColl(N, k){
+    if (k < 2) return 0;
+    if (k > N) return 1;
+    return -Math.expm1(Model.logMiss(N, k));
+  },
+
+  /* route two: the bare product, multiplied out term by term                */
+  pProd(N, k){
+    if (k < 2) return 0;
+    if (k > N) return 1;
+    let p = 1;
+    for (let i = 1; i < k; i++) p *= (1 - i / N);
+    return 1 - p;
+  },
+
+  /* route three: the textbook exponential approximation                     */
+  pApprox(N, k){ return -Math.expm1(-k * (k - 1) / (2 * N)); },
+
+  /* smallest item count whose collision chance reaches p                     */
+  threshold(N, p){
+    let lo = 1, hi = 2;
+    while (hi < N && Model.pColl(N, hi) < p) hi *= 2;
+    hi = Math.min(hi, N + 1);
+    while (lo < hi){
+      const m = Math.floor((lo + hi) / 2);
+      if (Model.pColl(N, m) >= p) hi = m; else lo = m + 1;
+    }
+    return lo;
+  },
+
+  expectedPairs(N, k){ return k < 2 ? 0 : k * (k - 1) / (2 * N); },
+
+  /* route four: actually throw the items in and look                        */
+  runs(N, k, trials, seed){
+    const rng = mulberry32(seed), out = [];
+    for (let t = 0; t < trials; t++){
+      const seen = new Set();
+      let hit = false;
+      for (let i = 0; i < k; i++){
+        const v = Math.floor(rng() * N);
+        if (seen.has(v)){ hit = true; break; }
+        seen.add(v);
+      }
+      out.push(hit);
+    }
+    return out;
+  },
+
+  simRate(N, k, trials, seed){
+    const r = Model.runs(N, k, trials, seed);
+    let n = 0;
+    for (let i = 0; i < r.length; i++) if (r[i]) n++;
+    return r.length ? n / r.length : 0;
+  },
+
+  /* how many runs we can afford at this item count                          */
+  affordable(k, asked){
+    return Math.max(12, Math.min(asked, Math.floor(BUDGET / Math.max(k, 1))));
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { size: 3, load: 118, trials: 192 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function num(n){ return Math.round(n).toLocaleString("en-GB"); }
+function pct(x){ return (100 * x).toFixed(1) + "%"; }
+
+const SS = 2;
+let CW = 900, CH = 600, NARROW = false, FS = 13, G_ = null;
+
+function wid(t){ return ctx.measureText(t).width; }
+function pick(sets, room){
+  for (let i = 0; i < sets.length; i++) if (wid(sets[i]) <= room) return sets[i];
+  return sets[sets.length - 1];
+}
+
+function fitCanvas(nRuns){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 20) : 900);
+  NARROW = avail < 470;
+  CW = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+
+  const pad  = NARROW ? 10 : 14;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.font = FS + "px " + css("--font-body");
+  const axw = Math.ceil(ctx.measureText("100%").width) + 8;
+
+  const L = pad + axw, R = CW - pad;
+  const plotTop = Math.round(pad + FS + 10);
+  const plotH   = Math.round(CW * (NARROW ? 0.72 : 0.42));
+  const plotBot = plotTop + plotH;
+  const xlabY   = plotBot + FS + 7;
+  const gridTitle = Math.round(xlabY + FS + 16);
+  const gridTop = gridTitle + 9;
+
+  const n = Math.max(1, nRuns);
+  let pitch = Math.floor((R - L) / Math.ceil(Math.sqrt(n * 2.6)));
+  pitch = Math.max(5, Math.min(20, pitch));
+  const cols = Math.max(1, Math.floor((R - L) / pitch));
+  const rows = Math.ceil(n / cols);
+  const gridBot = gridTop + rows * pitch;
+  const capY = gridBot + FS + 10;
+  CH = capY + 6;
+
+  G_ = { pad: pad, L: L, R: R, plotTop: plotTop, plotBot: plotBot, xlabY: xlabY,
+         gridTitle: gridTitle, gridTop: gridTop, gridBot: gridBot, capY: capY,
+         pitch: pitch, cols: cols, rows: rows };
+
+  if (cv.width !== CW * SS || cv.height !== CH * SS){ cv.width = CW * SS; cv.height = CH * SS; }
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+const XMAX = 3;
+
+function render(){
+  const N    = SIZES[state.size];
+  const root = Math.sqrt(N);
+  const mult = state.load / 100;
+  const k    = Math.round(mult * root);
+  const eff  = Model.affordable(k, state.trials);
+
+  fitCanvas(eff);
+  const G = G_;
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line"),
+        accent = css("--accent"), warn = css("--warn"), quiet = css("--quiet"),
+        soft = css("--accent-soft"), panel = css("--panel");
+
+  const p     = Model.pColl(N, k);
+  const half  = Model.threshold(N, 0.5);
+  const pairs = Model.expectedPairs(N, k);
+  const results = Model.runs(N, k, eff, 20260919 + state.size * 101 + state.load);
+  let hits = 0;
+  for (let i = 0; i < results.length; i++) if (results[i]) hits++;
+  const measured = results.length ? hits / results.length : 0;
+
+  ctx.clearRect(0, 0, CW, CH);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, CW, CH);
+  ctx.textBaseline = "alphabetic";
+
+  const PW = G.R - G.L, PH = G.plotBot - G.plotTop;
+  const X = (u) => G.L + PW * (u / XMAX);
+  const Y = (q) => G.plotBot - PH * q;
+
+  /* ---------------- upper pane: the collapsed curves -------------------- */
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  const nlab = "N = " + (NARROW ? SHORT[state.size] : SLOTS[state.size]);
+  const nw = wid(nlab) + 16;
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["Chance of at least one collision", "Chance of a collision",
+                     "Collision chance", ""], PW - nw),
+               G.L, G.plotTop - 8);
+  ctx.textAlign = "right"; ctx.fillStyle = accent;
+  ctx.fillText(nlab, G.R, G.plotTop - 8);
+
+  ctx.fillStyle = soft; ctx.fillRect(G.L, G.plotTop, PW, PH);
+
+  /* y grid */
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.textAlign = "right"; ctx.fillStyle = muted;
+  for (let q = 0; q <= 1.0001; q += 0.25){
+    const y = Math.round(Y(q)) + 0.5;
+    ctx.beginPath(); ctx.moveTo(G.L, y); ctx.lineTo(G.R, y); ctx.stroke();
+    ctx.fillText(q === 0 ? "0" : Math.round(q * 100) + "%", G.L - 6, y + FS * 0.36);
+  }
+
+  /* x ticks, in units of the square root */
+  ctx.textAlign = "center";
+  const stepX = NARROW ? 1 : 0.5;
+  for (let u = 0; u <= XMAX + 1e-9; u += stepX){
+    const x = Math.round(X(u)) + 0.5;
+    ctx.strokeStyle = line;
+    ctx.beginPath(); ctx.moveTo(x, G.plotBot); ctx.lineTo(x, G.plotBot + 4); ctx.stroke();
+    const lab = u === 0 ? "0" : (u === 1 ? "√N" : (u % 1 ? u.toFixed(1) : u) + "√N");
+    ctx.fillStyle = muted; ctx.fillText(lab, x, G.xlabY);
+  }
+
+  /* the eight curves. The current one last, so it sits on top. */
+  const order = [];
+  for (let i = 0; i < SIZES.length; i++) if (i !== state.size) order.push(i);
+  order.push(state.size);
+  for (let oi = 0; oi < order.length; oi++){
+    const idx = order[oi], M = SIZES[idx], rt = Math.sqrt(M);
+    const cur = idx === state.size;
+    ctx.strokeStyle = cur ? accent : quiet;
+    ctx.lineWidth = cur ? 2.4 : 1;
+    ctx.beginPath();
+    const STEPS = 260;
+    for (let i = 0; i <= STEPS; i++){
+      const u = XMAX * i / STEPS;
+      const kk = Math.round(u * rt);
+      const q = Model.pColl(M, kk);
+      const x = X(u), y = Y(q);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  /* the fifty per cent line and the 1.1774 crossing */
+  ctx.save();
+  ctx.setLineDash([5, 4]); ctx.lineWidth = 1;
+  ctx.strokeStyle = muted;
+  const y50 = Math.round(Y(0.5)) + 0.5;
+  ctx.beginPath(); ctx.moveTo(G.L, y50); ctx.lineTo(G.R, y50); ctx.stroke();
+  ctx.restore();
+  const xc = Math.round(X(1.1774)) + 0.5;
+  const markTop = G.plotTop + 2 * FS + 18;   /* clear of the two note rows */
+
+  /* two note rows in the empty top-left of the plot */
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.textAlign = "left"; ctx.fillStyle = muted;
+  ctx.fillText(pick(["grey: the other seven tables", "grey: other tables", "other tables", ""],
+                    PW - 16),
+               G.L + 8, G.plotTop + FS + 6);
+  /* the marker's caption is a legend row, not a label hung off the line:
+     anchored to the line it would run rightwards into the rising curve.     */
+  ctx.fillStyle = warn;
+  ctx.fillText(pick(["dashed: the coin flip, at 1.1774√N",
+                     "dashed: coin flip at 1.1774√N",
+                     "coin flip: 1.1774√N", ""], PW * 0.62),
+               G.L + 8, G.plotTop + 2 * FS + 12);
+
+  /* where the reader is */
+  const xk = Math.round(X(Math.min(mult, XMAX))) + 0.5;
+  ctx.strokeStyle = accent; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(xk, markTop); ctx.lineTo(xk, G.plotBot); ctx.stroke();
+  ctx.fillStyle = accent;
+  ctx.beginPath(); ctx.arc(xk, Y(p), 4.5, 0, 6.2832); ctx.fill();
+
+  /* the 1.1774 marker goes on last: at the default it sits under the
+     reader's own line, and a legend that names a line you cannot see lies. */
+  ctx.save();
+  ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = warn;
+  ctx.beginPath(); ctx.moveTo(xc, markTop); ctx.lineTo(xc, G.plotBot); ctx.stroke();
+  ctx.restore();
+
+  /* the chip, in the empty bottom-right under every curve */
+  ctx.font = "600 " + FS + "px " + css("--font-mono");
+  const chip = pick([num(k) + " items → " + pct(p), num(k) + " → " + pct(p), pct(p)],
+                    PW * 0.6);
+  const cw2 = wid(chip) + 16, ch2 = FS + 12;
+  const cx = G.R - 8 - cw2, cy = G.plotBot - 8 - ch2;
+  ctx.fillStyle = panel; ctx.fillRect(cx, cy, cw2, ch2);
+  ctx.strokeStyle = accent; ctx.lineWidth = 1;
+  ctx.strokeRect(cx + 0.5, cy + 0.5, cw2 - 1, ch2 - 1);
+  ctx.fillStyle = ink; ctx.textAlign = "center";
+  ctx.fillText(chip, cx + cw2 / 2, cy + ch2 - 9);
+
+  /* ---------------- lower pane: the runs -------------------------------- */
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  const mlab = "measured " + pct(measured);
+  const mw = wid(mlab) + 16;
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["One square per run, filled where two items collided",
+                     "One square per run, filled if it collided",
+                     "One square per run", ""], PW - mw),
+               G.L, G.gridTitle);
+  ctx.textAlign = "right"; ctx.fillStyle = hits ? warn : muted;
+  ctx.fillText(mlab, G.R, G.gridTitle);
+
+  for (let i = 0; i < results.length; i++){
+    const r = Math.floor(i / G.cols), c = i - r * G.cols;
+    const x = G.L + c * G.pitch, y = G.gridTop + r * G.pitch;
+    const w = G.pitch - (G.pitch > 8 ? 2 : 1);
+    ctx.fillStyle = results[i] ? warn : soft;
+    ctx.fillRect(x, y, w, w);
+    if (!results[i]){ ctx.strokeStyle = line; ctx.lineWidth = 1;
+                      ctx.strokeRect(x + 0.5, y + 0.5, w - 1, w - 1); }
+  }
+
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.fillStyle = muted; ctx.textAlign = "center";
+  ctx.fillText(pick([num(hits) + " of " + num(results.length) + " runs collided; theory says "
+                     + pct(p), num(hits) + "/" + num(results.length) + " collided, theory "
+                     + pct(p), num(hits) + "/" + num(results.length)], PW),
+               (G.L + G.R) / 2, G.capY);
+
+  /* ---------------- the numbers ----------------------------------------- */
+  el("sizeout").textContent = SLOTS[state.size];
+  el("loadout").textContent = num(k);
+  el("trialsout").textContent = num(state.trials);
+  el("oP").textContent = pct(p);
+  el("oSim").textContent = pct(measured);
+  el("oHalf").textContent = num(half);
+  el("oPairs").textContent = pairs.toFixed(2);
+  el("oBits").textContent = (Math.log(half) / Math.LN2).toFixed(1) + " of "
+                          + (Math.log(N) / Math.LN2).toFixed(1);
+  el("oRuns").textContent = num(eff);
+}
+
+function bind(id, key){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parseInt(input.value, 10); render(); });
+}
+bind("size", "size");
+bind("load", "load");
+bind("trials", "trials");
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("size").value = String(defaults.size);
+  el("load").value = String(defaults.load);
+  el("trials").value = String(defaults.trials);
+  render();
+});
+
+let rt = null;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 90); });
+const dark = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+if (dark && dark.addEventListener) dark.addEventListener("change", render);
+
+render();
+
+/* ---- SELFTEST: minimum 5 numeric assertions against known values. ------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1. the birthday problem itself, to four decimals */
+  const bd = Model.pColl(365, 23);
+  push("23 people share a birthday with probability 0.5073",
+       near(bd, 0.5073, 5e-5), "got " + bd.toFixed(10) + ", textbook 0.5072972343");
+
+  /* 2. route one against route two: the log sum against the bare product */
+  let d12 = 0, arg12 = "";
+  for (let si = 0; si < SIZES.length; si++){
+    const N = SIZES[si];
+    for (let k = 1; k <= Math.min(N, 4096); k += (k < 60 ? 1 : 53)){
+      const d = Math.abs(Model.pColl(N, k) - Model.pProd(N, k));
+      if (d > d12){ d12 = d; arg12 = "N=" + N + ", k=" + k; }
+    }
+  }
+  push("log sum agrees with the bare product to 1e-10",
+       d12 < 1e-10, "worst gap " + d12.toExponential(3) + " at " + arg12);
+
+  /* 3. the power series branch against the exact loop, in their overlap */
+  let dser = 0, argser = "";
+  for (const N of [16777216, 4294967296]){
+    for (let k = 4000; k <= 4096; k += 8){
+      let ex = 0;
+      for (let i = 1; i < k; i++) ex += Math.log1p(-i / N);
+      const n = k - 1;
+      const S1 = n * (n + 1) / 2, S2 = n * (n + 1) * (2 * n + 1) / 6, S3 = S1 * S1,
+            S4 = n * (n + 1) * (2 * n + 1) * (3 * n * n + 3 * n - 1) / 30,
+            S5 = n * n * (n + 1) * (n + 1) * (2 * n * n + 2 * n - 1) / 12;
+      const se = -(S1 / N + S2 / (2 * N * N) + S3 / (3 * Math.pow(N, 3))
+                 + S4 / (4 * Math.pow(N, 4)) + S5 / (5 * Math.pow(N, 5)));
+      const d = Math.abs(ex - se);
+      if (d > dser){ dser = d; argser = "N=" + N + ", k=" + k; }
+    }
+  }
+  push("five-term series matches the exact loop to 1e-10",
+       dser < 1e-10, "worst gap " + dser.toExponential(3) + " at " + argser);
+
+  /* 4. the 50% crossing against 1.1774 root N. The task file asked for 2%
+        at every table size; that is false at the small end, where the
+        asymptotic has not arrived. The true statement is below.            */
+  const rat = SIZES.map((N) => Model.threshold(N, 0.5) / (1.1774 * Math.sqrt(N)));
+  const small = Math.abs(rat[0] - 1), big = Math.max.apply(null, rat.slice(4).map((r) => Math.abs(r - 1)));
+  push("the 50% crossing converges on 1.1774 root N",
+       Math.abs(rat[2] - 1) < 0.02 && big < 0.002 && small > 0.05,
+       "64 slots is " + (100 * small).toFixed(1) + "% high (the task file's 2% claim fails there); "
+       + "from 65,536 slots up the worst error is " + (100 * big).toFixed(3) + "%");
+
+  /* 5. the exact thresholds, against values computed independently offline */
+  const known = [[64, 10], [365, 23], [1024, 38], [4096, 76], [65536, 302],
+                 [1000000, 1178], [16777216, 4823], [4294967296, 77164]];
+  const bad = known.filter((r) => Model.threshold(r[0], 0.5) !== r[1]);
+  push("threshold table matches the independently computed values",
+       bad.length === 0, "2^32 needs " + num(Model.threshold(4294967296, 0.5))
+       + " items for a coin flip; " + bad.length + " of 8 disagree");
+
+  /* 6. the collapse: every table gives the same answer at one square root */
+  const atRoot = SIZES.map((N) => Model.pColl(N, Math.round(Math.sqrt(N))));
+  const limit = 1 - Math.exp(-0.5);
+  const spread = Math.max.apply(null, atRoot) - Math.min.apply(null, atRoot);
+  push("at one square root every table sits near 1 - e^-0.5",
+       spread < 0.03 && near(atRoot[SIZES.length - 1], limit, 1e-4),
+       "range " + atRoot[0].toFixed(5) + " to " + atRoot[SIZES.length - 1].toFixed(5)
+       + ", limit " + limit.toFixed(6));
+
+  /* 7. monotone increasing in k, for every table on the slider */
+  push("probability never falls as items are added", (function(){
+    for (let si = 0; si < SIZES.length; si++){
+      const N = SIZES[si], rt2 = Math.sqrt(N);
+      let prev = -1;
+      for (let i = 0; i <= 300; i += 2){
+        const q = Model.pColl(N, Math.round(i / 100 * rt2));
+        if (q < prev - 1e-12) return false;
+        prev = q;
+      }
+    }
+    return true;
+  })(), "checked all 8 tables across the full range of the items slider");
+
+  /* 8. monotone decreasing in N at a fixed item count */
+  push("a bigger table always collides less", (function(){
+    for (let k = 2; k <= 60; k++)
+      for (let si = 1; si < SIZES.length; si++)
+        if (Model.pColl(SIZES[si], k) > Model.pColl(SIZES[si - 1], k) + 1e-15) return false;
+    return true;
+  })(), "checked k = 2 to 60 across all 8 tables");
+
+  /* 9. the two ends are exact, by counting rather than by analysis */
+  push("one item never collides and N+1 items always do",
+       Model.pColl(365, 1) === 0 && Model.pColl(64, 65) === 1 && Model.pColl(1024, 1025) === 1,
+       "pigeonhole holds at both ends");
+
+  /* 10. the textbook exponential: its error decays exactly as 1/root N.
+        Six tables, each giving worst-error x root N within a hair of 0.28.  */
+  const errs = [];
+  for (let si = 0; si < 6; si++){
+    const N = SIZES[si];
+    let mr = 0;
+    for (let k = 2; k <= Math.min(N, 3000); k++){
+      const e = Model.pColl(N, k);
+      if (e > 1e-6 && e < 0.999999){
+        const r = Math.abs(Model.pApprox(N, k) - e) / e;
+        if (r > mr) mr = r;
+      }
+    }
+    errs.push(mr);
+  }
+  const scaled = errs.map((e, i) => e * Math.sqrt(SIZES[i]));
+  push("the exponential approximation's error decays as 1 over root N",
+       Math.min.apply(null, scaled) > 0.27 && Math.max.apply(null, scaled) < 0.29,
+       "worst error x root N = " + scaled.map((v) => v.toFixed(3)).join(", ")
+       + " for 64 to 1,000,000 slots; the raw errors are "
+       + errs.map((v) => (100 * v).toFixed(2) + "%").join(", "));
+
+  /* 11. route four: throw the items in and count, at the birthday point */
+  const sr = Model.simRate(365, 23, 4000, 20260919);
+  const se = Math.sqrt(bd * (1 - bd) / 4000);
+  push("4,000 simulated parties land within 3 standard errors",
+       Math.abs(sr - bd) < 3 * se,
+       "measured " + sr.toFixed(5) + " against " + bd.toFixed(5)
+       + ", gap " + (Math.abs(sr - bd) / se).toFixed(2) + " standard errors");
+
+  /* 12. the same, two more places, so it is not one lucky seed */
+  push("simulation tracks theory at two more tables", (function(){
+    const cases = [[4096, 76, 4000, 7], [1000000, 1178, 900, 99]];
+    const notes = [];
+    let ok = true;
+    for (const c of cases){
+      const q = Model.pColl(c[0], c[1]), m = Model.simRate(c[0], c[1], c[2], c[3]);
+      const e2 = Math.sqrt(q * (1 - q) / c[2]);
+      notes.push(c[0] + ": " + m.toFixed(4) + " v " + q.toFixed(4));
+      if (Math.abs(m - q) > 3 * e2) ok = false;
+    }
+    window.__note12 = notes.join("; ");
+    return ok;
+  })(), window.__note12 || "");
+
+  /* 13. the expected number of colliding pairs, counted rather than derived */
+  push("mean collisions match k(k-1)/2N when collisions are rare", (function(){
+    const N = 65536, k = 40, T = 6000;
+    const rng = mulberry32(4242);
+    let tot = 0;
+    for (let t2 = 0; t2 < T; t2++){
+      const seen = new Set();
+      for (let i = 0; i < k; i++){
+        const v = Math.floor(rng() * N);
+        if (seen.has(v)) tot++; else seen.add(v);
+      }
+    }
+    const mean = tot / T, want = Model.expectedPairs(N, k);
+    const sd = Math.sqrt(want / T);
+    window.__note13 = "measured " + mean.toFixed(5) + " against " + want.toFixed(5)
+                    + ", " + (Math.abs(mean - want) / sd).toFixed(2) + " standard errors";
+    return Math.abs(mean - want) < 3 * sd;
+  })(), window.__note13 || "");
+
+  return t;
+};
+
+/* exposed for the verifier's control sweep */
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

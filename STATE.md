@@ -33,6 +33,55 @@ files in `AUDIT/` before starting any batch.
 
 ## Batches
 
+### batch/011 — 2026-09-19
+- merged: bayes-base-rate, hash-collisions-birthday, ideal-gas-law,
+  orbital-transfer-hohmann, rhythm-polymeter-cycle
+- blocked: none
+- patterns: tune-to-match, drag-parameter, perturb-and-observe, spatial-explore,
+  time-scrubber
+- learned:
+  1. **AUDIT/002 warned that the two-stacked-panes canvas was becoming the house
+     shape, and this batch deliberately broke it.** The Hohmann page is a single
+     orbital scene with its numbers in the HTML readouts; the polymeter page is
+     two concentric wheels over one strip; the gas page is one chart with a
+     coloured rug sharing its x-axis. Composition is a variety axis in its own
+     right, not only the interaction pattern. Keep choosing it consciously.
+  2. **A control whose value indexes a table must have the table's range.** The
+     Bayes page shipped a prevalence slider declared `min=0 max=100` while the
+     ladder it indexed had fourteen entries, so every position above 13 threw
+     on `undefined.toLocaleString` — eighteen uncaught exceptions, caught only
+     because the verifier sweeps nine positions of every control. Check the
+     slider bounds against the array length the moment you write either.
+  3. **A label anchored to a marker line runs rightwards into whatever the
+     marker is marking.** On the hash page the "coin flip at 1.1774√N" caption
+     hung off its vertical line and was struck through by the rising curve.
+     Anchor such captions to an empty corner as a legend row instead, and pick
+     the corner from the shape of the data: on a rising curve the top-left is
+     free, on a log-log P–V chart it is the bottom-left.
+  4. **Draw a marker last if a legend names it.** The same page's dashed
+     1.1774 line sat underneath the reader's own line at the default setting,
+     so the legend named something invisible. Ordering is part of the legend's
+     honesty.
+  5. **Check that a derivative is actually unimodal before reaching for a
+     ternary search.** dP/dV for van der Waals climbs to a maximum, falls to a
+     minimum near 3a/RT and creeps back to zero; the ternary search converged
+     on the wrong stationary point and three critical-point assertions failed
+     together. Grid the region first, then refine inside one cell.
+  6. **A delta-v between two orbits is a vector difference, not a subtraction of
+     speeds.** Differencing magnitudes made sampled two-burn alternatives look
+     cheaper than Hohmann by over a km/s. Any "is X optimal" assertion is only
+     as good as the cost function used for the alternatives — check that
+     function before believing a negative result.
+  7. **Five task files in a row have now had a numeric claim corrected rather
+     than obeyed** (007, 063, 076, 013, 071, and now 015, 045 and 065). The
+     pattern is consistent: the claim is a half-remembered version of a true
+     theorem. 2% of 1.1774√N holds asymptotically, not at 64 slots; Hohmann
+     losing above a ratio of 11.94 is the three-burn bi-elliptic result, not a
+     two-burn one; gcd(a, b) downbeat agreements is right only where gcd is 1.
+     In every case the stronger, true statement makes a better assertion than
+     the one asked for. Put the real figure in the detail line and say in the
+     commit message which claim was refused.
+
 ### batch/010 — 2026-09-19
 - merged: big-o-crossover, confidence-interval-coverage, markov-text-order, plus
   the batch/002 half of the legacy canvas repair (supply-demand-tax-incidence

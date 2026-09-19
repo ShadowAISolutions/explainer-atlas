@@ -1,0 +1,17 @@
+{
+  "slug": "orbital-transfer-hohmann",
+  "title": "Speed Up And You Will Go Slower",
+  "domain": "physics",
+  "difficulty": 3,
+  "summary": "A prograde burn raises the far side of your orbit, never the side you are on, and leaves you slower than you started. Aim the thrust by hand and watch the transfer ellipse miss.",
+  "prerequisites": [],
+  "tags": ["orbital-mechanics", "hohmann-transfer", "delta-v", "kepler", "spaceflight"],
+  "interaction_pattern": "spatial-explore",
+  "sources": [
+    { "title": "Hohmann transfer orbit", "url": "https://en.wikipedia.org/wiki/Hohmann_transfer_orbit" },
+    { "title": "Bi-elliptic transfer", "url": "https://en.wikipedia.org/wiki/Bi-elliptic_transfer" },
+    { "title": "Vis-viva equation", "url": "https://en.wikipedia.org/wiki/Vis-viva_equation" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}

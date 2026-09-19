@@ -1,0 +1,17 @@
+{
+  "slug": "bayes-base-rate",
+  "title": "Sensitivity Is The Least Important Number",
+  "domain": "statistics",
+  "difficulty": 2,
+  "summary": "Tune a test until a positive result actually means something. The number that moves the answer is almost never the one printed on the box.",
+  "prerequisites": ["simpsons-paradox"],
+  "tags": ["bayes-theorem", "base-rate", "sensitivity", "specificity", "screening", "false-positives"],
+  "interaction_pattern": "tune-to-match",
+  "sources": [
+    { "title": "Gigerenzer and Hoffrage, How to Improve Bayesian Reasoning Without Instruction: Frequency Formats (1995)", "url": "https://pure.mpg.de/rest/items/item_2102070/component/file_2102069/content" },
+    { "title": "Casscells, Schoenberger and Graboys, Interpretation by Physicians of Clinical Laboratory Results (1978)", "url": "https://www.nejm.org/doi/10.1056/NEJM197811022991808" },
+    { "title": "US Preventive Services Task Force, Screening for Breast Cancer: recommendation statement", "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/breast-cancer-screening" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}

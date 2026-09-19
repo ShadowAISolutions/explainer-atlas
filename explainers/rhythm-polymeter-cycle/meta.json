@@ -1,0 +1,17 @@
+{
+  "slug": "rhythm-polymeter-cycle",
+  "title": "Three Against Four Takes Twelve Beats",
+  "domain": "music-theory",
+  "difficulty": 2,
+  "summary": "Two rhythms of different lengths drift apart and snap back only at their least common multiple. Scrub through the cycle and watch the downbeats miss each other for eleven beats.",
+  "prerequisites": [],
+  "tags": ["rhythm", "polymeter", "least-common-multiple", "euclidean-rhythm", "number-theory"],
+  "interaction_pattern": "time-scrubber",
+  "sources": [
+    { "title": "Polymeter", "url": "https://en.wikipedia.org/wiki/Polyrhythm#Polymeter" },
+    { "title": "Euclidean rhythm", "url": "https://en.wikipedia.org/wiki/Euclidean_rhythm" },
+    { "title": "Toussaint, The Euclidean Algorithm Generates Traditional Musical Rhythms", "url": "https://archive.bridgesmathart.org/2005/bridges2005-47.html" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}
