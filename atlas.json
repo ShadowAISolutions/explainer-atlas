@@ -1,6 +1,6 @@
 {
   "generated_at": "2026-09-19",
-  "count": 39,
+  "count": 43,
   "domains": {
     "biology": [
       "enzyme-michaelis-menten",
@@ -9,6 +9,7 @@
       "predator-prey-cycles"
     ],
     "chemistry": [
+      "electrochemical-cell-potential",
       "ph-buffer-capacity",
       "reaction-rate-order"
     ],
@@ -20,10 +21,12 @@
     ],
     "earth-science": [
       "greenhouse-energy-balance",
+      "plate-tectonics-seafloor-age",
       "radiometric-dating"
     ],
     "economics": [
       "auction-formats-revenue",
+      "compound-interest-doubling",
       "supply-demand-tax-incidence"
     ],
     "engineering": [
@@ -60,6 +63,7 @@
     "physics": [
       "damped-harmonic-oscillator",
       "double-slit-interference",
+      "projectile-drag",
       "special-relativity-time-dilation"
     ],
     "statistics": [
@@ -70,16 +74,16 @@
   },
   "interaction_patterns": {
     "build-from-parts": 5,
-    "compare-side-by-side": 3,
-    "drag-parameter": 3,
+    "compare-side-by-side": 4,
+    "drag-parameter": 4,
     "draw-input": 3,
     "guess-then-reveal": 4,
     "live-code": 2,
     "perturb-and-observe": 4,
     "race-two-methods": 3,
-    "spatial-explore": 3,
+    "spatial-explore": 4,
     "step-through": 3,
-    "time-scrubber": 3,
+    "time-scrubber": 4,
     "tune-to-match": 3
   },
   "explainers": [
@@ -173,6 +177,38 @@
       "assertions_count": 9
     },
     {
+      "slug": "compound-interest-doubling",
+      "title": "The Rule of 72 Is Only Honest at One Rate",
+      "domain": "economics",
+      "difficulty": 2,
+      "summary": "Scrub through sixty years of compound growth, watch the doublings arrive on a fixed clock, and see where the rule of 72 stops telling the truth.",
+      "prerequisites": [],
+      "tags": [
+        "compound-interest",
+        "exponential-growth",
+        "doubling-time",
+        "rule-of-72",
+        "continuous-compounding"
+      ],
+      "interaction_pattern": "time-scrubber",
+      "sources": [
+        {
+          "title": "Rule of 72",
+          "url": "https://en.wikipedia.org/wiki/Rule_of_72"
+        },
+        {
+          "title": "Compound interest",
+          "url": "https://en.wikipedia.org/wiki/Compound_interest"
+        },
+        {
+          "title": "Doubling time",
+          "url": "https://en.wikipedia.org/wiki/Doubling_time"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
       "slug": "damped-harmonic-oscillator",
       "title": "One Number Decides How a Thing Stops Shaking",
       "domain": "physics",
@@ -257,6 +293,42 @@
         {
           "title": "Diffraction grating",
           "url": "https://en.wikipedia.org/wiki/Diffraction_grating"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
+      "slug": "electrochemical-cell-potential",
+      "title": "A Flat Battery Is Not Empty",
+      "domain": "chemistry",
+      "difficulty": 3,
+      "summary": "Drag the concentrations in a two-beaker cell and watch its voltage move, then follow the free-energy curve down to the bottom where the voltage is exactly zero.",
+      "prerequisites": [],
+      "tags": [
+        "nernst-equation",
+        "electrochemistry",
+        "gibbs-free-energy",
+        "equilibrium-constant",
+        "galvanic-cell"
+      ],
+      "interaction_pattern": "drag-parameter",
+      "sources": [
+        {
+          "title": "Nernst equation",
+          "url": "https://en.wikipedia.org/wiki/Nernst_equation"
+        },
+        {
+          "title": "Galvanic cell",
+          "url": "https://en.wikipedia.org/wiki/Galvanic_cell"
+        },
+        {
+          "title": "Standard electrode potential (data page)",
+          "url": "https://en.wikipedia.org/wiki/Standard_electrode_potential_(data_page)"
+        },
+        {
+          "title": "Concentration cell",
+          "url": "https://en.wikipedia.org/wiki/Concentration_cell"
         }
       ],
       "created_at": "2026-09-19",
@@ -770,6 +842,42 @@
       "assertions_count": 11
     },
     {
+      "slug": "plate-tectonics-seafloor-age",
+      "title": "The Ocean Floor Is a Tape Recorder",
+      "domain": "earth-science",
+      "difficulty": 3,
+      "summary": "Click anywhere on a synthetic ocean floor to read its age, and recover the spreading rate from the width of the magnetic stripes the way it was first done.",
+      "prerequisites": [],
+      "tags": [
+        "seafloor-spreading",
+        "plate-tectonics",
+        "magnetic-reversals",
+        "thermal-subsidence",
+        "linear-regression"
+      ],
+      "interaction_pattern": "spatial-explore",
+      "sources": [
+        {
+          "title": "Seafloor spreading",
+          "url": "https://en.wikipedia.org/wiki/Seafloor_spreading"
+        },
+        {
+          "title": "Vine-Matthews-Morley hypothesis",
+          "url": "https://en.wikipedia.org/wiki/Vine%E2%80%93Matthews%E2%80%93Morley_hypothesis"
+        },
+        {
+          "title": "Geomagnetic reversal",
+          "url": "https://en.wikipedia.org/wiki/Geomagnetic_reversal"
+        },
+        {
+          "title": "Oceanic crust",
+          "url": "https://en.wikipedia.org/wiki/Oceanic_crust"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
       "slug": "population-logistic-chaos",
       "title": "One Number Decides Whether a Population Settles",
       "domain": "biology",
@@ -839,6 +947,42 @@
       "sources": [],
       "created_at": "2026-09-19",
       "assertions_count": 13
+    },
+    {
+      "slug": "projectile-drag",
+      "title": "The 45-Degree Rule Is a Vacuum Rule",
+      "domain": "physics",
+      "difficulty": 3,
+      "summary": "Fire the same shot into a vacuum and into air, side by side, and watch the parabola lose its symmetry and its best angle drop below 45 degrees.",
+      "prerequisites": [],
+      "tags": [
+        "projectile-motion",
+        "air-resistance",
+        "quadratic-drag",
+        "optimisation",
+        "terminal-velocity"
+      ],
+      "interaction_pattern": "compare-side-by-side",
+      "sources": [
+        {
+          "title": "Projectile motion",
+          "url": "https://en.wikipedia.org/wiki/Projectile_motion"
+        },
+        {
+          "title": "Trajectory of a projectile",
+          "url": "https://en.wikipedia.org/wiki/Trajectory_of_a_projectile"
+        },
+        {
+          "title": "Drag (physics)",
+          "url": "https://en.wikipedia.org/wiki/Drag_(physics)"
+        },
+        {
+          "title": "Terminal velocity",
+          "url": "https://en.wikipedia.org/wiki/Terminal_velocity"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 14
     },
     {
       "slug": "quicksort-pivot-choice",
