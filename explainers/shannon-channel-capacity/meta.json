@@ -1,0 +1,19 @@
+{
+  "slug": "shannon-channel-capacity",
+  "title": "The Line You Cannot Cross",
+  "domain": "information-theory",
+  "difficulty": 3,
+  "summary": "Guess whether a noisy channel can carry your message reliably at a chosen rate, then see the hard boundary that no code of any block length can get past.",
+  "prerequisites": [],
+  "tags": [
+    "entropy",
+    "capacity",
+    "coding",
+    "noise",
+    "shannon"
+  ],
+  "interaction_pattern": "guess-then-reveal",
+  "sources": [],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}

@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Line You Cannot Cross — Explainer Atlas</title>
+<meta name="description" content="Guess whether a noisy channel can carry your message reliably, then find out. There is a hard number, and no amount of cleverness gets past it.">
+<style>
+:root{
+  --bg:#f2f3f0; --panel:#ffffff; --ink:#14171a; --muted:#5e666e; --line:#d9dcd6;
+  --instrument:#0f1418; --grid:#2a333a;
+  --go:#0a7d4f; --go-soft:#e2f2ea; --stop:#b01e5a; --stop-soft:#fae6ee;
+  --accent:#0a7d4f; --accent-soft:#e2f2ea; --trace:#27b277;
+  --radius:0px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --font-display:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --scale-h1:clamp(1.8rem,1.15rem + 3vw,2.9rem);
+  --scale-body:clamp(1rem,0.96rem + 0.22vw,1.08rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0c0e10; --panel:#14181b; --ink:#e9ecee; --muted:#9aa3ab; --line:#232a2f;
+    --instrument:#070a0c; --grid:#1d252b;
+    --go:#2fcb88; --go-soft:#0d2a1e; --stop:#f06a9e; --stop-soft:#2c101d;
+    --accent:#2fcb88; --accent-soft:#0d2a1e; --trace:#3ee39a;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.68 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:60rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:var(--pad); border-bottom:1px solid var(--line)}
+.kicker{margin:0 0 .45em; color:var(--muted); font:700 .7rem/1 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.26em}
+h1{font:800 var(--scale-h1)/1.02 var(--font-display); margin:0 0 .35em; letter-spacing:-.035em}
+.standfirst{margin:0; color:var(--muted); max-width:38em; font-size:1.05em}
+figure.stage{margin:var(--pad) 0 0; background:var(--instrument); border:1px solid var(--line);
+  padding:0; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin:.7em 0 0; color:var(--muted); font-size:.84rem; max-width:44em}
+/* the guess band runs the full width beneath the chart */
+.band{margin-top:14px; background:var(--panel); border:1px solid var(--line); padding:var(--pad);
+  display:grid; gap:1.2em}
+.sliders{display:grid; gap:1.2em; grid-template-columns:1fr}
+@media (min-width:44rem){ .sliders{grid-template-columns:1fr 1fr} }
+.control{display:grid; gap:.32em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font:700 .95rem/1.2 var(--font-display)}
+output{font:700 .95rem/1 var(--font-mono); color:var(--accent);
+  background:var(--accent-soft); padding:.3em .55em}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:28px}
+.hint{margin:0; color:var(--muted); font-size:.82rem}
+.ask{border-top:1px solid var(--line); padding-top:1.1em; display:grid; gap:.75em}
+.ask p.q{margin:0; font:700 1.05rem/1.35 var(--font-display); max-width:36em}
+.guessrow{display:flex; gap:.6em; flex-wrap:wrap; align-items:center}
+button{font:700 .95rem/1 var(--font-display); color:inherit; background:var(--bg);
+  border:1.5px solid var(--line); padding:.75em 1.1em; min-height:44px; cursor:pointer}
+button:hover{border-color:var(--accent)}
+button#yes:hover{border-color:var(--go)} button#no:hover{border-color:var(--stop)}
+.verdict{margin:0; font:700 1rem/1.4 var(--font-mono); padding:.7em .85em;
+  border-left:4px solid var(--line); background:var(--bg); min-height:1em}
+.verdict.ok{border-left-color:var(--go); background:var(--go-soft); color:var(--go)}
+.verdict.bad{border-left-color:var(--stop); background:var(--stop-soft); color:var(--stop)}
+:where(a,button,input,select):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8rem,1fr)); gap:.55em; margin:14px 0 0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); padding:.6em .75em}
+.readout dt{margin:0; color:var(--muted); font:700 .7rem/1.3 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.12em}
+.readout dd{margin:.22em 0 0; font:700 1.15rem/1.15 var(--font-mono)}
+.prose{max-width:37em; margin:calc(var(--pad)*1.6) auto 0}
+.prose h2{font:800 1.3rem/1.25 var(--font-display); margin:2.2em 0 .5em; letter-spacing:-.025em;
+  padding-top:.7em; border-top:3px solid var(--accent); display:inline-block}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.86em; background:var(--accent-soft);
+  padding:.8em .9em; border-left:4px solid var(--accent); overflow-x:auto;
+  white-space:pre; line-height:1.75; margin:0 0 1.05em}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad);
+  border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Information theory</p>
+  <h1>The Line You Cannot Cross</h1>
+  <p class="standfirst">Every noisy channel has a number. Below it you can send with arbitrarily few
+    errors; above it you cannot, no matter how clever the code. Guess which side you are on before
+    you look.</p>
+</header>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="920" height="470" role="img"
+    aria-label="Channel capacity plotted against crossover probability. The curve falls from one bit at zero noise to zero bits at a crossover probability of one half, then rises again. The region below the curve is achievable; the region above it is not. A marker shows the currently chosen noise level and attempted code rate."></canvas>
+</figure>
+
+<section class="band" data-role="controls" aria-label="Channel and code">
+  <div class="sliders">
+    <div class="control">
+      <div class="row">
+        <label for="p">Crossover probability</label>
+        <output id="pout" for="p">0.110</output>
+      </div>
+      <input type="range" id="p" min="0" max="1" step="0.005" value="0.11">
+      <p class="hint">The chance each bit gets flipped in transit. Independently, every time.</p>
+    </div>
+    <div class="control">
+      <div class="row">
+        <label for="rate">Attempted code rate</label>
+        <output id="rateout" for="rate">0.600</output>
+      </div>
+      <input type="range" id="rate" min="0" max="1" step="0.005" value="0.6">
+      <p class="hint">Message bits carried per channel use. Rate 1 means no redundancy at all.</p>
+    </div>
+  </div>
+
+  <div class="ask">
+    <p class="q" id="question">At this noise level and this rate, can a code exist that drives the
+      error rate arbitrarily close to zero?</p>
+    <div class="guessrow">
+      <button type="button" id="yes">Yes, possible</button>
+      <button type="button" id="no">No, impossible</button>
+      <button type="button" id="reset">Reset score</button>
+    </div>
+    <p class="verdict" id="verdict">Make a guess. The chart will show you the answer.</p>
+  </div>
+
+  <dl class="readout" aria-live="polite">
+    <div><dt>Capacity</dt><dd id="r1">—</dd></div>
+    <div><dt>Noise entropy</dt><dd id="r2">—</dd></div>
+    <div><dt>Headroom</dt><dd id="r3">—</dd></div>
+    <div><dt>Guesses right</dt><dd id="r4">0 of 0</dd></div>
+  </dl>
+</section>
+
+<article class="prose" data-role="prose">
+  <p>Set the crossover probability to 0.11 — about one bit in nine arrives flipped — and ask
+    yourself how much of your message can survive. The instinct is that a channel this bad is nearly
+    useless, or alternatively that with enough redundancy you can beat anything. Both are wrong, and
+    the second one is wrong in an interesting way.</p>
+
+  <h2>What the noise costs you</h2>
+
+  <p>Each received bit carries some information about the bit that was sent, but not all of it,
+    because you cannot tell a correct bit from a flipped one by looking. The uncertainty the channel
+    injects per use is the binary entropy of the flip probability:</p>
+
+  <p class="math">H(p) = −p log₂ p − (1−p) log₂ (1−p)</p>
+
+  <p>and the capacity of the channel is what is left of one bit after paying that:</p>
+
+  <p class="math">C = 1 − H(p)</p>
+
+  <p>At p = 0.11 the entropy is almost exactly half a bit, so the capacity is almost exactly half a
+    bit. You can push half a message bit through per channel use, reliably, forever — and you cannot
+    push 0.51.</p>
+
+  <h2>Why the curve is symmetric</h2>
+
+  <p>Drag p past 0.5 and the capacity climbs back to one. A channel that flips ninety percent of
+    your bits is exactly as good as one that flips ten percent, because you simply invert everything
+    you receive. The only genuinely useless channel is the one at p = 0.5, where the output is
+    independent of the input and carries no information at all. That is the single zero of the
+    curve, and it is the reason the shape has a cusp there rather than a floor.</p>
+
+  <h2>The part that is hard to believe</h2>
+
+  <p>The obvious way to fight noise is repetition: send every bit three times and take the majority.
+    At p = 0.11 that cuts the error rate from 11% to 3.4%. Eleven copies gets it to 0.05%. Keep
+    going and the error goes to zero — but so does the rate, because you are spending eleven channel
+    uses per message bit. Repetition buys reliability by paying rate, and in the limit it pays
+    everything.</p>
+
+  <p>Shannon's theorem says this tradeoff is not fundamental. For any rate strictly below C, there
+    exist codes with error probability as small as you like — the rate does not have to shrink at
+    all. The rate stays at 0.49 and the errors go to zero together. What has to grow instead is the
+    block length: you encode thousands of bits at a time rather than one, and the law of large
+    numbers does the work that repetition was doing crudely.</p>
+
+  <p>And above C, nothing works. Not a longer block, not a smarter decoder, not more computing. The
+    converse half of the theorem says the error probability is bounded away from zero for every code
+    with rate above capacity. That is why the shaded region has a hard edge rather than a gradient.</p>
+
+  <h2>What to try</h2>
+
+  <p>Put the rate at 0.5 and walk the noise slider up from zero. Everything is fine until p reaches
+    0.11, and then the marker crosses the curve and the answer flips — one bit in nine is exactly
+    the noise level that costs you half your channel. Then set the noise to 0.5 and try any rate at
+    all above zero. Nothing is possible, which is the only completely honest thing a channel can
+    say.</p>
+
+  <p>Finally, try p = 0.9 with rate 0.9. It works, and it should feel like cheating. It is not: a
+    channel that lies almost all the time is a channel that tells the truth almost all the time,
+    read upside down.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL ------------------------------------------------------------- */
+/* Binary symmetric channel. Everything here is a pure function of p.        */
+const Model = {
+  log2(x){ return Math.log(x) / Math.LN2; },
+
+  /* Binary entropy, with the 0 log 0 = 0 convention at both ends. */
+  entropy(p){
+    if (p <= 0 || p >= 1) return 0;
+    return -(p * this.log2(p) + (1 - p) * this.log2(1 - p));
+  },
+
+  capacity(p){ return 1 - this.entropy(p); },
+
+  achievable(p, rate){ return rate < this.capacity(p); },
+
+  /* Mutual information for input distribution q, derived independently of
+     the capacity formula: I = H(Y) - H(Y|X), and H(Y|X) = H(p).            */
+  mutualInformation(q, p){
+    const py1 = q * (1 - p) + (1 - q) * p;
+    return this.entropy(py1) - this.entropy(p);
+  },
+
+  /* Capacity the long way: maximise I over the input distribution. */
+  capacityByScan(p, steps){
+    let best = -Infinity;
+    for (let i = 0; i <= steps; i++)
+      best = Math.max(best, this.mutualInformation(i / steps, p));
+    return best;
+  },
+
+  /* Majority-vote repetition code over n uses, n odd. Exact binomial sum. */
+  repetitionError(p, n){
+    let e = 0;
+    for (let k = Math.floor(n / 2) + 1; k <= n; k++){
+      let c = 1;
+      for (let i = 0; i < k; i++) c = c * (n - i) / (i + 1);
+      e += c * Math.pow(p, k) * Math.pow(1 - p, n - k);
+    }
+    return e;
+  },
+
+  bitsThrough(p, uses){ return uses * this.capacity(p); }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------ */
+const defaults = { p: 0.11, rate: 0.6 };
+const state = Object.assign({}, defaults, { asked: 0, right: 0, guess: null });
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const W = cv.width, H = cv.height;
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const PL = 74, PR = 34, PT = 30, PB = 56;
+const PW = W - PL - PR, PH = H - PT - PB;
+const X = (p) => PL + PW * p;
+const Y = (c) => PT + PH * (1 - c);
+
+/* the capacity curve never changes, so build it once */
+const CURVE = (function(){
+  const pts = [];
+  for (let i = 0; i <= 900; i++){ const p = i / 900; pts.push([p, Model.capacity(p)]); }
+  return pts;
+})();
+
+function render(){
+  const p = state.p, rate = state.rate;
+  const C = Model.capacity(p);
+  const ok = Model.achievable(p, rate);
+  const grid = css("--grid"), trace = css("--trace"), go = css("--go"), stop = css("--stop");
+  const muted = css("--muted");
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--instrument"); ctx.fillRect(0, 0, W, H);
+
+  /* achievable region: everything under the curve */
+  ctx.beginPath();
+  ctx.moveTo(X(0), Y(0));
+  for (const q of CURVE) ctx.lineTo(X(q[0]), Y(q[1]));
+  ctx.lineTo(X(1), Y(0));
+  ctx.closePath();
+  ctx.fillStyle = go; ctx.globalAlpha = 0.16; ctx.fill(); ctx.globalAlpha = 1;
+
+  /* grid */
+  ctx.strokeStyle = grid; ctx.lineWidth = 1;
+  ctx.fillStyle = muted; ctx.font = "13px ui-monospace, monospace";
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let c = 0; c <= 1.0001; c += 0.25){
+    ctx.beginPath(); ctx.moveTo(PL, Y(c)); ctx.lineTo(PL + PW, Y(c)); ctx.stroke();
+    ctx.fillText(c.toFixed(2), PL - 10, Y(c));
+  }
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  for (let q = 0; q <= 1.0001; q += 0.25){
+    ctx.beginPath(); ctx.moveTo(X(q), PT); ctx.lineTo(X(q), PT + PH); ctx.stroke();
+    ctx.fillText(q.toFixed(2), X(q), PT + PH + 22);
+  }
+  ctx.fillText("crossover probability  p", PL + PW / 2, PT + PH + 44);
+  ctx.save(); ctx.translate(22, PT + PH / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText("bits per channel use", 0, 0); ctx.restore();
+
+  /* region labels */
+  ctx.textAlign = "center";
+  ctx.font = "700 15px ui-monospace, monospace";
+  ctx.fillStyle = go; ctx.globalAlpha = 0.85;
+  ctx.fillText("ACHIEVABLE", X(0.5), Y(0.09));
+  ctx.fillStyle = stop;
+  ctx.fillText("IMPOSSIBLE  —  no code exists at any block length", X(0.5), Y(0.92));
+  ctx.globalAlpha = 1;
+
+  /* the capacity curve */
+  ctx.strokeStyle = trace; ctx.lineWidth = 2.6; ctx.beginPath();
+  for (let i = 0; i < CURVE.length; i++){
+    const x = X(CURVE[i][0]), y = Y(CURVE[i][1]);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  /* the chosen rate, as a horizontal line */
+  ctx.strokeStyle = ok ? go : stop; ctx.lineWidth = 1.6; ctx.setLineDash([6, 5]);
+  ctx.beginPath(); ctx.moveTo(PL, Y(rate)); ctx.lineTo(PL + PW, Y(rate)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.textAlign = "left"; ctx.font = "12px ui-monospace, monospace";
+  ctx.fillStyle = ok ? go : stop;
+  ctx.fillText("your rate " + rate.toFixed(3), PL + 8, Y(rate) - 8);
+
+  /* the marker */
+  ctx.beginPath(); ctx.arc(X(p), Y(rate), 8, 0, Math.PI * 2);
+  ctx.fillStyle = ok ? go : stop; ctx.fill();
+  ctx.strokeStyle = css("--instrument"); ctx.lineWidth = 2.5; ctx.stroke();
+
+  /* drop line to the curve, showing the headroom */
+  ctx.strokeStyle = ok ? go : stop; ctx.lineWidth = 2; ctx.globalAlpha = 0.6;
+  ctx.beginPath(); ctx.moveTo(X(p), Y(rate)); ctx.lineTo(X(p), Y(C)); ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.beginPath(); ctx.arc(X(p), Y(C), 4.5, 0, Math.PI * 2);
+  ctx.fillStyle = trace; ctx.fill();
+
+  /* readouts */
+  el("pout").textContent = p.toFixed(3);
+  el("rateout").textContent = rate.toFixed(3);
+  el("r1").textContent = C.toFixed(4);
+  el("r2").textContent = Model.entropy(p).toFixed(4);
+  el("r3").textContent = (C - rate >= 0 ? "+" : "") + (C - rate).toFixed(4);
+  el("r4").textContent = state.right + " of " + state.asked;
+}
+
+/* ---- controls ---------------------------------------------------------- */
+function bind(id, key){
+  const input = el(id);
+  input.addEventListener("input", function(){
+    state[key] = parseFloat(input.value);
+    state.guess = null;
+    el("verdict").className = "verdict";
+    el("verdict").textContent = "Make a guess. The chart will show you the answer.";
+    render();
+  });
+}
+bind("p", "p");
+bind("rate", "rate");
+
+function judge(said){
+  const truth = Model.achievable(state.p, state.rate);
+  const correct = (said === truth);
+  state.asked += 1;
+  if (correct) state.right += 1;
+  state.guess = said;
+  const v = el("verdict");
+  const C = Model.capacity(state.p);
+  v.className = "verdict " + (correct ? "ok" : "bad");
+  v.textContent = (correct ? "Right. " : "Not quite. ")
+    + (truth
+        ? "Rate " + state.rate.toFixed(3) + " is below capacity " + C.toFixed(4)
+          + ", so codes exist with error as small as you like."
+        : "Rate " + state.rate.toFixed(3) + " is at or above capacity " + C.toFixed(4)
+          + ", so every code has error bounded away from zero.");
+  render();
+}
+el("yes").addEventListener("click", function(){ judge(true); });
+el("no").addEventListener("click", function(){ judge(false); });
+el("reset").addEventListener("click", function(){
+  state.p = defaults.p; state.rate = defaults.rate;
+  state.asked = 0; state.right = 0; state.guess = null;
+  el("p").value = String(defaults.p); el("rate").value = String(defaults.rate);
+  el("verdict").className = "verdict";
+  el("verdict").textContent = "Make a guess. The chart will show you the answer.";
+  render();
+});
+render();
+
+/* ---- SELFTEST ---------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+
+  push("capacity is exactly one minus the binary entropy", (function(){
+    for (let i = 0; i <= 200; i++){
+      const p = i / 200;
+      if (!near(M.capacity(p), 1 - M.entropy(p), 1e-15)) return false;
+    }
+    return true;
+  })(), "C = 1 - H(p) at 201 points");
+
+  push("the three exact values are exact", (function(){
+    return M.capacity(0.5) === 0 && M.capacity(0) === 1 && M.capacity(1) === 1
+        && M.entropy(0.5) === 1 && M.entropy(0) === 0 && M.entropy(1) === 0;
+  })(), "C(0.5)=0, C(0)=C(1)=1, H(0.5)=1, with 0 log 0 = 0 at both ends");
+
+  push("H(0.11) is half a bit to three decimals", (function(){
+    return near(M.entropy(0.11), 0.5, 5e-4) && near(M.entropy(0.11), 0.499916, 1e-6);
+  })(), "0.499916 bits, so a channel flipping one bit in nine costs exactly half the channel");
+
+  push("capacity is symmetric under p to 1-p", (function(){
+    for (let i = 0; i <= 500; i++){
+      const p = i / 1000;
+      if (!near(M.capacity(p), M.capacity(1 - p), 1e-15)) return false;
+    }
+    return true;
+  })(), "flipping every received bit turns a p channel into a 1-p channel, 501 points");
+
+  push("capacity equals the maximised mutual information", (function(){
+    for (const p of [0.02, 0.05, 0.11, 0.2, 0.3, 0.45, 0.7, 0.9]){
+      if (!near(M.capacityByScan(p, 4000), M.capacity(p), 1e-9)) return false;
+    }
+    return true;
+  })(), "max over input distributions of H(Y)-H(Y|X), computed by scan, agrees with 1-H(p) to 1e-9");
+
+  push("the maximising input distribution is uniform", (function(){
+    for (const p of [0.05, 0.11, 0.3, 0.8]){
+      let best = -Infinity, arg = -1;
+      for (let i = 0; i <= 4000; i++){
+        const v = M.mutualInformation(i / 4000, p);
+        if (v > best){ best = v; arg = i / 4000; }
+      }
+      if (!near(arg, 0.5, 1e-3)) return false;
+    }
+    return true;
+  })(), "argmax q = 0.5 to 0.001 for four channels, which is why capacity has a closed form");
+
+  push("entropy never exceeds one bit, and only reaches it at p = 0.5", (function(){
+    for (let i = 0; i <= 2000; i++){
+      const p = i / 2000, h = M.entropy(p);
+      if (h > 1 + 1e-15) return false;
+      if (Math.abs(p - 0.5) > 1e-9 && h >= 1 - 1e-12) return false;
+    }
+    return true;
+  })(), "H <= 1 with a unique maximum, 2001 points");
+
+  push("capacity is convex in p", (function(){
+    const h = 1e-4;
+    for (let i = 5; i <= 9995; i++){
+      const p = i / 10000;
+      if (p - h <= 0 || p + h >= 1) continue;
+      const d2 = M.capacity(p + h) - 2 * M.capacity(p) + M.capacity(p - h);
+      if (d2 < -1e-11) return false;
+    }
+    return true;
+  })(), "second differences non-negative across the open interval, since H is concave");
+
+  push("capacity falls to the cusp and rises after it", (function(){
+    let prev = Infinity;
+    for (let i = 0; i <= 500; i++){
+      const c = M.capacity(i / 1000);
+      if (!(c < prev)) return false;
+      prev = c;
+    }
+    prev = -Infinity;
+    for (let i = 500; i <= 1000; i++){
+      const c = M.capacity(i / 1000);
+      if (!(c > prev) && i > 500) return false;
+      prev = c;
+    }
+    return true;
+  })(), "strictly decreasing on [0,0.5] and strictly increasing on [0.5,1]");
+
+  push("repetition coding buys reliability by paying rate", (function(){
+    const p = 0.11;
+    let prev = Infinity;
+    for (let n = 1; n <= 21; n += 2){
+      const e = M.repetitionError(p, n);
+      if (!(e < prev)) return false;
+      prev = e;
+      /* its rate 1/n falls away from capacity as the error improves */
+      if (n >= 3 && !(1 / n < M.capacity(p))) return false;
+    }
+    /* eleven copies: error below a thousandth, but rate under a tenth */
+    if (!near(M.repetitionError(p, 11), 5.0e-4, 5e-5)) return false;
+    return 1 / 11 < 0.2 * M.capacity(p);
+  })(), "error strictly falls with n while rate 1/n collapses to a fifth of capacity by n=11");
+
+  push("the achievability test agrees with the curve", (function(){
+    for (let i = 0; i <= 100; i++){
+      const p = i / 100, C = M.capacity(p);
+      if (C > 1e-9 && !M.achievable(p, C * 0.5)) return false;
+      if (M.achievable(p, C + 1e-6)) return false;
+      if (M.achievable(p, C)) return false;
+    }
+    return true;
+  })(), "anything strictly under the curve is achievable, the curve itself and above is not");
+
+  push("no non-finite value across the control grid", (function(){
+    for (let i = 0; i <= 400; i++){
+      const p = i / 400;
+      if (!Number.isFinite(M.entropy(p)) || !Number.isFinite(M.capacity(p))) return false;
+      if (M.entropy(p) < -1e-15 || M.capacity(p) < -1e-15) return false;
+      if (!Number.isFinite(M.bitsThrough(p, 1000))) return false;
+      for (let j = 0; j <= 20; j++)
+        if (typeof M.achievable(p, j / 20) !== "boolean") return false;
+    }
+    return true;
+  })(), "entropy, capacity and throughput finite and non-negative over 401 noise levels");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
