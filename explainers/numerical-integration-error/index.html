@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why Simpson's Rule Beats the Trapezoid — Explainer Atlas</title>
+<meta name="description" content="Race the trapezoid rule against Simpson's rule and watch one error fall four times faster than the other.">
+<style>
+:root{
+  --bg:#fcfbf7; --panel:#ffffff; --ink:#1a1a17; --muted:#6a6a5e; --line:#e6e3d8;
+  --accent:#9a3412; --accent-soft:#fbe9e0; --alt:#1d4ed8; --alt-soft:#e3eaff;
+  --radius:4px; --pad:clamp(14px,3vw,28px);
+  --font-body:Georgia,"Iowan Old Style",serif;
+  --font-ui:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.6rem,1.1rem + 2.2vw,2.45rem);
+  --scale-body:clamp(1rem,0.96rem + 0.22vw,1.1rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#14140f; --panel:#1c1c16; --ink:#eae7dc; --muted:#a09b8b; --line:#302f26;
+        --accent:#f97316; --accent-soft:#2a1a0e; --alt:#7ea2ff; --alt-soft:#141c33;}
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0;background:var(--bg);color:var(--ink);font:var(--scale-body)/1.65 var(--font-body);-webkit-text-size-adjust:100%}
+.wrap{max-width:62rem;margin:0 auto;padding:var(--pad)}
+header.page{border-bottom:2px solid var(--ink);padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1);line-height:1.12;margin:0 0 .35em;letter-spacing:-.015em}
+.kicker{margin:0 0 .4em;color:var(--accent);font:700 .74rem/1.3 var(--font-ui);text-transform:uppercase;letter-spacing:.13em}
+.standfirst{margin:0;color:var(--muted);max-width:44em;font-size:1.04em}
+.layout{display:grid;gap:var(--pad);grid-template-columns:1fr;margin-top:var(--pad)}
+@media (min-width:58rem){.layout{grid-template-columns:minmax(0,1.5fr) minmax(15rem,1fr);align-items:start}}
+figure.stage{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px;overflow:hidden}
+figure.stage canvas{display:block;width:100%;height:auto}
+figcaption{margin-top:.55em;color:var(--muted);font:.84rem/1.5 var(--font-ui)}
+.controls{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad);display:grid;gap:1.1em;font-family:var(--font-ui)}
+.control{display:grid;gap:.3em}
+.control .row{display:flex;justify-content:space-between;align-items:baseline;gap:.7em}
+.control label{font-weight:700;font-size:.92rem}
+.control output{font:700 .88rem/1 var(--font-mono);color:var(--accent);background:var(--accent-soft);padding:.26em .5em;border-radius:3px}
+.control .hint{margin:0;color:var(--muted);font-size:.8rem;line-height:1.45}
+input[type=range]{width:100%;accent-color:var(--accent);min-height:26px}
+select,button{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:3px;padding:.5em .6em;min-height:40px;width:100%}
+button{cursor:pointer;font-weight:700}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select):focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+table.err{width:100%;border-collapse:collapse;font:.82rem/1.4 var(--font-mono)}
+table.err th{text-align:left;font-family:var(--font-ui);font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:.3em .2em;border-bottom:1px solid var(--line)}
+table.err td{padding:.35em .2em;border-bottom:1px solid var(--line)}
+table.err td:first-child{color:var(--muted)}
+.swatch{display:inline-block;width:.62em;height:.62em;border-radius:50%;margin-right:.35em;vertical-align:baseline}
+.sw-t{background:var(--accent)} .sw-s{background:var(--alt)}
+.prose{max-width:38em;margin-top:calc(var(--pad)*1.3)}
+.prose h2{font:700 1.02rem/1.3 var(--font-ui);text-transform:uppercase;letter-spacing:.09em;color:var(--accent);margin:2em 0 .5em}
+.prose p{margin:0 0 1.05em}
+.prose .math{font:.92rem/1.7 var(--font-mono);background:var(--accent-soft);padding:.8em .9em;border-radius:3px;border-left:3px solid var(--accent);overflow-x:auto;margin:0 0 1.05em}
+footer.page{margin-top:calc(var(--pad)*1.6);padding-top:var(--pad);border-top:1px solid var(--line);color:var(--muted);font:.84rem/1.5 var(--font-ui)}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Mathematics · numerical analysis</p>
+  <h1>Why Simpson's Rule Beats the Trapezoid</h1>
+  <p class="standfirst">Both rules chop a curve into strips and add up the pieces. Halve the strip width and one rule's error falls by a factor of four; the other's falls by sixteen. The extra cost is a single multiplication.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="920" height="580" role="img"
+            aria-label="A curve with the area beneath it approximated by strips: straight-topped trapezoids on the left of each pair, parabola-topped strips for Simpson's rule, with the error of each method plotted below on logarithmic axes."></canvas>
+    <figcaption>Top: the curve and the strips each rule actually adds up. Bottom: absolute error against the number of strips, on log–log axes, where a straight line's slope is the convergence order.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Integration controls">
+    <div class="control">
+      <label for="fn">Function to integrate</label>
+      <select id="fn">
+        <option value="sin">sin x, from 0 to π</option>
+        <option value="cubic">x³ − x, from 0 to 2</option>
+        <option value="exp">e⁻ˣ, from 0 to 3</option>
+        <option value="sqrt">√x, from 0 to 1</option>
+        <option value="runge">1 / (1 + 25x²), from −1 to 1</option>
+      </select>
+      <p class="hint">√x has an infinite derivative at zero, and the Runge function has a narrow spike. Watch what each does to the slopes below.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="n">Strips</label>
+        <output id="nout" for="n">8</output>
+      </div>
+      <input type="range" id="n" min="2" max="64" step="2" value="8">
+      <p class="hint">Always even, so Simpson's rule can pair them up. Arrow keys step by two.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="zoom">Error plot floor</label>
+        <output id="zoomout" for="zoom">1e-10</output>
+      </div>
+      <input type="range" id="zoom" min="4" max="14" step="1" value="10">
+      <p class="hint">How far down the log axis reaches. Pull it down to see Simpson's line run into floating-point noise.</p>
+    </div>
+
+    <table class="err">
+      <thead><tr><th>Rule</th><th>Estimate</th><th>Error</th></tr></thead>
+      <tbody>
+        <tr><td><span class="swatch sw-t"></span>Trapezoid</td><td id="t-est">—</td><td id="t-err">—</td></tr>
+        <tr><td><span class="swatch sw-s"></span>Simpson</td><td id="s-est">—</td><td id="s-err">—</td></tr>
+        <tr><td>Exact</td><td id="exact">—</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Every numerical integration rule is the same bet: replace the function you have with a function you can integrate exactly, then integrate that instead. The trapezoid rule bets on straight lines. Over each strip it draws a chord from one endpoint to the other and takes the area underneath. Simpson's rule bets on parabolas, fitting one through three consecutive points and integrating that.</p>
+
+  <p>The trapezoid rule is the obvious idea, and it works. Push the strip count up and the estimate converges. But look at the lower panel with sin x selected: double the strips from 8 to 16 and the red error drops by a factor of four, not two. Double again and it drops by four again. That is second-order convergence — error proportional to <em>h</em>², where <em>h</em> is the strip width.</p>
+
+  <h2>Where the four comes from</h2>
+
+  <p>Expand the function about the midpoint of a strip and integrate term by term. The constant and linear parts are captured exactly by the chord — a straight line through two points on a straight line is that line. The first term the chord gets wrong is the curvature, and the error it leaves on a single strip works out to</p>
+
+  <p class="math">E_strip = −(h³/12) · f″(ξ)</p>
+
+  <p>for some point ξ inside the strip. There are (b − a)/h strips, so the h³ per strip becomes h² overall. That is the whole story of the trapezoid rule: it is exact for anything a straight line can represent, and it pays h² for everything else.</p>
+
+  <h2>Buying two more orders for free</h2>
+
+  <p>Simpson's rule fits a parabola through three points, so you would expect it to be exact for quadratics and to leave an h³ error. It is exact for quadratics — and also, surprisingly, for cubics. Select <em>x³ − x</em> and set the strips to 2: the blue error is zero, to the last bit of double precision, using a single parabola to integrate a cubic.</p>
+
+  <p>The reason is symmetry. A parabola fitted through three equally spaced points differs from a cubic by a term proportional to (x − x₀)(x − x₁)(x − x₂), and that product is odd about the middle point. Integrating an odd function over a symmetric interval gives exactly zero. The cubic error term does not shrink — it cancels. So the first surviving term is the fourth derivative, and the error per pair of strips is</p>
+
+  <p class="math">E_pair = −(h⁵/90) · f⁗(ξ)</p>
+
+  <p>which accumulates to h⁴ overall. Halving h divides the error by sixteen. In exchange, Simpson's rule weights the interior points 4, 2, 4, 2 instead of all 1. It evaluates the function at exactly the same points as the trapezoid rule. The extra accuracy costs nothing but the weights.</p>
+
+  <h2>What to try</h2>
+
+  <p>Switch to <em>√x</em>. The neat slopes collapse: Simpson's line flattens towards the trapezoid's. The derivation above quietly assumed f⁗ exists and is bounded, and √x has an infinite first derivative at the origin. No amount of cleverness in the weights survives a function that is not smooth where you are sampling it.</p>
+
+  <p>Then pull the error floor down to 1e-14 with sin x and push the strips up. Simpson's line stops falling and starts wandering. That is not the method failing — it is the method succeeding past the point where double precision can represent the answer. Below about 1e-15 relative error you are measuring rounding, not truncation.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---------------- MODEL: pure, no DOM ---------------- */
+
+const FNS = {
+  sin:   { f: (x) => Math.sin(x),                 a: 0,  b: Math.PI, exact: 2,
+           label: "sin x" },
+  cubic: { f: (x) => x*x*x - x,                   a: 0,  b: 2,       exact: 2,
+           label: "x^3 - x" },
+  exp:   { f: (x) => Math.exp(-x),                a: 0,  b: 3,       exact: 1 - Math.exp(-3),
+           label: "e^-x" },
+  sqrt:  { f: (x) => Math.sqrt(x),                a: 0,  b: 1,       exact: 2/3,
+           label: "sqrt x" },
+  runge: { f: (x) => 1 / (1 + 25*x*x),            a: -1, b: 1,       exact: (2/5)*Math.atan(5),
+           label: "Runge" }
+};
+
+const Model = {
+  /* composite trapezoid rule on n strips */
+  trapezoid(f, a, b, n){
+    const h = (b - a) / n;
+    let s = 0.5 * (f(a) + f(b));
+    for (let i = 1; i < n; i++) s += f(a + i*h);
+    return s * h;
+  },
+
+  /* composite Simpson's rule; n must be even */
+  simpson(f, a, b, n){
+    if (n % 2 !== 0) n += 1;
+    const h = (b - a) / n;
+    let s = f(a) + f(b);
+    for (let i = 1; i < n; i++) s += f(a + i*h) * (i % 2 ? 4 : 2);
+    return s * h / 3;
+  },
+
+  /* observed convergence order between strip counts n and 2n */
+  order(f, a, b, exact, n, rule){
+    const e1 = Math.abs(Model[rule](f, a, b, n) - exact);
+    const e2 = Math.abs(Model[rule](f, a, b, 2*n) - exact);
+    if (e2 === 0) return Infinity;
+    return Math.log2(e1 / e2);
+  }
+};
+
+/* ---------------- STATE + VIEW ---------------- */
+
+const defaults = { fn: "sin", n: 8, zoom: 10 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt = (v) => Math.abs(v) < 1e-13 ? "0" : (Math.abs(v) < 1e-3 ? v.toExponential(3) : v.toFixed(8));
+
+function render(){
+  const cfg = FNS[state.fn];
+  const { f, a, b, exact } = cfg;
+  const n = state.n;
+  const tv = Model.trapezoid(f, a, b, n);
+  const sv = Model.simpson(f, a, b, n);
+
+  const W = cv.width, H = cv.height;
+  const splitY = Math.round(H * 0.56);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+
+  /* ---- upper panel: the curve and the strips ---- */
+  const padL = 46, padR = 18, padT = 18, padB = 26;
+  const px = (x) => padL + ((x - a) / (b - a)) * (W - padL - padR);
+  let lo = Infinity, hi = -Infinity;
+  for (let i = 0; i <= 400; i++){ const v = f(a + (b-a)*i/400); if (v<lo) lo=v; if (v>hi) hi=v; }
+  lo = Math.min(lo, 0); hi = Math.max(hi, 0);
+  const span = (hi - lo) || 1;
+  const py = (y) => splitY - padB - ((y - lo) / span) * (splitY - padT - padB);
+
+  /* axes */
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, py(0)); ctx.lineTo(W - padR, py(0)); ctx.stroke();
+
+  /* trapezoid strips (left half of plot area is fine — draw all, hollow) */
+  const h = (b - a) / n;
+  ctx.fillStyle = css("--accent-soft"); ctx.strokeStyle = css("--accent"); ctx.lineWidth = 1;
+  for (let i = 0; i < n; i++){
+    const x0 = a + i*h, x1 = x0 + h;
+    ctx.beginPath();
+    ctx.moveTo(px(x0), py(0)); ctx.lineTo(px(x0), py(f(x0)));
+    ctx.lineTo(px(x1), py(f(x1))); ctx.lineTo(px(x1), py(0)); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+  }
+
+  /* Simpson parabolas, drawn over the top */
+  ctx.strokeStyle = css("--alt"); ctx.lineWidth = 2;
+  for (let i = 0; i + 1 < n; i += 2){
+    const x0 = a + i*h, x1 = x0 + h, x2 = x0 + 2*h;
+    const y0 = f(x0), y1 = f(x1), y2 = f(x2);
+    ctx.beginPath();
+    for (let k = 0; k <= 24; k++){
+      const t = k / 24, x = x0 + t*(x2 - x0);
+      /* Lagrange parabola through the three points */
+      const L0 = ((x-x1)*(x-x2))/((x0-x1)*(x0-x2));
+      const L1 = ((x-x0)*(x-x2))/((x1-x0)*(x1-x2));
+      const L2 = ((x-x0)*(x-x1))/((x2-x0)*(x2-x1));
+      const y = y0*L0 + y1*L1 + y2*L2;
+      k ? ctx.lineTo(px(x), py(y)) : ctx.moveTo(px(x), py(y));
+    }
+    ctx.stroke();
+  }
+
+  /* the true curve */
+  ctx.strokeStyle = css("--ink"); ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  for (let i = 0; i <= 400; i++){
+    const x = a + (b-a)*i/400;
+    i ? ctx.lineTo(px(x), py(f(x))) : ctx.moveTo(px(x), py(f(x)));
+  }
+  ctx.stroke();
+
+  /* ---- lower panel: log-log error ---- */
+  const ly0 = splitY + 12, ly1 = H - 30;
+  const floor = Math.pow(10, -state.zoom);
+  const lpx = (k) => padL + ((Math.log2(k) - 1) / (Math.log2(4096) - 1)) * (W - padL - padR);
+  const lpy = (e) => {
+    const v = Math.max(e, floor);
+    return ly1 - ((Math.log10(v) - Math.log10(floor)) / (0 - Math.log10(floor))) * (ly1 - ly0);
+  };
+
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+  ctx.font = "11px ui-monospace, monospace"; ctx.fillStyle = css("--muted");
+  for (let d = 0; d >= -state.zoom; d -= Math.max(1, Math.round(state.zoom/6))){
+    const y = lpy(Math.pow(10, d));
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillText("1e" + d, 4, y + 3);
+  }
+
+  for (const [rule, colour] of [["trapezoid", css("--accent")], ["simpson", css("--alt")]]){
+    ctx.strokeStyle = colour; ctx.lineWidth = 2; ctx.beginPath();
+    let started = false;
+    for (let k = 2; k <= 4096; k *= 2){
+      const e = Math.abs(Model[rule](f, a, b, k) - exact);
+      const X = lpx(k), Y = lpy(e);
+      started ? ctx.lineTo(X, Y) : (ctx.moveTo(X, Y), started = true);
+    }
+    ctx.stroke();
+    /* marker at the current strip count */
+    const e = Math.abs(Model[rule](f, a, b, n) - exact);
+    ctx.fillStyle = colour;
+    ctx.beginPath(); ctx.arc(lpx(n), lpy(e), 4.5, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle = css("--muted");
+  ctx.fillText("strips →", W - padR - 56, ly1 + 18);
+
+  /* ---- readouts ---- */
+  el("nout").textContent = String(n);
+  el("zoomout").textContent = "1e-" + state.zoom;
+  el("t-est").textContent = tv.toFixed(8);
+  el("s-est").textContent = sv.toFixed(8);
+  el("exact").textContent = exact.toFixed(8);
+  el("t-err").textContent = fmt(Math.abs(tv - exact));
+  el("s-err").textContent = fmt(Math.abs(sv - exact));
+}
+
+el("fn").addEventListener("change", (e) => { state.fn = e.target.value; render(); });
+el("n").addEventListener("input", (e) => { state.n = Math.max(2, parseInt(e.target.value, 10) & ~1); render(); });
+el("zoom").addEventListener("input", (e) => { state.zoom = parseInt(e.target.value, 10); render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("fn").value = defaults.fn; el("n").value = defaults.n; el("zoom").value = defaults.zoom;
+  render();
+});
+render();
+
+/* ---------------- SELFTEST ---------------- */
+
+const near = (a, b, tol) => Number.isFinite(a) && Math.abs(a - b) <= tol;
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1. trapezoid is exact for a straight line, by construction */
+  push("trapezoid exact on f(x)=3x+1 over [0,2] with n=1",
+    near(Model.trapezoid((x) => 3*x + 1, 0, 2, 1), 8, 1e-14),
+    "closed form: 3x^2/2 + x from 0 to 2 = 8");
+
+  /* 2. Simpson is exact for cubics — the symmetry cancellation */
+  push("Simpson exact on f(x)=x^3-x over [0,2] with n=2",
+    near(Model.simpson((x) => x*x*x - x, 0, 2, 2), 2, 1e-13),
+    "closed form: x^4/4 - x^2/2 from 0 to 2 = 2; a single parabola integrates a cubic exactly");
+
+  /* 3. known trapezoid error on a quadratic: -(b-a)h^2/12 * f'' */
+  push("trapezoid error on x^2 over [0,1], n=1 equals 1/6",
+    near(Model.trapezoid((x) => x*x, 0, 1, 1) - 1/3, 1/6, 1e-14),
+    "E = -(h^3/12) f'' = -(1/12)(2) = -1/6, so the estimate overshoots 1/3 by exactly 1/6");
+
+  /* 4. observed order of convergence: trapezoid ~2 */
+  push("trapezoid converges at order 2 on sin x",
+    near(Model.order(Math.sin, 0, Math.PI, 2, 32, "trapezoid"), 2, 0.05),
+    "log2(e_32 / e_64) should approach 2");
+
+  /* 5. observed order of convergence: Simpson ~4 */
+  push("Simpson converges at order 4 on sin x",
+    near(Model.order(Math.sin, 0, Math.PI, 2, 32, "simpson"), 4, 0.05),
+    "log2(e_32 / e_64) should approach 4");
+
+  /* 6. both rules agree with the closed form when given enough strips */
+  push("both rules reach the exact integral of e^-x over [0,3]",
+    near(Model.trapezoid((x) => Math.exp(-x), 0, 3, 4096), 1 - Math.exp(-3), 1e-7) &&
+    near(Model.simpson((x) => Math.exp(-x), 0, 3, 4096), 1 - Math.exp(-3), 1e-12),
+    "closed form 1 - e^-3 = " + (1 - Math.exp(-3)).toFixed(12));
+
+  /* 7. Simpson on an odd n is promoted to even, not silently wrong */
+  push("Simpson forces an even strip count",
+    near(Model.simpson((x) => x*x, 0, 1, 3), 1/3, 1e-13),
+    "n=3 is promoted to n=4; a parabola integrates x^2 exactly either way");
+
+  /* 8. every function in the menu is finite across its own domain */
+  push("no NaN or Infinity for any menu function at any strip count", (function(){
+    for (const k of Object.keys(FNS)){
+      const c = FNS[k];
+      for (let n = 2; n <= 64; n += 2){
+        if (!Number.isFinite(Model.trapezoid(c.f, c.a, c.b, n))) return false;
+        if (!Number.isFinite(Model.simpson(c.f, c.a, c.b, n)))  return false;
+      }
+    }
+    return true;
+  })(), "swept all five functions over every even n from 2 to 64");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, FNS, seed: 20260101 };
+
+})();
+</script>
+</body>
+</html>
