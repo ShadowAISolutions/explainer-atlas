@@ -1,0 +1,836 @@
+<!doctype html>
+<!--
+  Interactive Explainer Atlas — page skeleton.
+  Start EVERY new explainer from this file. Never copy a previous page.
+  Replace every {{PLACEHOLDER}}. Delete the demo model and write your own.
+  Contract: FOUNDATION.md. Rules: CLAUDE.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Interval Either Contains It Or It Does Not &#8212; Explainer Atlas</title>
+<meta name="description" content="Draw a population, then watch a hundred confidence intervals appear and roughly five of them miss. The ninety-five is a property of the recipe, not of the interval in front of you.">
+<style>
+/* ---- tokens: restate these per page to vary the collection's feel ------- */
+:root{
+  --bg:#f8f8fb; --panel:#ffffff; --ink:#191823; --muted:#5f5d72; --line:#e3e1ec;
+  --accent:#4b3d9e; --accent-soft:#ecebf8; --warn:#b3541e; --alt:#b3541e;
+  --radius:18px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.48rem,1.02rem + 2.15vw,2.5rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.06rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#131220; --panel:#1c1a2b; --ink:#eae8f4; --muted:#9e9ab5; --line:#2c2940;
+    --accent:#9d8ff0; --accent-soft:#221f38; --warn:#e69a5e; --alt:#e69a5e;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.15; margin:0 0 .4em; letter-spacing:-.01em}
+.kicker{margin:0 0 .35em; color:var(--accent); font:600 .78rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.09em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas, figure.stage svg{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.86rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.83rem}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .7em; min-height:40px}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.06em}
+.readout dd{margin:.18em 0 0; font:600 1.05rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.16rem; margin:1.8em 0 .45em; letter-spacing:-.005em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); background:var(--accent-soft); padding:.7em .85em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">statistics</p>
+  <h1>Your Interval Either Contains It Or It Does Not</h1>
+  <p class="standfirst">A ninety-five per cent interval is not ninety-five per cent likely to hold the
+  true value. It came out of a recipe that succeeds ninety-five times in a hundred. Draw a
+  population, run the recipe a hundred times, and count the failures.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="620" role="img"
+            aria-label="Above, a histogram of the population being sampled, with a vertical line at its true mean. Below, a stack of confidence intervals drawn as horizontal bars, one per sample, with the ones that fail to reach the true mean shown in a contrasting colour."></canvas>
+    <figcaption>Above: the population, with its true mean marked. Drag across it to reshape it.
+    Below: one interval per sample, stacked. The ones that miss the line are the failures the
+    confidence level is counting.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row">
+        <label for="shape">Population</label>
+      </div>
+      <select id="shape">
+        <option value="bell" selected>bell</option>
+        <option value="flat">flat</option>
+        <option value="skew">strongly skewed</option>
+        <option value="two">two humps</option>
+        <option value="drawn">drawn by hand</option>
+      </select>
+      <p class="hint">Or drag across the upper panel to draw your own shape. Whatever you draw is
+      the population, and its mean is known exactly.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="n">Sample size</label>
+        <output id="nout" for="n">8</output>
+      </div>
+      <input type="range" id="n" min="3" max="40" step="1" value="8">
+      <p class="hint">How many values go into each interval. Arrow keys step; Home and End jump.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="conf">Confidence level</label>
+        <output id="confout" for="conf">95%</output>
+      </div>
+      <input type="range" id="conf" min="80" max="99" step="1" value="95">
+      <p class="hint">The rate the recipe promises. Watch how much wider ninety-nine per cent has
+      to be than eighty.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="method">Recipe</label>
+      </div>
+      <select id="method">
+        <option value="t" selected>t interval, spread estimated</option>
+        <option value="z">z interval, spread known</option>
+      </select>
+      <p class="hint">The t interval pays for not knowing the spread in advance, which is the
+      situation you are actually in.</p>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Shown here</dt><dd id="oHit">&#8212;</dd></div>
+      <div><dt>Long run</dt><dd id="oCov">&#8212;</dd></div>
+      <div><dt>Promised</dt><dd id="oNom">&#8212;</dd></div>
+      <div><dt>True mean</dt><dd id="oMu">&#8212;</dd></div>
+      <div><dt>Typical width</dt><dd id="oW">&#8212;</dd></div>
+      <div><dt>Population skew</dt><dd id="oSk">&#8212;</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Start over</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Every horizontal bar in the lower panel is one confidence interval, built from its own fresh
+  sample out of the population above it. The vertical line is the population mean, which you can
+  see because this is a simulation and the population is something you drew. Count the bars that
+  fail to reach the line. At ninety-five per cent, on a bell-shaped population, about five of the
+  hundred will miss.</p>
+
+  <p>That is the whole meaning of the number. Ninety-five per cent describes how often the
+  procedure works, taken over all the samples it might have drawn. It says nothing about the one
+  interval in front of you. That interval either contains the mean or it does not; there is no
+  probability left in it once the sample is in hand. The uncertainty lives in the sampling, and you
+  spent it when you sampled.</p>
+
+  <h2>Where the width comes from</h2>
+
+  <p class="math">interval = sample mean &#177; t &#215; s / &#8730;n</p>
+
+  <p>The sample mean wanders around the population mean with a spread of &#963;/&#8730;n, so an
+  interval reaching out a couple of those wanderings in each direction catches the mean most of the
+  time. Push the sample size up and every bar shortens by exactly the factor &#8730;n demands:
+  quadruple the sample and the interval halves. That is a punishing exchange rate, and it is why
+  the last decimal place of precision is so expensive.</p>
+
+  <p>The multiplier is where the two recipes differ. If you already know the population spread you
+  can use a fixed number from the normal distribution &#8212; 1.96 for ninety-five per cent. You
+  almost never know it, so you estimate it from the same small sample, and that estimate is itself
+  noisy. Student&#8217;s t multiplier compensates by being larger, and by shrinking toward 1.96 as
+  the sample grows. At three observations it is 4.30; at forty it is 2.02. Switch the recipe to the
+  z interval at a sample size of three and watch the failures pile up: you are pretending to know
+  something you do not.</p>
+
+  <h2>Where the promise breaks</h2>
+
+  <p>Choose the strongly skewed population and set the sample size to five. The bars still say
+  ninety-five per cent, but only about eighty-eight in a hundred reach the line. The t multiplier
+  is derived on the assumption that the population is normal, and a long right tail breaks it in a
+  specific way: most samples miss the rare large values entirely, so they under-estimate both the
+  mean and the spread at once, and the interval is both too low and too short. The failures are
+  lopsided &#8212; nearly all of them fall below the mean rather than above it.</p>
+
+  <p>Now walk the sample size up. At ten the coverage is about ninety per cent, at thirty about
+  ninety-three, and it keeps creeping toward the promise. This is the central limit theorem
+  arriving late: the sample mean becomes normal eventually whatever the population looks like, but
+  how late it arrives depends on how skewed that population is. The usual advice that thirty is
+  enough is a rule of thumb about mildly skewed data, not a theorem.</p>
+
+  <h2>What to try</h2>
+
+  <p>Draw a population with one narrow spike and a long low tail off to the right, then set the
+  sample size to four and read the long-run coverage: a nominal ninety-five can land in the
+  seventies. Then set the confidence level to ninety-nine and watch what it costs &#8212; the bars
+  get a third longer and the recipe still under-delivers, because the problem is the shape, not the
+  level. Finally flatten the population out and see the coverage snap back: a symmetric population
+  is forgiving at almost any sample size.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG. Never use bare Math.random(). ------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+
+/* ---- MODEL: pure functions of the parameters. No DOM in here. ----------- */
+/* Two independent routes to the coverage claim.                             */
+/*   Route A  is the simulation the page draws: sample, build the interval,  */
+/*            ask whether it reached the mean, repeat.                       */
+/*   Route B  is analytic: the normal CDF from its own series, the Student t */
+/*            CDF from a continued fraction, and a critical value found by   */
+/*            inverting it. Route B is checked against published table        */
+/*            values and against the two degrees of freedom where the t CDF  */
+/*            has an elementary closed form, so it is not merely a second    */
+/*            copy of the same idea.                                         */
+const BINS = 28;                        /* the drawn population's resolution */
+const LO = 0, HI = 14;                  /* the value axis                    */
+const BW = (HI - LO) / BINS;
+const SHOWN = 100;                      /* intervals drawn on screen         */
+
+const Model = {
+  /* ---------------- the population ------------------------------------ */
+  preset(name){
+    const w = [];
+    for (let i = 0; i < BINS; i++){
+      const x = LO + (i + 0.5) * BW;
+      let v;
+      if (name === "flat") v = 1;
+      else if (name === "skew") v = Math.exp(-(x - 1.4) / 2.2) * (x > 0.6 ? 1 : 0.04);
+      else if (name === "two") v = Math.exp(-Math.pow(x - 4, 2) / 2.2) + 0.85 * Math.exp(-Math.pow(x - 10, 2) / 3.2);
+      else v = Math.exp(-Math.pow(x - 7, 2) / 5.2);
+      w.push(Math.max(1e-4, v));
+    }
+    return Model.normalise(w);
+  },
+  normalise(w){
+    let s = 0;
+    for (let i = 0; i < w.length; i++) s += Math.max(0, w[i]);
+    if (!(s > 0)) return w.map(() => 1 / w.length);
+    return w.map((v) => Math.max(0, v) / s);
+  },
+  /* Each bin is uniform over its width, so the moments are closed forms.  */
+  mean(w){
+    let m = 0;
+    for (let i = 0; i < w.length; i++) m += w[i] * (LO + (i + 0.5) * BW);
+    return m;
+  },
+  variance(w){
+    const m = Model.mean(w);
+    let s = 0;
+    for (let i = 0; i < w.length; i++){
+      const c = LO + (i + 0.5) * BW;
+      s += w[i] * (c * c + BW * BW / 12);       /* uniform within the bin   */
+    }
+    return s - m * m;
+  },
+  skewness(w){
+    const m = Model.mean(w), sd = Math.sqrt(Model.variance(w));
+    if (!(sd > 0)) return 0;
+    let s = 0;
+    for (let i = 0; i < w.length; i++){
+      const d = LO + (i + 0.5) * BW - m;
+      /* third central moment of a uniform bin is its centre's cube shifted */
+      s += w[i] * (d * d * d + d * BW * BW / 4);
+    }
+    return s / (sd * sd * sd);
+  },
+  cum(w){
+    const c = [0];
+    for (let i = 0; i < w.length; i++) c.push(c[i] + w[i]);
+    return c;
+  },
+  draw(cumw, rng){
+    const u = rng() * cumw[cumw.length - 1];
+    let lo = 0, hi = cumw.length - 1;
+    while (lo + 1 < hi){
+      const mid = (lo + hi) >> 1;
+      if (cumw[mid] <= u) lo = mid; else hi = mid;
+    }
+    return LO + (lo + rng()) * BW;
+  },
+
+  /* ---------------- ROUTE B: the distributions, from scratch ----------- */
+  pdf(x){ return Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI); },
+  /* the standard series Phi(x) = 1/2 + phi(x) * sum x^(2k+1)/(1.3.5...)   */
+  normCdf(x){
+    if (x < 0) return 1 - Model.normCdf(-x);
+    if (x > 9) return 1;
+    let term = x, sum = x, d = 1;
+    for (let k = 1; k < 400; k++){
+      d += 2; term *= x * x / d; sum += term;
+      if (Math.abs(term) < 1e-18 * Math.abs(sum)) break;
+    }
+    return 0.5 + Model.pdf(x) * sum;
+  },
+  normQ(p){
+    let lo = -40, hi = 40, m = 0;
+    for (let i = 0; i < 200; i++){
+      m = (lo + hi) / 2;
+      if (Model.normCdf(m) < p) lo = m; else hi = m;
+    }
+    return m;
+  },
+  lgamma(x){
+    const c = [76.18009172947146, -86.50532032941677, 24.01409824083091,
+               -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+    let y = x, t = x + 5.5;
+    t -= (x + 0.5) * Math.log(t);
+    let s = 1.000000000190015;
+    for (let j = 0; j < 6; j++) s += c[j] / ++y;
+    return -t + Math.log(2.5066282746310005 * s / x);
+  },
+  betacf(a, b, x){
+    const FPMIN = 1e-300, EPS = 3e-16;
+    const qab = a + b, qap = a + 1, qam = a - 1;
+    let c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < FPMIN) d = FPMIN;
+    d = 1 / d;
+    let h = d;
+    for (let m = 1; m <= 300; m++){
+      const m2 = 2 * m;
+      let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN;
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+      d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN;
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+      d = 1 / d;
+      const del = d * c;
+      h *= del;
+      if (Math.abs(del - 1) < EPS) break;
+    }
+    return h;
+  },
+  ibeta(a, b, x){
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    const bt = Math.exp(Model.lgamma(a + b) - Model.lgamma(a) - Model.lgamma(b)
+                        + a * Math.log(x) + b * Math.log(1 - x));
+    if (x < (a + 1) / (a + b + 2)) return bt * Model.betacf(a, b, x) / a;
+    return 1 - bt * Model.betacf(b, a, 1 - x) / b;
+  },
+  tCdf(t, df){
+    const p = 0.5 * Model.ibeta(df / 2, 0.5, df / (df + t * t));
+    return t > 0 ? 1 - p : p;
+  },
+  tQ(p, df){
+    let lo = -200, hi = 200, m = 0;
+    for (let i = 0; i < 200; i++){
+      m = (lo + hi) / 2;
+      if (Model.tCdf(m, df) < p) lo = m; else hi = m;
+    }
+    return m;
+  },
+  crit(method, conf, n){
+    const p = 0.5 + conf / 2;
+    return method === "z" ? Model.normQ(p) : Model.tQ(p, n - 1);
+  },
+
+  /* ---------------- ROUTE A: the simulation --------------------------- */
+  normal(rng){
+    let u = 0;
+    while (u === 0) u = rng();
+    const v = rng();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  },
+  /* one interval from one sample, plus the sample's own statistics */
+  interval(sample, method, conf, sigma){
+    const n = sample.length;
+    let s = 0;
+    for (let i = 0; i < n; i++) s += sample[i];
+    const m = s / n;
+    let q = 0;
+    for (let i = 0; i < n; i++) q += (sample[i] - m) * (sample[i] - m);
+    const sd = Math.sqrt(q / (n - 1));
+    const spread = method === "z" ? sigma : sd;
+    const h = Model.crit(method, conf, n) * spread / Math.sqrt(n);
+    return { mean: m, sd: sd, half: h, lo: m - h, hi: m + h };
+  },
+  sampleFrom(w, n, rng){
+    const c = Model.cum(w), a = [];
+    for (let i = 0; i < n; i++) a.push(Model.draw(c, rng));
+    return a;
+  },
+
+  /* coverage of a drawn population, memoised so the sweep costs nothing */
+  _cov: {},
+  coverage(w, n, conf, method, trials, seed){
+    const key = w.map((v) => v.toFixed(6)).join("") + "|" + n + "|" + conf + "|" + method
+              + "|" + trials + "|" + seed;
+    if (Model._cov[key] !== undefined) return Model._cov[key];
+    const mu = Model.mean(w), sigma = Math.sqrt(Model.variance(w));
+    const c = Model.cum(w), rng = mulberry32(seed);
+    const crit = Model.crit(method, conf, n);
+    let hit = 0, low = 0, wsum = 0;
+    for (let t = 0; t < trials; t++){
+      let s = 0, ss = 0;
+      const a = [];
+      for (let i = 0; i < n; i++){ const v = Model.draw(c, rng); a.push(v); s += v; }
+      const m = s / n;
+      for (let i = 0; i < n; i++) ss += (a[i] - m) * (a[i] - m);
+      const spread = method === "z" ? sigma : Math.sqrt(ss / (n - 1));
+      const h = crit * spread / Math.sqrt(n);
+      wsum += 2 * h;
+      if (m - h <= mu && mu <= m + h) hit++;
+      else if (m + h < mu) low++;
+    }
+    const r = { rate: hit / trials, trials: trials, width: wsum / trials,
+                lowMisses: low, misses: trials - hit };
+    return (Model._cov[key] = r);
+  },
+
+  /* the same on a genuine normal population, where the promise is exact */
+  _norm: {},
+  coverageNormal(n, conf, method, trials, seed){
+    const key = n + "|" + conf + "|" + method + "|" + trials + "|" + seed;
+    if (Model._norm[key] !== undefined) return Model._norm[key];
+    const rng = mulberry32(seed), crit = Model.crit(method, conf, n);
+    let hit = 0;
+    for (let t = 0; t < trials; t++){
+      let s = 0, ss = 0;
+      const a = [];
+      for (let i = 0; i < n; i++){ const v = Model.normal(rng); a.push(v); s += v; }
+      const m = s / n;
+      for (let i = 0; i < n; i++) ss += (a[i] - m) * (a[i] - m);
+      const spread = method === "z" ? 1 : Math.sqrt(ss / (n - 1));
+      const h = crit * spread / Math.sqrt(n);
+      if (Math.abs(m) <= h) hit++;
+    }
+    return (Model._norm[key] = hit / trials);
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { shape: "bell", n: 8, conf: 95, method: "t" };
+const state = Object.assign({}, defaults);
+state.w = Model.preset("bell");
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+const SS = 2;
+let CW = 900, CH = 620, NARROW = false, FS = 13, G_ = null;
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 20) : 900);
+  NARROW = avail < 470;
+  CW = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+
+  const pad = NARROW ? 10 : 14;
+  const L = pad, R = CW - pad;
+  const popTop = Math.round(pad + FS + 12);
+  const popH = Math.round(CW * (NARROW ? 0.34 : 0.20));
+  const popBot = popTop + popH;
+  const popCap = popBot + FS + 8;           /* "drag to reshape" caption    */
+  const barTitle = Math.round(popCap + 14 + FS);
+  const barsTop = barTitle + 10;
+  const rowH = NARROW ? 3 : 4;
+  const barsH = SHOWN * rowH;
+  const barsBot = barsTop + barsH;
+  const axisY = barsBot + FS + 6;           /* value ticks under the stack  */
+  const cap2Y = barsBot + 2 * FS + 12;
+  CH = cap2Y + 6;
+
+  G_ = { pad: pad, L: L, R: R, popTop: popTop, popBot: popBot, popCap: popCap,
+         barTitle: barTitle, barsTop: barsTop, barsBot: barsBot, rowH: rowH,
+         axisY: axisY, cap2Y: cap2Y };
+
+  if (cv.width !== CW * SS || cv.height !== CH * SS){ cv.width = CW * SS; cv.height = CH * SS; }
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function wid(s){ return ctx.measureText(s).width; }
+function pick(sets, room){
+  for (let i = 0; i < sets.length; i++) if (wid(sets[i]) <= room) return sets[i];
+  return sets[sets.length - 1];
+}
+
+/* the value axis maps onto the full drawing width, shared by both panes */
+function xOf(v, G){ return G.L + (v - LO) / (HI - LO) * (G.R - G.L); }
+
+function render(){
+  fitCanvas();
+  const G = G_, w = state.w, n = state.n, conf = state.conf / 100, method = state.method;
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line");
+  const accent = css("--accent"), warn = css("--warn"), panel = css("--panel"),
+        soft = css("--accent-soft");
+
+  ctx.clearRect(0, 0, CW, CH);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, CW, CH);
+  ctx.textBaseline = "alphabetic";
+
+  const mu = Model.mean(w), sigma = Math.sqrt(Model.variance(w));
+
+  /* ---------------- upper pane: the population ------------------------ */
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  /* the true mean's label shares the title row rather than sitting inside the
+     population, where it covered the tallest bars.                          */
+  const muLab = pick(["true mean " + mu.toFixed(2), "mean " + mu.toFixed(2),
+                      mu.toFixed(2)], (G.R - G.L) * 0.45);
+  const muW = wid(muLab) + 22;
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["The population you are sampling from",
+                     "The population", "Population"], G.R - G.L - muW - 14),
+               G.L, G.pad + FS);
+  ctx.strokeStyle = ink; ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(G.R - muW + 4, G.pad + 2); ctx.lineTo(G.R - muW + 4, G.pad + FS + 2);
+  ctx.stroke();
+  ctx.textAlign = "right";
+  ctx.fillText(muLab, G.R, G.pad + FS);
+  ctx.textAlign = "left";
+
+  let wMax = 0;
+  for (let i = 0; i < BINS; i++) if (w[i] > wMax) wMax = w[i];
+  if (!(wMax > 0)) wMax = 1;
+  const popH = G.popBot - G.popTop;
+  const bwPx = (G.R - G.L) / BINS;
+  ctx.fillStyle = soft;
+  ctx.fillRect(G.L, G.popTop, G.R - G.L, popH);
+  ctx.fillStyle = accent;
+  for (let i = 0; i < BINS; i++){
+    const h = (w[i] / wMax) * popH;
+    ctx.fillRect(G.L + i * bwPx + 0.5, G.popBot - h, Math.max(1, bwPx - 1), h);
+  }
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(G.L, Math.round(G.popBot) + 0.5); ctx.lineTo(G.R, Math.round(G.popBot) + 0.5);
+  ctx.stroke();
+
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.fillStyle = muted; ctx.textAlign = "center";
+  ctx.fillText(pick(["drag across this panel to reshape the population",
+                     "drag here to reshape it", "drag to reshape"], G.R - G.L),
+               (G.L + G.R) / 2, G.popCap);
+
+  /* ---------------- lower pane: one interval per sample --------------- */
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(pick([SHOWN + " intervals, one per sample of " + n,
+                     SHOWN + " intervals of " + n, SHOWN + " intervals"], G.R - G.L),
+               G.L, G.barTitle);
+
+  const rng = mulberry32(SEED + n * 131 + state.conf * 7 + (method === "z" ? 1 : 0));
+  const cw = Model.cum(w);
+  let hit = 0;
+  ctx.lineWidth = Math.max(1.4, G.rowH - 1.6);
+  ctx.lineCap = "round";
+  for (let r = 0; r < SHOWN; r++){
+    const a = [];
+    for (let i = 0; i < n; i++) a.push(Model.draw(cw, rng));
+    const iv = Model.interval(a, method, conf, sigma);
+    const ok = iv.lo <= mu && mu <= iv.hi;
+    if (ok) hit++;
+    const y = G.barsTop + r * G.rowH + G.rowH / 2;
+    ctx.strokeStyle = ok ? accent : warn;
+    ctx.globalAlpha = ok ? 0.5 : 1;
+    ctx.beginPath();
+    ctx.moveTo(Math.max(G.L, xOf(iv.lo, G)), y);
+    ctx.lineTo(Math.min(G.R, xOf(iv.hi, G)), y);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  /* the true mean, drawn last so it sits over the bars. Two segments, so the
+     caption and the lower pane's title are not struck through.             */
+  ctx.strokeStyle = ink; ctx.lineWidth = 1.6;
+  const xm = Math.round(xOf(mu, G)) + 0.5;
+  ctx.beginPath();
+  ctx.moveTo(xm, G.popTop); ctx.lineTo(xm, G.popBot);
+  ctx.moveTo(xm, G.barsTop - 3); ctx.lineTo(xm, G.barsBot + 3);
+  ctx.stroke();
+
+  /* value ticks, shared by both panes */
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.fillStyle = muted; ctx.textAlign = "center";
+  const ticks = NARROW ? [0, 4, 8, 12] : [0, 2, 4, 6, 8, 10, 12, 14];
+  for (const v of ticks) ctx.fillText(String(v), xOf(v, G), G.axisY);
+  ctx.fillText(pick(["each bar is one interval; the coloured ones missed the mean",
+                     "coloured bars missed the mean", "coloured bars missed"], G.R - G.L),
+               (G.L + G.R) / 2, G.cap2Y);
+
+  /* ---------------- readouts ------------------------------------------ */
+  const long = Model.coverage(w, n, conf, method, 20000, 424242);
+  el("nout").textContent = String(n);
+  el("confout").textContent = state.conf + "%";
+  el("oHit").textContent = hit + " of " + SHOWN;
+  el("oCov").textContent = (long.rate * 100).toFixed(1) + "%";
+  el("oNom").textContent = state.conf + "%";
+  el("oMu").textContent = mu.toFixed(3);
+  el("oW").textContent = long.width.toFixed(2);
+  el("oSk").textContent = Model.skewness(w).toFixed(2);
+}
+
+/* ---- drawing the population by dragging over the upper pane ------------ */
+let painting = false;
+function paint(ev){
+  const G = G_;
+  if (!G) return;
+  const box = cv.getBoundingClientRect();
+  const x = (ev.clientX - box.left) * (CW / box.width);
+  const y = (ev.clientY - box.top) * (CH / box.height);
+  if (y < G.popTop - 10 || y > G.popBot + 10) return;
+  const i = Math.floor((x - G.L) / ((G.R - G.L) / BINS));
+  if (i < 0 || i >= BINS) return;
+  const h = Math.max(0, Math.min(1, (G.popBot - y) / (G.popBot - G.popTop)));
+  const raw = state.w.slice();
+  let wMax = 0;
+  for (let j = 0; j < BINS; j++) if (raw[j] > wMax) wMax = raw[j];
+  raw[i] = Math.max(1e-4, h) * (wMax > 0 ? wMax : 1 / BINS);
+  state.w = Model.normalise(raw);
+  if (state.shape !== "drawn"){ state.shape = "drawn"; el("shape").value = "drawn"; }
+  render();
+}
+cv.addEventListener("pointerdown", (e) => {
+  painting = true;
+  if (cv.setPointerCapture) cv.setPointerCapture(e.pointerId);
+  paint(e);
+});
+cv.addEventListener("pointermove", (e) => { if (painting) paint(e); });
+cv.addEventListener("pointerup", () => { painting = false; });
+cv.addEventListener("pointercancel", () => { painting = false; });
+
+el("shape").addEventListener("change", () => {
+  state.shape = el("shape").value;
+  if (state.shape !== "drawn") state.w = Model.preset(state.shape);
+  render();
+});
+el("n").addEventListener("input", () => { state.n = parseInt(el("n").value, 10); render(); });
+el("conf").addEventListener("input", () => { state.conf = parseInt(el("conf").value, 10); render(); });
+el("method").addEventListener("change", () => { state.method = el("method").value; render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  state.w = Model.preset("bell");
+  el("shape").value = defaults.shape; el("n").value = defaults.n;
+  el("conf").value = defaults.conf; el("method").value = defaults.method;
+  render();
+});
+
+let rid = null;
+addEventListener("resize", () => { clearTimeout(rid); rid = setTimeout(render, 90); });
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
+render();
+
+/* ---- SELFTEST: minimum 5 numeric assertions against known values. ------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1. the normal machinery against published values. */
+  const p1 = Model.normCdf(1), p196 = Model.normCdf(1.96), z975 = Model.normQ(0.975);
+  push("the normal distribution is computed, not approximated",
+       near(p1, 0.8413447460685429, 1e-12) && near(p196, 0.9750021048517795, 1e-12)
+       && near(z975, 1.959963984540054, 1e-10),
+       "Phi(1) = " + p1.toFixed(12) + ", Phi(1.96) = " + p196.toFixed(12)
+       + ", and the 97.5th percentile is " + z975.toFixed(9) + " against the published 1.959963985");
+
+  /* 2. Student's t against the two degrees of freedom with elementary forms. */
+  let w2 = 0;
+  for (const x of [-4, -2.5, -1, -0.2, 0.5, 1, 2, 7]){
+    w2 = Math.max(w2, Math.abs(Model.tCdf(x, 1) - (0.5 + Math.atan(x) / Math.PI)));
+    w2 = Math.max(w2, Math.abs(Model.tCdf(x, 2) - (0.5 + x / (2 * Math.sqrt(2 + x * x)))));
+  }
+  push("the t distribution matches its closed forms at one and two degrees of freedom",
+       w2 < 1e-12,
+       "one degree of freedom is the Cauchy, two has an elementary form; largest disagreement "
+       + w2.toExponential(2) + " over eight points");
+
+  /* 3. and against the published table of critical values. */
+  const tbl = [[1, 12.70620474], [2, 4.30265273], [5, 2.57058184],
+               [10, 2.22813885], [30, 2.04227246], [100, 1.98397152]];
+  let w3 = 0, s3 = [];
+  for (const row of tbl){
+    const v = Model.tQ(0.975, row[0]);
+    w3 = Math.max(w3, Math.abs(v - row[1]));
+    if (row[0] === 5 || row[0] === 30) s3.push(row[0] + " gives " + v.toFixed(6));
+  }
+  push("the 97.5th percentile of t matches the published table",
+       w3 < 1e-6, s3.join(", ") + "; largest error across six degrees of freedom "
+       + w3.toExponential(2));
+
+  /* 4. the z interval on a known-variance normal, 200000 seeded samples. */
+  const c4 = Model.coverageNormal(10, 0.95, "z", 200000, 918273);
+  push("a z interval covers at 95 per cent on a normal population",
+       Math.abs(c4 - 0.95) < 0.01,
+       "200,000 seeded samples of ten observations covered " + (c4 * 100).toFixed(3)
+       + " per cent, against the promised 95");
+
+  /* 5. the same claim analytically: the z interval's coverage IS the level. */
+  let w5 = 0;
+  for (let pc = 80; pc <= 99; pc++){
+    const conf = pc / 100, z = Model.normQ(0.5 + conf / 2);
+    w5 = Math.max(w5, Math.abs((Model.normCdf(z) - Model.normCdf(-z)) - conf));
+  }
+  push("and analytically, with no simulation at all", w5 < 1e-12,
+       "the mean of n normals is exactly normal, so the coverage is Phi(z) - Phi(-z); that equals "
+       + "the nominal level to " + w5.toExponential(2) + " at every one of the 20 settings");
+
+  /* 6. the t interval holds its nominal rate at small n on normal data. */
+  let ok6 = true, s6 = [];
+  for (const n of [5, 10, 30]){
+    const c = Model.coverageNormal(n, 0.95, "t", 60000, 500 + n);
+    if (Math.abs(c - 0.95) >= 0.01) ok6 = false;
+    s6.push("n=" + n + " gave " + (c * 100).toFixed(2));
+  }
+  push("a t interval covers at its nominal rate for every small sample size", ok6,
+       s6.join(", ") + " per cent, all within one point of 95 over 60,000 samples each");
+
+  /* 7. width is exactly proportional to one over the square root of n. */
+  let w7 = 0;
+  for (const conf of [0.8, 0.9, 0.95, 0.99])
+    for (const n of [4, 9, 16, 36, 100]){
+      const z = Model.normQ(0.5 + conf / 2);
+      const a = 2 * z * 3 / Math.sqrt(n), b = 2 * z * 3 / Math.sqrt(4 * n);
+      w7 = Math.max(w7, Math.abs(a / b - 2));
+    }
+  push("quadrupling the sample halves the interval, exactly", w7 < 1e-12,
+       "the ratio of widths at n and 4n is 2 to within " + w7.toExponential(2)
+       + " across four confidence levels and five sizes");
+
+  /* 8. a strongly skewed population falls short of the promise at n = 5. */
+  const skew = Model.preset("skew");
+  const c8 = Model.coverage(skew, 5, 0.95, "t", 60000, 60606);
+  push("a strongly skewed population breaks the promise at five observations",
+       0.95 - c8.rate > 0.02,
+       "nominal 95 per cent, actual " + (c8.rate * 100).toFixed(2)
+       + " per cent over 60,000 samples, a shortfall of "
+       + ((0.95 - c8.rate) * 100).toFixed(2) + " points");
+
+  /* 9. and recovers as the sample grows, which is the central limit theorem. */
+  const g = [5, 10, 30].map((n) => Model.coverage(skew, n, 0.95, "t", 40000, 71717).rate);
+  push("and recovers as the sample grows", g[0] < g[1] && g[1] < g[2] && g[2] < 0.95,
+       "coverage climbs " + g.map((v) => (v * 100).toFixed(1)).join(" to ")
+       + " per cent at five, ten and thirty, still short of 95 at thirty");
+
+  /* 10. those failures are one-sided, which is what skew does to an interval. */
+  push("the failures on a skewed population nearly all fall on the same side",
+       c8.lowMisses / c8.misses > 0.9,
+       (100 * c8.lowMisses / c8.misses).toFixed(1)
+       + " per cent of the misses sit entirely below the mean, because a sample that misses the "
+       + "long tail under-estimates the centre and the spread together");
+
+  /* 11. sample mean and sample variance against their closed forms. */
+  let w11 = 0;
+  const rngA = mulberry32(31337);
+  for (let trial = 0; trial < 400; trial++){
+    const n = 3 + (trial % 38);
+    const a = Model.sampleFrom(skew, n, rngA);
+    let s = 0, ss = 0;
+    for (let i = 0; i < n; i++){ s += a[i]; ss += a[i] * a[i]; }
+    const m = s / n, v = (ss - n * m * m) / (n - 1);
+    const iv = Model.interval(a, "t", 0.95, 1);
+    w11 = Math.max(w11, Math.abs(iv.mean - m), Math.abs(iv.sd * iv.sd - v) / (1 + Math.abs(v)));
+  }
+  push("every sample's mean and variance agree with the closed forms", w11 < 1e-12,
+       "the two-pass and single-pass formulas agree to " + w11.toExponential(2)
+       + " over 400 samples of between three and forty observations");
+
+  /* 12. the drawn population's own moments are exact, not estimated. */
+  let w12 = 0;
+  for (const name of ["bell", "flat", "skew", "two"]){
+    const p = Model.preset(name);
+    let m = 0, v = 0, tot = 0;
+    for (let i = 0; i < BINS; i++){ tot += p[i]; m += p[i] * (LO + (i + 0.5) * BW); }
+    for (let i = 0; i < BINS; i++){
+      const c = LO + (i + 0.5) * BW;
+      v += p[i] * ((c - m) * (c - m) + BW * BW / 12);
+    }
+    w12 = Math.max(w12, Math.abs(tot - 1), Math.abs(Model.mean(p) - m),
+                   Math.abs(Model.variance(p) - v));
+  }
+  push("the population mean the page draws a line at is exact", w12 < 1e-12,
+       "weights sum to one and the bin-uniform moments reproduce the model's mean and variance to "
+       + w12.toExponential(2) + " on all four presets");
+
+  /* 13. nothing the controls can reach produces a non-finite interval. */
+  let ok13 = true;
+  for (const name of ["bell", "flat", "skew", "two"]){
+    const p = Model.preset(name), c = Model.cum(p), rng = mulberry32(999);
+    for (const n of [3, 8, 40])
+      for (const pc of [80, 95, 99])
+        for (const meth of ["t", "z"]){
+          const a = Model.sampleFrom(p, n, rng);
+          const iv = Model.interval(a, meth, pc / 100, Math.sqrt(Model.variance(p)));
+          if (!Number.isFinite(iv.lo) || !Number.isFinite(iv.hi) || !(iv.half > 0)) ok13 = false;
+        }
+  }
+  push("every reachable setting produces a finite interval", ok13,
+       "four populations, three sample sizes, three levels and both recipes all give a real "
+       + "interval of positive width");
+
+  return t;
+};
+
+/* exposed for the verifier's control sweep */
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
