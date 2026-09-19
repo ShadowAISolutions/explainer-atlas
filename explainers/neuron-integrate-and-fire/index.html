@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Below This Current, Nothing Happens — Explainer Atlas</title>
+<meta name="description" content="A neuron charges like a capacitor until it crosses threshold, fires, and resets. Drag the input current down and at one exact value the output stops entirely.">
+<style>
+/* A single narrow measure for everything, with the stage breaking out of it
+   full width -- a paper with one plate. Warm paper, near-black ink, and the
+   stage itself a deep indigo instrument panel.                              */
+:root{
+  --bg:#f5f1e8; --panel:#fbf8f1; --ink:#14120e; --muted:#6b6455; --line:#ddd6c6;
+  --stage:#141a2e; --stage-ink:#c9d4f0; --grid:#26304d;
+  --trace:#5ce6b0; --spike:#ffd166; --thresh:#ff7b72; --rest:#7f8db5;
+  --accent:#8a4b1f; --accent-soft:#f2e6d8;
+  --radius:3px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Iowan Old Style",Charter,Georgia,serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.7rem,1.1rem + 2.6vw,2.6rem);
+  --scale-body:clamp(1.02rem,0.98rem + 0.2vw,1.1rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#12110e; --panel:#1a1814; --ink:#ece7dc; --muted:#a29a88; --line:#2d2a22;
+    --stage:#0d1120; --stage-ink:#c9d4f0; --grid:#1e2740;
+    --accent:#e0a35c; --accent-soft:#2a1d10;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.66 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+
+/* one narrow measure for every word on the page; the instrument breaks out */
+.wrap{max-width:38rem; margin:0 auto; padding:var(--pad) var(--pad) 0}
+.bleed{max-width:70rem; margin:calc(var(--pad)*1.1) auto 0; padding:0 var(--pad)}
+
+header.page h1{font-size:var(--scale-h1); line-height:1.1; margin:0 0 .35em; letter-spacing:-.018em}
+.kicker{margin:0 0 .5em; color:var(--accent); font:600 .72rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.14em}
+.standfirst{margin:0; color:var(--muted); font-size:1.06em; font-style:italic}
+.rule{height:1px; background:var(--line); margin:calc(var(--pad)*0.9) 0 0}
+
+/* the instrument: dark plate, readouts welded into its footer */
+figure.stage{margin:0}
+.plate{background:var(--stage); border-radius:var(--radius); overflow:hidden}
+.plate canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:1px;
+         margin:0; padding:0; background:var(--grid); border-top:1px solid var(--grid)}
+.readout div{background:var(--stage); padding:.6em .85em}
+.readout dt{margin:0; color:var(--rest); font:600 .66rem/1.4 var(--font-mono); text-transform:uppercase; letter-spacing:.11em}
+.readout dd{margin:.15em 0 0; color:var(--stage-ink); font:600 1.12rem/1.2 var(--font-mono)}
+.readout dd.silent{color:var(--thresh)}
+figcaption{margin:.7em 0 0; color:var(--muted); font-size:.87rem; max-width:44em}
+
+/* controls sit under the plate, inside the measure, two to a row */
+.controls{margin:calc(var(--pad)*1.05) 0 0; padding:0; border:0;
+          display:grid; gap:1.1em var(--pad); grid-template-columns:1fr}
+@media (min-width:34rem){ .controls{grid-template-columns:1fr 1fr} }
+.controls > .legend{padding:0; margin:0 0 .2em; grid-column:1/-1;
+          font:600 .72rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.14em; color:var(--muted)}
+.control{display:grid; gap:.25em; align-content:start}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font-weight:600; font-size:.97em}
+.control output{font:600 .88rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft);
+                padding:.26em .48em; border-radius:var(--radius); white-space:nowrap}
+.control .hint{margin:.1em 0 0; color:var(--muted); font-size:.81rem; line-height:1.45}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px; margin:0}
+button{font:600 .95rem/1 var(--font-body); color:inherit; background:var(--panel);
+       border:1px solid var(--line); border-radius:var(--radius); padding:.7em 1em; min-height:42px; cursor:pointer}
+button:hover{border-color:var(--accent); color:var(--accent)}
+.actions{grid-column:1/-1; display:flex; gap:.6em; flex-wrap:wrap}
+:where(a,button,input,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:3px; border-radius:2px}
+
+.prose{margin-top:calc(var(--pad)*1.5)}
+.prose h2{font:600 1.02rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.1em;
+          color:var(--accent); margin:2.1em 0 .5em}
+.prose p{margin:0 0 1.05em}
+.prose p.lead:first-letter{float:left; font-size:3.1em; line-height:.84; padding:.06em .09em 0 0; font-weight:600}
+.prose .math{font:.95rem/1.75 var(--font-mono); background:var(--panel); border:1px solid var(--line);
+             border-left:3px solid var(--accent); padding:.85em 1em; border-radius:var(--radius); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.8); padding:var(--pad) 0; border-top:1px solid var(--line);
+            color:var(--muted); font-size:.85rem}
+footer.page a{color:var(--accent)}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header class="page">
+  <p class="kicker">Biology · Neuroscience</p>
+  <h1>Below This Current, Nothing Happens</h1>
+  <p class="standfirst">A neuron is a leaky bucket with a trip switch. Turn the tap down far enough and the
+  switch never trips &mdash; not slowly, not rarely, but never.</p>
+</header>
+<div class="rule"></div>
+</div>
+
+<div class="bleed">
+  <figure class="stage" data-role="stage">
+    <div class="plate">
+    <canvas id="view" width="1100" height="620" role="img"
+      aria-label="Left: the membrane voltage of a leaky integrate-and-fire neuron charging toward its steady state, crossing a dashed threshold line, resetting, and repeating, with spikes marked above the trace. Right: the firing rate plotted against input current, flat at zero until the rheobase current and then rising and saturating, with the current operating point marked."></canvas>
+    <dl class="readout" aria-live="polite">
+      <div><dt>Firing rate</dt><dd id="rRate">&mdash;</dd></div>
+      <div><dt>Interval</dt><dd id="rIsi">&mdash;</dd></div>
+      <div><dt>Steady state IR</dt><dd id="rSs">&mdash;</dd></div>
+      <div><dt>Rheobase</dt><dd id="rRheo">&mdash;</dd></div>
+    </dl>
+    </div>
+    <figcaption>Green is the membrane voltage; the red dashed line is threshold. Pull the current slider
+    down slowly and watch the marker on the right-hand curve walk toward the cliff at the rheobase.</figcaption>
+  </figure>
+
+  <div class="wrap" style="padding-top:0">
+  <section class="controls" data-role="controls" aria-label="Neuron parameters">
+    <p class="legend">The five knobs</p>
+
+    <div class="control">
+      <div class="row">
+        <label for="cur">Input current <span class="sr-only">in nanoamps</span></label>
+        <output id="curOut" for="cur">2.00 nA</output>
+      </div>
+      <input type="range" id="cur" min="0" max="4" step="0.01" value="2">
+      <p class="hint">The steady injected current. Arrow keys step by 0.01&nbsp;nA; Home and End jump to the ends.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="res">Membrane resistance <span class="sr-only">in megohms</span></label>
+        <output id="resOut" for="res">10.0 M&#8486;</output>
+      </div>
+      <input type="range" id="res" min="4" max="20" step="0.1" value="10">
+      <p class="hint">How much voltage a given current buys. Current times resistance is where the voltage is heading.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="tau">Membrane time constant <span class="sr-only">in milliseconds</span></label>
+        <output id="tauOut" for="tau">10.0 ms</output>
+      </div>
+      <input type="range" id="tau" min="4" max="40" step="0.5" value="10">
+      <p class="hint">How fast it gets there. Changes the rate but never whether the neuron fires at all.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="vth">Threshold <span class="sr-only">in millivolts above rest</span></label>
+        <output id="vthOut" for="vth">15.0 mV</output>
+      </div>
+      <input type="range" id="vth" min="4" max="30" step="0.5" value="15">
+      <p class="hint">How far above rest the trip switch sits. This is the knob that moves the cliff.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="ref">Refractory period <span class="sr-only">in milliseconds</span></label>
+        <output id="refOut" for="ref">2.0 ms</output>
+      </div>
+      <input type="range" id="ref" min="0" max="10" step="0.1" value="2">
+      <p class="hint">Dead time held at reset after each spike. Sets the ceiling the rate can never pass.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="win">Window shown <span class="sr-only">in milliseconds</span></label>
+        <output id="winOut" for="win">120 ms</output>
+      </div>
+      <input type="range" id="win" min="40" max="400" step="10" value="120">
+      <p class="hint">How much recorded time the left pane shows. Display only &mdash; the neuron ignores it.</p>
+    </div>
+
+    <div class="actions">
+      <button type="button" id="rheo">Sit exactly on the rheobase</button>
+      <button type="button" id="reset">Reset to defaults</button>
+    </div>
+  </section>
+  </div>
+</div>
+
+<div class="wrap">
+<article class="prose" data-role="prose">
+  <p class="lead">The green trace on the left is a voltage, and it is doing the only thing a leaky
+  membrane can do: heading for wherever the injected current is pushing it, at a rate set by how leaky
+  it is. What makes it a neuron rather than a resistor is the dashed red line. The moment the voltage
+  touches it, the cell fires, the voltage is slammed back to rest, and the climb starts over. Everything
+  interesting about this page follows from one consequence of that arrangement: if the voltage is not
+  heading somewhere <em>above</em> the dashed line, it never arrives, and the cell is silent forever.</p>
+
+  <h2>A bucket with a trip switch</h2>
+
+  <p>Between spikes the membrane is a resistor and a capacitor in parallel, fed by a current. Measuring
+  voltage from the resting potential, that is one line of physics:</p>
+
+  <p class="math">&tau; dV/dt = &minus;V + IR&nbsp;&nbsp;&nbsp;with&nbsp;&nbsp; &tau; = RC</p>
+
+  <p>The voltage is always moving toward <em>IR</em>, closing whatever gap remains at a fractional rate
+  of one part in &tau; per millisecond. Starting from the reset value <em>V</em><sub>r</sub>, the solution
+  is an exponential approach that never overshoots its target:</p>
+
+  <p class="math">V(t) = IR + (V<sub>r</sub> &minus; IR)&nbsp;e<sup>&minus;t/&tau;</sup></p>
+
+  <p>Set that equal to the threshold <em>V</em><sub>th</sub> and solve for the time it takes, then add the
+  refractory dead time <em>t</em><sub>ref</sub> the cell spends pinned at reset after firing. The whole
+  behaviour of the neuron is in this one expression:</p>
+
+  <p class="math">ISI = t<sub>ref</sub> + &tau;&nbsp;ln[ (IR &minus; V<sub>r</sub>) / (IR &minus; V<sub>th</sub>) ]</p>
+
+  <p>At the settings this page opens with, <em>IR</em> is 20&nbsp;mV, threshold is 15&nbsp;mV above rest,
+  and &tau; is 10&nbsp;ms, so the climb takes 10&nbsp;ln&nbsp;4&nbsp;=&nbsp;13.86&nbsp;ms, the interval is
+  15.86&nbsp;ms, and the cell fires at 63&nbsp;Hz.</p>
+
+  <h2>The cliff is real, and it is not a discontinuity</h2>
+
+  <p>Look at the logarithm. Its argument blows up as <em>IR</em> falls toward <em>V</em><sub>th</sub>, and
+  at <em>IR</em>&nbsp;=&nbsp;<em>V</em><sub>th</sub> the neuron's target voltage is exactly the threshold,
+  which an exponential approaches but never reaches. Below that the target is under the line entirely. So
+  there is a current with a name &mdash; the <strong>rheobase</strong>,
+  <em>I</em><sub>rh</sub>&nbsp;=&nbsp;<em>V</em><sub>th</sub>/<em>R</em> &mdash; beneath which the output is
+  not merely slow but exactly zero, for any length of recording you care to make. Notice which knobs move
+  it: threshold and resistance do, the time constant does not. Making a cell slower changes how often it
+  fires, never whether it fires.</p>
+
+  <p>The tempting conclusion is that the firing rate jumps at the rheobase. It does not. As the current
+  approaches <em>I</em><sub>rh</sub> from above, the interval grows without bound and the rate slides
+  continuously to zero &mdash; but it does so logarithmically, which means every derivative of the rate
+  vanishes there too. The curve leaves the axis infinitely flatly. That is why on any real plot, and on the
+  right-hand pane here, the onset reads as a wall: the rate is genuinely continuous and genuinely
+  unmeasurable over the same stretch of current.</p>
+
+  <h2>The ceiling</h2>
+
+  <p>At the other end the refractory period takes over. However hard you drive the cell, the climb time can
+  only shrink toward zero, so the interval can only shrink toward <em>t</em><sub>ref</sub> and the rate is
+  capped at 1/<em>t</em><sub>ref</sub> &mdash; 500&nbsp;Hz at the default 2&nbsp;ms. Set the refractory
+  period to zero and the ceiling disappears: the rate then grows without limit, roughly linearly in current,
+  because for large <em>IR</em> the logarithm flattens to <em>V</em><sub>th</sub>/<em>IR</em>.</p>
+
+  <h2>What to try</h2>
+
+  <p>Start by dragging the current down from 2&nbsp;nA. The trace stays regular and simply slows, then
+  around 1.6&nbsp;nA it slows alarmingly, and at 1.50&nbsp;nA the spikes stop dead. Press the
+  rheobase button to land exactly on that edge and watch the voltage crawl up and stall a hair under
+  the line. Now, without touching the current, raise the resistance: more volts per nanoamp moves the
+  target back above threshold and the cell starts again. Finally set the refractory period to zero and
+  push the current to 4&nbsp;nA &mdash; the readout sails past 500&nbsp;Hz, which is the model honestly
+  telling you that a leaky integrator with no dead time is not a neuron.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ------------------------------------------------------------------ MODEL
+   Leaky integrate-and-fire. Voltage is measured from the resting potential,
+   so the leak pulls V toward 0 and the injected current pulls it toward IR.
+   Units: I in nA, R in megohms (so IR is in mV), tau and t_ref in ms.
+   Nothing in here touches the DOM; the selftest asserts against it alone. */
+const Model = {
+
+  /* V(t) starting from v0, between spikes: an exponential approach to IR. */
+  volt(t, I, R, tau, v0){
+    const IR = I * R;
+    return IR + (v0 - IR) * Math.exp(-t / tau);
+  },
+
+  /* the current at which IR exactly equals threshold; below it, silence.
+     Independent of the reset value and of tau -- only R and V_th move it.  */
+  rheobase(R, vth){ return vth / R; },
+
+  /* time in ms to climb from the reset value to threshold, by the closed
+     form. Infinite when the target voltage does not clear the threshold.   */
+  climb(I, R, tau, vth, vr){
+    const IR = I * R;
+    if (!(IR > vth)) return Infinity;
+    return tau * Math.log((IR - vr) / (IR - vth));
+  },
+
+  isi(I, R, tau, vth, vr, tref){
+    const T = this.climb(I, R, tau, vth, vr);
+    return Number.isFinite(T) ? tref + T : Infinity;
+  },
+
+  /* firing rate in Hz. Exactly zero below rheobase -- not small, zero.     */
+  rate(I, R, tau, vth, vr, tref){
+    const s = this.isi(I, R, tau, vth, vr, tref);
+    return Number.isFinite(s) ? 1000 / s : 0;
+  },
+
+  /* ---- three independent routes to the same climb time ---------------- */
+
+  /* (a) bisection on V(t) - V_th, which never sees the logarithm at all.  */
+  climbBisect(I, R, tau, vth, vr){
+    const IR = I * R;
+    if (!(IR > vth)) return Infinity;
+    const f = (t) => this.volt(t, I, R, tau, vr) - vth;
+    let lo = 0, hi = tau;
+    while (f(hi) < 0 && hi < tau * 1e4) hi *= 2;
+    if (f(hi) < 0) return Infinity;
+    for (let i = 0; i < 200; i++){
+      const mid = 0.5 * (lo + hi);
+      if (f(mid) < 0) lo = mid; else hi = mid;
+    }
+    return 0.5 * (lo + hi);
+  },
+
+  /* (b) forward Euler on the differential equation, with a linear
+         interpolation across the step that crosses threshold.             */
+  climbEuler(I, R, tau, vth, vr, dt){
+    const IR = I * R;
+    if (!(IR > vth)) return Infinity;
+    let v = vr, t = 0;
+    const cap = 1e5;
+    for (;;){
+      const vn = v + dt * (-v + IR) / tau;
+      if (!(vn > v)) return NaN;
+      if (vn >= vth) return t + dt * (vth - v) / (vn - v);
+      v = vn; t += dt;
+      if (t > cap) return NaN;
+    }
+  },
+
+  /* (c) classical RK4, used to check the subthreshold curve pointwise.    */
+  rk4(tEnd, I, R, tau, v0, n){
+    const IR = I * R, h = tEnd / n, f = (v) => (-v + IR) / tau;
+    let v = v0;
+    for (let i = 0; i < n; i++){
+      const k1 = f(v), k2 = f(v + 0.5 * h * k1),
+            k3 = f(v + 0.5 * h * k2), k4 = f(v + h * k3);
+      v += (h / 6) * (k1 + 2 * k2 + 2 * k3 + k4);
+    }
+    return v;
+  },
+
+  /* charge balance over one climb: every nanocoulomb injected either sits
+     on the capacitance or has leaked away through R. Simpson's rule on
+     the leak integral, so this checks the solution, not the algebra.      */
+  chargeResidual(I, R, tau, vth, vr, n){
+    const T = this.climb(I, R, tau, vth, vr);
+    if (!Number.isFinite(T)) return NaN;
+    const C = tau / R;                       /* nF, since ms / Mohm        */
+    let sum = 0;
+    const h = T / n;
+    for (let i = 0; i <= n; i++){
+      const w = (i === 0 || i === n) ? 1 : (i % 2 ? 4 : 2);
+      sum += w * this.volt(i * h, I, R, tau, vr);
+    }
+    const leak = (h / 3) * sum / R;          /* integral of V/R dt, in pC   */
+    return I * T - (C * (vth - vr) + leak);  /* should be zero             */
+  },
+
+  /* the f-I curve, sampled for drawing and for the monotonicity check.    */
+  curve(iMax, n, R, tau, vth, vr, tref){
+    const out = [];
+    for (let k = 0; k <= n; k++){
+      const I = iMax * k / n;
+      out.push({ I: I, f: this.rate(I, R, tau, vth, vr, tref) });
+    }
+    return out;
+  },
+
+  /* voltage at time t of the free-running cell, plus the spike times, for
+     a recording of the given length starting from reset at t = 0.         */
+  record(len, I, R, tau, vth, vr, tref, n){
+    const T = this.climb(I, R, tau, vth, vr);
+    const P = Number.isFinite(T) ? T + tref : Infinity;
+    const pts = [], spikes = [];
+    for (let k = 0; k <= n; k++){
+      const t = len * k / n;
+      let v;
+      if (!Number.isFinite(P)) v = this.volt(t, I, R, tau, vr);
+      else {
+        const ph = t - P * Math.floor(t / P);
+        v = ph < T ? this.volt(ph, I, R, tau, vr) : vr;
+      }
+      pts.push({ t: t, v: v });
+    }
+    if (Number.isFinite(P)) for (let ts = T; ts <= len; ts += P) spikes.push(ts);
+    return { pts: pts, spikes: spikes, T: T, P: P };
+  }
+};
+
+/* ------------------------------------------------------------- STATE + VIEW */
+const defaults = { cur: 2, res: 10, tau: 10, vth: 15, ref: 2, win: 120 };
+const VRESET = 0;                       /* reset sits at the resting potential */
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+const SS = 2;
+let W, H, NARROW, FT, FL, FS, PA, AXP, PANES = {};
+
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth;
+  W = Math.max(300, Math.min(1060, avail || 900));
+  NARROW = W < 720;
+  FT = NARROW ? 10 : 11;                 /* pane titles, mono, letterspaced   */
+  FL = NARROW ? 11 : 13;                 /* legends and axis titles           */
+  FS = NARROW ? 10 : 12;                 /* tick numbers                      */
+  PA = NARROW ? 12 : 20;
+  AXP = NARROW ? 7 : 12;                 /* left of the rotated axis title    */
+  H = Math.round(W * (NARROW ? 1.16 : 0.50));
+  if (NARROW){
+    const cut = Math.round(H * 0.575);
+    PANES.trace = { x: 0, y: 0, w: W, h: cut };
+    PANES.fi    = { x: 0, y: cut, w: W, h: H - cut };
+    PANES.split = "h";
+  } else {
+    const cut = Math.round(W * 0.605);
+    PANES.trace = { x: 0, y: 0, w: cut, h: H };
+    PANES.fi    = { x: cut, y: 0, w: W - cut, h: H };
+    PANES.split = "v";
+  }
+  cv.width = Math.round(W * SS); cv.height = Math.round(H * SS);
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function mono(size, weight){ return (weight || 400) + " " + size + "px " + (css("--font-mono") || "monospace"); }
+function body(size, weight){ return (weight || 400) + " " + size + "px " + (css("--font-body") || "serif"); }
+
+/* nice round tick values covering [lo, hi] */
+function ticks(lo, hi, want){
+  const raw = (hi - lo) / Math.max(1, want);
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const norm = raw / mag;
+  const step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10) * mag;
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step){
+    out.push(Math.abs(v) < step * 1e-9 ? 0 : v);
+  }
+  return { vals: out, step: step };
+}
+function fmt(v, step){
+  const d = step >= 1 ? 0 : step >= 0.1 ? 1 : 2;
+  return v.toFixed(d);
+}
+/* a text plate: draw the backing first so nothing behind can strike the words */
+function plate(x, y, w, h){
+  ctx.save();
+  ctx.globalAlpha = 0.92; ctx.fillStyle = css("--stage");
+  ctx.fillRect(x, y, w, h);
+  ctx.restore();
+}
+
+/* ------------------------------------------------------------ the two panes */
+function drawTrace(p, S){
+  const ink = css("--stage-ink"), grid = css("--grid"), rest = css("--rest");
+  const titleY = p.y + PA + FT;
+  const spkTop = titleY + (NARROW ? 8 : 12), spkH = NARROW ? 11 : 14;
+  const legH = FL + 8;
+  const plotT = spkTop + spkH + (NARROW ? 6 : 9);
+  const plotB = p.y + p.h - PA - legH - (FS + 6) - (FL + 4);
+  const tickRowY = plotB + FS + 5;
+  const axTitleY = tickRowY + FL + 2;
+  const legY = p.y + p.h - PA;
+
+  /* y range, always framed on the threshold rather than on the trace */
+  const vSpan = S.vth - Math.min(0, VRESET);
+  const vLo = Math.min(0, VRESET) - 0.12 * vSpan, vHi = S.vth + 0.24 * vSpan;
+  const ty = ticks(vLo, vHi, NARROW ? 4 : 5);
+  ctx.font = mono(FS);
+  let gut = 0;
+  for (const v of ty.vals) gut = Math.max(gut, ctx.measureText(fmt(v, ty.step)).width);
+  const axC = p.x + AXP + FL / 2;
+  const plotL = p.x + AXP + FL + 8 + gut + 6, plotR = p.x + p.w - PA - (NARROW ? 4 : 8);
+
+  const X = (t) => plotL + (plotR - plotL) * (t / S.win);
+  const Y = (v) => plotB - (plotB - plotT) * ((v - vLo) / (vHi - vLo));
+
+  /* title */
+  ctx.font = mono(FT, 600); ctx.fillStyle = rest; ctx.textAlign = "left";
+  try { ctx.letterSpacing = "1.4px"; } catch (e) {}
+  ctx.fillText("MEMBRANE VOLTAGE", p.x + PA, titleY);
+  try { ctx.letterSpacing = "0px"; } catch (e) {}
+
+  /* grid + ticks */
+  const tx = ticks(0, S.win, NARROW ? 3 : 6);
+  ctx.strokeStyle = grid; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (const v of ty.vals){ const y = Math.round(Y(v)) + 0.5; ctx.moveTo(plotL, y); ctx.lineTo(plotR, y); }
+  for (const t of tx.vals){ if (t < 0 || t > S.win) continue; const x = Math.round(X(t)) + 0.5; ctx.moveTo(x, plotT); ctx.lineTo(x, plotB); }
+  ctx.stroke();
+
+  ctx.font = mono(FS); ctx.fillStyle = rest;
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (const v of ty.vals) ctx.fillText(fmt(v, ty.step), plotL - 6, Y(v));
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  for (const t of tx.vals){ if (t < 0 || t > S.win) continue; ctx.fillText(fmt(t, tx.step), X(t), tickRowY + FS * 0.5); }
+  ctx.font = body(FL); ctx.fillText("time since reset (ms)", (plotL + plotR) / 2, axTitleY + FL * 0.5);
+  ctx.save();
+  ctx.translate(axC, (plotT + plotB) / 2); ctx.rotate(-Math.PI / 2);
+  ctx.font = body(FL); ctx.textBaseline = "middle"; ctx.fillText("mV above rest", 0, 0);
+  ctx.restore();
+
+  /* reset line, steady-state line, threshold line */
+  ctx.strokeStyle = rest; ctx.lineWidth = 1; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(plotL, Math.round(Y(VRESET)) + 0.5); ctx.lineTo(plotR, Math.round(Y(VRESET)) + 0.5); ctx.stroke();
+  const IR = S.cur * S.res;
+  const irShown = IR > vLo && IR < vHi;
+  if (irShown){
+    ctx.strokeStyle = css("--spike"); ctx.setLineDash([2, 4]);
+    ctx.beginPath(); ctx.moveTo(plotL, Math.round(Y(IR)) + 0.5); ctx.lineTo(plotR, Math.round(Y(IR)) + 0.5); ctx.stroke();
+  }
+  ctx.strokeStyle = css("--thresh"); ctx.lineWidth = 1.5; ctx.setLineDash([7, 5]);
+  ctx.beginPath(); ctx.moveTo(plotL, Math.round(Y(S.vth)) + 0.5); ctx.lineTo(plotR, Math.round(Y(S.vth)) + 0.5); ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* the trace */
+  const rec = Model.record(S.win, S.cur, S.res, S.tau, S.vth, VRESET, S.ref, 1400);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(plotL, plotT, plotR - plotL, plotB - plotT); ctx.clip();
+  ctx.strokeStyle = css("--trace"); ctx.lineWidth = NARROW ? 1.8 : 2.2;
+  ctx.lineJoin = "round"; ctx.beginPath();
+  let pen = false;
+  for (let i = 0; i < rec.pts.length; i++){
+    const q = rec.pts[i];
+    if (i > 0 && rec.pts[i - 1].v - q.v > (vHi - vLo) * 0.2){ pen = false; }  /* reset drop */
+    if (!pen){ ctx.moveTo(X(q.t), Y(q.v)); pen = true; } else ctx.lineTo(X(q.t), Y(q.v));
+  }
+  ctx.stroke();
+  /* the spike itself: a vertical stroke from threshold up out of the box */
+  ctx.strokeStyle = css("--spike"); ctx.lineWidth = NARROW ? 1.4 : 1.8;
+  ctx.beginPath();
+  for (const t of rec.spikes){ ctx.moveTo(X(t), Y(S.vth)); ctx.lineTo(X(t), plotT); }
+  ctx.stroke();
+  ctx.restore();
+
+  /* the reserved spike row above the plot, which nothing else may enter */
+  ctx.fillStyle = css("--spike");
+  for (const t of rec.spikes) ctx.fillRect(Math.round(X(t)) - 1, spkTop, 2.5, spkH);
+
+  if (!rec.spikes.length){
+    ctx.font = body(NARROW ? 12 : 15, 600); ctx.textAlign = "center";
+    const msg = "silent — IR settles at " + IR.toFixed(1) + " mV, under threshold";
+    const tw = ctx.measureText(msg).width;
+    const cx = (plotL + plotR) / 2, cy = plotT + (plotB - plotT) * 0.34;
+    plate(cx - tw / 2 - 9, cy - FL - 5, tw + 18, FL * 2 + 6);
+    ctx.fillStyle = css("--thresh"); ctx.fillText(msg, cx, cy + 4);
+  }
+
+  /* legend row: the only place line styles are named */
+  const legT = [["dash", css("--thresh"), "threshold"]];
+  if (irShown) legT.push(["dot", css("--spike"), "IR"]);
+  legT.push(["line", css("--trace"), "V(t)"]);
+  if (rec.spikes.length) legT.push(["bar", css("--spike"), "spike"]);
+  legend(p.x + PA, legY, legT, p.x + p.w - PA);
+}
+
+function legend(x0, y, items, xMax){
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.font = body(FL);
+  let x = x0;
+  for (const it of items){
+    const tw = ctx.measureText(it[2]).width;
+    if (x + 20 + tw > xMax) break;
+    ctx.strokeStyle = it[1]; ctx.fillStyle = it[1]; ctx.lineWidth = 2;
+    if (it[0] === "bar"){ ctx.fillRect(x, y - 5, 2.5, 10); }
+    else {
+      ctx.setLineDash(it[0] === "dash" ? [6, 4] : it[0] === "dot" ? [2, 3] : []);
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 15, y); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.fillStyle = css("--stage-ink");
+    ctx.fillText(it[2], x + 20, y);
+    x += 20 + tw + (NARROW ? 13 : 20);
+  }
+  ctx.textBaseline = "alphabetic";
+}
+
+function drawFI(p, S){
+  const grid = css("--grid"), rest = css("--rest");
+  const titleY = p.y + PA + FT;
+  const legH = FL + 8;
+  const plotT = titleY + (NARROW ? 12 : 18);
+  const plotB = p.y + p.h - PA - legH - (FS + 6) - (FL + 4);
+  const tickRowY = plotB + FS + 5;
+  const axTitleY = tickRowY + FL + 2;
+  const legY = p.y + p.h - PA;
+
+  const rheo = Model.rheobase(S.res, S.vth);
+  const iMax = Math.max(4.4, rheo * 1.35);
+  const pts = Model.curve(iMax, 620, S.res, S.tau, S.vth, VRESET, S.ref);
+  let fMax = 0; for (const q of pts) fMax = Math.max(fMax, q.f);
+  fMax = Math.max(10, fMax * 1.12);
+
+  const fy = ticks(0, fMax, NARROW ? 3 : 5);
+  ctx.font = mono(FS);
+  let gut = 0;
+  for (const v of fy.vals) gut = Math.max(gut, ctx.measureText(fmt(v, fy.step)).width);
+  const axC = p.x + AXP + FL / 2;
+  const plotL = p.x + AXP + FL + 8 + gut + 6, plotR = p.x + p.w - PA - (NARROW ? 4 : 8);
+  const X = (i) => plotL + (plotR - plotL) * (i / iMax);
+  const Y = (f) => plotB - (plotB - plotT) * (f / fMax);
+
+  ctx.font = mono(FT, 600); ctx.fillStyle = rest; ctx.textAlign = "left";
+  try { ctx.letterSpacing = "1.4px"; } catch (e) {}
+  ctx.fillText("RATE vs CURRENT", p.x + PA, titleY);
+  try { ctx.letterSpacing = "0px"; } catch (e) {}
+
+  const tx = ticks(0, iMax, NARROW ? 3 : 4);
+  ctx.strokeStyle = grid; ctx.lineWidth = 1; ctx.beginPath();
+  for (const v of fy.vals){ const y = Math.round(Y(v)) + 0.5; ctx.moveTo(plotL, y); ctx.lineTo(plotR, y); }
+  for (const v of tx.vals){ if (v < 0 || v > iMax) continue; const x = Math.round(X(v)) + 0.5; ctx.moveTo(x, plotT); ctx.lineTo(x, plotB); }
+  ctx.stroke();
+
+  ctx.font = mono(FS); ctx.fillStyle = rest;
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (const v of fy.vals) ctx.fillText(fmt(v, fy.step), plotL - 6, Y(v));
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  for (const v of tx.vals){ if (v < 0 || v > iMax) continue; ctx.fillText(fmt(v, tx.step), X(v), tickRowY + FS * 0.5); }
+  ctx.font = body(FL); ctx.fillText("input current (nA)", (plotL + plotR) / 2, axTitleY + FL * 0.5);
+  ctx.save();
+  ctx.translate(axC, (plotT + plotB) / 2); ctx.rotate(-Math.PI / 2);
+  ctx.textBaseline = "middle"; ctx.fillText("firing rate (Hz)", 0, 0);
+  ctx.restore();
+
+  /* the ceiling the refractory period imposes */
+  let ceilShown = false;
+  if (S.ref > 0){
+    const ceil = 1000 / S.ref;
+    if (ceil <= fMax){
+      ceilShown = true;
+      ctx.strokeStyle = css("--spike"); ctx.setLineDash([2, 3]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(plotL, Math.round(Y(ceil)) + 0.5); ctx.lineTo(plotR, Math.round(Y(ceil)) + 0.5);
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+  }
+
+  /* the rheobase wall */
+  const xr = X(Math.min(rheo, iMax));
+  ctx.strokeStyle = css("--thresh"); ctx.lineWidth = 1.5; ctx.setLineDash([7, 5]);
+  ctx.beginPath(); ctx.moveTo(Math.round(xr) + 0.5, plotT); ctx.lineTo(Math.round(xr) + 0.5, plotB); ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* the curve */
+  ctx.strokeStyle = css("--trace"); ctx.lineWidth = NARROW ? 1.8 : 2.2; ctx.lineJoin = "round";
+  ctx.save(); ctx.beginPath(); ctx.rect(plotL, plotT, plotR - plotL, plotB - plotT); ctx.clip();
+  ctx.beginPath();
+  for (let i = 0; i < pts.length; i++){
+    const q = pts[i];
+    if (i === 0) ctx.moveTo(X(q.I), Y(q.f)); else ctx.lineTo(X(q.I), Y(q.f));
+  }
+  ctx.stroke();
+
+  /* the operating point */
+  const f0 = Model.rate(S.cur, S.res, S.tau, S.vth, VRESET, S.ref);
+  const ox = X(Math.min(S.cur, iMax)), oy = Y(Math.min(f0, fMax));
+  ctx.strokeStyle = css("--stage-ink"); ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(plotL, oy); ctx.lineTo(ox, oy); ctx.moveTo(ox, plotB); ctx.lineTo(ox, oy); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+  ctx.fillStyle = f0 > 0 ? css("--trace") : css("--thresh");
+  ctx.beginPath(); ctx.arc(ox, oy, NARROW ? 4 : 5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = css("--stage"); ctx.lineWidth = 2; ctx.stroke();
+
+  /* the rheobase label lives in the region the model guarantees is empty:
+     to the left of the wall the rate is exactly zero, so nothing is drawn
+     there. Where that strip is too thin, the label crosses to the right on
+     a plate instead.                                                       */
+  const lab = "rheobase " + rheo.toFixed(2) + " nA";
+  ctx.font = body(NARROW ? 11 : 12);
+  const lw = ctx.measureText(lab).width;
+  const need = FL + 6;
+  ctx.save();
+  const side = (xr - plotL >= need + 6) ? -1 : 1;
+  ctx.translate(xr + side * 9 + (side > 0 ? need : 0),
+                plotT + 8 + Math.min(lw, plotB - plotT - 16));
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = "left";
+  /* the operating-point crosshair can cross this strip at any height, so the
+     label always rides on its own plate rather than trusting an empty region */
+  plate(-5, -FL - 2, lw + 10, FL + 5);
+  ctx.fillStyle = css("--thresh"); ctx.fillText(lab, 0, 0);
+  ctx.restore();
+
+  const items = [["line", css("--trace"), "rate"], ["dash", css("--thresh"), "rheobase"]];
+  if (ceilShown) items.push(["dot", css("--spike"), "1/t_ref"]);
+  legend(p.x + PA, legY, items, p.x + p.w - PA);
+}
+
+/* ------------------------------------------------------------------ render */
+function render(){
+  fitCanvas();
+  const S = state;
+  ctx.fillStyle = css("--stage"); ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "alphabetic";
+
+  drawTrace(PANES.trace, S);
+  drawFI(PANES.fi, S);
+
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1; ctx.beginPath();
+  if (PANES.split === "v"){ const x = PANES.fi.x + 0.5; ctx.moveTo(x, PA); ctx.lineTo(x, H - PA); }
+  else { const y = PANES.fi.y + 0.5; ctx.moveTo(PA, y); ctx.lineTo(W - PA, y); }
+  ctx.stroke();
+
+  const rate = Model.rate(S.cur, S.res, S.tau, S.vth, VRESET, S.ref);
+  const isi  = Model.isi(S.cur, S.res, S.tau, S.vth, VRESET, S.ref);
+  const rheo = Model.rheobase(S.res, S.vth);
+
+  el("curOut").textContent = S.cur.toFixed(2) + " nA";
+  el("resOut").textContent = S.res.toFixed(1) + " MΩ";
+  el("tauOut").textContent = S.tau.toFixed(1) + " ms";
+  el("vthOut").textContent = S.vth.toFixed(1) + " mV";
+  el("refOut").textContent = S.ref.toFixed(1) + " ms";
+  el("winOut").textContent = S.win.toFixed(0) + " ms";
+
+  const rr = el("rRate"), ri = el("rIsi");
+  rr.textContent = rate > 0 ? rate.toFixed(1) + " Hz" : "0 Hz — silent";
+  rr.className = rate > 0 ? "" : "silent";
+  ri.textContent = Number.isFinite(isi) ? isi.toFixed(2) + " ms" : "never";
+  ri.className = Number.isFinite(isi) ? "" : "silent";
+  el("rSs").textContent = (S.cur * S.res).toFixed(1) + " mV";
+  el("rRheo").textContent = rheo.toFixed(2) + " nA";
+}
+
+/* ---------------------------------------------------------------- bindings */
+function bind(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parse(input.value); render(); });
+}
+bind("cur", "cur", parseFloat);
+bind("res", "res", parseFloat);
+bind("tau", "tau", parseFloat);
+bind("vth", "vth", parseFloat);
+bind("ref", "ref", parseFloat);
+bind("win", "win", parseFloat);
+
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  for (const k of ["cur", "res", "tau", "vth", "ref", "win"]) el(k).value = String(defaults[k]);
+  render();
+});
+el("rheo").addEventListener("click", () => {
+  const r = Model.rheobase(state.res, state.vth);
+  state.cur = Math.min(4, Math.round(r * 100) / 100);
+  el("cur").value = String(state.cur);
+  render();
+});
+
+let raf = 0;
+addEventListener("resize", () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(render); });
+const mq = matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+render();
+
+/* -------------------------------------------------------------- SELFTEST
+   Thirteen numeric checks. Every one compares the model against something
+   established independently of the closed form it is testing: a bisection
+   that never sees the logarithm, forward Euler, classical RK4, Simpson's
+   rule on the charge balance, and two parameter choices whose answers are
+   exactly tau and exactly tau ln 2.                                       */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const VR = VRESET;
+
+  /* 1. the page's own opening state, against hand arithmetic */
+  const isi0 = Model.isi(2, 10, 10, 15, VR, 2);
+  push("default interval is 2 + 10 ln 4 ms",
+    near(isi0, 2 + 10 * Math.log(4), 1e-12),
+    "got " + isi0.toFixed(12) + " ms, rate " + Model.rate(2, 10, 10, 15, VR, 2).toFixed(6) + " Hz");
+
+  /* 2. bisection on V(t) - V_th, which never evaluates the logarithm */
+  let d2 = 0;
+  for (let k = 0; k < 60; k++){
+    const I = 1.55 + k * 0.04;
+    d2 = Math.max(d2, Math.abs(Model.climb(I, 10, 10, 15, VR) - Model.climbBisect(I, 10, 10, 15, VR)));
+  }
+  push("closed form matches bisection at 60 currents", d2 <= 1e-10,
+    "worst absolute difference " + d2.toExponential(2) + " ms, tolerance 1e-10");
+
+  /* 3. below rheobase the answer is not small, it is exactly zero */
+  let allZero = true, n3 = 200;
+  for (let k = 0; k < n3; k++){
+    const I = 1.5 * k / (n3 - 1);
+    if (Model.rate(I, 10, 10, 15, VR, 2) !== 0 || Number.isFinite(Model.isi(I, 10, 10, 15, VR, 2))) allZero = false;
+  }
+  push("exactly zero rate at 200 currents up to and including rheobase", allZero,
+    "rate at I = 1.5 nA exactly: " + Model.rate(1.5, 10, 10, 15, VR, 2));
+
+  /* 4. the subthreshold curve against classical RK4 */
+  let d4 = 0;
+  for (let tt = 0.5; tt <= 30.0001; tt += 0.5){
+    d4 = Math.max(d4, Math.abs(Model.volt(tt, 1.2, 10, 10, VR) - Model.rk4(tt, 1.2, 10, 10, VR, 4000)));
+  }
+  push("charging curve matches RK4 at 60 times", d4 <= 1e-11,
+    "worst absolute difference " + d4.toExponential(2) + " mV, tolerance 1e-11");
+
+  /* 5. forward Euler at 1e-4 ms, the crossing interpolated across the step */
+  let d5 = 0, w5 = "";
+  const cases5 = [[2, 10, 10, 15], [1.6, 10, 40, 15], [3.2, 10, 5, 30], [4, 20, 4, 4]];
+  for (const c of cases5){
+    const a = Model.climb(c[0], c[1], c[2], c[3], VR);
+    const b = Model.climbEuler(c[0], c[1], c[2], c[3], VR, 1e-4);
+    const r = Math.abs(a - b) / a;
+    if (r > d5){ d5 = r; w5 = c.join("/"); }
+  }
+  push("Euler integration reproduces the interval to 0.1 percent", d5 <= 1e-3,
+    "worst relative error " + d5.toExponential(2) + " at I/R/tau/Vth = " + w5);
+
+  /* 6. charge balance: injected charge = stored + leaked, Simpson on the leak */
+  let d6 = 0;
+  for (const c of [[2, 10, 10, 15], [1.6, 10, 40, 15], [3.2, 10, 5, 30], [1.51, 10, 20, 15], [0.5, 20, 12, 8]]){
+    const T = Model.climb(c[0], c[1], c[2], c[3], VR);
+    if (!Number.isFinite(T)) continue;
+    d6 = Math.max(d6, Math.abs(Model.chargeResidual(c[0], c[1], c[2], c[3], VR, 2000)) / (c[0] * T));
+  }
+  push("charge injected equals charge stored plus charge leaked", d6 <= 1e-10,
+    "worst relative residual " + d6.toExponential(2) + " over 5 parameter sets");
+
+  /* 7. an exactly computable case: threshold at IR(1 - 1/e) gives T = tau */
+  const vthE = 20 * (1 - 1 / Math.E);
+  push("threshold at IR(1 - 1/e) gives a climb time of exactly tau",
+    near(Model.climb(2, 10, 10, vthE, VR), 10, 1e-12),
+    "got " + Model.climb(2, 10, 10, vthE, VR).toFixed(12) + " ms for tau = 10 ms");
+
+  /* 8. a second exact case: threshold at half of IR gives T = tau ln 2 */
+  push("threshold at IR/2 gives a climb time of exactly tau ln 2",
+    near(Model.climb(2, 10, 10, 10, VR), 10 * Math.LN2, 1e-12),
+    "got " + Model.climb(2, 10, 10, 10, VR).toFixed(12) + " ms, tau ln 2 = " + (10 * Math.LN2).toFixed(12));
+
+  /* 9. rate rises with current everywhere, and never passes 1/t_ref */
+  let mono = true, bound = true, prev = -1;
+  for (let k = 0; k <= 600; k++){
+    const f = Model.rate(k * 10 / 600, 10, 10, 15, VR, 2);
+    if (f < prev) mono = false;
+    if (f > 500) bound = false;
+    prev = f;
+  }
+  push("rate is monotone in current and capped by 1/t_ref", mono && bound,
+    "600 samples to 10 nA; ceiling 1000/2 ms = 500 Hz, highest sample " + prev.toFixed(3) + " Hz");
+
+  /* 10. the rheobase formula, checked by where the rate actually turns on */
+  const rh = Model.rheobase(10, 15);
+  const justAbove = Model.rate(rh * (1 + 1e-6), 10, 10, 15, VR, 2);
+  push("rate is zero at the rheobase and positive a millionth above it",
+    rh === 1.5 && Model.rate(rh, 10, 10, 15, VR, 2) === 0 && justAbove > 0,
+    "rheobase V_th/R = " + rh + " nA; rate just above = " + justAbove.toFixed(4) + " Hz");
+
+  /* 11. with no refractory period the rate is exactly inverse in tau */
+  const a11 = Model.rate(2, 10, 10, 15, VR, 0), b11 = Model.rate(2, 10, 20, 15, VR, 0);
+  push("doubling tau exactly halves the rate when t_ref is zero",
+    near(b11, a11 / 2, 1e-12), "tau 10 ms: " + a11.toFixed(9) + " Hz, tau 20 ms: " + b11.toFixed(9) + " Hz");
+
+  /* 12. the large-current limit: T tends to tau (V_th - V_r)/IR */
+  const I12 = 400, T12 = Model.climb(I12, 10, 10, 15, VR);
+  push("climb time approaches tau(V_th - V_r)/IR at large current",
+    Math.abs(T12 / (10 * 15 / (I12 * 10)) - 1) < 2e-3,
+    "at 400 nA: exact " + T12.toFixed(9) + " ms, asymptote " + (10 * 15 / (I12 * 10)).toFixed(9) + " ms");
+
+  /* 13. nothing in the control ranges produces a non-finite readout */
+  let finite = true;
+  for (let I = 0; I <= 4.0001; I += 0.25)
+    for (let R = 4; R <= 20.0001; R += 4)
+      for (const tau of [4, 12, 24, 40])
+        for (const vth of [4, 10, 18, 30])
+          for (const tref of [0, 2, 6, 10]){
+            const f = Model.rate(I, R, tau, vth, VR, tref);
+            const s = Model.isi(I, R, tau, vth, VR, tref);
+            if (!Number.isFinite(f) || f < 0) finite = false;
+            if (!(Number.isFinite(s) || s === Infinity)) finite = false;
+            if (tref > 0 && f > 1000 / tref + 1e-9) finite = false;
+          }
+  push("every readout is finite over the whole control space", finite,
+    "17 x 5 x 4 x 4 x 4 = 5440 parameter combinations swept");
+
+  return t;
+};
+
+/* exposed for the verifier's control sweep */
+window.__ATLAS = { state: state, render: render, Model: Model, seed: 20260101 };
+
+})();
+</script>
+
+</body>
+</html>
