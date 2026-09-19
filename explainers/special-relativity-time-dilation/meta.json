@@ -1,0 +1,19 @@
+{
+  "slug": "special-relativity-time-dilation",
+  "title": "The Longer Way Round",
+  "domain": "physics",
+  "difficulty": 3,
+  "summary": "Put a light clock at rest beside the same clock in motion, drag the photon along both paths, and read the Lorentz factor straight off the triangle.",
+  "prerequisites": [],
+  "tags": [
+    "relativity",
+    "lorentz-factor",
+    "light-clock",
+    "muon",
+    "spacetime"
+  ],
+  "interaction_pattern": "compare-side-by-side",
+  "sources": [],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}

@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Longer Way Round — Explainer Atlas</title>
+<meta name="description" content="A moving clock ticks slow because its light has further to go. Put the two clocks side by side and the factor is just Pythagoras.">
+<style>
+:root{
+  --bg:#f6f4fa; --panel:#ffffff; --ink:#17141f; --muted:#5f596e; --line:#ddd7e8;
+  --void:#141024; --rest:#2f7f9e; --moving:#c2681c; --photon:#2fd4d4;
+  --accent:#5b3fa8; --accent-soft:#ece7f7; --rule:#cdc4e0;
+  --radius:14px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Optima","Segoe UI",system-ui,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --font-display:Georgia,"Times New Roman",serif;
+  --scale-h1:clamp(1.8rem,1.1rem + 3.1vw,3rem);
+  --scale-body:clamp(1rem,0.96rem + 0.24vw,1.1rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0d0b14; --panel:#16131f; --ink:#e9e5f2; --muted:#9c94ae; --line:#272134;
+    --void:#08060f; --rest:#5fb7d6; --moving:#e89a4c; --photon:#4ff0f0;
+    --accent:#a48ce0; --accent-soft:#1c1630; --rule:#38304c;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.68 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{text-align:center; padding-bottom:var(--pad); max-width:40em; margin:0 auto}
+.kicker{margin:0 0 .5em; color:var(--accent); font:700 .7rem/1 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.3em}
+h1{font:400 var(--scale-h1)/1.06 var(--font-display); margin:0 0 .35em; letter-spacing:-.018em}
+.standfirst{margin:0 auto; color:var(--muted); max-width:34em; font-size:1.06em; font-style:italic}
+figure.stage{margin:var(--pad) 0 0; background:var(--void); border:1px solid var(--line);
+  border-radius:var(--radius); padding:0; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin:.75em 0 0; color:var(--muted); font-size:.85rem; text-align:center; max-width:42em;
+  margin-left:auto; margin-right:auto}
+/* controls in a three-column bar beneath the stage */
+.bar{margin-top:16px; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.3em; grid-template-columns:1fr}
+@media (min-width:52rem){ .bar{grid-template-columns:1.2fr 1fr 1fr; gap:1.8em; align-items:start} }
+.control{display:grid; gap:.34em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control label{font:600 .95rem/1.2 var(--font-body); letter-spacing:.01em}
+output{font:600 .92rem/1 var(--font-mono); color:var(--accent);
+  background:var(--accent-soft); padding:.3em .55em; border-radius:6px}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:28px}
+select,button{font:inherit; font-size:.95rem; color:inherit; background:var(--bg);
+  border:1px solid var(--line); border-radius:8px; padding:.6em .75em; min-height:42px; width:100%}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+.hint{margin:0; color:var(--muted); font-size:.82rem}
+:where(a,button,input,select):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr)); gap:.6em; margin:14px 0 0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:.65em .8em}
+.readout dt{margin:0; color:var(--muted); font:.71rem/1.3 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.13em}
+.readout dd{margin:.22em 0 0; font:400 1.35rem/1.15 var(--font-mono)}
+.prose{max-width:37em; margin:calc(var(--pad)*1.7) auto 0}
+.prose h2{font:400 1.32rem/1.3 var(--font-display); margin:2em 0 .45em; color:var(--accent);
+  letter-spacing:-.012em; text-align:center}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.86em; background:var(--accent-soft);
+  padding:.85em .95em; border-radius:10px; border:1px solid var(--rule); overflow-x:auto;
+  white-space:pre; line-height:1.75; margin:0 0 1.05em; text-align:center}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); text-align:center;
+  border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Physics</p>
+  <h1>The Longer Way Round</h1>
+  <p class="standfirst">Two identical clocks, one of them moving. The moving one ticks slower — not
+    because anything is wrong with it, but because its light has further to travel and light
+    refuses to hurry.</p>
+</header>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="920" height="560" role="img"
+    aria-label="Two light clocks side by side. On the left a stationary clock, with a photon bouncing straight up and down between two mirrors. On the right the same clock in motion, with the photon tracing a longer zigzag diagonal path. Below both, a pair of rulers compares the elapsed time each clock has accumulated."></canvas>
+  <figcaption>Both photons travel at the same speed. The one on the right covers more ground per
+    bounce, so fewer bounces fit into the same span of time — and a bounce is what the clock counts.</figcaption>
+</figure>
+
+<section class="bar" data-role="controls" aria-label="Clock controls">
+  <div class="control">
+    <div class="row">
+      <label for="beta">Speed, as a fraction of c</label>
+      <output id="betaout" for="beta">0.866</output>
+    </div>
+    <input type="range" id="beta" min="0" max="0.999" step="0.001" value="0.866">
+    <p class="hint">0.866 is the square root of three over two, rounded. The exact value puts γ at precisely 2; three decimal places gets you 1.9998.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="phase">Photon along its path</label>
+      <output id="phaseout" for="phase">0.00</output>
+    </div>
+    <input type="range" id="phase" min="0" max="1" step="0.005" value="0">
+    <p class="hint">Move the photon and watch the two path lengths diverge.</p>
+  </div>
+
+  <div class="control">
+    <label for="scene">Compare against</label>
+    <select id="scene">
+      <option value="clock" selected>An abstract light clock</option>
+      <option value="muon">A muon falling through the atmosphere</option>
+      <option value="walk">Someone walking at 1.4 m/s</option>
+      <option value="jet">A passenger jet at 250 m/s</option>
+    </select>
+    <p class="hint" id="scenehint">Sets the speed and the units used in the readouts.</p>
+    <button type="button" id="reset">Reset</button>
+  </div>
+</section>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Lorentz factor γ</dt><dd id="r1">—</dd></div>
+  <div><dt>Moving clock reads</dt><dd id="r2">—</dd></div>
+  <div><dt>Path length ratio</dt><dd id="r3">—</dd></div>
+  <div><dt>Slowing</dt><dd id="r4">—</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>Build a clock out of nothing but two mirrors and one photon. The photon bounces up, bounces
+    down, and each round trip is one tick. It is a terrible clock to own but a perfect one to think
+    with, because its rate depends on exactly one thing: how far the light has to go.</p>
+
+  <h2>Pythagoras does the whole job</h2>
+
+  <p>Stand still and the photon goes straight up and straight back — a round trip of 2L, taking
+    2L/c. Now watch the same clock slide past you at speed v. In the time the photon takes to reach
+    the top mirror, the mirror has moved sideways. The photon does not get to travel straight up
+    any more; it has to travel along the hypotenuse of a triangle whose base is how far the clock
+    moved.</p>
+
+  <p class="math">(c t)² = L² + (v t)²</p>
+
+  <p>Solve for t and you have it:</p>
+
+  <p class="math">t = L / √(c² − v²)  =  (L/c) · 1/√(1 − v²/c²)</p>
+
+  <p>That last factor is γ, and nothing in the derivation is deeper than a right-angled triangle.
+    The only physics is the assumption you never questioned: that c in the moving case is the same
+    c as in the stationary one. Drag the photon slider and the two triangles draw themselves.</p>
+
+  <h2>Why you have never noticed</h2>
+
+  <p>Pick <em>someone walking</em> from the menu. γ comes out as 1.000000000000 with the difference
+    hiding around the twentieth decimal place. A passenger jet does no better. This is not because
+    the effect is approximate at low speed — it is exact at every speed — but because γ − 1 grows
+    like v²/2c², and c² is nine times ten to the sixteenth. You would have to hold a stopwatch for
+    longer than the age of the universe to see a jet's clock drift by a second.</p>
+
+  <p>Then push the slider toward 1 and watch the curve go vertical. At 0.87c the moving clock runs
+    at half speed; at 0.99c it is down to a seventh; at 0.999c a twenty-second. The blow-up is why
+    nothing with mass reaches c, and why the last few percent of the slider costs more than the
+    first ninety.</p>
+
+  <h2>The muon that should not arrive</h2>
+
+  <p>Choose the muon. Cosmic rays hitting the upper atmosphere produce muons about fifteen
+    kilometres up, and a muon at rest decays with a half-life of 2.197 microseconds. Travelling at
+    0.98c it should manage 645 metres before decaying — nowhere near the ground. Detectors at sea
+    level find them anyway, in large numbers.</p>
+
+  <p>The resolution is that 2.197 microseconds is the muon's own time. In our frame its clock is
+    dilated by γ = 5.03, giving it 11.04 microseconds of our time and 3.24 kilometres of travel.
+    From the muon's point of view nothing is dilated at all and it lives its usual 2.197
+    microseconds — but the fifteen kilometres of atmosphere is length-contracted by the same factor,
+    so it has less distance to cross. The two descriptions are the same physics in different
+    coordinates, and they agree on the only thing that is not a matter of perspective: whether the
+    muon arrives.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set the speed to 0.6 and read γ: exactly 1.25. Then 0.8, and read exactly 5/3. Those are not
+    coincidences — 3-4-5 and 6-8-10 are Pythagorean triples, and the light-clock triangle is the
+    same triangle. It is the cleanest hint that the factor is geometry rather than mechanics. The
+    slider cannot land on √3/2 exactly, which is why 0.866 stops just short of 2 while 0.6 and 0.8
+    land dead on.</p>
+
+  <p>Finally, park the photon slider halfway and sweep the speed. The vertical path on the left
+    never changes length; the diagonal on the right stretches without limit. The ratio of those two
+    lengths is γ, measured with a ruler rather than computed with a formula — and the readout shows
+    the two agreeing to the last digit.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL ------------------------------------------------------------- */
+/* Speeds are held as beta = v/c so nothing depends on a choice of units.    */
+const Model = {
+  C: 299792458,
+  MUON_LIFETIME: 2.197e-6,        /* seconds, in the muon's own frame */
+
+  gamma(beta){ return 1 / Math.sqrt(1 - beta * beta); },
+
+  /* gamma - 1, without the catastrophic cancellation that the naive
+     subtraction suffers below about beta = 1e-4. Algebraically identical:
+     (1 - s)/s with s = sqrt(1 - beta^2), rationalised to beta^2/(s(1+s)).  */
+  gammaMinusOne(beta){
+    const s = Math.sqrt(1 - beta * beta);
+    return beta * beta / (s * (1 + s));
+  },
+
+  /* The same factor read off the light-clock triangle instead of the
+     formula: solve (c t)^2 = L^2 + (v t)^2 for the one-way flight time and
+     compare it to the stationary L/c. Uses only Pythagoras.                */
+  gammaFromGeometry(beta, L){
+    const c = 1, v = beta;                       /* work in units of c */
+    /* t satisfies (c t)^2 - (v t)^2 = L^2, found by bisection so that the
+       geometry, not the algebra, is what is being tested.                  */
+    let lo = 0, hi = 1e6;
+    for (let i = 0; i < 200; i++){
+      const t = (lo + hi) / 2;
+      const lhs = (c * t) * (c * t) - (v * t) * (v * t);
+      if (lhs < L * L) lo = t; else hi = t;
+    }
+    const t = (lo + hi) / 2;
+    return t / (L / c);
+  },
+
+  /* Path lengths per one-way leg, in units of the mirror separation L. */
+  paths(beta, L){
+    const t = L * this.gamma(beta);              /* flight time, units of L/c */
+    return { still: L, moving: t, base: beta * t };
+  },
+
+  /* Relativistic velocity addition, in units of c. */
+  addVelocities(u, v){ return (u + v) / (1 + u * v); },
+
+  /* Lorentz boost of an event (t, x), with t and x in the same units. */
+  boost(t, x, beta){
+    const g = this.gamma(beta);
+    return { t: g * (t - beta * x), x: g * (x - beta * t) };
+  },
+  interval(t, x){ return t * t - x * x; },
+
+  /* Muon: proper lifetime, dilated lifetime, and distance covered. */
+  muon(beta){
+    const g = this.gamma(beta);
+    return {
+      proper: this.MUON_LIFETIME,
+      dilated: this.MUON_LIFETIME * g,
+      classicalRange: beta * this.C * this.MUON_LIFETIME,
+      range: beta * this.C * this.MUON_LIFETIME * g,
+      gamma: g
+    };
+  },
+
+  betaFor(speed){ return speed / this.C; }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------ */
+const SCENES = {
+  clock: { beta: 0.866, label: "abstract light clock", note: "Sets the speed and the units used in the readouts." },
+  muon:  { beta: 0.98,  label: "muon at 0.98c",       note: "Produced 15 km up, half-life 2.197 microseconds at rest." },
+  walk:  { beta: 1.4 / Model.C,   label: "walking pace", note: "1.4 metres per second. The effect is real and utterly invisible." },
+  jet:   { beta: 250 / Model.C,   label: "passenger jet", note: "250 metres per second, about 900 km/h." }
+};
+const defaults = { beta: 0.866, phase: 0, scene: "clock" };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const W = cv.width, H = cv.height;
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function panel(x0, w, title, colour){
+  ctx.strokeStyle = colour; ctx.globalAlpha = 0.35; ctx.lineWidth = 1;
+  ctx.strokeRect(x0, 40, w, 330);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = colour; ctx.font = "600 17px ui-monospace, monospace";
+  ctx.textAlign = "center";
+  ctx.fillText(title, x0 + w / 2, 28);
+}
+
+function render(){
+  const beta = state.beta, ph = state.phase;
+  const g = Model.gamma(beta);
+  const rest = css("--rest"), moving = css("--moving"), photon = css("--photon");
+  const muted = css("--muted"), rule = css("--rule");
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--void"); ctx.fillRect(0, 0, W, H);
+
+  const MIRROR = 210;                 /* mirror separation on screen, pixels */
+  const TOP = 90, BOT = TOP + MIRROR;
+
+  /* ---- left panel: the clock at rest ---- */
+  panel(40, 340, "AT REST", rest);
+  const lx = 210;
+  ctx.strokeStyle = rest; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(lx - 62, TOP); ctx.lineTo(lx + 62, TOP); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(lx - 62, BOT); ctx.lineTo(lx + 62, BOT); ctx.stroke();
+  ctx.strokeStyle = photon; ctx.lineWidth = 2; ctx.globalAlpha = 0.5;
+  ctx.beginPath(); ctx.moveTo(lx, BOT); ctx.lineTo(lx, TOP); ctx.stroke();
+  ctx.globalAlpha = 1;
+  const ly = BOT - MIRROR * ph;
+  ctx.fillStyle = photon;
+  ctx.beginPath(); ctx.arc(lx, ly, 7, 0, Math.PI * 2); ctx.fill();
+
+  /* ---- right panel: the same clock, moving ---- */
+  panel(420, 460, "MOVING", moving);
+  /* the diagonal, drawn to the same vertical scale, base = beta * gamma * L */
+  const baseFull = Math.min(360, MIRROR * beta * g);
+  const rx0 = 470;
+  ctx.strokeStyle = moving; ctx.lineWidth = 5; ctx.globalAlpha = 0.3;
+  ctx.beginPath(); ctx.moveTo(rx0 - 50, BOT); ctx.lineTo(rx0 + 50, BOT); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(rx0 - 50, TOP); ctx.lineTo(rx0 + 50, TOP); ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.beginPath(); ctx.moveTo(rx0 + baseFull - 50, TOP); ctx.lineTo(rx0 + baseFull + 50, TOP); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(rx0 + baseFull - 50, BOT); ctx.lineTo(rx0 + baseFull + 50, BOT); ctx.stroke();
+
+  /* the triangle */
+  ctx.strokeStyle = photon; ctx.lineWidth = 2; ctx.globalAlpha = 0.5;
+  ctx.beginPath(); ctx.moveTo(rx0, BOT); ctx.lineTo(rx0 + baseFull, TOP); ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = rule; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(rx0, BOT); ctx.lineTo(rx0 + baseFull, BOT); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(rx0 + baseFull, BOT); ctx.lineTo(rx0 + baseFull, TOP); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = photon;
+  ctx.beginPath(); ctx.arc(rx0 + baseFull * ph, BOT - MIRROR * ph, 7, 0, Math.PI * 2); ctx.fill();
+
+  /* triangle side labels */
+  ctx.font = "13px ui-monospace, monospace"; ctx.fillStyle = muted; ctx.textAlign = "center";
+  ctx.fillText("v t", rx0 + baseFull / 2, BOT + 22);
+  ctx.save(); ctx.translate(rx0 + baseFull + 20, (TOP + BOT) / 2); ctx.rotate(Math.PI / 2);
+  ctx.fillText("L", 0, 0); ctx.restore();
+  ctx.fillStyle = photon;
+  ctx.fillText("c t", rx0 + baseFull / 2 - 26, (TOP + BOT) / 2 - 10);
+  ctx.fillStyle = muted; ctx.textAlign = "center";
+  ctx.fillText("L", lx - 20, (TOP + BOT) / 2);
+
+  /* ---- the comparison rulers ---- */
+  const RY = 430, RX = 70, RW = W - 2 * RX;
+  ctx.fillStyle = muted; ctx.font = "13px ui-monospace, monospace"; ctx.textAlign = "left";
+  ctx.fillText("ticks accumulated over the same span of your time", RX, RY - 16);
+
+  const drawRuler = (y, n, colour, label) => {
+    ctx.strokeStyle = colour; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(RX, y); ctx.lineTo(RX + RW, y); ctx.stroke();
+    const shown = Math.min(n, 48);
+    for (let i = 0; i <= shown; i++){
+      const x = RX + RW * i / 48;
+      ctx.beginPath(); ctx.moveTo(x, y - 9); ctx.lineTo(x, y + 9); ctx.stroke();
+    }
+    ctx.fillStyle = colour; ctx.font = "600 14px ui-monospace, monospace"; ctx.textAlign = "left";
+    ctx.fillText(label, RX, y + 32);
+  };
+  drawRuler(RY + 14, 48, rest, "your clock:  48 ticks");
+  drawRuler(RY + 76, 48 / g, moving, "moving clock:  " + (48 / g).toFixed(2) + " ticks");
+
+  /* readouts */
+  el("betaout").textContent = beta < 1e-4 ? beta.toExponential(2) : beta.toFixed(3);
+  el("phaseout").textContent = ph.toFixed(2);
+  el("r1").textContent = Model.gammaMinusOne(beta) < 1e-4 ? g.toFixed(12)
+                       : g < 1e6 ? g.toFixed(g < 100 ? 6 : 2) : g.toExponential(3);
+  el("r2").textContent = (1 / g).toFixed(9) + " s";
+  const paths = Model.paths(beta, 1);
+  el("r3").textContent = (paths.moving / paths.still).toFixed(6);
+  const gm1 = Model.gammaMinusOne(beta);
+  el("r4").textContent = gm1 < 1e-6 ? gm1.toExponential(2) + " of a percent"
+                                    : ((1 - 1 / g) * 100).toFixed(3) + "% slower";
+}
+
+/* ---- controls ---------------------------------------------------------- */
+el("beta").addEventListener("input", function(){
+  state.beta = parseFloat(el("beta").value); render();
+});
+el("phase").addEventListener("input", function(){
+  state.phase = parseFloat(el("phase").value); render();
+});
+el("scene").addEventListener("change", function(){
+  state.scene = el("scene").value;
+  const s = SCENES[state.scene];
+  state.beta = s.beta;
+  el("beta").value = String(Math.min(0.999, s.beta));
+  el("scenehint").textContent = s.note;
+  render();
+});
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults);
+  el("beta").value = String(defaults.beta);
+  el("phase").value = String(defaults.phase);
+  el("scene").value = defaults.scene;
+  el("scenehint").textContent = SCENES.clock.note;
+  render();
+});
+render();
+
+/* ---- SELFTEST ---------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+function rel(a, b){ return Math.abs(a - b) / Math.max(Math.abs(b), 1e-300); }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+
+  push("gamma matches its closed form", (function(){
+    for (let i = 0; i <= 200; i++){
+      const b = 0.999 * i / 200;
+      if (rel(M.gamma(b), 1 / Math.sqrt(1 - b * b)) > 1e-15) return false;
+    }
+    return true;
+  })(), "1/sqrt(1 - beta^2) at 201 speeds");
+
+  push("gamma read off the triangle equals gamma from the formula", (function(){
+    for (const b of [0, 0.1, 0.35, 0.6, 0.8, 0.866, 0.95, 0.99, 0.999])
+      for (const L of [0.5, 1, 7.25])
+        if (rel(M.gammaFromGeometry(b, L), M.gamma(b)) > 1e-9) return false;
+    return true;
+  })(), "bisecting (ct)^2 - (vt)^2 = L^2 reproduces gamma to 1e-9, at three mirror separations");
+
+  push("the three exact values are exact", (function(){
+    return near(M.gamma(Math.sqrt(3) / 2), 2, 1e-12)
+        && rel(M.gamma(0.6), 1.25) < 1e-15
+        && rel(M.gamma(0.8), 5 / 3) < 1e-15
+        && M.gamma(0) === 1;
+  })(), "gamma(sqrt3/2)=2, gamma(0.6)=5/4, gamma(0.8)=5/3 from the 3-4-5 and 6-8-10 triples");
+
+  push("everyday speeds are indistinguishable from rest", (function(){
+    for (const v of [1.4, 30, 250, 300, 11000]){
+      const g = M.gamma(M.betaFor(v));
+      if (!(g - 1 < 1e-9)) return false;
+    }
+    return M.gamma(M.betaFor(300)) - 1 < 1e-12;
+  })(), "walking, driving, a jet, a rifle round and orbital speed all give gamma - 1 below 1e-9");
+
+  push("the low-speed expansion is gamma - 1 = beta^2/2", (function(){
+    /* the naive difference loses all its digits below about 1e-4, so the
+       model carries a rationalised form; both are checked, each where it
+       is valid, and against each other where they overlap.                 */
+    for (const b of [1e-12, 1e-9, 1e-7, 1e-6, 1e-4, 1e-3])
+      if (rel(M.gammaMinusOne(b), b * b / 2) > 1e-6) return false;
+    /* where the naive difference still has digits, the two must agree */
+    for (const b of [0.1, 0.3, 0.5, 0.866, 0.99, 0.999])
+      if (rel(M.gammaMinusOne(b), M.gamma(b) - 1) > 1e-13) return false;
+    /* and where it does not, the disagreement must be the cancellation,
+       growing as beta shrinks -- which is the reason the stable form exists */
+    if (!(rel(M.gammaMinusOne(1e-3), M.gamma(1e-3) - 1) > 1e-11)) return false;
+    if (!(rel(M.gammaMinusOne(1e-7), M.gamma(1e-7) - 1) > 1e-3)) return false;
+    /* and the next term: the relative shortfall of beta^2/2 is 3beta^2/4 */
+    for (const b of [1e-3, 3e-3, 1e-2, 3e-2])
+      if (rel((M.gammaMinusOne(b) - b * b / 2) / (b * b / 2), 0.75 * b * b) > 1e-3) return false;
+    return true;
+  })(), "gamma - 1 = beta^2/2 to 1e-6 relative down to beta = 1e-12, the two forms agree to 1e-13 where both hold, and the next correction is 3beta^4/8");
+
+  push("gamma is at least one and strictly increasing", (function(){
+    let prev = 0;
+    for (let i = 0; i <= 999; i++){
+      const g = M.gamma(i / 1000);
+      if (!(g >= 1) || !(g > prev)) return false;
+      prev = g;
+    }
+    return true;
+  })(), "monotone over 1000 speeds, never below unity");
+
+  push("adding two sub-light speeds never reaches light speed", (function(){
+    for (let i = 0; i <= 200; i++)
+      for (let j = 0; j <= 200; j++){
+        const u = -0.999 + 1.998 * i / 200, v = -0.999 + 1.998 * j / 200;
+        const w = M.addVelocities(u, v);
+        if (!(Math.abs(w) < 1)) return false;
+      }
+    return true;
+  })(), "40401 pairs, every result strictly inside the light cone");
+
+  push("adding light speed to anything gives light speed", (function(){
+    for (let i = 0; i <= 100; i++){
+      const u = -0.99 + 1.98 * i / 100;
+      if (rel(M.addVelocities(u, 1), 1) > 1e-15) return false;
+      if (rel(M.addVelocities(u, -1), -1) > 1e-15) return false;
+    }
+    return true;
+  })(), "(u + 1)/(1 + u) = 1 exactly, which is the postulate the whole theory rests on");
+
+  push("velocity addition is commutative and Galilean at low speed", (function(){
+    for (let i = 0; i <= 60; i++)
+      for (let j = 0; j <= 60; j++){
+        const u = -0.9 + 1.8 * i / 60, v = -0.9 + 1.8 * j / 60;
+        if (rel(M.addVelocities(u, v), M.addVelocities(v, u)) > 1e-14) return false;
+      }
+    for (const u of [1e-6, 1e-5]) for (const v of [1e-6, 1e-5])
+      if (rel(M.addVelocities(u, v), u + v) > 1e-9) return false;
+    return true;
+  })(), "symmetric in its arguments, and reduces to u + v below 1e-5 c");
+
+  push("the spacetime interval survives every boost", (function(){
+    let worst = 0;
+    for (const b of [0.05, 0.3, 0.6, 0.9, 0.99, 0.999])
+      for (let k = -9; k <= 9; k++)
+        for (let x = -7; x <= 7; x++){
+          const e = M.boost(k, x, b);
+          worst = Math.max(worst, Math.abs(M.interval(k, x) - M.interval(e.t, e.x)));
+        }
+    return worst < 1e-10;
+  })(), "t^2 - x^2 unchanged to 1e-10 over 1710 event-and-boost combinations");
+
+  push("boosting forward then back returns the original event", (function(){
+    for (const b of [0.2, 0.5, 0.87, 0.99])
+      for (let k = -5; k <= 5; k++){
+        const e = M.boost(k, 2 * k - 1, b);
+        const back = M.boost(e.t, e.x, -b);
+        if (Math.abs(back.t - k) > 1e-9 || Math.abs(back.x - (2 * k - 1)) > 1e-9) return false;
+      }
+    return true;
+  })(), "the inverse boost is the boost with beta negated, to 1e-9");
+
+  push("the muon reaches the ground only because of dilation", (function(){
+    const m = M.muon(0.98);
+    if (!near(m.gamma, 5.0252, 1e-3)) return false;
+    if (!near(m.dilated * 1e6, 11.040, 5e-3)) return false;
+    if (!near(m.classicalRange, 645.6, 1)) return false;
+    if (!near(m.range, 3244, 3)) return false;
+    return m.range / m.classicalRange > 5 && m.classicalRange < 1000 && m.range > 3000;
+  })(), "2.197 us proper becomes 11.04 us, turning 646 m of travel into 3.24 km");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
