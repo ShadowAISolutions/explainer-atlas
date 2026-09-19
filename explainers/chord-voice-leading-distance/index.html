@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Shortest Way Between Two Chords — Explainer Atlas</title>
+<meta name="description" content="Voice-leading distance is the smallest total semitone motion between two chords. Build a pair, reassign the voices, and watch the number fall.">
+<style>
+:root{
+  --bg:#ffffff; --panel:#ffffff; --ink:#0d0f12; --muted:#6b7280; --line:#dcdde0;
+  --accent:#c8402c; --accent-soft:#fbecea; --cool:#2b4a7d; --cool-soft:#eaeff7;
+  --plate:#fafafa; --warn:#8a6d12;
+  --radius:3px; --pad:clamp(16px,3.2vw,30px);
+  --font-body:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(2rem,1.2rem + 4vw,3.6rem);
+  --scale-body:clamp(0.97rem,0.93rem + 0.2vw,1.05rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0c0d10; --panel:#131519; --ink:#eceef2; --muted:#98a0ad; --line:#272a31;
+    --accent:#f0705a; --accent-soft:#2a1613; --cool:#7ba4e0; --cool-soft:#131c2b;
+    --plate:#171a1f; --warn:#d4b155;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:66rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:calc(var(--pad)*0.8)}
+h1{font-size:var(--scale-h1); font-weight:300; line-height:1.03; margin:0 0 .35em; letter-spacing:-.028em}
+.kicker{margin:0 0 .8em; color:var(--accent); font:600 .7rem/1.3 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.16em}
+.standfirst{margin:0; color:var(--muted); max-width:38em; font-size:1.06em}
+.rule{height:1px; background:var(--line); margin:calc(var(--pad)*0.9) 0}
+.layout{display:grid; gap:calc(var(--pad)*0.8); grid-template-columns:1fr}
+figure.stage{margin:0; background:var(--plate); border:1px solid var(--line);
+  border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin:.7em 2px 2px; color:var(--muted); font-size:.85rem; max-width:46em}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1.1em;
+  grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
+.control{display:grid; gap:.3em; align-content:start}
+.control.wide{grid-column:1/-1}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600; font-size:.95rem; letter-spacing:-.005em}
+.control output{font:600 .88rem/1 var(--font-mono); color:var(--accent);
+  background:var(--accent-soft); padding:.26em .5em; border-radius:2px}
+.control .hint{color:var(--muted); font-size:.81rem; margin:.1em 0 0}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line);
+  border-radius:2px; padding:.5em .6em; min-height:40px; width:100%}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+.btnrow{grid-column:1/-1; display:grid; gap:.7em; grid-template-columns:repeat(auto-fit,minmax(12rem,1fr))}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent);
+  outline-offset:2px; border-radius:2px}
+.readout{grid-column:1/-1; display:grid; grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));
+  gap:.6em; margin:0; padding:0}
+.readout div{background:var(--plate); border:1px solid var(--line); border-radius:2px; padding:.5em .65em}
+.readout dt{margin:0; color:var(--muted); font-size:.71rem; text-transform:uppercase; letter-spacing:.09em}
+.readout dd{margin:.2em 0 0; font:600 1.15rem/1.15 var(--font-mono)}
+.prose{max-width:37em; margin:calc(var(--pad)*1.3) auto 0}
+.prose h2{font-size:1.05rem; font-weight:700; margin:2.1em 0 .5em; letter-spacing:.005em;
+  text-transform:uppercase; font-family:var(--font-mono); color:var(--accent); font-size:.76rem;
+  letter-spacing:.14em}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.88rem; background:var(--cool-soft);
+  padding:.8em .9em; border-radius:2px; border-left:2px solid var(--cool); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.8); padding-top:var(--pad); border-top:1px solid var(--line);
+  color:var(--muted); font-size:.84rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Music theory &middot; Voice leading</p>
+  <h1>The Shortest Way<br>Between Two Chords</h1>
+  <p class="standfirst">Two chords sound smooth in succession when their notes move a short total
+  distance. That distance is not a matter of taste. It is the answer to a small optimisation problem,
+  and you can watch it being solved.</p>
+</header>
+
+<div class="rule"></div>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1000" height="470" role="img"
+            aria-label="A clock face of the twelve pitch classes. The first chord's notes are drawn as
+            filled discs, the second chord's as open rings, and a curved arrow runs from each note of the
+            first chord to the note of the second it has been assigned to, labelled with the number of
+            semitones it travels. Beside the clock, a ranked strip shows the total motion for each of the
+            six possible ways of pairing the voices up, with the one now in force highlighted."></canvas>
+    <figcaption>Every note of the first chord must go somewhere in the second, and no two may land on the
+    same note. There are six ways to pair three voices with three notes; the strip on the right ranks them.
+    Drag the assignment slider to try each in turn.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Chord and voice-leading controls">
+    <div class="control">
+      <div class="row">
+        <label for="rootA">First chord root</label>
+        <output id="rootAout" for="rootA">C</output>
+      </div>
+      <input type="range" id="rootA" min="0" max="11" step="1" value="0">
+      <p class="hint">Transposes the first chord. Arrow keys step a semitone.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="qualA">First chord quality</label>
+        <output id="qualAout" for="qualA">0 4 7</output>
+      </div>
+      <select id="qualA">
+        <option value="maj" selected>major</option>
+        <option value="min">minor</option>
+        <option value="dim">diminished</option>
+        <option value="aug">augmented</option>
+      </select>
+      <p class="hint">All four are three-note chords, so the voices always pair up one to one.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="rootB">Second chord root</label>
+        <output id="rootBout" for="rootB">G</output>
+      </div>
+      <input type="range" id="rootB" min="0" max="11" step="1" value="7">
+      <p class="hint">Transposes the second chord.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="qualB">Second chord quality</label>
+        <output id="qualBout" for="qualB">2 7 11</output>
+      </div>
+      <select id="qualB">
+        <option value="maj" selected>major</option>
+        <option value="min">minor</option>
+        <option value="dim">diminished</option>
+        <option value="aug">augmented</option>
+      </select>
+      <p class="hint">Change it and the whole ranking is recomputed.</p>
+    </div>
+
+    <div class="control wide">
+      <div class="row">
+        <label for="perm">Voice assignment</label>
+        <output id="permout" for="perm">6 of 6</output>
+      </div>
+      <input type="range" id="perm" min="0" max="5" step="1" value="5">
+      <p class="hint">Steps through all six pairings of the three voices, worst to best left to right in the
+      strip. Home and End jump to the ends.</p>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Your total</dt><dd id="rYours">&mdash;</dd></div>
+      <div><dt>Smoothest</dt><dd id="rBest">&mdash;</dd></div>
+      <div><dt>Common tones</dt><dd id="rCommon">&mdash;</dd></div>
+      <div><dt>Largest move</dt><dd id="rMax">&mdash;</dd></div>
+    </dl>
+
+    <div class="btnrow">
+      <button type="button" id="snap">Snap to the smoothest</button>
+      <button type="button" id="reset">Reset to defaults</button>
+    </div>
+  </section>
+</div>
+
+
+<article class="prose" data-role="prose">
+
+  <p>Play a C major triad and then a G major triad. If every finger jumps to the nearest available note
+  the change is almost inaudible as motion &mdash; it sounds like the harmony shifted underneath a held
+  sound. If instead each finger leaps to the note a fifth above, the same two chords sound like two
+  separate events. Same chords, same order, different experience, and the only thing that changed is
+  which note went where.</p>
+
+  <p>That choice has a name and a number. A <em>voice leading</em> is an assignment of the notes of one
+  chord to the notes of the next, one to one. Its size is the total number of semitones the voices travel,
+  each voice by the shorter way round the twelve-note circle. The smallest size any assignment achieves is
+  the <em>voice-leading distance</em> between the two chords.</p>
+
+  <h2>The metric on the circle</h2>
+
+  <p>Pitch classes live on a circle of twelve, so the distance between two of them is the shorter of the
+  two arcs:</p>
+
+  <p class="math">d(a, b) = min( (a &minus; b) mod 12 , (b &minus; a) mod 12 ) = 6 &minus; |6 &minus; ((a &minus; b) mod 12)|</p>
+
+  <p>Nothing is ever more than six semitones from anything, because at six you may as well go the other
+  way. Stack three of those up, one per voice, and you have the size of one assignment. Minimise over all
+  the assignments and you have the distance between the chords:</p>
+
+  <p class="math">D(A, B) = min over bijections &sigma; of &nbsp;&Sigma;&nbsp; d( a<sub>i</sub> , &sigma;(a<sub>i</sub>) )</p>
+
+  <h2>Six ways, and why you only need three</h2>
+
+  <p>Three voices can be paired with three notes in 3! = 6 ways, and the strip beside the clock shows what
+  each one costs. From C major to G major they cost 15, 11, 9, 9, 7 and 3: the best is five times cheaper
+  than the worst. For four-note chords there would be 24 ways, for five-note chords 120, and the brute
+  force gets expensive fast.</p>
+
+  <p>It does not have to. Write both chords in ascending order round the circle and the optimal assignment
+  is always one that preserves that order &mdash; no voice ever needs to cross another. That leaves only
+  the three cyclic rotations to check instead of all six, and for chords of n notes only n instead of n
+  factorial. The page checks this the hard way: over all 2,304 ordered pairs of the 48 three-note chords
+  it can build, the cheapest of the three rotations is never once beaten by any of the six assignments.</p>
+
+  <h2>What the distance is good for</h2>
+
+  <p>D is a genuine metric. It is zero exactly when the two chords are the same collection of notes, it is
+  symmetric, and it obeys the triangle inequality &mdash; all 110,592 triples of those 48 chords are
+  checked on load. It is also blind to transposition and to inversion, which is what you want: the
+  smoothness of a progression should not depend on what key you wrote it in.</p>
+
+  <p>Restrict attention to the 24 major and minor triads and a structure appears. From any one of them,
+  exactly seven others lie within two semitones of total motion, and the list of sizes is the same for
+  every one of the 24: two at distance 1, five at distance 2. Of those seven, exactly three move a single
+  voice and leave the other two sitting still &mdash; one by a semitone, one by a semitone, one by a whole
+  tone. Those three are the transformations nineteenth-century harmony leans on hardest. From C major they
+  are C minor, E minor and A minor.</p>
+
+  <p>Two common tones are not, on their own, a guarantee of smoothness. Among major and minor triads they
+  are: sharing two notes forces the third to be within two semitones, every time. Widen the collection to
+  include diminished and augmented triads and it fails badly &mdash; C diminished and F&sharp; diminished
+  share two notes and are six semitones apart, the furthest anything can be. The guarantee is a fact about
+  consonant triads, not about common tones.</p>
+
+  <h2>What to try</h2>
+
+  <p>Leave the chords at C major and G major and drag the assignment slider from one end to the other:
+  watch the arrows uncross as the total falls to 3. Now set the second chord to A minor. The best is 2, and
+  two of the three voices do not move at all. Then set the second chord to F&sharp; major, a tritone away:
+  the best of the six is 6, the worst is 18, and even the best is as far apart as two chords can be &mdash;
+  there is no smooth way to make that move.
+  Finally set both qualities to augmented and sweep the second root &mdash; the distance repeats every four
+  semitones, because an augmented triad is its own transposition.</p>
+
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+
+<script>
+"use strict";
+(function(){
+
+/* ------------------------------------------------------------------ MODEL */
+/* Pitch classes are integers 0..11. A chord is a sorted array of three of
+   them. A voice leading is a bijection from one chord to the other; its size
+   is the sum of the shorter circular distances each voice travels.          */
+const Model = {
+  N: 12,
+  NAMES: ["C", "C\u266f", "D", "D\u266f", "E", "F", "F\u266f", "G", "G\u266f", "A", "A\u266f", "B"],
+  QUAL: { maj: [0, 4, 7], min: [0, 3, 7], dim: [0, 3, 6], aug: [0, 4, 8] },
+  QKEYS: ["maj", "min", "dim", "aug"],
+  QNAME: { maj: "major", min: "minor", dim: "dim", aug: "aug" },
+  /* all six pairings of three voices with three notes                       */
+  PERMS: [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]],
+
+  chord(root, qual){
+    const q = this.QUAL[qual] || this.QUAL.maj;
+    return q.map((i) => (((i + root) % 12) + 12) % 12).sort((a, b) => a - b);
+  },
+  /* the shorter arc between two pitch classes, always 0..6                  */
+  ring(a, b){ const d = (((a - b) % 12) + 12) % 12; return Math.min(d, 12 - d); },
+  /* the same thing without a min(), used to check ring() against itself     */
+  ringAlt(a, b){ return 6 - Math.abs(6 - ((((a - b) % 12) + 12) % 12)); },
+  /* signed move, positive clockwise. A tritone has no shorter way, so it is
+     reported as +6 by convention.                                           */
+  signed(a, b){
+    const up = (((b - a) % 12) + 12) % 12;
+    return up <= 6 ? up : up - 12;
+  },
+  size(A, B, p){ let s = 0; for (let i = 0; i < A.length; i++) s += this.ring(A[i], B[p[i]]); return s; },
+  /* brute force: every bijection                                            */
+  best(A, B){
+    let m = Infinity;
+    for (const p of this.PERMS) m = Math.min(m, this.size(A, B, p));
+    return m;
+  },
+  bestPerm(A, B){
+    let m = Infinity, w = this.PERMS[0];
+    for (const p of this.PERMS){ const s = this.size(A, B, p); if (s < m){ m = s; w = p; } }
+    return w;
+  },
+  /* the cheap way: both chords already ascending, so only the three cyclic
+     rotations can be optimal. This is the claim the selftest checks.        */
+  bestCyclic(A, B){
+    const n = A.length;
+    let m = Infinity;
+    for (let k = 0; k < n; k++){
+      let s = 0;
+      for (let i = 0; i < n; i++) s += this.ring(A[i], B[(i + k) % n]);
+      m = Math.min(m, s);
+    }
+    return m;
+  },
+  /* the six assignments, ranked worst first, so the slider reads left to right
+     as "getting better"                                                     */
+  ranked(A, B){
+    const r = this.PERMS.map((p, i) => ({ perm: p, index: i, size: this.size(A, B, p) }));
+    r.sort((u, v) => v.size - u.size || u.index - v.index);
+    return r;
+  },
+  commonTones(A, B){
+    const b = B.slice(); let c = 0;
+    for (const a of A){ const k = b.indexOf(a); if (k >= 0){ b.splice(k, 1); c++; } }
+    return c;
+  },
+  transpose(A, k){ return A.map((x) => (((x + k) % 12) + 12) % 12).sort((a, b) => a - b); },
+  invert(A){ return A.map((x) => ((12 - x) % 12)).sort((a, b) => a - b); },
+  /* the 48 chords the controls can build, and the 24 consonant ones         */
+  all(){
+    const out = [];
+    for (const q of this.QKEYS) for (let r = 0; r < 12; r++) out.push(this.chord(r, q));
+    return out;
+  },
+  consonant(){
+    const out = [];
+    for (const q of ["maj", "min"]) for (let r = 0; r < 12; r++) out.push(this.chord(r, q));
+    return out;
+  }
+};
+
+/* -------------------------------------------------------------- STATE/VIEW */
+const defaults = { rootA: 0, qualA: "maj", rootB: 7, qualB: "maj", perm: 5 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const SS = 2;                     /* supersample so the hairlines stay crisp */
+let W = 1000, H = 470, NARROW = false;
+let CLK = null, STRIP = null;     /* geometry, recomputed in fitCanvas()      */
+let FS = 11, FL = 12, FT = 11;
+
+function sans(px, wt){ return (wt || 400) + " " + px + "px " + css("--font-body"); }
+function mono(px, wt){ return (wt || 400) + " " + px + "px " + css("--font-mono"); }
+
+function fitCanvas(){
+  const box = cv.parentElement.getBoundingClientRect();
+  W = Math.max(300, Math.min(1000, Math.round(box.width - 20)));
+  NARROW = W < 620;
+  H = NARROW ? 620 : 470;
+  cv.width = W * SS; cv.height = H * SS;
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+
+  FS = NARROW ? 10 : 11;
+  FL = NARROW ? 11 : 12.5;
+  FT = NARROW ? 10 : 11;
+
+  const pad = NARROW ? 12 : 18;
+  if (NARROW){
+    const side = W - pad * 2;
+    const clkH = Math.min(side, 340);
+    CLK = { x: pad, y: pad + 20, w: side, h: clkH };
+    const sy = pad + 20 + clkH + 40;
+    STRIP = { x: pad, y: sy, w: side, h: H - sy - pad };
+  } else {
+    const sw = Math.max(210, Math.round(W * 0.31));
+    CLK = { x: pad, y: pad + 20, w: W - pad * 3 - sw, h: H - pad * 2 - 20 };
+    STRIP = { x: W - pad - sw, y: pad + 20, w: sw, h: H - pad * 2 - 20 };
+  }
+}
+
+/* the clock face: pitch class 0 at twelve o'clock, clockwise                 */
+function angleOf(pc){ return -Math.PI / 2 + pc * Math.PI / 6; }
+
+function current(){
+  const A = Model.chord(state.rootA, state.qualA);
+  const B = Model.chord(state.rootB, state.qualB);
+  const rank = Model.ranked(A, B);
+  const idx = Math.max(0, Math.min(rank.length - 1, state.perm));
+  const chosen = rank[idx];
+  const bestSize = rank[rank.length - 1].size;
+  const moves = chosen.perm.map((j, i) => ({
+    from: A[i], to: B[j], step: Model.signed(A[i], B[j]), cost: Model.ring(A[i], B[j])
+  }));
+  return { A: A, B: B, rank: rank, chosen: chosen, best: bestSize, moves: moves,
+           common: Model.commonTones(A, B) };
+}
+
+function drawClock(p, cur){
+  const cx = p.x + p.w / 2, cy = p.y + p.h / 2;
+  const R = Math.min(p.w, p.h) / 2 - (NARROW ? 34 : 40);
+
+  ctx.font = mono(FT, 700); ctx.fillStyle = css("--muted");
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  try { ctx.letterSpacing = "1.5px"; } catch (e) {}
+  ctx.fillText("THE TWELVE PITCH CLASSES", p.x, p.y - 7);
+  try { ctx.letterSpacing = "0px"; } catch (e) {}
+
+  /* the circle and its twelve stations */
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+  ctx.font = sans(FS); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (let pc = 0; pc < 12; pc++){
+    const a = angleOf(pc), x = cx + R * Math.cos(a), y = cy + R * Math.sin(a);
+    ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx + (R - 4) * Math.cos(a), cy + (R - 4) * Math.sin(a));
+    ctx.lineTo(cx + (R + 4) * Math.cos(a), cy + (R + 4) * Math.sin(a));
+    ctx.stroke();
+    ctx.fillStyle = css("--muted");
+    ctx.fillText(Model.NAMES[pc], cx + (R + (NARROW ? 19 : 22)) * Math.cos(a),
+                                  cy + (R + (NARROW ? 19 : 22)) * Math.sin(a));
+  }
+
+  /* each voice's journey, drawn as an arc that takes the shorter way round,
+     one inset per voice so two voices sharing a stretch stay separable       */
+  const rA = NARROW ? 6.5 : 8;
+  const inset = NARROW ? 13 : 17;
+  cur.moves.forEach((m, vi) => {
+    if (m.cost === 0) return;
+    const rr = R - inset * (vi + 1);
+    const a0 = angleOf(m.from), a1 = a0 + m.step * Math.PI / 6;
+    const cw = m.step > 0;
+    ctx.strokeStyle = css("--accent"); ctx.lineWidth = NARROW ? 1.7 : 2.1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rr, a0, a1, !cw);
+    ctx.stroke();
+    /* a spur from the note on the rim in to the arc, so the path is readable */
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx + (R - rA - 2) * Math.cos(a0), cy + (R - rA - 2) * Math.sin(a0));
+    ctx.lineTo(cx + rr * Math.cos(a0), cy + rr * Math.sin(a0));
+    ctx.stroke();
+
+    /* arrowhead at the far end, pointing at the destination note             */
+    const hx = cx + rr * Math.cos(a1), hy = cy + rr * Math.sin(a1);
+    const ux = (cw ? -1 : 1) * Math.sin(a1), uy = (cw ? 1 : -1) * Math.cos(a1);
+    const hs = NARROW ? 6.5 : 8;
+    ctx.fillStyle = css("--accent");
+    ctx.beginPath();
+    ctx.moveTo(hx + ux * hs * 0.9, hy + uy * hs * 0.9);
+    ctx.lineTo(hx - uy * hs * 0.5 - ux * hs * 0.4, hy + ux * hs * 0.5 - uy * hs * 0.4);
+    ctx.lineTo(hx + uy * hs * 0.5 - ux * hs * 0.4, hy - ux * hs * 0.5 - uy * hs * 0.4);
+    ctx.closePath(); ctx.fill();
+    /* then on to the destination note itself                                */
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(hx, hy);
+    ctx.lineTo(cx + (R - rA - 4) * Math.cos(a1), cy + (R - rA - 4) * Math.sin(a1));
+    ctx.stroke();
+
+    /* the semitone count, set INSIDE the arc so it never lies on the line    */
+    const am = (a0 + a1) / 2;
+    const lx = cx + (rr - (NARROW ? 9 : 11)) * Math.cos(am);
+    const ly = cy + (rr - (NARROW ? 9 : 11)) * Math.sin(am);
+    const txt = String(m.cost);
+    ctx.font = mono(FL, 700);
+    const tw = ctx.measureText(txt).width;
+    ctx.fillStyle = css("--plate");
+    ctx.fillRect(lx - tw / 2 - 3, ly - FL / 2 - 2, tw + 6, FL + 4);
+    ctx.fillStyle = css("--accent"); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(txt, lx, ly);
+  });
+
+  /* chord B first, as open rings, so the filled A discs sit on top           */
+  for (const pc of cur.B){
+    const a = angleOf(pc);
+    ctx.strokeStyle = css("--cool"); ctx.lineWidth = NARROW ? 2 : 2.4;
+    ctx.beginPath(); ctx.arc(cx + R * Math.cos(a), cy + R * Math.sin(a), rA + 3, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  for (const pc of cur.A){
+    const a = angleOf(pc);
+    ctx.fillStyle = css("--ink");
+    ctx.beginPath(); ctx.arc(cx + R * Math.cos(a), cy + R * Math.sin(a), rA, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /* a legend under the circle, in its own reserved row                       */
+  const ly2 = p.y + p.h - 4;
+  ctx.font = sans(FS); ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  let lx2 = p.x;
+  ctx.fillStyle = css("--ink");
+  ctx.beginPath(); ctx.arc(lx2 + 5, ly2, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = css("--muted");
+  const t1 = Model.NAMES[state.rootA] + " " + Model.QNAME[state.qualA];
+  ctx.fillText(t1, lx2 + 15, ly2);
+  lx2 += 15 + ctx.measureText(t1).width + 18;
+  ctx.strokeStyle = css("--cool"); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(lx2 + 5, ly2, 5, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = css("--muted");
+  ctx.fillText(Model.NAMES[state.rootB] + " " + Model.QNAME[state.qualB], lx2 + 15, ly2);
+  ctx.textBaseline = "alphabetic";
+}
+
+function drawStrip(p, cur){
+  ctx.font = mono(FT, 700); ctx.fillStyle = css("--muted");
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  try { ctx.letterSpacing = "1.5px"; } catch (e) {}
+  ctx.fillText("ALL SIX ASSIGNMENTS", p.x, p.y - 7);
+  try { ctx.letterSpacing = "0px"; } catch (e) {}
+
+  const rows = cur.rank, n = rows.length;
+  const gap = NARROW ? 5 : 7;
+  const rowH = Math.max(18, (p.h - 26 - gap * (n - 1)) / n);
+  /* reserve a column on the left for the pairing, and one on the right for
+     the number, measured rather than guessed                                 */
+  ctx.font = mono(FS);
+  const pairW = ctx.measureText("C\u266f\u2192C\u266f  C\u266f\u2192C\u266f  C\u266f\u2192C\u266f").width;
+  ctx.font = mono(FL, 700);
+  const numW = ctx.measureText("18").width + 8;
+  const barL = p.x + (NARROW ? pairW + 10 : 0);
+  const barR = p.x + p.w - numW;
+  const maxSize = Math.max(1, rows[0].size);
+
+  for (let i = 0; i < n; i++){
+    const r = rows[i];
+    const y = p.y + i * (rowH + gap);
+    const on = i === state.perm, opt = r.size === cur.best;
+    const wpx = Math.max(2, (barR - barL - 6) * (r.size / maxSize));
+
+    ctx.fillStyle = on ? css("--accent") : (opt ? css("--cool") : css("--line"));
+    ctx.fillRect(barL, y + rowH / 2 - (NARROW ? 6 : 7), wpx, NARROW ? 12 : 14);
+
+    if (on){
+      ctx.strokeStyle = css("--accent"); ctx.lineWidth = 1;
+      ctx.strokeRect(p.x - 3.5, y - 1.5, p.w + 7, rowH + 3);
+    }
+    ctx.font = mono(FL, 700); ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillStyle = on ? css("--accent") : css("--ink");
+    ctx.fillText(String(r.size), p.x + p.w, y + rowH / 2);
+
+    if (!NARROW){
+      /* the pairing itself, written under the bar                            */
+      ctx.font = mono(FS); ctx.textAlign = "left"; ctx.fillStyle = css("--muted");
+      const parts = r.perm.map((j, k) => Model.NAMES[cur.A[k]] + "\u2192" + Model.NAMES[cur.B[j]]);
+      ctx.fillText(parts.join("  "), barL, y + rowH / 2 + (NARROW ? 0 : 13));
+    } else {
+      ctx.font = mono(FS); ctx.textAlign = "left"; ctx.fillStyle = css("--muted");
+      const parts = r.perm.map((j, k) => Model.NAMES[cur.A[k]] + "\u2192" + Model.NAMES[cur.B[j]]);
+      ctx.fillText(parts.join(" "), p.x, y + rowH / 2);
+    }
+  }
+  ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+
+  /* one line naming what the blue bar means, in its own row at the foot      */
+  ctx.font = sans(FS); ctx.fillStyle = css("--muted"); ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText("smoothest = " + cur.best + " semitones", p.x, p.y + p.h - 4);
+  ctx.textBaseline = "alphabetic";
+}
+
+function render(){
+  fitCanvas();
+  const cur = current();
+
+  ctx.fillStyle = css("--plate"); ctx.fillRect(0, 0, W, H);
+  drawClock(CLK, cur);
+  drawStrip(STRIP, cur);
+
+  el("rootAout").textContent = Model.NAMES[state.rootA];
+  el("rootBout").textContent = Model.NAMES[state.rootB];
+  el("qualAout").textContent = cur.A.join(" ");
+  el("qualBout").textContent = cur.B.join(" ");
+  el("permout").textContent = (state.perm + 1) + " of 6";
+  el("rYours").textContent = cur.chosen.size + " st";
+  el("rBest").textContent = cur.best + " st";
+  el("rCommon").textContent = String(cur.common);
+  el("rMax").textContent = Math.max.apply(null, cur.moves.map((m) => m.cost)) + " st";
+}
+
+/* ------------------------------------------------------------------ WIRING */
+function bindRange(id, key){
+  el(id).addEventListener("input", () => { state[key] = parseInt(el(id).value, 10); render(); });
+}
+function bindSelect(id, key){
+  el(id).addEventListener("change", () => { state[key] = el(id).value; render(); });
+}
+bindRange("rootA", "rootA");
+bindRange("rootB", "rootB");
+bindRange("perm", "perm");
+bindSelect("qualA", "qualA");
+bindSelect("qualB", "qualB");
+
+el("snap").addEventListener("click", () => {
+  const cur = current();
+  for (let i = cur.rank.length - 1; i >= 0; i--) if (cur.rank[i].size === cur.best){ state.perm = i; break; }
+  el("perm").value = String(state.perm);
+  render();
+});
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("rootA").value = String(defaults.rootA); el("rootB").value = String(defaults.rootB);
+  el("perm").value = String(defaults.perm);
+  el("qualA").value = defaults.qualA; el("qualB").value = defaults.qualB;
+  render();
+});
+
+let raf = 0;
+addEventListener("resize", () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(render); });
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const relay = () => render();
+  if (mq.addEventListener) mq.addEventListener("change", relay); else if (mq.addListener) mq.addListener(relay);
+}
+render();
+
+/* ---------------------------------------------------------------- SELFTEST */
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+
+  const ALL = Model.all(), CONS = Model.consonant();
+  const D = ALL.map((A) => ALL.map((B) => Model.best(A, B)));
+  const CD = CONS.map((A) => CONS.map((B) => Model.best(A, B)));
+  const nameOf = (i) => Model.NAMES[i % 12] + " " + Model.QNAME[Model.QKEYS[Math.floor(i / 12)]];
+
+  /* 1. the circular metric agrees with a formula that uses no min() */
+  {
+    let bad = 0;
+    for (let a = 0; a < 12; a++) for (let b = 0; b < 12; b++)
+      if (Model.ring(a, b) !== Model.ringAlt(a, b)) bad++;
+    push("the circular distance matches 6 - |6 - ((a-b) mod 12)|", bad === 0,
+      "all 144 pitch-class pairs agree; " + bad + " disagreed");
+  }
+
+  /* 2. no voice leading is ever cheaper than the crossing-free one */
+  {
+    let bad = 0, worst = null;
+    for (let i = 0; i < ALL.length; i++) for (let j = 0; j < ALL.length; j++)
+      if (Model.bestCyclic(ALL[i], ALL[j]) !== D[i][j]){ bad++; worst = nameOf(i) + " to " + nameOf(j); }
+    push("the three cyclic rotations always find what all six assignments find", bad === 0,
+      "checked all " + (ALL.length * ALL.length) + " ordered pairs of the 48 chords the controls can " +
+      "build; " + bad + " disagreed" + (worst ? " (e.g. " + worst + ")" : ""));
+  }
+
+  /* 3. zero distance exactly when the chords are the same collection */
+  {
+    let bad = 0, zeros = 0;
+    for (let i = 0; i < ALL.length; i++) for (let j = 0; j < ALL.length; j++){
+      const same = ALL[i].join(",") === ALL[j].join(",");
+      if (D[i][j] === 0) zeros++;
+      if ((D[i][j] === 0) !== same) bad++;
+    }
+    push("the distance is zero exactly when the chords are the same notes", bad === 0 && zeros === 72,
+      zeros + " of 2304 pairs are at distance zero: the 48 diagonal ones plus the augmented triads, " +
+      "which each carry three different root names for one collection of notes");
+  }
+
+  /* 4. symmetry */
+  {
+    let bad = 0;
+    for (let i = 0; i < ALL.length; i++) for (let j = i + 1; j < ALL.length; j++)
+      if (D[i][j] !== D[j][i]) bad++;
+    push("the distance is symmetric", bad === 0, "all 1128 unordered pairs agree in both directions");
+  }
+
+  /* 5. triangle inequality, exhaustively */
+  {
+    let bad = 0, n = 0, tight = 0;
+    for (let i = 0; i < 48; i++) for (let j = 0; j < 48; j++) for (let k = 0; k < 48; k++){
+      n++;
+      if (D[i][k] > D[i][j] + D[j][k]) bad++;
+      else if (D[i][k] === D[i][j] + D[j][k]) tight++;
+    }
+    push("the triangle inequality holds", bad === 0,
+      n.toLocaleString("en") + " triples checked, " + bad + " violations; " +
+      tight.toLocaleString("en") + " of them are equalities, so the bound is reached, not merely safe");
+  }
+
+  /* 6. transposition changes nothing */
+  {
+    let bad = 0;
+    for (let i = 0; i < 48; i++) for (let j = 0; j < 48; j++) for (let k = 1; k < 12; k++)
+      if (Model.best(Model.transpose(ALL[i], k), Model.transpose(ALL[j], k)) !== D[i][j]) bad++;
+    push("transposing both chords leaves the distance unchanged", bad === 0,
+      "all 2304 pairs at all 11 non-trivial transpositions: " + bad + " changed");
+  }
+
+  /* 7. inversion changes nothing */
+  {
+    let bad = 0;
+    for (let i = 0; i < 48; i++) for (let j = 0; j < 48; j++)
+      if (Model.best(Model.invert(ALL[i]), Model.invert(ALL[j])) !== D[i][j]) bad++;
+    push("turning both chords upside down leaves the distance unchanged", bad === 0,
+      "all 2304 pairs reflected about C: " + bad + " changed");
+  }
+
+  /* 8. the diameter of the space is exactly 6 */
+  {
+    let mx = 0, at = null, over = 0;
+    for (let i = 0; i < 48; i++) for (let j = 0; j < 48; j++){
+      if (D[i][j] > 6) over++;
+      if (D[i][j] > mx){ mx = D[i][j]; at = nameOf(i) + " to " + nameOf(j); }
+    }
+    push("nothing is further than six semitones from anything", mx === 6 && over === 0,
+      "the largest distance over all 2304 pairs is " + mx + ", reached first at " + at +
+      "; a single voice can never need more than 6, yet three voices together never do either");
+  }
+
+  /* 9. the optimal assignment's per-voice moves add up to the reported total */
+  {
+    let bad = 0, pvmax = 0;
+    for (let i = 0; i < 48; i++) for (let j = 0; j < 48; j++){
+      const p = Model.bestPerm(ALL[i], ALL[j]);
+      let sum = 0;
+      for (let v = 0; v < 3; v++){
+        const m = Model.ring(ALL[i][v], ALL[j][p[v]]);
+        pvmax = Math.max(pvmax, m); sum += m;
+      }
+      if (sum !== D[i][j]) bad++;
+    }
+    push("the winning assignment's three moves add up to the distance", bad === 0 && pvmax === 4,
+      bad + " mismatches over 2304 pairs; no single voice in any winning assignment ever moves more " +
+      "than " + pvmax + " semitones, although the metric allows 6");
+  }
+
+  /* 10. among consonant triads, two common tones do bound the distance */
+  {
+    let worst = 0, pairs = 0;
+    for (let i = 0; i < 24; i++) for (let j = 0; j < 24; j++)
+      if (i !== j && Model.commonTones(CONS[i], CONS[j]) === 2){ pairs++; worst = Math.max(worst, CD[i][j]); }
+    push("two consonant triads sharing two notes are at most 2 semitones apart", pairs > 0 && worst <= 2,
+      pairs + " such pairs among the 24 major and minor triads; the worst is " + worst + " semitones");
+  }
+
+  /* 11. ... and that is a fact about consonant triads, not about common tones */
+  {
+    let worst = 0, at = null;
+    for (let i = 0; i < 48; i++) for (let j = 0; j < 48; j++)
+      if (i !== j && Model.commonTones(ALL[i], ALL[j]) === 2 && D[i][j] > worst){
+        worst = D[i][j]; at = nameOf(i) + " and " + nameOf(j);
+      }
+    push("across all 48 chords, two common tones guarantee nothing", worst === 6,
+      "the task file asks for a bound of 2 semitones whenever two tones are shared. That is false as " +
+      "stated: " + at + " share two notes and are " + worst + " apart, the maximum possible. The " +
+      "bound holds on the consonant triads only, which the previous assertion checks");
+  }
+
+  /* 12. every consonant triad sees the same neighbourhood */
+  {
+    let sig = null, bad = 0, sums = new Set();
+    for (let i = 0; i < 24; i++){
+      const near = [];
+      for (let j = 0; j < 24; j++) if (j !== i && CD[i][j] <= 2) near.push(CD[i][j]);
+      near.sort();
+      const s = near.join(",");
+      if (sig === null) sig = s; else if (s !== sig) bad++;
+      sums.add(CD[i].reduce((a, b) => a + b, 0));
+    }
+    push("all 24 consonant triads have identical neighbourhoods", bad === 0 && sums.size === 1,
+      "from every one of them the sizes within 2 semitones are [" + sig + "], and the distances to " +
+      "all 24 sum to " + [...sums][0] + " in every case, a mean of " +
+      ([...sums][0] / 24).toFixed(2));
+  }
+
+  /* 13. exactly three of those neighbours move a single voice: P, L and R */
+  {
+    let sig = null, bad = 0;
+    for (let i = 0; i < 24; i++){
+      const solo = [];
+      for (let j = 0; j < 24; j++){
+        if (j === i || CD[i][j] > 2) continue;
+        let one = false;
+        for (const p of Model.PERMS){
+          if (Model.size(CONS[i], CONS[j], p) !== CD[i][j]) continue;
+          let moved = 0;
+          for (let v = 0; v < 3; v++) if (Model.ring(CONS[i][v], CONS[j][p[v]]) > 0) moved++;
+          if (moved === 1) one = true;
+        }
+        if (one) solo.push(CD[i][j]);
+      }
+      solo.sort();
+      const s = solo.join(",");
+      if (sig === null) sig = s; else if (s !== sig) bad++;
+    }
+    push("exactly three neighbours are reached by moving one voice alone", bad === 0 && sig === "1,1,2",
+      "from every consonant triad the single-voice moves within 2 semitones cost [" + sig + "] " +
+      "semitones. From C major they land on C minor, E minor and A minor");
+  }
+
+  return t;
+};
+
+/* exposed for the verifier's control sweep */
+window.__ATLAS = { state: state, render: render, Model: Model };
+
+})();
+</script>
+</div>
+</body>
+</html>

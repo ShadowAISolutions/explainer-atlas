@@ -33,6 +33,51 @@ files in `AUDIT/` before starting any batch.
 
 ## Batches
 
+### batch/014 — 2026-09-19
+- merged: neuron-integrate-and-fire, coriolis-deflection, river-meander-migration,
+  chord-voice-leading-distance, heat-sink-fin-efficiency
+- blocked: none
+- patterns: drag-parameter, spatial-explore, time-scrubber, build-from-parts,
+  compare-side-by-side
+- learned:
+  - **Quote figures measured in the browser, not in node.** The meander page's
+    prose said twelve cutoffs because a node probe said twelve; the page renders
+    eleven. The two engines differ by an ulp or so in `Math.exp` and friends, and
+    a cutoff test is a threshold comparison, so a one-ulp difference flips a
+    whole event. Node is fine for integer-only models (the chord page), but any
+    model that crosses a threshold on a transcendental must have its quoted
+    numbers read out of the page's own engine.
+  - **Pinned endpoints wind up.** A migrating curve with fixed end nodes wraps
+    itself into a spiral around each pin, because the nodes next to the pin
+    migrate at full rate while the pin cannot follow. Ramp the freedom to zero
+    within a few characteristic widths of the pin, measured as **straight-line**
+    distance rather than distance along the curve, so a limb that has already
+    curled back toward a pin is damped too. Arc-length damping does not fix it:
+    a spiral accumulates arc length and escapes the buffer.
+  - `Float32Array` frame storage silently breaks any assertion at 1e-12. If a
+    selftest recomputes a quantity from stored coordinates, store them as
+    `Float64Array`.
+  - A "different seeds give different histories" assertion must not be evaluated
+    at a horizon where several seeds still have no events: empty histories
+    compare equal. Test geometric divergence as well, and pick a horizon where
+    both seeds have fired.
+  - The task-file claim count is now **fourteen**. This batch refuted three:
+    monotone channel lengthening (false for any resampled polyline), bank-by-bank
+    erosion balance (measured 24% off, which is *why* meanders lengthen), the
+    two-common-tone voice-leading bound (false outside the consonant triads), and
+    a 1e-10 finite-difference agreement (below the round-off floor of a
+    three-point scheme). Where a claim is false, assert the true statement **and**
+    assert the counterexample, so the refutation is itself checked.
+  - Screenshot review caught a real defect on **every one of the five pages** —
+    nine batches running now. This batch: an early-terminating spike loop, clipped
+    rotated axis titles, a wrong-way north arrow and a caption struck by an arc,
+    two pinned-endpoint spirals, a page opening on the second-best answer because
+    the default indexed the wrong list, a thermal ramp running dark-for-cold on a
+    page whose whole argument is that the cold end is dead, and two clipped labels
+    at 360px.
+- **queue refill is due**: 17 tasks left, below the threshold of 20. An AUDIT
+  pass falls due after batch/015.
+
 ### batch/013 — 2026-09-19
 - merged: bloom-filter-false-positives, comparative-advantage-ppf,
   phoneme-vowel-space-formants, checksum-vs-crc-collisions, plus the legibility

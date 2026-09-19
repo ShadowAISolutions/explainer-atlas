@@ -1,0 +1,17 @@
+{
+  "slug": "chord-voice-leading-distance",
+  "title": "The Shortest Way Between Two Chords",
+  "domain": "music-theory",
+  "difficulty": 3,
+  "summary": "Voice-leading distance is the smallest total semitone motion between two chords. Build a pair, reassign the voices, and watch the number fall to its minimum.",
+  "prerequisites": [],
+  "tags": ["music-theory", "voice-leading", "metric-space", "optimisation", "neo-riemannian", "pitch-class"],
+  "interaction_pattern": "build-from-parts",
+  "sources": [
+    { "title": "Tymoczko, The Geometry of Musical Chords (Science, 2006)", "url": "https://www.science.org/doi/10.1126/science.1126287" },
+    { "title": "Cohn, Neo-Riemannian Operations, Parsimonious Trichords (Journal of Music Theory, 1997)", "url": "https://www.jstor.org/stable/843761" },
+    { "title": "Callender, Quinn and Tymoczko, Generalized Voice-Leading Spaces (Science, 2008)", "url": "https://www.science.org/doi/10.1126/science.1153021" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}

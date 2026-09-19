@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nothing Pushed It Sideways &mdash; Explainer Atlas</title>
+<meta name="description" content="Fire a puck across frictionless ice and watch it in two frames at once. In space it goes dead straight; on the ground it curves, because the ground turned underneath it.">
+<style>
+/* A navigation chart: cool paper, hairline rules, a sans face set tight, and
+   two maps of the same shot seen from two frames. Controls ride a right-hand
+   rail so the maps can run as wide as the page allows.                      */
+:root{
+  --bg:#eef1f4; --panel:#ffffff; --ink:#0f1b2a; --muted:#59697a; --line:#ccd6de;
+  --field:#f7fafc; --grid:#c8d4dd; --grid2:#e0e8ee;
+  --inertial:#17508e; --ground:#bd3327; --accent:#0a6d64; --accent-soft:#ddefec;
+  --radius:0px; --pad:clamp(15px,3vw,30px);
+  --font-body:Inter,"Helvetica Neue",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.85rem,1.1rem + 3.2vw,3.1rem);
+  --scale-body:clamp(0.97rem,0.93rem + 0.2vw,1.04rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0a0f15; --panel:#111a23; --ink:#dfe8f0; --muted:#8798a9; --line:#1e2b37;
+    --field:#0e1720; --grid:#22323f; --grid2:#17242e;
+    --inertial:#6fa9e9; --ground:#ef7a6c; --accent:#45cfc1; --accent-soft:#0c2b28;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+     font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:74rem; margin:0 auto; padding:var(--pad)}
+
+header.page{display:grid; gap:.4em; padding-bottom:calc(var(--pad)*0.8); border-bottom:2px solid var(--ink)}
+.kicker{margin:0; font:700 .68rem/1.3 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:var(--ground)}
+h1{margin:0; font-size:var(--scale-h1); line-height:.98; letter-spacing:-.035em; font-weight:800; max-width:15em}
+.standfirst{margin:.3em 0 0; color:var(--muted); max-width:42em; font-size:1.05em}
+
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:62rem){ .layout{grid-template-columns:minmax(0,1fr) 19rem; align-items:start} }
+
+figure.stage{margin:0}
+figure.stage canvas{display:block; width:100%; height:auto; background:var(--field);
+                    border:1px solid var(--line); touch-action:pan-y}
+figcaption{margin:.65em 0 0; color:var(--muted); font-size:.86rem; max-width:46em}
+
+.controls{padding:0; border:0; margin:0; display:grid; gap:1em}
+.controls .legend{margin:0; padding:0 0 .45em; border-bottom:1px solid var(--line);
+  font:700 .68rem/1.3 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:var(--muted)}
+.control{display:grid; gap:.22em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.5em}
+.control label{font-weight:650; font-size:.93rem; letter-spacing:-.01em}
+.control output{font:700 .82rem/1 var(--font-mono); color:var(--accent); white-space:nowrap}
+.control .hint{margin:.05em 0 0; color:var(--muted); font-size:.78rem; line-height:1.4}
+input[type=range]{width:100%; accent-color:var(--ground); min-height:24px; margin:0}
+button{font:650 .88rem/1 var(--font-body); color:inherit; background:var(--panel);
+  border:1px solid var(--line); border-radius:var(--radius); padding:.7em .9em; min-height:40px; cursor:pointer}
+button:hover{border-color:var(--ground); color:var(--ground)}
+:where(a,button,input,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:3px}
+
+.readout{display:grid; grid-template-columns:1fr 1fr; gap:1px; margin:0; padding:0; background:var(--line);
+         border:1px solid var(--line)}
+.readout div{background:var(--panel); padding:.5em .65em}
+.readout dt{margin:0; color:var(--muted); font:600 .64rem/1.4 var(--font-mono); letter-spacing:.1em; text-transform:uppercase}
+.readout dd{margin:.1em 0 0; font:700 1rem/1.2 var(--font-mono); letter-spacing:-.02em}
+
+.prose{max-width:40em; margin-top:calc(var(--pad)*1.4)}
+.prose h2{font:800 1.28rem/1.2 var(--font-body); letter-spacing:-.025em; margin:2em 0 .5em}
+.prose p{margin:0 0 1em}
+.prose .math{font:.9rem/1.7 var(--font-mono); background:var(--panel); border:1px solid var(--line);
+             padding:.8em .95em; overflow-x:auto; letter-spacing:-.01em}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line);
+            color:var(--muted); font-size:.85rem}
+footer.page a{color:var(--accent)}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Earth science &middot; Rotating frames</p>
+  <h1>Nothing Pushed It Sideways</h1>
+  <p class="standfirst">Slide a puck across frictionless ice and follow it in two frames at once. Seen from
+  the stars it goes dead straight. Seen from the ground it curves &mdash; because the ground turned underneath it.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1000" height="560" role="img"
+      aria-label="Two maps of the same shot, drawn to one scale. On the left, the view from the fixed stars: the puck travels a perfectly straight line while the square grid painted on the ground, and the arrow marking the ground's north, turn beneath it. On the right, the view from the ground: the same flight drawn in ground coordinates, curving away from the straight aiming line, with the cross-track miss marked at the end."></canvas>
+    <figcaption>Both maps show one shot. Left is the non-rotating view, right is what the gunner sees.
+    Walk the time slider from 0 to 100 percent and watch the two pictures disagree more and more.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Shot and planet settings">
+    <p class="legend">The shot</p>
+
+    <div class="control">
+      <div class="row">
+        <label for="lat">Latitude</label>
+        <output id="latOut" for="lat">45.0&deg; N</output>
+      </div>
+      <input type="range" id="lat" min="-90" max="90" step="0.5" value="45">
+      <p class="hint">Positive is north. Drag through zero and the curve flips over.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="brg">Bearing fired</label>
+        <output id="brgOut" for="brg">000&deg;</output>
+      </div>
+      <input type="range" id="brg" min="0" max="359" step="1" value="0">
+      <p class="hint">Compass bearing of the aim. The miss is the same size whichever way you shoot.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="spd">Muzzle speed</label>
+        <output id="spdOut" for="spd">30 m/s</output>
+      </div>
+      <input type="range" id="spd" min="10" max="1000" step="10" value="30">
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="dur">Flight time</label>
+        <output id="durOut" for="dur">1.00 h</output>
+      </div>
+      <input type="range" id="dur" min="10" max="7200" step="10" value="3600">
+      <p class="hint">The miss grows with the square of this, not in proportion to it.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="day">Length of the day</label>
+        <output id="dayOut" for="day">23.93 h</output>
+      </div>
+      <input type="range" id="day" min="1" max="100" step="0.01" value="23.93">
+      <p class="hint">Spin the planet up and the effect stops being a curiosity.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="tim">Time into flight</label>
+        <output id="timOut" for="tim">100%</output>
+      </div>
+      <input type="range" id="tim" min="0" max="100" step="1" value="100">
+      <p class="hint">Scrub the shot. Both maps redraw together.</p>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Cross-track miss</dt><dd id="rMiss">&mdash;</dd></div>
+      <div><dt>Coriolis f</dt><dd id="rF">&mdash;</dd></div>
+      <div><dt>Inertial circle</dt><dd id="rRad">&mdash;</dd></div>
+      <div><dt>Its period</dt><dd id="rPer">&mdash;</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Two maps, one shot. On the left there is no rotating planet at all: there is a puck sliding across
+  frictionless ice in a straight line, and a compass rose painted on the ice that slowly turns. On the
+  right the same flight is redrawn in the painted rose's own coordinates, and it bends. Nothing in the
+  first picture pushes the puck sideways, and the second picture is just the first one seen from a
+  turning chair.</p>
+
+  <h2>How fast does the ground turn?</h2>
+
+  <p>The planet spins about its axis at &Omega;, once per sidereal day. Stand at latitude &phi; and ask
+  not how fast you are being carried around, but how fast the little patch of ground under your feet is
+  turning <em>about its own vertical</em>. That is the component of the spin vector along the local
+  vertical, and the geometry gives it immediately:</p>
+
+  <p class="math">&omega;<sub>ground</sub> = &Omega; sin &phi;&nbsp;&nbsp;&nbsp;&nbsp;
+  f = 2&Omega; sin &phi;</p>
+
+  <p>At the pole the vertical is the spin axis, so the ground turns a full circle a day. At the equator
+  the vertical is at right angles to the axis: the patch of ground is tipping over, not turning, and a
+  horizontal path over it never gets twisted. That is the whole reason the effect dies at the equator and
+  reverses sign below it. The quantity <em>f</em>, twice the ground's turning rate, is the Coriolis
+  parameter, and it is the only thing about latitude that the rest of the physics remembers.</p>
+
+  <h2>The size of the miss</h2>
+
+  <p>Aim at something a distance <em>D</em>&nbsp;=&nbsp;<em>VT</em> away. The puck arrives where the
+  target used to be; the ground &mdash; and the target with it &mdash; has turned through
+  &Omega;&nbsp;sin&nbsp;&phi;&nbsp;<em>T</em> in the meantime. The cross-track miss is therefore exactly
+  <em>D</em>&nbsp;sin(&Omega; sin &phi;&nbsp;<em>T</em>), which for any flight short against a day is</p>
+
+  <p class="math">miss &asymp; &frac12; f V T&sup2;</p>
+
+  <p>Quadratic in time, which is why a rifle shot does not care and a weather system does. At
+  45&deg;&nbsp;N, <em>f</em> is 1.03&times;10<sup>&minus;4</sup>&nbsp;s<sup>&minus;1</sup>. The page opens
+  on a puck at 30&nbsp;m/s given a full hour: it covers 108&nbsp;km and lands 19.9&nbsp;km to the right,
+  nearly a fifth of the range. Cut the flight to ten minutes and the same puck misses by only 557&nbsp;m,
+  a thirtieth of its range &mdash; the fraction missed is sin(&Omega; sin &phi;&nbsp;<em>T</em>) and
+  depends on the clock alone, not on how fast you fired. Note what the formula does not contain either:
+  the bearing. Fire north, south or west and the miss is the same size, always to the right in the
+  northern hemisphere and always to the left in the southern.</p>
+
+  <h2>The circle it would close, given long enough</h2>
+
+  <p>Keep going and the veer keeps veering. A puck left alone on a rotating ocean traces a closed
+  <strong>inertial circle</strong> of radius <em>V</em>/<em>f</em> with period 2&pi;/<em>f</em> &mdash;
+  970&nbsp;km and 16.9&nbsp;hours for our 100&nbsp;m/s puck at 45&deg;. That period is exactly half a
+  pendulum day, the 33.85&nbsp;hours a Foucault pendulum takes to come back round at the same latitude,
+  and the factor of two is the same 2 that sits in <em>f</em>. The faint dotted arc in the right-hand map
+  is that circle. For a short flight it lies on top of the drawn track; stretch the flight time or shorten
+  the day and the two separate, because the simple turning-ground picture is the first term of the exact
+  answer, not the whole of it.</p>
+
+  <p>One honest caveat about the ice. A puck on a spinning planet also feels centrifugal force, and on this
+  page it does not appear at all. That is not a cheat: a planet's own rotation bulges it into exactly the
+  shape whose downhill pull cancels the centrifugal push, so a level surface on a rotating world is
+  already the surface on which centrifugal force does nothing. What is left over is the term that depends
+  on the puck's own velocity, and that term is Coriolis.</p>
+
+  <h2>What to try</h2>
+
+  <p>Start at the default and drag the latitude slider slowly down through zero. The curvature shrinks to
+  nothing at the equator and comes back the other way below it. Now put the latitude back at 45&deg;, pull
+  the flight time down to 1800&nbsp;s and then back up: the miss does not halve and double with it, it
+  falls to a quarter and climbs back, because the law is quadratic. Finally drag the length of the day
+  down to about two hours. The inertial circle shrinks to something the map can hold, the dotted arc and
+  the drawn track in the right-hand pane come apart, and you can watch a puck that was fired due north
+  end up travelling west.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+
+/* ------------------------------------------------------------------- MODEL
+   A free puck on a level, frictionless surface at latitude phi. In the
+   non-rotating frame its path is a straight line, exactly. The ground turns
+   about the local vertical at Omega sin(phi), so the ground-frame track is
+   that same straight line written in axes that have turned. Nothing here
+   touches the DOM.                                                          */
+const RAD = Math.PI / 180;
+const Model = {
+  SIDEREAL: 86164.0905,                 /* seconds in a sidereal day         */
+
+  omega(dayHours){ return 2 * Math.PI / (dayHours * 3600); },
+
+  /* the local vertical in planet-fixed axes, spin along +z */
+  up(latDeg, lonDeg){
+    const p = latDeg * RAD, l = (lonDeg || 0) * RAD;
+    return [Math.cos(p) * Math.cos(l), Math.cos(p) * Math.sin(l), Math.sin(p)];
+  },
+
+  /* f as twice the projection of the rotation vector on the local vertical.
+     Built from a 3-vector so longitude has to drop out on its own.          */
+  coriolis(latDeg, om, lonDeg){
+    const u = this.up(latDeg, lonDeg);
+    return 2 * (om * u[2]);             /* Omega = (0, 0, om)                */
+  },
+  groundRate(latDeg, om, lonDeg){ return this.coriolis(latDeg, om, lonDeg) / 2; },
+
+  /* ---- the two frames -------------------------------------------------- */
+  /* map axes are (east, north) in metres                                    */
+  inertial(t, V, brgDeg){
+    const b = brgDeg * RAD;
+    return [V * t * Math.sin(b), V * t * Math.cos(b)];
+  },
+  rot(v, a){
+    const c = Math.cos(a), s = Math.sin(a);
+    return [v[0] * c - v[1] * s, v[0] * s + v[1] * c];
+  },
+  /* the same point, in axes that have turned counter-clockwise by wg*t      */
+  ground(t, V, brgDeg, wg){ return this.rot(this.inertial(t, V, brgDeg), -wg * t); },
+  toInertial(g, t, wg){ return this.rot(g, wg * t); },
+
+  /* signed cross-track, positive to the right of the aim. Bearing cancels.  */
+  cross(t, V, wg){ return V * t * Math.sin(wg * t); },
+
+  /* the unit vector 90 degrees right of the aim, in map axes               */
+  rightOf(brgDeg){ const b = brgDeg * RAD; return [Math.cos(b), -Math.sin(b)]; },
+
+  /* ---- the exact f-plane trajectory, for comparison --------------------- */
+  /* u' = f v, v' = -f u : a circle of radius V/|f| and period 2 pi / |f|.   */
+  fplane(t, V, brgDeg, f){
+    const b = brgDeg * RAD, u0 = V * Math.sin(b), v0 = V * Math.cos(b);
+    if (f === 0) return [u0 * t, v0 * t];
+    const c = Math.cos(f * t), s = Math.sin(f * t);
+    return [(u0 * s - v0 * c + v0) / f, (u0 * c + v0 * s - u0) / f];
+  },
+  fplaneCentre(V, brgDeg, f){
+    const b = brgDeg * RAD;
+    return f === 0 ? null : [V * Math.cos(b) / f, -V * Math.sin(b) / f];
+  },
+  /* classical RK4 on the same system, used only by the selftest            */
+  fplaneRK4(tEnd, V, brgDeg, f, n){
+    const b = brgDeg * RAD;
+    let st = [0, 0, V * Math.sin(b), V * Math.cos(b)];
+    const h = tEnd / n;
+    const F = (q) => [q[2], q[3], f * q[3], -f * q[2]];
+    let speedErr = 0, radErr = 0;
+    const C = this.fplaneCentre(V, brgDeg, f), R = f === 0 ? 0 : Math.abs(V / f);
+    for (let i = 0; i < n; i++){
+      const k1 = F(st),
+            s2 = st.map((q, j) => q + h / 2 * k1[j]), k2 = F(s2),
+            s3 = st.map((q, j) => q + h / 2 * k2[j]), k3 = F(s3),
+            s4 = st.map((q, j) => q + h * k3[j]),     k4 = F(s4);
+      st = st.map((q, j) => q + h / 6 * (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j]));
+      speedErr = Math.max(speedErr, Math.abs(Math.hypot(st[2], st[3]) - V) / V);
+      if (C) radErr = Math.max(radErr, Math.abs(Math.hypot(st[0] - C[0], st[1] - C[1]) - R) / R);
+    }
+    return { state: st, speedErr: speedErr, radErr: radErr, radius: R };
+  },
+
+  /* perpendicular distance of a point from the line through A and B         */
+  offLine(pt, A, B){
+    const dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy);
+    if (L === 0) return Math.hypot(pt[0] - A[0], pt[1] - A[1]);
+    return Math.abs((pt[0] - A[0]) * dy - (pt[1] - A[1]) * dx) / L;
+  }
+};
+
+/* -------------------------------------------------------------- STATE/VIEW */
+const defaults = { lat: 45, brg: 0, spd: 30, dur: 3600, day: 23.93, tim: 100 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+const SS = 2;
+let W, H, NARROW, FT, FL, FS, PA, PANES = {};
+
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth;
+  W = Math.max(300, Math.min(1000, avail || 900));
+  NARROW = W < 640;
+  FT = NARROW ? 10 : 11;
+  FL = NARROW ? 11 : 12.5;
+  FS = NARROW ? 10 : 11;
+  PA = NARROW ? 11 : 18;
+  H = Math.round(W * (NARROW ? 1.62 : 0.60));
+  if (NARROW){
+    const cut = Math.round(H / 2);
+    PANES.a = { x: 0, y: 0, w: W, h: cut };
+    PANES.b = { x: 0, y: cut, w: W, h: H - cut };
+  } else {
+    const cut = Math.round(W / 2);
+    PANES.a = { x: 0, y: 0, w: cut, h: H };
+    PANES.b = { x: cut, y: 0, w: W - cut, h: H };
+  }
+  cv.width = Math.round(W * SS); cv.height = Math.round(H * SS);
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+function mono(sz, wt){ return (wt || 400) + " " + sz + "px " + (css("--font-mono") || "monospace"); }
+function sans(sz, wt){ return (wt || 400) + " " + sz + "px " + (css("--font-body") || "sans-serif"); }
+function plate(x, y, w, h){
+  ctx.save(); ctx.globalAlpha = 0.93; ctx.fillStyle = css("--field");
+  ctx.fillRect(x, y, w, h); ctx.restore();
+}
+function dist(m){
+  if (Math.abs(m) >= 10000) return (m / 1000).toFixed(m >= 100000 ? 0 : 1) + " km";
+  if (Math.abs(m) >= 1000) return (m / 1000).toFixed(2) + " km";
+  if (Math.abs(m) >= 1) return m.toFixed(0) + " m";
+  return m.toFixed(2) + " m";
+}
+function dur(sec){
+  if (sec < 90) return sec.toFixed(1) + " s";
+  if (sec < 5400) return (sec / 60).toFixed(1) + " min";
+  return (sec / 3600).toFixed(2) + " h";
+}
+
+/* every pane of a frame shares one world window, so the two maps are
+   directly comparable rather than each zoomed to its own contents          */
+function geometry(S){
+  const om = Model.omega(S.day);
+  const f = Model.coriolis(S.lat, om, 0);
+  const wg = f / 2;
+  const T = S.dur, t = T * S.tim / 100;
+  const N = 420;
+  const iPath = [], gPath = [], fPath = [];
+  for (let k = 0; k <= N; k++){
+    const tk = t * k / N;
+    iPath.push(Model.inertial(tk, S.spd, S.brg));
+    gPath.push(Model.ground(tk, S.spd, S.brg, wg));
+    fPath.push(Model.fplane(tk, S.spd, S.brg, f));
+  }
+  const aim = Model.inertial(T, S.spd, S.brg);       /* where the target was */
+  const tgt = Model.rot(aim, wg * t);                /* where the ground took it */
+
+  let x0 = 0, x1 = 0, y0 = 0, y1 = 0;
+  const eat = (q) => {
+    x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]);
+    y0 = Math.min(y0, q[1]); y1 = Math.max(y1, q[1]);
+  };
+  for (const q of iPath) eat(q);
+  for (const q of gPath) eat(q);
+  for (const q of fPath) eat(q);
+  eat(aim); eat(tgt);
+  /* the ground-north arrows are drawn at a fixed fraction of the window, so
+     let them into the box before it is fixed                              */
+  const diag = Math.max(Math.hypot(x1 - x0, y1 - y0), 1);
+  const arm = diag * 0.19;
+  eat([0, arm]); eat(Model.rot([0, arm], wg * t));
+  const mx = (x1 - x0) * 0.09 + 1, my = (y1 - y0) * 0.09 + 1;
+  return { om: om, f: f, wg: wg, T: T, t: t, iPath: iPath, gPath: gPath, fPath: fPath,
+           aim: aim, tgt: tgt, arm: arm,
+           box: [x0 - mx, x1 + mx, y0 - my, y1 + my] };
+}
+
+/* a pane's plot box and the shared projection into it */
+/* the plot box, with a row reserved above it for the pane's one annotation.
+   A caption that sits inside the map gets struck by whatever crosses it; a
+   row that belongs to nobody else cannot be crossed.                      */
+function annY(p){ return p.y + PA + FT + (NARROW ? 8 : 11); }
+function boxOf(p){
+  const legH = FL + 10, barH = FS + 14;
+  return {
+    L: p.x + PA, R: p.x + p.w - PA,
+    T: annY(p) + FL + (NARROW ? 8 : 10),
+    B: p.y + p.h - PA - legH - barH
+  };
+}
+function annotate(p, box, text){
+  ctx.font = sans(FL, 650); ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillStyle = css("--ground");
+  ctx.fillText(text, box.L, annY(p));
+  ctx.textBaseline = "alphabetic";
+}
+function paneTitle(p, text, colour){
+  ctx.font = mono(FT, 700); ctx.fillStyle = colour; ctx.textAlign = "left";
+  try { ctx.letterSpacing = "1.6px"; } catch (e) {}
+  ctx.fillText(text, p.x + PA, p.y + PA + FT);
+  try { ctx.letterSpacing = "0px"; } catch (e) {}
+}
+function niceStep(want){
+  const mag = Math.pow(10, Math.floor(Math.log10(Math.max(want, 1e-9))));
+  const nrm = want / mag;
+  return (nrm >= 5 ? 5 : nrm >= 2 ? 2 : 1) * mag;
+}
+function scaleBar(bx, py, px, metresPerPx){
+  /* a round number of metres that fits in about a quarter of the pane */
+  const len = niceStep(px * metresPerPx);
+  const w = len / metresPerPx;
+  ctx.strokeStyle = css("--ink"); ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(bx, py); ctx.lineTo(bx + w, py);
+  ctx.moveTo(bx, py - 4); ctx.lineTo(bx, py + 4);
+  ctx.moveTo(bx + w, py - 4); ctx.lineTo(bx + w, py + 4);
+  ctx.stroke();
+  ctx.font = mono(FS); ctx.fillStyle = css("--muted");
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText(dist(len), bx + w + 7, py - FS * 0.6);
+  ctx.textBaseline = "alphabetic";
+}
+function arrowTo(x0, y0, x1, y1, size){
+  const a = Math.atan2(y1 - y0, x1 - x0);
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x1 - size * Math.cos(a - 0.42), y1 - size * Math.sin(a - 0.42));
+  ctx.lineTo(x1 - size * Math.cos(a + 0.42), y1 - size * Math.sin(a + 0.42));
+  ctx.closePath(); ctx.fill();
+}
+
+/* ------------------------------------------------------------- the panes */
+/* a square grid painted on the ground, rotated by ang. In the left pane ang
+   grows with time (the ground turns); in the right pane it is always zero
+   (the ground is what we are standing on).                                 */
+function groundGrid(box, P, step, ang){
+  const c = Math.cos(ang), sn = Math.sin(ang);
+  const corners = [[box.L, box.T], [box.R, box.T], [box.R, box.B], [box.L, box.B]];
+  let lo = Infinity, hi = -Infinity, lo2 = Infinity, hi2 = -Infinity;
+  for (const q of corners){
+    const mx = P.inv(q[0], q[1]);
+    const u = mx[0] * c + mx[1] * sn, v = -mx[0] * sn + mx[1] * c;
+    lo = Math.min(lo, u); hi = Math.max(hi, u);
+    lo2 = Math.min(lo2, v); hi2 = Math.max(hi2, v);
+  }
+  const pt = (u, v) => [P.X(u * c - v * sn), P.Y(u * sn + v * c)];
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let u = Math.ceil(lo / step) * step; u <= hi; u += step){
+    const a = pt(u, lo2), b = pt(u, hi2);
+    ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]);
+  }
+  for (let v = Math.ceil(lo2 / step) * step; v <= hi2; v += step){
+    const a = pt(lo, v), b = pt(hi, v);
+    ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]);
+  }
+  ctx.stroke();
+}
+function polyline(pts, P){
+  ctx.beginPath();
+  for (let k = 0; k < pts.length; k++){
+    const q = pts[k];
+    if (k === 0) ctx.moveTo(P.X(q[0]), P.Y(q[1])); else ctx.lineTo(P.X(q[0]), P.Y(q[1]));
+  }
+  ctx.stroke();
+}
+/* an arrow marking which way the painted ground calls north */
+function northArm(P, arm, ang, colour, dashed){
+  const tip = Model.rot([0, arm], ang);   /* the same rotation the grid uses */
+  ctx.strokeStyle = colour; ctx.fillStyle = colour;
+  ctx.lineWidth = dashed ? 1.2 : 2;
+  ctx.setLineDash(dashed ? [4, 4] : []);
+  ctx.beginPath(); ctx.moveTo(P.X(0), P.Y(0)); ctx.lineTo(P.X(tip[0]), P.Y(tip[1])); ctx.stroke();
+  ctx.setLineDash([]);
+  if (!dashed) arrowTo(P.X(0), P.Y(0), P.X(tip[0]), P.Y(tip[1]), NARROW ? 6 : 8);
+  return tip;
+}
+
+function drawInertial(p, S, G, P){
+  const box = boxOf(p);
+  paneTitle(p, NARROW ? "VIEW FROM THE STARS" : "VIEW FROM THE FIXED STARS", css("--inertial"));
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(box.L, box.T, box.R - box.L, box.B - box.T); ctx.clip();
+  groundGrid(box, P, G.step, G.wg * G.t);
+
+  /* the arc the turning ground has carried the target along */
+  if (Math.abs(G.wg * G.t) > 1e-6){
+    ctx.strokeStyle = css("--ground"); ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+    const arc = [];
+    for (let k = 0; k <= 80; k++) arc.push(Model.rot(G.aim, G.wg * G.t * k / 80));
+    polyline(arc, P); ctx.setLineDash([]);
+  }
+
+  ctx.strokeStyle = css("--inertial"); ctx.lineWidth = NARROW ? 2 : 2.6;
+  polyline(G.iPath, P);
+  /* the two norths go on top, so neither can be buried under the path when
+     the shot happens to be fired along one of them                        */
+  northArm(P, G.arm, G.wg * G.t, css("--ground"), false);
+  northArm(P, G.arm, 0, css("--muted"), true);
+  ctx.restore();
+
+  const last = G.iPath[G.iPath.length - 1];
+  ctx.strokeStyle = css("--ground"); ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(P.X(G.aim[0]), P.Y(G.aim[1]), NARROW ? 4 : 5, 0, 7); ctx.stroke();
+  ctx.fillStyle = css("--ground");
+  ctx.beginPath(); ctx.arc(P.X(G.tgt[0]), P.Y(G.tgt[1]), NARROW ? 4 : 5, 0, 7); ctx.fill();
+  ctx.fillStyle = css("--inertial");
+  ctx.beginPath(); ctx.arc(P.X(last[0]), P.Y(last[1]), NARROW ? 3.5 : 4.5, 0, 7); ctx.fill();
+  ctx.strokeStyle = css("--field"); ctx.lineWidth = 1.5; ctx.stroke();
+
+  /* how far the ground has turned, said in words on its own plate */
+  const turn = (G.wg * G.t) * 180 / Math.PI;
+  annotate(p, box, "ground turned " + Math.abs(turn).toFixed(1) + "\u00B0 " +
+    (turn > 0 ? "anticlockwise" : turn < 0 ? "clockwise" : ""));
+
+  legendRow(p, box, [
+    ["line", css("--inertial"), "puck"],
+    ["line", css("--ground"), "ground north"],
+    ["dash", css("--muted"), "at t=0"]
+  ]);
+  scaleBar(box.L, box.B + FS + 12, (box.R - box.L) * 0.3, P.mpp);
+}
+
+function drawGround(p, S, G, P){
+  const box = boxOf(p);
+  paneTitle(p, NARROW ? "VIEW FROM THE GROUND" : "VIEW FROM THE TURNING GROUND", css("--ground"));
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(box.L, box.T, box.R - box.L, box.B - box.T); ctx.clip();
+  groundGrid(box, P, G.step, 0);
+  northArm(P, G.arm, 0, css("--ground"), false);
+
+  ctx.strokeStyle = css("--inertial"); ctx.lineWidth = 1.4; ctx.setLineDash([6, 5]);
+  ctx.beginPath(); ctx.moveTo(P.X(0), P.Y(0)); ctx.lineTo(P.X(G.aim[0]), P.Y(G.aim[1])); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle = css("--muted"); ctx.lineWidth = 1.2; ctx.setLineDash([1.5, 3.5]);
+  polyline(G.fPath, P); ctx.setLineDash([]);
+
+  ctx.strokeStyle = css("--ground"); ctx.lineWidth = NARROW ? 2 : 2.6;
+  polyline(G.gPath, P);
+
+  /* the perpendicular from the aiming line to where the puck actually is */
+  const g = G.gPath[G.gPath.length - 1];
+  const b = S.brg * Math.PI / 180;
+  const along = g[0] * Math.sin(b) + g[1] * Math.cos(b);
+  const foot = [along * Math.sin(b), along * Math.cos(b)];
+  ctx.strokeStyle = css("--ground"); ctx.lineWidth = 1.3; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(P.X(foot[0]), P.Y(foot[1])); ctx.lineTo(P.X(g[0]), P.Y(g[1])); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  ctx.strokeStyle = css("--inertial"); ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(P.X(G.aim[0]), P.Y(G.aim[1]), NARROW ? 4 : 5, 0, 7); ctx.stroke();
+  ctx.fillStyle = css("--ground");
+  ctx.beginPath(); ctx.arc(P.X(g[0]), P.Y(g[1]), NARROW ? 3.5 : 4.5, 0, 7); ctx.fill();
+  ctx.strokeStyle = css("--field"); ctx.lineWidth = 1.5; ctx.stroke();
+
+  const miss = Model.cross(G.t, S.spd, G.wg);
+  annotate(p, box, Math.abs(miss) < 1e-9 ? "no miss at all"
+    : "miss " + dist(Math.abs(miss)) + " to the " + (miss > 0 ? "right" : "left"));
+
+  legendRow(p, box, [
+    ["line", css("--ground"), "track"],
+    ["dash", css("--inertial"), "aim"],
+    ["dot", css("--muted"), "inertial circle"]
+  ]);
+  scaleBar(box.L, box.B + FS + 12, (box.R - box.L) * 0.3, P.mpp);
+}
+
+function legendRow(p, box, items){
+  const y = p.y + p.h - PA - FL * 0.2;
+  ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.font = sans(FL);
+  let x = box.L;
+  for (const it of items){
+    const tw = ctx.measureText(it[2]).width;
+    if (x + 18 + tw > box.R) break;
+    ctx.strokeStyle = it[1]; ctx.lineWidth = 2;
+    ctx.setLineDash(it[0] === "dash" ? [5, 4] : it[0] === "dot" ? [1.5, 3] : []);
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 13, y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = css("--muted"); ctx.fillText(it[2], x + 17, y);
+    x += 17 + tw + (NARROW ? 11 : 16);
+  }
+  ctx.textBaseline = "alphabetic";
+}
+
+/* ------------------------------------------------------------------ render */
+function render(){
+  fitCanvas();
+  const S = state, G = geometry(S);
+  ctx.fillStyle = css("--field"); ctx.fillRect(0, 0, W, H);
+
+  /* one window and one scale for both panes, so they can be compared */
+  const ba = boxOf(PANES.a), bb = boxOf(PANES.b);
+  const pw = Math.min(ba.R - ba.L, bb.R - bb.L), ph = Math.min(ba.B - ba.T, bb.B - bb.T);
+  const bw = G.box[1] - G.box[0], bh = G.box[3] - G.box[2];
+  const sc = Math.min(pw / bw, ph / bh);
+  G.step = niceStep((Math.max(bw, bh)) / 5);
+  const wcx = (G.box[0] + G.box[1]) / 2, wcy = (G.box[2] + G.box[3]) / 2;
+  const proj = (box) => {
+    const cx = (box.L + box.R) / 2, cy = (box.T + box.B) / 2;
+    return {
+      X: (m) => cx + (m - wcx) * sc,
+      Y: (m) => cy - (m - wcy) * sc,
+      inv: (px, py) => [wcx + (px - cx) / sc, wcy - (py - cy) / sc],
+      mpp: 1 / sc
+    };
+  };
+  drawInertial(PANES.a, S, G, proj(ba));
+  drawGround(PANES.b, S, G, proj(bb));
+
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1; ctx.beginPath();
+  if (NARROW){ ctx.moveTo(PA, PANES.b.y + 0.5); ctx.lineTo(W - PA, PANES.b.y + 0.5); }
+  else { ctx.moveTo(PANES.b.x + 0.5, PA); ctx.lineTo(PANES.b.x + 0.5, H - PA); }
+  ctx.stroke();
+
+  const hemi = S.lat > 0 ? " N" : S.lat < 0 ? " S" : "";
+  el("latOut").textContent = Math.abs(S.lat).toFixed(1) + "°" + hemi;
+  el("brgOut").textContent = String(Math.round(S.brg)).padStart(3, "0") + "°";
+  el("spdOut").textContent = S.spd.toFixed(0) + " m/s";
+  el("durOut").textContent = dur(S.dur);
+  el("dayOut").textContent = S.day.toFixed(2) + " h";
+  el("timOut").textContent = S.tim.toFixed(0) + "%";
+
+  const miss = Model.cross(G.t, S.spd, G.wg);
+  el("rMiss").textContent = Math.abs(miss) < 1e-9 ? "none"
+    : dist(Math.abs(miss)) + (miss > 0 ? " right" : " left");
+  el("rF").textContent = G.f === 0 ? "0" : G.f.toExponential(3) + " /s";
+  el("rRad").textContent = G.f === 0 ? "∞" : dist(Math.abs(S.spd / G.f));
+  el("rPer").textContent = G.f === 0 ? "∞" : dur(2 * Math.PI / Math.abs(G.f));
+}
+
+/* ---------------------------------------------------------------- bindings */
+function bind(id, key){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parseFloat(input.value); render(); });
+}
+for (const k of ["lat", "brg", "spd", "dur", "day", "tim"]) bind(k, k);
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  for (const k of ["lat", "brg", "spd", "dur", "day", "tim"]) el(k).value = String(defaults[k]);
+  render();
+});
+
+let raf = 0;
+addEventListener("resize", () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(render); });
+const mq = matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+render();
+
+/* -------------------------------------------------------------- SELFTEST
+   Thirteen checks. The Coriolis parameter is rebuilt from a three-vector
+   projection so that longitude has to cancel on its own; the trajectory is
+   checked for straightness, for exact recovery under the inverse rotation,
+   and against a classical RK4 integration of the f-plane equations that
+   shares no code with the closed forms it is testing.                     */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const OM = 2 * Math.PI / Model.SIDEREAL;
+  const wg45 = Model.groundRate(45, OM, 0), f45 = Model.coriolis(45, OM, 0);
+
+  /* 1. the non-rotating path is a straight line to the limit of doubles */
+  let off = 0, len = 0;
+  for (const b of [0, 37, 90, 180, 233, 359]) for (const V of [10, 100, 1000]){
+    const T = 3600, A = Model.inertial(0, V, b), B = Model.inertial(T, V, b);
+    len = Math.max(len, Math.hypot(B[0], B[1]));
+    for (let k = 0; k <= 400; k++) off = Math.max(off, Model.offLine(Model.inertial(T * k / 400, V, b), A, B));
+  }
+  push("inertial path is straight to 1e-15 of its own length", off / len <= 1e-15,
+    "worst departure " + off.toExponential(2) + " m on a path of " + (len / 1000).toFixed(0) +
+    " km, i.e. " + (off / len).toExponential(2) + " of it — double-precision rounding, not curvature");
+
+  /* 2. f rebuilt as 2 (Omega . up), with longitude obliged to cancel */
+  let d2 = 0;
+  for (let k = 0; k <= 90; k++) for (const lon of [0, 47, 123, 271]){
+    const lat = -90 + k * 2;
+    d2 = Math.max(d2, Math.abs(Model.coriolis(lat, OM, lon) - 2 * OM * Math.sin(lat * Math.PI / 180)));
+  }
+  push("f equals 2 Omega sin(lat) at 91 latitudes and 4 longitudes", d2 <= 1e-14 * 2 * OM,
+    "worst absolute error " + d2.toExponential(2) + " /s against 2 Omega = " + (2 * OM).toExponential(4) + " /s");
+
+  /* 3. the equator is exactly silent, and the sign flips across it */
+  let eqZero = Model.coriolis(0, OM, 0) === 0, anti = 0;
+  for (let b = 0; b < 360; b += 15){
+    if (Model.cross(600, 100, Model.groundRate(0, OM, 0)) !== 0) eqZero = false;
+    for (let la = 1; la <= 89; la += 4){
+      anti = Math.max(anti, Math.abs(Model.cross(600, 100, Model.groundRate(la, OM, 0)) +
+                                     Model.cross(600, 100, Model.groundRate(-la, OM, 0))));
+    }
+  }
+  push("deflection is exactly zero at the equator and exactly odd in latitude", eqZero && anti === 0,
+    "f(0) = " + Model.coriolis(0, OM, 0) + " exactly; worst |north + south| over 23 latitudes = " + anti);
+
+  /* 4. the inertial circle closes after 2 pi / f, at 40 latitudes */
+  let d4 = 0;
+  for (let k = 1; k <= 40; k++){
+    const f = Model.coriolis(k * 2, OM, 0), r = Model.fplaneRK4(2 * Math.PI / f, 100, 0, f, 4000);
+    d4 = Math.max(d4, Math.hypot(r.state[0], r.state[1]) / r.radius);
+  }
+  push("RK4 returns to the start after exactly 2 pi / f at 40 latitudes", d4 <= 1e-9,
+    "worst closure gap " + d4.toExponential(2) + " of the circle radius");
+
+  /* 5. rotating the ground track back recovers the straight line */
+  let d5 = 0;
+  for (let k = 0; k <= 500; k++){
+    const tk = 3600 * k / 500, g = Model.ground(tk, 100, 33, wg45);
+    const back = Model.toInertial(g, tk, wg45), want = Model.inertial(tk, 100, 33);
+    d5 = Math.max(d5, Math.hypot(back[0] - want[0], back[1] - want[1]));
+  }
+  push("the ground track transforms back to the straight line", d5 <= 1e-9,
+    "worst discrepancy " + d5.toExponential(2) + " m over a 360 km flight");
+
+  /* 6. a rotation cannot change a distance from the origin */
+  let d6 = 0;
+  for (let k = 1; k <= 500; k++){
+    const tk = 3600 * k / 500;
+    const g = Model.ground(tk, 100, 33, wg45), i = Model.inertial(tk, 100, 33);
+    d6 = Math.max(d6, Math.abs(Math.hypot(g[0], g[1]) - Math.hypot(i[0], i[1])) / Math.hypot(i[0], i[1]));
+  }
+  push("the frame change preserves range exactly", d6 <= 1e-12,
+    "worst relative range error " + d6.toExponential(2));
+
+  /* 7. the miss does not depend on which way you fire */
+  let lo = Infinity, hi = -Infinity;
+  for (let b = 0; b < 360; b += 5){
+    const g = Model.ground(600, 100, b, wg45), r = Model.rightOf(b);
+    const c = g[0] * r[0] + g[1] * r[1];
+    lo = Math.min(lo, c); hi = Math.max(hi, c);
+  }
+  push("cross-track miss is the same at all 72 bearings", (hi - lo) / hi <= 1e-12,
+    "spread " + (hi - lo).toExponential(2) + " m about " + hi.toFixed(4) + " m");
+
+  /* 8. right in the north, left in the south, for every heading */
+  let sides = true;
+  for (let la = -88; la <= 88; la += 8){
+    if (la === 0) continue;
+    const w = Model.groundRate(la, OM, 0);
+    for (let b = 0; b < 360; b += 10){
+      const g = Model.ground(900, 250, b, w), r = Model.rightOf(b);
+      const c = g[0] * r[0] + g[1] * r[1];
+      if (Math.sign(c) !== Math.sign(la)) sides = false;
+    }
+  }
+  push("deflection is right in the north and left in the south at every bearing", sides,
+    "23 latitudes x 36 bearings, sign of cross-track matched the sign of latitude every time");
+
+  /* 9. the quadratic small-time law */
+  const r9 = Model.cross(1, 100, wg45) / (0.5 * f45 * 100 * 1);
+  push("miss approaches one half f V t squared for short flights", Math.abs(r9 - 1) <= 1e-8,
+    "at t = 1 s the ratio to the quadratic law is 1 " + (r9 - 1).toExponential(2));
+
+  /* 10. against RK4 on the f-plane, which shares no code with the rotation */
+  const exact = Model.cross(600, 100, wg45);
+  const st = Model.fplaneRK4(600, 100, 0, f45, 20000).state;
+  const rr = Model.rightOf(0), crk = st[0] * rr[0] + st[1] * rr[1];
+  push("turning-ground miss agrees with the f-plane integration to 0.05 percent",
+    Math.abs(exact - crk) / crk <= 5e-4,
+    "100 m/s for 600 s at 45 N: " + exact.toFixed(2) + " m by rotation, " + crk.toFixed(2) +
+    " m by RK4, differing by " + (100 * Math.abs(exact - crk) / crk).toFixed(4) + " percent");
+
+  /* 11. Coriolis does no work, so the speed is untouched */
+  const r11 = Model.fplaneRK4(2 * Math.PI / f45, 100, 0, f45, 20000);
+  push("speed is conserved around a whole inertial circle", r11.speedErr <= 1e-12,
+    "worst relative speed drift " + r11.speedErr.toExponential(2) + " over 20000 RK4 steps");
+
+  /* 12. and the radius it settles on is V / |f| */
+  push("the integrated circle has radius V / |f|", r11.radErr <= 1e-12,
+    "worst relative radius error " + r11.radErr.toExponential(2) + " about " +
+    (r11.radius / 1000).toFixed(1) + " km");
+
+  /* 13. nothing in the control space goes non-finite */
+  let finite = true;
+  for (let la = -90; la <= 90; la += 10)
+    for (let b = 0; b < 360; b += 45)
+      for (const V of [10, 250, 1000])
+        for (const T of [10, 600, 3600])
+          for (const day of [1, 23.93, 100]){
+            const w = Model.groundRate(la, Model.omega(day), 0);
+            const g = Model.ground(T, V, b, w), c = Model.cross(T, V, w);
+            if (!Number.isFinite(g[0]) || !Number.isFinite(g[1]) || !Number.isFinite(c)) finite = false;
+            if (Math.abs(c) > V * T + 1e-6) finite = false;
+          }
+  push("every drawn quantity is finite and inside range over the control space", finite,
+    "19 x 8 x 3 x 3 x 3 = 4104 combinations, cross-track never exceeding the distance flown");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: 20260101 };
+
+})();
+</script>
+
+</body>
+</html>

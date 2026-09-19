@@ -1,11 +1,12 @@
 {
   "generated_at": "2026-09-19",
-  "count": 60,
+  "count": 65,
   "domains": {
     "biology": [
       "enzyme-michaelis-menten",
       "epidemic-r0-herd-immunity",
       "hardy-weinberg",
+      "neuron-integrate-and-fire",
       "population-logistic-chaos",
       "predator-prey-cycles"
     ],
@@ -25,10 +26,12 @@
       "regex-backtracking-blowup"
     ],
     "earth-science": [
+      "coriolis-deflection",
       "earthquake-magnitude-energy",
       "greenhouse-energy-balance",
       "plate-tectonics-seafloor-age",
-      "radiometric-dating"
+      "radiometric-dating",
+      "river-meander-migration"
     ],
     "economics": [
       "auction-formats-revenue",
@@ -39,6 +42,7 @@
     "engineering": [
       "beam-bending-moment",
       "gear-train-ratio",
+      "heat-sink-fin-efficiency",
       "pid-controller"
     ],
     "game-theory": [
@@ -70,6 +74,7 @@
     ],
     "music-theory": [
       "beat-frequency-tuning",
+      "chord-voice-leading-distance",
       "equal-temperament",
       "harmonic-series-timbre",
       "rhythm-polymeter-cycle"
@@ -90,17 +95,17 @@
     ]
   },
   "interaction_patterns": {
-    "build-from-parts": 6,
-    "compare-side-by-side": 5,
-    "drag-parameter": 5,
+    "build-from-parts": 7,
+    "compare-side-by-side": 6,
+    "drag-parameter": 6,
     "draw-input": 5,
     "guess-then-reveal": 5,
     "live-code": 3,
     "perturb-and-observe": 6,
     "race-two-methods": 5,
-    "spatial-explore": 5,
+    "spatial-explore": 6,
     "step-through": 5,
-    "time-scrubber": 5,
+    "time-scrubber": 6,
     "tune-to-match": 5
   },
   "explainers": [
@@ -391,6 +396,39 @@
       "assertions_count": 13
     },
     {
+      "slug": "chord-voice-leading-distance",
+      "title": "The Shortest Way Between Two Chords",
+      "domain": "music-theory",
+      "difficulty": 3,
+      "summary": "Voice-leading distance is the smallest total semitone motion between two chords. Build a pair, reassign the voices, and watch the number fall to its minimum.",
+      "prerequisites": [],
+      "tags": [
+        "music-theory",
+        "voice-leading",
+        "metric-space",
+        "optimisation",
+        "neo-riemannian",
+        "pitch-class"
+      ],
+      "interaction_pattern": "build-from-parts",
+      "sources": [
+        {
+          "title": "Tymoczko, The Geometry of Musical Chords (Science, 2006)",
+          "url": "https://www.science.org/doi/10.1126/science.1126287"
+        },
+        {
+          "title": "Cohn, Neo-Riemannian Operations, Parsimonious Trichords (Journal of Music Theory, 1997)",
+          "url": "https://www.jstor.org/stable/843761"
+        },
+        {
+          "title": "Callender, Quinn and Tymoczko, Generalized Voice-Leading Spaces (Science, 2008)",
+          "url": "https://www.science.org/doi/10.1126/science.1153021"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
       "slug": "comparative-advantage-ppf",
       "title": "Worse At Everything, Still Worth Trading With",
       "domain": "economics",
@@ -479,6 +517,39 @@
         {
           "title": "Morey, Hoekstra, Rouder, Lee and Wagenmakers, The Fallacy of Placing Confidence in Confidence Intervals (2016)",
           "url": "https://link.springer.com/article/10.3758/s13423-015-0947-8"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
+      "slug": "coriolis-deflection",
+      "title": "Nothing Pushed It Sideways",
+      "domain": "earth-science",
+      "difficulty": 3,
+      "summary": "Slide a puck across frictionless ice and watch it in two frames at once. From the stars it goes dead straight; from the ground it curves, because the ground turned underneath it.",
+      "prerequisites": [],
+      "tags": [
+        "coriolis",
+        "rotating-frames",
+        "geophysics",
+        "inertial-oscillation",
+        "latitude",
+        "pseudo-force"
+      ],
+      "interaction_pattern": "spatial-explore",
+      "sources": [
+        {
+          "title": "Persson, How do we understand the Coriolis force? (BAMS, 1998)",
+          "url": "https://journals.ametsoc.org/view/journals/bams/79/7/1520-0477_1998_079_1373_hdwutc_2_0_co_2.xml"
+        },
+        {
+          "title": "Vallis, Atmospheric and Oceanic Fluid Dynamics, ch. 2: effects of rotation",
+          "url": "https://www.cambridge.org/core/books/atmospheric-and-oceanic-fluid-dynamics/41F3FE6D4CA5A9A91F1CE5C6C0D1B1E9"
+        },
+        {
+          "title": "NOAA: inertial oscillations and the inertial period",
+          "url": "https://oceanservice.noaa.gov/education/tutorial_currents/04currents1.html"
         }
       ],
       "created_at": "2026-09-19",
@@ -990,6 +1061,35 @@
       "assertions_count": 13
     },
     {
+      "slug": "heat-sink-fin-efficiency",
+      "title": "The Far End of the Fin Is Cold",
+      "domain": "engineering",
+      "difficulty": 3,
+      "summary": "A longer cooling fin always dissipates more heat and always dissipates less per millimetre of metal. Put two fins side by side and watch the second one waste its length.",
+      "prerequisites": [],
+      "tags": [
+        "engineering",
+        "heat-transfer",
+        "conduction",
+        "convection",
+        "diminishing-returns",
+        "optimisation"
+      ],
+      "interaction_pattern": "compare-side-by-side",
+      "sources": [
+        {
+          "title": "Incropera and DeWitt, Fundamentals of Heat and Mass Transfer, chapter 3: extended surfaces",
+          "url": "https://archive.org/details/fundamentalsofhe0000incr"
+        },
+        {
+          "title": "Schneider, Conduction Heat Transfer (fin efficiency and the corrected length)",
+          "url": "https://archive.org/details/conductionheattr0000schn"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
       "slug": "huffman-coding",
       "title": "Building an Optimal Code, Two Symbols at a Time",
       "domain": "information-theory",
@@ -1182,6 +1282,41 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 9
+    },
+    {
+      "slug": "neuron-integrate-and-fire",
+      "title": "Below This Current, Nothing Happens",
+      "domain": "biology",
+      "difficulty": 3,
+      "summary": "A neuron charges like a leaky capacitor until it trips a threshold, fires, and resets. Drag the input current down and at one exact value the output stops entirely.",
+      "prerequisites": [
+        "damped-harmonic-oscillator"
+      ],
+      "tags": [
+        "neuroscience",
+        "integrate-and-fire",
+        "threshold",
+        "rheobase",
+        "differential-equations",
+        "membrane"
+      ],
+      "interaction_pattern": "drag-parameter",
+      "sources": [
+        {
+          "title": "Lapicque's 1907 paper: from frogs to integrate-and-fire (Brunel & van Rossum, 2007)",
+          "url": "https://link.springer.com/article/10.1007/s00422-007-0190-0"
+        },
+        {
+          "title": "Gerstner et al., Neuronal Dynamics, ch. 1.3: integrate-and-fire models",
+          "url": "https://neuronaldynamics.epfl.ch/online/Ch1.S3.html"
+        },
+        {
+          "title": "Dayan & Abbott, Theoretical Neuroscience, ch. 5: model neurons",
+          "url": "https://mitpress.mit.edu/9780262541855/theoretical-neuroscience/"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
     },
     {
       "slug": "newton-raphson-basins",
@@ -1665,6 +1800,39 @@
         {
           "title": "Toussaint, The Euclidean Algorithm Generates Traditional Musical Rhythms",
           "url": "https://archive.bridgesmathart.org/2005/bridges2005-47.html"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
+      "slug": "river-meander-migration",
+      "title": "The River Cuts Its Own Corner",
+      "domain": "earth-science",
+      "difficulty": 3,
+      "summary": "A bend erodes its outside and builds its inside, so it deepens and crawls downstream until two limbs touch and the loop is left behind as a lake. Scrub three centuries of it.",
+      "prerequisites": [],
+      "tags": [
+        "geomorphology",
+        "meanders",
+        "oxbow-lake",
+        "sinuosity",
+        "erosion",
+        "bend-theory"
+      ],
+      "interaction_pattern": "time-scrubber",
+      "sources": [
+        {
+          "title": "Ikeda, Parker & Sawai, Bend theory of river meanders (JFM, 1981)",
+          "url": "https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/abs/bend-theory-of-river-meanders-part-1-linear-development/8C5D0B8D6C0C1F0E2E1A9E4E6F5A1B2C"
+        },
+        {
+          "title": "Howard & Knutson, Sufficient conditions for river meandering (WRR, 1984)",
+          "url": "https://agupubs.onlinelibrary.wiley.com/doi/10.1029/WR020i011p01659"
+        },
+        {
+          "title": "Leopold & Wolman, River meanders (GSA Bulletin, 1960)",
+          "url": "https://pubs.geoscienceworld.org/gsa/gsabulletin/article/71/6/769/4266"
         }
       ],
       "created_at": "2026-09-19",
