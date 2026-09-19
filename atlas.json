@@ -1,6 +1,6 @@
 {
   "generated_at": "2026-09-19",
-  "count": 35,
+  "count": 39,
   "domains": {
     "biology": [
       "enzyme-michaelis-menten",
@@ -33,14 +33,17 @@
     "game-theory": [
       "monty-hall",
       "prisoners-dilemma-iterated",
-      "schelling-segregation-model"
+      "schelling-segregation-model",
+      "tragedy-of-the-commons"
     ],
     "information-theory": [
+      "hamming-code",
       "huffman-coding",
       "shannon-channel-capacity"
     ],
     "linguistics": [
-      "levenshtein-distance"
+      "levenshtein-distance",
+      "sound-change-chain-shift"
     ],
     "mathematics": [
       "fourier-series-square-wave",
@@ -61,20 +64,21 @@
     ],
     "statistics": [
       "central-limit-theorem",
+      "regression-to-the-mean",
       "simpsons-paradox"
     ]
   },
   "interaction_patterns": {
     "build-from-parts": 5,
     "compare-side-by-side": 3,
-    "drag-parameter": 2,
+    "drag-parameter": 3,
     "draw-input": 3,
-    "guess-then-reveal": 3,
+    "guess-then-reveal": 4,
     "live-code": 2,
-    "perturb-and-observe": 3,
+    "perturb-and-observe": 4,
     "race-two-methods": 3,
     "spatial-explore": 3,
-    "step-through": 2,
+    "step-through": 3,
     "time-scrubber": 3,
     "tune-to-match": 3
   },
@@ -457,6 +461,39 @@
       ],
       "interaction_pattern": "drag-parameter",
       "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
+      "slug": "hamming-code",
+      "title": "The Error Tells You Where It Is",
+      "domain": "information-theory",
+      "difficulty": 2,
+      "summary": "Three parity checks over seven bits, arranged so the checks that fail spell out, in binary, the number of the bit that broke. Flip a bit and watch the circles answer.",
+      "prerequisites": [],
+      "tags": [
+        "error-correction",
+        "parity",
+        "hamming-distance",
+        "perfect-code",
+        "binary",
+        "venn"
+      ],
+      "interaction_pattern": "perturb-and-observe",
+      "sources": [
+        {
+          "title": "Hamming(7,4)",
+          "url": "https://en.wikipedia.org/wiki/Hamming(7,4)"
+        },
+        {
+          "title": "Hamming bound and perfect codes",
+          "url": "https://en.wikipedia.org/wiki/Hamming_bound"
+        },
+        {
+          "title": "R. W. Hamming, Error Detecting and Error Correcting Codes (1950)",
+          "url": "https://ieeexplore.ieee.org/document/6772729"
+        }
+      ],
       "created_at": "2026-09-19",
       "assertions_count": 12
     },
@@ -903,6 +940,38 @@
       "assertions_count": 12
     },
     {
+      "slug": "regression-to-the-mean",
+      "title": "Nobody Did Anything and It Improved",
+      "domain": "statistics",
+      "difficulty": 3,
+      "summary": "Pick the top scorers and test them again. They fall back with no cause at all, and that alone is enough to manufacture a treatment effect that never happened.",
+      "prerequisites": [],
+      "tags": [
+        "regression-to-the-mean",
+        "selection-effect",
+        "normal-distribution",
+        "study-design",
+        "control-group"
+      ],
+      "interaction_pattern": "guess-then-reveal",
+      "sources": [
+        {
+          "title": "Galton, Regression Towards Mediocrity in Hereditary Stature (1886)",
+          "url": "https://galton.org/essays/1880-1889/galton-1886-jaigi-regression-stature.pdf"
+        },
+        {
+          "title": "Barnett, van der Pols and Dobson, Regression to the mean: what it is and how to deal with it",
+          "url": "https://academic.oup.com/ije/article/34/1/215/638499"
+        },
+        {
+          "title": "NIST/SEMATECH e-Handbook, Normal distribution",
+          "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
       "slug": "schelling-segregation-model",
       "title": "Nobody Wanted This",
       "domain": "game-theory",
@@ -986,6 +1055,42 @@
       "assertions_count": 12
     },
     {
+      "slug": "sound-change-chain-shift",
+      "title": "Seven Vowels Move and None Collide",
+      "domain": "linguistics",
+      "difficulty": 3,
+      "summary": "Step through the Great Vowel Shift one change at a time and watch seven long vowels cross the mouth over two centuries without any two of them ever landing on the same spot.",
+      "prerequisites": [],
+      "tags": [
+        "great-vowel-shift",
+        "chain-shift",
+        "historical-phonology",
+        "phonemic-contrast",
+        "vowel-space"
+      ],
+      "interaction_pattern": "step-through",
+      "sources": [
+        {
+          "title": "Great Vowel Shift",
+          "url": "https://en.wikipedia.org/wiki/Great_Vowel_Shift"
+        },
+        {
+          "title": "Chain shift: push chains and pull chains",
+          "url": "https://en.wikipedia.org/wiki/Chain_shift"
+        },
+        {
+          "title": "Wells's standard lexical sets",
+          "url": "https://en.wikipedia.org/wiki/Lexical_set"
+        },
+        {
+          "title": "The IPA vowel diagram",
+          "url": "https://en.wikipedia.org/wiki/Vowel_diagram"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
       "slug": "special-relativity-time-dilation",
       "title": "The Longer Way Round",
       "domain": "physics",
@@ -1036,6 +1141,42 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 12
+    },
+    {
+      "slug": "tragedy-of-the-commons",
+      "title": "Everyone Is Right and the Field Is Ruined",
+      "domain": "game-theory",
+      "difficulty": 3,
+      "summary": "Every herder's own best move is one more animal, and the common ends up carrying nearly twice what it should. Drag the number of herders and watch the gap open.",
+      "prerequisites": [],
+      "tags": [
+        "tragedy-of-the-commons",
+        "nash-equilibrium",
+        "externality",
+        "pigouvian-tax",
+        "common-pool-resource"
+      ],
+      "interaction_pattern": "drag-parameter",
+      "sources": [
+        {
+          "title": "Tragedy of the commons",
+          "url": "https://en.wikipedia.org/wiki/Tragedy_of_the_commons"
+        },
+        {
+          "title": "Cournot competition, the same first-order condition",
+          "url": "https://en.wikipedia.org/wiki/Cournot_competition"
+        },
+        {
+          "title": "Pigouvian tax",
+          "url": "https://en.wikipedia.org/wiki/Pigouvian_tax"
+        },
+        {
+          "title": "Elinor Ostrom, Governing the Commons",
+          "url": "https://en.wikipedia.org/wiki/Elinor_Ostrom"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
     }
   ]
 }

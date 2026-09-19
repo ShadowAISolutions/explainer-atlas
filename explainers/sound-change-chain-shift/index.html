@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seven Vowels Move and None Collide — Explainer Atlas</title>
+<meta name="description" content="Step through the Great Vowel Shift one change at a time. Seven long vowels walk right across the mouth over two centuries and not one of them lands on another.">
+<style>
+:root{
+  --bg:#f7f4ec; --panel:#fffdf8; --ink:#241f1a; --muted:#6b6154; --line:#e2dbc9;
+  --accent:#43407f; --accent-soft:#e9e8f4; --front:#2f5090; --back:#a5501e;
+  --ghost:#b9b0a0; --flag:#8a2f3f;
+  --radius:9px; --pad:clamp(14px,3vw,26px);
+  --font-body:Iowan Old Style,Palatino Linotype,Palatino,Georgia,serif;
+  --font-ui:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.6rem,1.05rem + 2.3vw,2.5rem);
+  --scale-body:clamp(1rem,0.95rem + 0.24vw,1.1rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#15140f; --panel:#1e1c16; --ink:#ede7d9; --muted:#a2997f; --line:#332e24;
+    --accent:#a5a2e8; --accent-soft:#232140; --front:#83a6e8; --back:#e69a62;
+    --ghost:#5d564a; --flag:#e0788a;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.65 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:63rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:2px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.12; margin:0 0 .35em; letter-spacing:-.012em}
+.kicker{margin:0 0 .4em; color:var(--accent); font:600 .74rem/1.3 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.13em}
+.standfirst{margin:0; color:var(--muted); max-width:44em; font-style:italic}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:57rem){ .layout{grid-template-columns:minmax(0,1.4fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.85rem; font-family:var(--font-ui)}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1em; font-family:var(--font-ui)}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .88rem/1 var(--font-mono); color:var(--accent);
+  background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.82rem; line-height:1.5}
+.check{display:flex; align-items:center; gap:.55em}
+.check input{width:17px; height:17px; accent-color:var(--accent)}
+.check label{font-weight:600}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line);
+  border-radius:7px; padding:.5em .7em; min-height:40px}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+.steps{display:grid; grid-template-columns:1fr 1fr; gap:.5em}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.4rem,1fr)); gap:.55em;
+  margin:var(--pad) 0 0; padding:0; font-family:var(--font-ui)}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:.5em .65em}
+.readout dt{margin:0; color:var(--muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.07em}
+.readout dd{margin:.2em 0 0; font:600 1rem/1.2 var(--font-mono)}
+.prose{max-width:39em; margin-top:var(--pad)}
+.prose h2{font-family:var(--font-ui); font-size:1.08rem; margin:1.9em 0 .45em;
+  letter-spacing:.005em; padding-left:.6em; border-left:3px solid var(--accent)}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.86rem; background:var(--accent-soft);
+  padding:.75em .9em; border-radius:8px; white-space:pre; overflow-x:auto; line-height:1.55}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line);
+  color:var(--muted); font-size:.85rem; font-family:var(--font-ui)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Linguistics &middot; Historical phonology</p>
+  <h1>Seven Vowels Move and None Collide</h1>
+  <p class="standfirst">Between Chaucer and Shakespeare every long vowel in English walked to a new
+  place in the mouth. Step through it and watch what never happens: two of them landing on the same
+  spot.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1300" height="1500" role="img"
+      aria-label="A vowel chart shaped like the mouth, with seven word classes plotted by tongue position. A slider steps through the stages of the Great Vowel Shift and each class moves to its new position, leaving a trail. Below the chart, a bar for each stage shows how close the two nearest vowels come."></canvas>
+    <figcaption>The chart is the mouth seen from the left: front of the tongue at the left edge, high
+    at the top. Each dot is a class of words, and an arrow means the vowel glides. The bars underneath
+    give the closest approach between any two classes at each stage &mdash; the shift's safety margin.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Shift stage and chain controls">
+    <div class="control">
+      <div class="row"><label for="stage">Stage</label><output id="stageout" for="stage">0</output></div>
+      <input type="range" id="stage" min="0" max="6" step="1" value="0">
+      <p class="hint">Drag, or use the arrow keys. Stage 0 is Chaucer's English, stage 5 is roughly
+      Shakespeare's, and stage 6 carries on into the eighteenth century.</p>
+    </div>
+
+    <div class="steps">
+      <button type="button" id="back">&larr; Earlier</button>
+      <button type="button" id="fwd">Later &rarr;</button>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="chain">Which vowel moved first</label></div>
+      <select id="chain">
+        <option value="pull" selected>the close ones (a pull chain)</option>
+        <option value="push">the open ones (a push chain)</option>
+      </select>
+      <p class="hint">The two accounts end in the same place and disagree about everything in between.
+      Watch the safety margin: a pull chain steps into empty rooms, a push chain shoves.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="focus">Show</label></div>
+      <select id="focus">
+        <option value="both" selected>both chains</option>
+        <option value="front">the front chain only</option>
+        <option value="back">the back chain only</option>
+      </select>
+      <p class="hint">The front and back series move independently and in parallel, which is itself
+      evidence that the mechanism is structural rather than a run of coincidences.</p>
+    </div>
+
+    <div class="control">
+      <div class="check"><input type="checkbox" id="trails" checked>
+        <label for="trails">Draw the path so far</label></div>
+      <p class="hint">Every position the class has occupied, joined up.</p>
+    </div>
+
+    <div class="control">
+      <div class="check"><input type="checkbox" id="ipa">
+        <label for="ipa">Label with the sound, not the word</label></div>
+      <p class="hint">Swaps BITE, MEET, MEAT and the rest for the vowel symbols.</p>
+    </div>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Stage</dt><dd id="rWhen">&mdash;</dd></div>
+  <div><dt>Distinct vowels</dt><dd id="rCount">&mdash;</dd></div>
+  <div><dt>Closest pair now</dt><dd id="rGap">&mdash;</dd></div>
+  <div><dt>Closest all shift</dt><dd id="rMin">&mdash;</dd></div>
+  <div><dt>Just moved</dt><dd id="rMoved">&mdash;</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>Chaucer's <i>name</i> rhymed with the modern <i>calm</i>, his <i>meet</i> sounded like today's
+  <i>mate</i>, and his <i>house</i> was closer to <i>hoose</i>. Two hundred years later every one of
+  those long vowels had moved, and the spelling never caught up. That is why English writes the same
+  letter for the vowel of <i>bite</i> and the vowel of <i>machine</i>, and why no one can learn to
+  spell it.</p>
+
+  <h2>The thing that did not happen</h2>
+
+  <p>Seven classes of words moved. Push the stage slider and watch them: <i>bite</i> slides down and
+  turns into a glide, <i>meet</i> climbs into the space it left, <i>meat</i> climbs into the space
+  <i>meet</i> left, and so on down the front of the mouth. The back of the mouth does the same thing
+  at the same time. What never happens is a collision. At no stage do two of the seven classes end up
+  sounding alike.</p>
+
+  <p>That is remarkable, because a vowel has nowhere much to go. The mouth is small, the vowels are
+  packed into it, and a change of a few per cent in tongue height is enough to turn one into another.
+  If each vowel had drifted on its own, the seven would have been five within a century. Instead they
+  moved as a system, and the bar chart under the vowel chart is the record of it: the closest any two
+  classes come to each other, stage by stage.</p>
+
+  <h2>Pull or push</h2>
+
+  <p>Two accounts fit the endpoints and disagree about the middle. In a pull chain, the close vowels
+  go first: <i>bite</i> and <i>house</i> break into glides, which empties the top corners, and the
+  vowels below are drawn up into the vacancies one after another. In a push chain the open vowels go
+  first: <i>name</i> raises, crowds <i>meat</i>, which crowds <i>meet</i>, which crowds <i>bite</i>
+  until it has to leave the system altogether.</p>
+
+  <p>Switch between them and the readout tells them apart. The pull chain keeps its distance
+  throughout, because each vowel arrives in a room that has just been vacated. The push chain spends
+  the whole shift crowded &mdash; its closest approach is less than half the pull chain's, because
+  every intermediate stage has a vowel sitting somewhere it does not want to be, shouldering its
+  neighbour. Neither is proven. The crowding is the reason many linguists find the push account the
+  harder one to believe.</p>
+
+  <h2>What the safety margin is</h2>
+
+  <p>Each class is four numbers: how far forward the tongue is and how high it is at the start of the
+  vowel, then the same two for where the tongue is heading if it glides. A monophthong goes nowhere,
+  so its last two numbers repeat its first two. Distance is then the ordinary straight-line distance
+  in that four-dimensional space, and the safety margin is the smallest distance between any two of
+  the twenty-one pairs. The positions here are the textbook schematic ones, not measured formants
+  &mdash; nobody recorded Chaucer &mdash; so the margin is a number about the diagram. What it
+  demonstrates is that the diagram is consistent: a set of movements this large can be arranged
+  without a single collision.</p>
+
+  <p class="math">class      = ( front-back, high-low, glide front-back, glide high-low )
+margin(k)  = min over all 21 pairs of | class i (k) - class j (k) |
+worst      = min over every moment of the shift, not only the stages</p>
+
+  <p>Counting only the stages would be cheating: two vowels could pass close to one another on the
+  way and the tally would never notice. The page checks the whole path. Between one stage and the
+  next each class moves in a straight line, so the distance between any two of them is a quadratic in
+  time, and its lowest point can be found exactly. The closest approach the pull chain ever permits
+  is 0.270 of the chart's width. The push chain's is 0.124.</p>
+
+  <h2>Where it finally gave way</h2>
+
+  <p>Stage 6 is the exception, and it is worth reaching. The <i>meat</i> class, having spent the whole
+  shift one step behind <i>meet</i>, finally caught up with it in the eighteenth century, and the two
+  became the single vowel they are today. The distinct-vowel count drops from seven to six and the
+  margin falls to zero. English held that contrast through two centuries of wholesale rearrangement
+  and then lost it standing still &mdash; which is a fair summary of how sound change usually works.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+const TAU = Math.PI * 2;
+const C = (n) => String.fromCharCode(n);
+/* Built from code points on purpose: a phonetic symbol written into a source
+   file as an escape is decoded by whatever wrote the file, and then no later
+   search finds it. */
+const LEN = C(0x02D0), SCHWA = C(0x0259), EPS = C(0x025B), AE = C(0x00E6),
+      OPENO = C(0x0254), SMI = C(0x026A), SMU = C(0x028A),
+      LOWERED = C(0x031E), RAISED = C(0x031D);
+
+/* ---- MODEL: pure, no DOM ------------------------------------------------ */
+/* Every vowel is four numbers: where the tongue starts (front-back, high-low)
+   and where it is heading if the vowel glides. A monophthong repeats itself. */
+const V = {
+  "i:":    [0.06, 0.06, 0.06, 0.06],
+  "i_lo:": [0.08, 0.18, 0.08, 0.18],
+  "e:":    [0.10, 0.32, 0.10, 0.32],
+  "e_lo:": [0.12, 0.45, 0.12, 0.45],
+  "E:":    [0.14, 0.58, 0.14, 0.58],
+  "E_hi:": [0.15, 0.70, 0.15, 0.70],
+  "ae:":   [0.18, 0.82, 0.18, 0.82],
+  "a:":    [0.26, 0.96, 0.26, 0.96],
+  "O:":    [0.86, 0.66, 0.86, 0.66],
+  "o_lo:": [0.88, 0.52, 0.88, 0.52],
+  "o:":    [0.90, 0.38, 0.90, 0.38],
+  "u_lo:": [0.92, 0.22, 0.92, 0.22],
+  "u:":    [0.94, 0.08, 0.94, 0.08],
+  "@I":    [0.50, 0.52, 0.12, 0.16],
+  "aI":    [0.36, 0.94, 0.12, 0.16],
+  "@U":    [0.50, 0.52, 0.88, 0.16],
+  "aU":    [0.42, 0.94, 0.88, 0.16],
+  "eI":    [0.12, 0.40, 0.10, 0.18],
+  "oU":    [0.88, 0.40, 0.90, 0.18]
+};
+const IPA = {
+  "i:": "i" + LEN, "i_lo:": "i" + LOWERED + LEN, "e:": "e" + LEN,
+  "e_lo:": "e" + LOWERED + LEN, "E:": EPS + LEN, "E_hi:": EPS + RAISED + LEN,
+  "ae:": AE + LEN, "a:": "a" + LEN, "O:": OPENO + LEN, "o_lo:": "o" + LOWERED + LEN,
+  "o:": "o" + LEN, "u_lo:": "u" + LOWERED + LEN, "u:": "u" + LEN,
+  "@I": SCHWA + SMI, "aI": "a" + SMI, "@U": SCHWA + SMU, "aU": "a" + SMU,
+  "eI": "e" + SMI, "oU": "o" + SMU
+};
+
+/* the seven long-vowel classes of late Middle English, named for a keyword */
+const SETS = ["BITE", "MEET", "MEAT", "NAME", "BOAT", "BOOT", "HOUSE"];
+const SIDE = { BITE:"front", MEET:"front", MEAT:"front", NAME:"front",
+               BOAT:"back", BOOT:"back", HOUSE:"back" };
+const WORDS = { BITE:["bite","time"], MEET:["meet","feed"], MEAT:["meat","clean"],
+                NAME:["name","take"], BOAT:["boat","stone"], BOOT:["boot","food"],
+                HOUSE:["house","out"] };
+
+/* Stage 0 is late Middle English; 1 to 5 are the Great Vowel Shift proper;
+   6 carries on past it into the eighteenth century. */
+const PULL = {
+  BITE:  ["i:",  "@I",   "@I",   "@I",   "@I",   "@I",  "aI"],
+  MEET:  ["e:",  "e:",   "i:",   "i:",   "i:",   "i:",  "i:"],
+  MEAT:  ["E:",  "E:",   "E:",   "e:",   "e:",   "e:",  "i:"],
+  NAME:  ["a:",  "a:",   "a:",   "a:",   "ae:",  "E:",  "eI"],
+  BOAT:  ["O:",  "O:",   "O:",   "o:",   "o:",   "o:",  "oU"],
+  BOOT:  ["o:",  "o:",   "u:",   "u:",   "u:",   "u:",  "u:"],
+  HOUSE: ["u:",  "@U",   "@U",   "@U",   "@U",   "@U",  "aU"]
+};
+const PUSH = {
+  BITE:  ["i:",  "i:",    "i:",    "i:",    "@I",    "@I",  "aI"],
+  MEET:  ["e:",  "e:",    "e:",    "i_lo:", "i_lo:", "i:",  "i:"],
+  MEAT:  ["E:",  "E:",    "e_lo:", "e_lo:", "e:",    "e:",  "i:"],
+  NAME:  ["a:",  "ae:",   "E_hi:", "E_hi:", "E:",    "E:",  "eI"],
+  BOAT:  ["O:",  "o_lo:", "o_lo:", "o:",    "o:",    "o:",  "oU"],
+  BOOT:  ["o:",  "o:",    "u_lo:", "u_lo:", "u:",    "u:",  "u:"],
+  HOUSE: ["u:",  "u:",    "u:",    "@U",    "@U",    "@U",  "aU"]
+};
+const NST = 7, GVS = 5;   /* stages 0..5 are the shift; the sixth leg is later */
+const WHEN = ["c. 1400", "c. 1450", "c. 1500", "c. 1550", "c. 1600", "c. 1650", "c. 1750"];
+const CAPTION = [
+  "Chaucer's long vowels, before anything moves",
+  "the first change",
+  "the second",
+  "the third",
+  "the fourth",
+  "the shift is complete",
+  "later still: MEAT catches MEET and the contrast is lost"
+];
+
+const Model = {
+  V: V, SETS: SETS, PULL: PULL, PUSH: PUSH, NST: NST, GVS: GVS,
+  chainOf(name){ return name === "push" ? PUSH : PULL; },
+  keyAt(chain, set, k){ return chain[set][k]; },
+  at(chain, set, k){ return V[chain[set][k]]; },
+
+  dist(a, b){
+    let s = 0;
+    for (let i = 0; i < 4; i++){ const d = a[i] - b[i]; s += d * d; }
+    return Math.sqrt(s);
+  },
+  /* the closest any two of the seven come at one stage */
+  marginAt(chain, k){
+    let m = Infinity;
+    for (let i = 0; i < SETS.length; i++)
+      for (let j = i + 1; j < SETS.length; j++)
+        m = Math.min(m, Model.dist(Model.at(chain, SETS[i], k), Model.at(chain, SETS[j], k)));
+    return m;
+  },
+  distinctAt(chain, k){
+    const s = {};
+    let n = 0;
+    for (const nm of SETS){ const key = chain[nm][k]; if (!s[key]){ s[key] = 1; n++; } }
+    return n;
+  },
+  movedAt(chain, k){
+    if (k === 0) return [];
+    const out = [];
+    for (const nm of SETS) if (chain[nm][k] !== chain[nm][k - 1]) out.push(nm);
+    return out;
+  },
+
+  /* ROUTE A to the safety margin: sample the moving points densely.
+     Sampling can only ever miss the true minimum, so this is an upper bound. */
+  marginSampled(chain, legs, samples){
+    let m = Infinity;
+    for (let k = 0; k < legs; k++)
+      for (let s = 0; s <= samples; s++){
+        const t = s / samples;
+        for (let i = 0; i < SETS.length; i++)
+          for (let j = i + 1; j < SETS.length; j++){
+            const a0 = Model.at(chain, SETS[i], k), a1 = Model.at(chain, SETS[i], k + 1);
+            const b0 = Model.at(chain, SETS[j], k), b1 = Model.at(chain, SETS[j], k + 1);
+            let q = 0;
+            for (let c = 0; c < 4; c++){
+              const d = (a0[c] + t * (a1[c] - a0[c])) - (b0[c] + t * (b1[c] - b0[c]));
+              q += d * d;
+            }
+            if (q < m * m) m = Math.sqrt(q);
+          }
+      }
+    return m;
+  },
+  /* ROUTE B, knowing nothing of route A: between two stages every class moves
+     in a straight line, so the squared distance between a pair is a quadratic
+     in time and its lowest point is where the derivative vanishes. */
+  marginExact(chain, legs){
+    let m = Infinity;
+    for (let k = 0; k < legs; k++)
+      for (let i = 0; i < SETS.length; i++)
+        for (let j = i + 1; j < SETS.length; j++){
+          const a0 = Model.at(chain, SETS[i], k), a1 = Model.at(chain, SETS[i], k + 1);
+          const b0 = Model.at(chain, SETS[j], k), b1 = Model.at(chain, SETS[j], k + 1);
+          let dw = 0, ww = 0, dd = 0;
+          for (let c = 0; c < 4; c++){
+            const d = a0[c] - b0[c], w = (a1[c] - a0[c]) - (b1[c] - b0[c]);
+            dw += d * w; ww += w * w; dd += d * d;
+          }
+          let t = ww > 0 ? -dw / ww : 0;
+          t = Math.max(0, Math.min(1, t));
+          const q = dd + 2 * t * dw + t * t * ww;
+          m = Math.min(m, Math.sqrt(Math.max(0, q)));
+        }
+    return m;
+  },
+
+  /* the shift as a sequence of additive steps, so it can be run backwards */
+  deltas(chain, set, legs){
+    const out = [];
+    for (let k = 0; k < legs; k++){
+      const a = Model.at(chain, set, k), b = Model.at(chain, set, k + 1), d = [];
+      for (let c = 0; c < 4; c++) d.push(b[c] - a[c]);
+      out.push(d);
+    }
+    return out;
+  },
+  runSteps(start, steps, sign){
+    const p = start.slice();
+    for (const d of steps) for (let c = 0; c < 4; c++) p[c] += sign * d[c];
+    return p;
+  }
+};
+
+/* ---- STATE + VIEW -------------------------------------------------------- */
+const defaults = { stage: 0, chain: "pull", focus: "both", trails: true, ipa: false };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const SS = 2;
+let W = 640, H = 740, NARROW = false, G = {};
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(240, cv.parentNode.clientWidth - 24) : 640);
+  NARROW = avail < 460;
+  W = Math.max(280, Math.min(860, Math.round(avail)));
+  const g = {};
+  g.padL = NARROW ? 14 : 22;
+  g.padR = NARROW ? 14 : 22;
+  g.chartTitleY = NARROW ? 15 : 17;
+  g.chartTop = g.chartTitleY + (NARROW ? 16 : 20);
+  g.chartW = W - g.padL - g.padR;
+  g.chartH = Math.round(Math.max(210, Math.min(430, g.chartW * (NARROW ? 1.02 : 0.70))));
+  g.axisY = g.chartTop + g.chartH + (NARROW ? 16 : 18);
+  g.barTitleY = g.axisY + (NARROW ? 28 : 32);
+  g.barTop = g.barTitleY + (NARROW ? 12 : 14);
+  g.barH = NARROW ? 96 : 112;
+  g.barTickY = g.barTop + g.barH + 6;
+  g.barFootY = g.barTickY + (NARROW ? 20 : 22);
+  H = Math.round(g.barFootY + (NARROW ? 14 : 16));
+  if (cv.width !== W * SS || cv.height !== H * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+  G = g;
+}
+
+/* the vowel quadrilateral: front vowels have the wider range of heights, so
+   the chart leans, exactly as the IPA one does */
+function vx(x, y){
+  const lean = 0.13 * y;          /* the back wall slopes in toward the bottom */
+  const left = G.padL + lean * G.chartW * 0.55;
+  const right = G.padL + G.chartW - lean * G.chartW * 0.18;
+  return left + x * (right - left);
+}
+function vy(y){ return G.chartTop + y * G.chartH; }
+
+function quadPath(){
+  ctx.beginPath();
+  ctx.moveTo(vx(0, 0), vy(0)); ctx.lineTo(vx(1, 0), vy(0));
+  ctx.lineTo(vx(1, 1), vy(1)); ctx.lineTo(vx(0, 1), vy(1));
+  ctx.closePath();
+}
+
+function colourFor(set){
+  return SIDE[set] === "front" ? css("--front") : css("--back");
+}
+function visible(set){
+  return state.focus === "both" || state.focus === SIDE[set];
+}
+function labelFor(chain, set, k){
+  return state.ipa ? IPA[chain[set][k]] : set;
+}
+
+function drawChart(chain, MONO, UI){
+  const muted = css("--muted"), line = css("--line"), ink = css("--ink"), ghost = css("--ghost");
+  const fs = NARROW ? -1 : 0;
+  const k = state.stage;
+
+  ctx.fillStyle = muted; ctx.font = "600 " + (10 + fs) + "px " + MONO;
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(NARROW ? "the mouth, from the left" : "the mouth seen from the left",
+               G.padL, G.chartTitleY);
+  ctx.textAlign = "right";
+  ctx.fillText(WHEN[k], W - G.padR, G.chartTitleY);
+
+  ctx.strokeStyle = line; ctx.lineWidth = 1.2;
+  quadPath(); ctx.stroke();
+  ctx.strokeStyle = line; ctx.lineWidth = 1; ctx.setLineDash([2, 5]);
+  for (const y of [0.33, 0.66]){
+    ctx.beginPath(); ctx.moveTo(vx(0, y), vy(y)); ctx.lineTo(vx(1, y), vy(y)); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = muted; ctx.font = "600 " + (8 + fs) + "px " + MONO;
+  ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+  ctx.fillText("front", vx(0, 0), vy(0) - 5);
+  ctx.textAlign = "right";
+  ctx.fillText("back", vx(1, 0), vy(0) - 5);
+  ctx.save();
+  ctx.translate(G.padL - 1, G.chartTop + G.chartH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+  /* rotated text runs bottom to top, so this string is written back to front */
+  ctx.fillText("open        close", 0, 0);
+  ctx.restore();
+
+  ctx.fillStyle = css("--accent"); ctx.font = "700 " + (10 + fs) + "px " + MONO;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("stage " + k + ": " + CAPTION[k], G.padL, G.axisY - 12);
+
+  /* the path each class has walked so far */
+  if (state.trails){
+    for (const set of SETS){
+      if (!visible(set) || k === 0) continue;
+      ctx.strokeStyle = colourFor(set); ctx.lineWidth = 1.4; ctx.globalAlpha = 0.34;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      for (let s = 0; s <= k; s++){
+        const p = Model.at(chain, set, s);
+        if (s === 0) ctx.moveTo(vx(p[0], p[1]), vy(p[1])); else ctx.lineTo(vx(p[0], p[1]), vy(p[1]));
+      }
+      ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+      for (let s = 0; s < k; s++){
+        const p = Model.at(chain, set, s);
+        ctx.fillStyle = ghost;
+        ctx.beginPath(); ctx.arc(vx(p[0], p[1]), vy(p[1]), 2, 0, TAU); ctx.fill();
+      }
+    }
+  }
+
+  /* the classes as they stand now */
+  const moved = Model.movedAt(chain, k);
+  const R = NARROW ? 6.5 : 7.5;
+  for (const set of SETS){
+    if (!visible(set)) continue;
+    const p = Model.at(chain, set, k);
+    const x = vx(p[0], p[1]), y = vy(p[1]);
+    const col = colourFor(set);
+    const glides = (p[2] !== p[0] || p[3] !== p[1]);
+
+    if (glides){
+      const gx = vx(p[2], p[3]), gy = vy(p[3]);
+      const dx = gx - x, dy = gy - y, len = Math.hypot(dx, dy) || 1;
+      const ux = dx / len, uy = dy / len;
+      ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.globalAlpha = 0.75;
+      ctx.beginPath();
+      ctx.moveTo(x + ux * R, y + uy * R);
+      ctx.lineTo(gx - ux * 5, gy - uy * 5);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(gx, gy);
+      ctx.lineTo(gx - ux * 8 - uy * 4, gy - uy * 8 + ux * 4);
+      ctx.lineTo(gx - ux * 8 + uy * 4, gy - uy * 8 - ux * 4);
+      ctx.closePath(); ctx.fillStyle = col; ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    const justMoved = moved.indexOf(set) >= 0;
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill();
+    if (justMoved){
+      ctx.strokeStyle = css("--flag"); ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.arc(x, y, R + 4.5, 0, TAU); ctx.stroke();
+    }
+    ctx.fillStyle = col;
+    ctx.font = "700 " + (state.ipa ? 13 + fs : 10 + fs) + "px " + (state.ipa ? UI : MONO);
+    /* BITE and HOUSE sit on the same nucleus for most of the shift, so their
+       labels would print on top of each other. Each one goes to the side away
+       from its own glide arrow: that separates the two and keeps the label off
+       the arrow at the same time. */
+    const left = glides ? (p[2] > p[0]) : (p[0] > 0.6);
+    ctx.textAlign = left ? "right" : "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(labelFor(chain, set, k), x + (left ? -(R + 6) : R + 6), y);
+  }
+}
+
+function drawBars(chain, other, MONO){
+  const muted = css("--muted"), line = css("--line"), ghost = css("--ghost");
+  const accent = css("--accent"), flag = css("--flag");
+  const fs = NARROW ? -1 : 0;
+  const x0 = G.padL + (NARROW ? 6 : 10), x1 = W - G.padR - (NARROW ? 6 : 10);
+  const slot = (x1 - x0) / NST, bw = Math.min(NARROW ? 26 : 40, slot * 0.62);
+  const top = G.barTop, base = top + G.barH;
+  const FULL = 0.62;                       /* the tallest bar the axis shows */
+
+  ctx.fillStyle = muted; ctx.font = "600 " + (10 + fs) + "px " + MONO;
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(NARROW ? "closest pair, by stage" : "how close the nearest two classes come, by stage",
+               G.padL, G.barTitleY);
+
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0 - 4, base + .5); ctx.lineTo(x1 + 4, base + .5); ctx.stroke();
+
+  for (let k = 0; k < NST; k++){
+    const cx = x0 + (k + 0.5) * slot;
+    const mine = Model.marginAt(chain, k), theirs = Model.marginAt(other, k);
+    const hM = Math.max(0, Math.min(1, mine / FULL)) * G.barH;
+    const hT = Math.max(0, Math.min(1, theirs / FULL)) * G.barH;
+
+    /* the other account as an outline, so it cannot be mistaken for a bar */
+    ctx.strokeStyle = ghost; ctx.lineWidth = 1.2; ctx.setLineDash([3, 3]);
+    ctx.strokeRect(cx - bw / 2 - 4.5, base - hT + .5, bw + 9, Math.max(1, hT));
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = k === state.stage ? accent : ghost;
+    if (k !== state.stage) ctx.globalAlpha = 0.72;
+    ctx.fillRect(cx - bw / 2, base - hM, bw, hM);
+    ctx.globalAlpha = 1;
+
+    if (mine === 0){
+      ctx.fillStyle = flag; ctx.font = "700 " + (9 + fs) + "px " + MONO;
+      ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+      ctx.fillText("merged", cx, base - 4);
+    }
+    ctx.fillStyle = k === state.stage ? accent : muted;
+    ctx.font = (k === state.stage ? "700 " : "600 ") + (9 + fs) + "px " + MONO;
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText(String(k), cx, G.barTickY);
+    if (!NARROW && mine > 0){
+      ctx.textBaseline = "bottom";
+      ctx.fillText(mine.toFixed(2), cx, base - hM - 4);
+    }
+  }
+
+  /* the worst moment of the shift, which is not at any stage */
+  const worst = Model.marginExact(chain, GVS);
+  const wy = base - Math.max(0, Math.min(1, worst / FULL)) * G.barH;
+  ctx.strokeStyle = flag; ctx.lineWidth = 1.4; ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(x0 - 4, wy); ctx.lineTo(x1 + 4, wy); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = flag; ctx.font = "700 " + (9 + fs) + "px " + MONO;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText((NARROW ? "worst moment " : "closest at any moment ") + worst.toFixed(3),
+               x0 - 4, wy + 3);
+
+  ctx.fillStyle = muted; ctx.font = "600 " + (8 + fs) + "px " + MONO;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText(NARROW ? "stage" : "stage of the shift", x0 - 4, G.barFootY);
+  ctx.textAlign = "right";
+  ctx.fillText(state.chain === "push" ? "outline: the pull account" : "outline: the push account",
+               x1 + 4, G.barFootY);
+}
+
+function render(){
+  fitCanvas();
+  const chain = Model.chainOf(state.chain);
+  const other = Model.chainOf(state.chain === "push" ? "pull" : "push");
+  const MONO = css("--font-mono"), UI = css("--font-ui");
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+  drawChart(chain, MONO, UI);
+  drawBars(chain, other, MONO);
+
+  el("stageout").textContent = String(state.stage);
+  const moved = Model.movedAt(chain, state.stage);
+  const gap = Model.marginAt(chain, state.stage);
+  el("rWhen").textContent = WHEN[state.stage];
+  el("rCount").textContent = Model.distinctAt(chain, state.stage) + " of 7";
+  el("rGap").textContent = gap === 0 ? "merged" : gap.toFixed(3);
+  el("rMin").textContent = Model.marginExact(chain, GVS).toFixed(3);
+  el("rMoved").textContent = moved.length ? moved.join(", ") : "nothing yet";
+}
+
+/* ---- WIRING -------------------------------------------------------------- */
+el("stage").addEventListener("input", () => {
+  state.stage = parseInt(el("stage").value, 10); render();
+});
+el("chain").addEventListener("change", () => { state.chain = el("chain").value; render(); });
+el("focus").addEventListener("change", () => { state.focus = el("focus").value; render(); });
+el("trails").addEventListener("change", () => { state.trails = el("trails").checked; render(); });
+el("ipa").addEventListener("change", () => { state.ipa = el("ipa").checked; render(); });
+
+function step(by){
+  state.stage = Math.max(0, Math.min(NST - 1, state.stage + by));
+  el("stage").value = String(state.stage);
+  render();
+}
+el("back").addEventListener("click", () => step(-1));
+el("fwd").addEventListener("click", () => step(1));
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("stage").value = String(defaults.stage);
+  el("chain").value = defaults.chain;
+  el("focus").value = defaults.focus;
+  el("trails").checked = defaults.trails;
+  el("ipa").checked = defaults.ipa;
+  render();
+});
+
+let rt = 0;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 90); });
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+
+render();
+
+/* ---- SELFTEST ------------------------------------------------------------ */
+/* the vowel every class actually has in Modern English */
+const ATTESTED = { BITE:"aI", MEET:"i:", MEAT:"i:", NAME:"eI", BOAT:"oU", BOOT:"u:", HOUSE:"aU" };
+const CHAINS = [["pull", PULL], ["push", PUSH]];
+
+function selftest(){
+  const out = [], push = (name, pass, detail) => out.push({ name, pass: !!pass, detail });
+
+  /* ---- 1. nothing ever lands on anything else ---------------------------- */
+  let worstStage = Infinity, worstWhere = "";
+  for (const [nm, ch] of CHAINS)
+    for (let k = 0; k <= GVS; k++){
+      const m = Model.marginAt(ch, k);
+      if (m < worstStage){ worstStage = m; worstWhere = nm + " at stage " + k; }
+    }
+  push("no two word classes share a vowel at any stage of the shift",
+       worstStage > 0.12,
+       "the tightest stage is " + worstWhere + ", where the nearest pair are "
+       + worstStage.toFixed(4) + " apart");
+
+  /* ---- 2. seven contrasts in, seven contrasts out ------------------------ */
+  let conserved = true, counts = [];
+  for (const [nm, ch] of CHAINS)
+    for (let k = 0; k <= GVS; k++){
+      const d = Model.distinctAt(ch, k);
+      if (d !== 7) conserved = false;
+      if (nm === "pull") counts.push(d);
+    }
+  const merged = Model.distinctAt(PULL, 6) === 6 && Model.distinctAt(PUSH, 6) === 6;
+  push("the seven contrasts survive the whole shift, and only the later merger costs one",
+       conserved && merged,
+       "distinct vowels by stage " + counts.join(",") + " through the shift, then 6 at stage 6");
+
+  /* ---- 3. the fourteen reference words end where they really end --------- */
+  let wordsOk = true, checked = 0, wrong = "";
+  for (const [nm, ch] of CHAINS)
+    for (const set of SETS)
+      for (const w of WORDS[set]){
+        checked++;
+        if (ch[set][6] !== ATTESTED[set]){ wordsOk = false; wrong = w + " in the " + nm + " account"; }
+      }
+  push("every reference word arrives at its attested modern vowel",
+       wordsOk && checked === 28,
+       checked / 2 + " words down both accounts land on their real Modern English vowel"
+       + (wrong ? "; " + wrong + " does not" : ""));
+
+  /* ---- 4. the two accounts agree at the ends and nowhere in between ------ */
+  let endsSame = true, midDiff = 0, midCells = 0;
+  for (const set of SETS){
+    if (PULL[set][0] !== PUSH[set][0] || PULL[set][6] !== PUSH[set][6]) endsSame = false;
+    for (let k = 1; k <= GVS - 1; k++){ midCells++; if (PULL[set][k] !== PUSH[set][k]) midDiff++; }
+  }
+  push("the push and pull accounts share their endpoints and differ in the middle",
+       endsSame && midDiff >= 15,
+       midDiff + " of " + midCells + " intermediate positions differ, with identical stage 0 and stage 6");
+
+  /* ---- 5. the shift run backwards undoes itself exactly ------------------ */
+  let revErr = 0;
+  for (const [, ch] of CHAINS)
+    for (const set of SETS){
+      const steps = Model.deltas(ch, set, NST - 1);
+      const start = Model.at(ch, set, 0);
+      const there = Model.runSteps(start, steps, 1);
+      const back = Model.runSteps(there, steps.slice().reverse(), -1);
+      for (let c = 0; c < 4; c++) revErr = Math.max(revErr, Math.abs(back[c] - start[c]));
+      for (let c = 0; c < 4; c++)
+        revErr = Math.max(revErr, Math.abs(there[c] - Model.at(ch, set, NST - 1)[c]));
+    }
+  push("stepping the whole shift forwards then backwards returns every vowel to its start",
+       revErr < 1e-12, "worst coordinate left over after the round trip is " + revErr.toExponential(2));
+
+  /* ---- 6. INDEPENDENT ROUTE to the safety margin ------------------------- */
+  let gapMax = 0, orderOk = true, vals = [];
+  for (const [nm, ch] of CHAINS){
+    const sampled = Model.marginSampled(ch, GVS, 800);
+    const exact = Model.marginExact(ch, GVS);
+    vals.push(nm + " " + exact.toFixed(6));
+    if (sampled < exact - 1e-15) orderOk = false;   /* sampling cannot beat the closed form */
+    gapMax = Math.max(gapMax, sampled - exact);
+  }
+  push("sampling the moving vowels and solving for the closest approach give the same answer",
+       orderOk && gapMax < 1e-5,
+       "800 samples a leg sit " + gapMax.toExponential(2)
+       + " above the closed form and never below it; " + vals.join(", "));
+
+  /* ---- 7. the closest moment is not at any stage ------------------------- */
+  let strict = true, deltas = [];
+  for (const [nm, ch] of CHAINS){
+    let stageMin = Infinity;
+    for (let k = 0; k <= GVS; k++) stageMin = Math.min(stageMin, Model.marginAt(ch, k));
+    const worst = Model.marginExact(ch, GVS);
+    if (!(worst < stageMin - 1e-9)) strict = false;
+    deltas.push(nm + " " + worst.toFixed(3) + " against " + stageMin.toFixed(3));
+  }
+  push("counting only the stages would overstate the clearance",
+       strict, "worst moment against worst stage: " + deltas.join(", "));
+
+  /* ---- 8. the push account really is the crowded one --------------------- */
+  const pullWorst = Model.marginExact(PULL, GVS), pushWorst = Model.marginExact(PUSH, GVS);
+  push("the push account crowds the vowel space more than twice as hard",
+       pullWorst > 2 * pushWorst,
+       "pull clears " + pullWorst.toFixed(3) + ", push only " + pushWorst.toFixed(3)
+       + ", a ratio of " + (pullWorst / pushWorst).toFixed(2));
+
+  /* ---- 9. nothing teleports and nothing leaves the mouth ----------------- */
+  let hop = 0, inside = true;
+  for (const [, ch] of CHAINS)
+    for (const set of SETS)
+      for (let k = 0; k < NST; k++){
+        const p = Model.at(ch, set, k);
+        for (let c = 0; c < 4; c++) if (p[c] < -1e-12 || p[c] > 1 + 1e-12) inside = false;
+        if (k > 0) hop = Math.max(hop, Model.dist(Model.at(ch, set, k - 1), p));
+      }
+  push("every change is one step, and no vowel leaves the vowel space",
+       inside && hop < 0.95,
+       "the largest single change is " + hop.toFixed(3) + " and every coordinate stays within 0 to 1");
+
+  /* ---- 10. the front and back series never get in each other's way ------- */
+  let crossMin = Infinity, withinMin = Infinity;
+  for (const [, ch] of CHAINS)
+    for (let k = 0; k <= GVS; k++)
+      for (let i = 0; i < SETS.length; i++)
+        for (let j = i + 1; j < SETS.length; j++){
+          const d = Model.dist(Model.at(ch, SETS[i], k), Model.at(ch, SETS[j], k));
+          if (SIDE[SETS[i]] === SIDE[SETS[j]]) withinMin = Math.min(withinMin, d);
+          else crossMin = Math.min(crossMin, d);
+        }
+  push("the front and back chains stay out of each other's way throughout",
+       crossMin > withinMin,
+       "the nearest front-to-back pair are " + crossMin.toFixed(3)
+       + " apart against " + withinMin.toFixed(3) + " within a series");
+
+  /* ---- 11. the glide is carrying a real contrast ------------------------- */
+  const a = V["@I"], b = V["@U"];
+  const sameNucleus = a[0] === b[0] && a[1] === b[1];
+  const glideApart = Math.hypot(a[2] - b[2], a[3] - b[3]);
+  push("two of the vowels are told apart by their glide alone",
+       sameNucleus && glideApart > 0.7,
+       "BITE and HOUSE share a starting position mid-shift and differ by "
+       + glideApart.toFixed(3) + " in where they are heading");
+
+  /* ---- 12. the starting system is seven separate long vowels ------------- */
+  const start = {};
+  let nStart = 0;
+  for (const set of SETS) if (!start[PULL[set][0]]){ start[PULL[set][0]] = 1; nStart++; }
+  let wordCount = 0;
+  for (const set of SETS) wordCount += WORDS[set].length;
+  push("the fourteen words start from exactly seven distinct Middle English long vowels",
+       nStart === 7 && wordCount === 14,
+       wordCount + " words across " + nStart + " long vowels, before anything moves");
+
+  return out;
+}
+
+window.__SELFTEST = selftest;
+
+})();
+</script>
+</body>
+</html>

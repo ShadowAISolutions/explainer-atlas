@@ -292,16 +292,41 @@ const bifurcation = (function(){
   return cols;
 })();
 
-const TOP_Y = 26, TOP_H = 250, BOT_Y = 350, BOT_H = 290, LEFT = 54, RIGHT = 22;
+/* The canvas tracks its container rather than sitting at a fixed 960 by 680:
+   scaled into a phone viewport the old fixed surface became an unreadable
+   strip. Both pane heights, the gutters and the type size come from the width
+   here, and the backing store is twice the CSS size so one unit is one CSS
+   pixel. */
+const SS = 2;
+let W = 960, H = 680, NARROW = false;
+let TOP_Y = 26, TOP_H = 250, BOT_Y = 350, BOT_H = 290, LEFT = 54, RIGHT = 22, FS = 12;
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(240, cv.parentNode.clientWidth - 24) : 960);
+  NARROW = avail < 470;
+  W = Math.max(280, Math.min(1000, Math.round(avail)));
+  LEFT = NARROW ? 38 : 54;
+  RIGHT = NARROW ? 14 : 22;
+  FS = NARROW ? 11 : 12;
+  TOP_Y = NARROW ? 22 : 26;
+  TOP_H = Math.round(Math.max(150, Math.min(280, W * (NARROW ? 0.62 : 0.27))));
+  BOT_Y = TOP_Y + TOP_H + (NARROW ? 56 : 74);
+  BOT_H = Math.round(Math.max(180, Math.min(320, W * (NARROW ? 0.78 : 0.31))));
+  H = BOT_Y + BOT_H + (NARROW ? 30 : 38);
+  if (cv.width !== W * SS || cv.height !== H * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
 
 function render(){
-  const W = cv.width, H = cv.height;
+  fitCanvas();
   const muted = css("--muted"), line = css("--line"), panel = css("--panel"),
         accent = css("--accent"), hot = css("--hot"), olive = css("--olive"), ink = css("--ink");
 
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = panel; ctx.fillRect(0, 0, W, H);
-  ctx.font = "12px ui-monospace, monospace";
+  ctx.font = FS + "px ui-monospace, monospace";
 
   const x1 = W - RIGHT;
 
@@ -313,12 +338,12 @@ function render(){
 
   ctx.strokeStyle = line; ctx.lineWidth = 1;
   ctx.textAlign = "right"; ctx.fillStyle = muted;
-  for (const v of [0, 0.25, 0.5, 0.75, 1]){
+  for (const v of (NARROW ? [0, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1])){
     ctx.beginPath(); ctx.moveTo(LEFT, ty(v)); ctx.lineTo(x1, ty(v)); ctx.stroke();
     ctx.fillText(v.toFixed(2), LEFT - 8, ty(v) + 4);
   }
   ctx.textAlign = "left";
-  ctx.fillText("population, year 0 to " + N, LEFT, TOP_Y - 9);
+  ctx.fillText((NARROW ? "population, years 0 to " : "population, year 0 to ") + N, LEFT, TOP_Y - 9);
 
   /* the steady state, where one exists and is meaningful */
   if (state.r > 1){
@@ -352,9 +377,10 @@ function render(){
   ctx.strokeStyle = line; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(LEFT, by(0)); ctx.lineTo(x1, by(0)); ctx.stroke();
   ctx.fillStyle = muted; ctx.textAlign = "left";
-  ctx.fillText("every long-run population, for every r", LEFT, BOT_Y - 9);
+  ctx.fillText(NARROW ? "long-run population, every r"
+                      : "every long-run population, for every r", LEFT, BOT_Y - 9);
   ctx.textAlign = "center";
-  for (const r of [1, 1.5, 2, 2.5, 3, 3.5, 4]){
+  for (const r of (NARROW ? [1, 2, 3, 4] : [1, 1.5, 2, 2.5, 3, 3.5, 4])){
     ctx.strokeStyle = line;
     ctx.beginPath(); ctx.moveTo(bx(r), by(0)); ctx.lineTo(bx(r), by(0) + 5); ctx.stroke();
     ctx.fillStyle = muted; ctx.fillText(r.toFixed(1), bx(r), by(0) + 20);
@@ -372,8 +398,18 @@ function render(){
 
   ctx.strokeStyle = hot; ctx.lineWidth = 1.4;
   ctx.beginPath(); ctx.moveTo(bx(state.r), BOT_Y); ctx.lineTo(bx(state.r), by(0)); ctx.stroke();
-  ctx.fillStyle = hot; ctx.textAlign = "center";
-  ctx.fillText("r = " + state.r.toFixed(3), bx(state.r), BOT_Y - 9);
+  /* inside the pane on a backing, because above it this label collided with
+     the pane title whenever r sat in the middle of the range */
+  const rTag = "r = " + state.r.toFixed(3);
+  ctx.font = FS + "px ui-monospace, monospace";
+  const rw = ctx.measureText(rTag).width;
+  const rx = Math.max(LEFT + rw / 2 + 3, Math.min(x1 - rw / 2 - 3, bx(state.r)));
+  ctx.fillStyle = panel; ctx.globalAlpha = 0.85;
+  ctx.fillRect(rx - rw / 2 - 3, BOT_Y + 2, rw + 6, FS + 5);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = hot; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText(rTag, rx, BOT_Y + 4);
+  ctx.textBaseline = "alphabetic";
 
   /* ---------- readouts ---------- */
   const p = Model.period(state.r, state.x0, 16, 4000, 1e-7);
@@ -411,6 +447,15 @@ el("reset").addEventListener("click", () => {
   el("year").value = String(defaults.year);
   render();
 });
+
+let resizeTimer = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(render, 90);
+});
+const colourScheme = window.matchMedia("(prefers-color-scheme: dark)");
+if (colourScheme.addEventListener) colourScheme.addEventListener("change", render);
+
 render();
 
 /* ---- SELFTEST ----------------------------------------------------------- */

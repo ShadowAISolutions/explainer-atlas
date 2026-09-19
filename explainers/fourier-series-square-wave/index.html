@@ -264,10 +264,33 @@ const el = (id) => document.getElementById(id);
 const cv = el("view"), ctx = cv.getContext("2d");
 function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
-const PAD = 56, WAVE_H = 380, BAR_TOP = 452, BAR_H = 120;
+/* The canvas tracks its container rather than sitting at a fixed 960 by 600:
+   scaled into a phone viewport the old fixed surface became an illegible
+   strip. Every pane height and pad is derived from the width here, and the
+   backing store is twice the CSS size so one unit is one CSS pixel. */
+const SS = 2;
+let W = 960, H = 600, NARROW = false;
+let PAD = 56, TOP = 40, WAVE_H = 380, BAR_TOP = 452, BAR_H = 120, FS = 13;
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(240, cv.parentNode.clientWidth - 24) : 960);
+  NARROW = avail < 470;
+  W = Math.max(280, Math.min(1000, Math.round(avail)));
+  PAD = NARROW ? 34 : 56;
+  TOP = NARROW ? 26 : 40;
+  WAVE_H = Math.round(Math.max(210, Math.min(400, W * (NARROW ? 0.86 : 0.40))));
+  BAR_H = NARROW ? 96 : 120;
+  BAR_TOP = TOP + WAVE_H + (NARROW ? 48 : 34);
+  FS = NARROW ? 12 : 13;
+  H = BAR_TOP + BAR_H + (NARROW ? 18 : 22);
+  if (cv.width !== W * SS || cv.height !== H * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
 
 function render(){
-  const W = cv.width, H = cv.height;
+  fitCanvas();
   const ink = css("--ink"), muted = css("--muted"), accent = css("--accent"),
         warn = css("--warn"), line = css("--line"), panel = css("--panel");
 
@@ -275,14 +298,14 @@ function render(){
   ctx.fillStyle = panel; ctx.fillRect(0, 0, W, H);
 
   const x0 = PAD, x1 = W - PAD;
-  const midY = 40 + WAVE_H / 2, amp = WAVE_H / 2 - 22;
+  const midY = TOP + WAVE_H / 2, amp = WAVE_H / 2 - (NARROW ? 16 : 22);
   const toX = (t) => x0 + (t / TAU) * (x1 - x0);          /* t in [0, 2pi] */
   const toY = (v) => midY - v * amp / 1.25;
 
   /* axes */
   ctx.strokeStyle = line; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(x0, midY); ctx.lineTo(x1, midY); ctx.stroke();
-  ctx.fillStyle = muted; ctx.font = "13px ui-monospace, monospace"; ctx.textAlign = "center";
+  ctx.fillStyle = muted; ctx.font = FS + "px ui-monospace, monospace"; ctx.textAlign = "center";
   [[0, "0"], [Math.PI / 2, "π/2"], [Math.PI, "π"], [3 * Math.PI / 2, "3π/2"], [TAU, "2π"]]
     .forEach(([t, lab]) => {
       ctx.strokeStyle = line;
@@ -358,9 +381,11 @@ function render(){
     ctx.fillRect(bx + Math.min(1.5, bw * 0.15), BAR_TOP + BAR_H / 2 - Math.max(h, 0),
                  Math.max(bw - Math.min(3, bw * 0.3), 1), Math.abs(h));
   }
-  ctx.fillStyle = muted; ctx.textAlign = "left"; ctx.font = "13px ui-monospace, monospace";
-  ctx.fillText("harmonic amplitude bₙ  —  " + ns.length + " terms, highest is n = " + slots,
-               x0, BAR_TOP - 14);
+  ctx.fillStyle = muted; ctx.textAlign = "left"; ctx.font = FS + "px ui-monospace, monospace";
+  ctx.fillText(NARROW
+    ? "bₙ  —  " + ns.length + " terms, up to n = " + slots
+    : "harmonic amplitude bₙ  —  " + ns.length + " terms, highest is n = " + slots,
+    x0, BAR_TOP - 14);
 
   /* readouts */
   const energy = Model.energyCaptured(state.wave, state.terms);
@@ -388,6 +413,15 @@ el("reset").addEventListener("click", () => {
   el("showparts").checked = defaults.parts;
   render();
 });
+
+let resizeTimer = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(render, 90);
+});
+const colourScheme = window.matchMedia("(prefers-color-scheme: dark)");
+if (colourScheme.addEventListener) colourScheme.addEventListener("change", render);
+
 render();
 
 /* ---- SELFTEST ----------------------------------------------------------- */

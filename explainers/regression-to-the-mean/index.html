@@ -1,0 +1,878 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nobody Did Anything and It Improved — Explainer Atlas</title>
+<meta name="description" content="Pick the top scorers and test them again. They fall back, with no cause at all. Guess how far before you look, then watch the same effect manufacture a treatment that never happened.">
+<style>
+:root{
+  --bg:#f6f6f3; --panel:#ffffff; --ink:#1a1c1a; --muted:#5f6360; --line:#e1e3dd;
+  --accent:#2d6a4f; --accent-soft:#e3efe8; --hot:#b5304c; --hot-soft:#f7e6ea;
+  --cool:#7a808a; --guess:#b07d18;
+  --radius:12px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.55rem,1.05rem + 2.2vw,2.35rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.05rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#101311; --panel:#171a18; --ink:#e8ebe7; --muted:#98a09a; --line:#262b27;
+    --accent:#5fbf94; --accent-soft:#16281f; --hot:#ef7f95; --hot-soft:#2c191e;
+    --cool:#8b929b; --guess:#dfae4e;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.63 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:65rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.12; margin:0 0 .35em; letter-spacing:-.02em}
+.kicker{margin:0 0 .4em; color:var(--hot); font:700 .73rem/1.3 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.15em}
+.standfirst{margin:0; color:var(--muted); max-width:45em}
+
+/* controls on the left, the picture on the right */
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:58rem){ .layout{grid-template-columns:minmax(16rem,1fr) minmax(0,1.85fr); align-items:start} }
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1.05em; order:1}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control label{font-weight:650}
+.control output{font:700 .87rem/1 var(--font-mono); color:var(--accent);
+  background:var(--accent-soft); padding:.26em .5em; border-radius:5px; white-space:nowrap}
+.control.guessed output{color:var(--guess); background:var(--hot-soft)}
+.control .hint{margin:0; color:var(--muted); font-size:.82rem; line-height:1.45}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+.control.guessed input[type=range]{accent-color:var(--guess)}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line);
+  border-radius:8px; padding:.5em .7em; min-height:40px; width:100%}
+button{cursor:pointer; font-weight:650}
+button:hover{border-color:var(--accent)}
+#reveal{background:var(--accent-soft); border-color:var(--accent)}
+.check{display:flex; align-items:flex-start; gap:.55em}
+.check input{margin-top:.25em; width:1.05em; height:1.05em; accent-color:var(--accent)}
+.btns{display:grid; gap:.5em}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:10px; overflow:hidden; order:2}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.55em; color:var(--muted); font-size:.85rem}
+
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:.55em; margin:.7em 0 0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.5em .65em}
+.readout dt{margin:0; color:var(--muted); font-size:.7rem; text-transform:uppercase; letter-spacing:.08em}
+.readout dd{margin:.18em 0 0; font:700 1rem/1.2 var(--font-mono)}
+
+.prose{max-width:39em; margin-top:calc(var(--pad)*1.4)}
+.prose h2{font-size:1.05rem; margin:2em 0 .5em; padding-left:.6em; border-left:4px solid var(--hot);
+  letter-spacing:-.005em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.88rem; background:var(--accent-soft);
+  padding:.75em .9em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto; white-space:pre}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line);
+  color:var(--muted); font-size:.85rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Statistics · causal inference</p>
+  <h1>Nobody Did Anything and It Improved</h1>
+  <p class="standfirst">Sit a class two equivalent tests a week apart. Take whoever scored highest the
+  first time and look at what they got the second time. Before you look: guess how far above average
+  they land.</p>
+</header>
+
+<div class="layout">
+  <section class="controls" data-role="controls" aria-label="Cohort and selection controls">
+    <div class="control guessed">
+      <div class="row"><label for="guess">Your guess</label><output id="guessout" for="guess">+1.60</output></div>
+      <input type="range" id="guess" min="-0.5" max="2.5" step="0.01" value="1.6">
+      <p class="hint">Where you think the selected group's second-round average lands, in standard
+      deviations above the class average.</p>
+    </div>
+
+    <div class="btns">
+      <button type="button" id="reveal">Reveal the second round</button>
+      <button type="button" id="cohort">Another class</button>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="rho">Test reliability</label><output id="rhoout" for="rho">0.50</output></div>
+      <input type="range" id="rho" min="0" max="1" step="0.01" value="0.5">
+      <p class="hint">How much of a score is durable skill rather than the day you had. It is the
+      correlation between the two rounds.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="cut">Select the top</label><output id="cutout" for="cut">10%</output></div>
+      <input type="range" id="cut" min="2" max="50" step="1" value="10">
+      <p class="hint">How extreme the shortlist is. Half of it is coached, half is left alone. Narrower
+      selection means a bigger fall.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="rule">Chosen by</label></div>
+      <select id="rule">
+        <option value="top" selected>the highest scores</option>
+        <option value="bottom">the lowest scores</option>
+        <option value="random">a coin, ignoring scores</option>
+      </select>
+      <p class="hint">Picking the shortlist at random means no selection at all, so there is nothing to
+      fall back from.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="delta">Real effect of the coaching</label><output id="deltaout" for="delta">+0.00</output></div>
+      <input type="range" id="delta" min="0" max="1.5" step="0.05" value="0">
+      <p class="hint">Added to the coached half's second round only. Leave it at zero and the naive
+      before-and-after still reports something.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="n">Class size</label><output id="nout" for="n">800</output></div>
+      <input type="range" id="n" min="200" max="4000" step="100" value="800">
+      <p class="hint">Larger classes make the averages settle onto the theory.</p>
+    </div>
+
+    <div class="control">
+      <div class="check">
+        <input type="checkbox" id="showctrl" checked>
+        <label for="showctrl">Separate the uncoached half on reveal</label>
+      </div>
+      <p class="hint">The other half of the shortlist gets nothing. It is equally extreme, so it falls back
+      by the same amount, which is what makes the comparison honest. It stays mixed in until you reveal,
+      because on its own it would give the answer away.</p>
+    </div>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1700" height="1560" role="img"
+      aria-label="Above, a scatter of each pupil's first-round score against their second-round score, with the selected group highlighted and their second-round scores withheld until revealed. Below, lines joining each selected pupil's first-round score to their second, showing the group average falling back toward the class average."></canvas>
+    <figcaption>Top: every pupil, first round across, second round up. The shortlist shows as marks
+    along the bottom &mdash; their second round stays hidden behind your guess until you reveal it, and
+    only then does the uncoached half separate out in green. Bottom: the same pupils as lines from round
+    one to round two, with the group averages marked.</figcaption>
+  </figure>
+</div>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Coached half, round 1</dt><dd id="rR1">&mdash;</dd></div>
+  <div><dt>Coached half, round 2</dt><dd id="rR2">&mdash;</dd></div>
+  <div><dt>Theory says</dt><dd id="rTheory">&mdash;</dd></div>
+  <div><dt>Naive verdict</dt><dd id="rNaive">&mdash;</dd></div>
+  <div><dt>Against the control</dt><dd id="rDid">&mdash;</dd></div>
+  <div><dt>Your guess was</dt><dd id="rScore">&mdash;</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>The top tenth of this class averaged about 1.75 standard deviations above the mean in the first
+  round. In the second they average about 0.88. Nothing happened in between. No one was coached, nothing
+  was taught, the test was the same difficulty. The group simply is not as far ahead as it looked, and
+  it never was.</p>
+
+  <h2>Half of being top is being lucky</h2>
+
+  <p>Treat a score as durable skill plus the day you happened to have. Choosing the highest scorers
+  selects for both at once: they are genuinely good, and they also caught a following wind. Skill turns
+  up again next week. Luck does not. So the group keeps the part that was real and loses the part that
+  was not, and the average slides back toward the middle.</p>
+
+  <p>That is the whole mechanism, and it is not a tendency or a pressure. It is arithmetic. For scores
+  standardised to mean zero and correlation &rho; between rounds, the expected second score of anyone who
+  scored x the first time is exactly &rho;x. Set the reliability slider to 1 and the fallback vanishes,
+  because there is no luck left to lose. Set it to 0 and the whole lead evaporates.</p>
+
+  <h2>Exactly how far they fall</h2>
+
+  <p>Selecting the top fraction q by the first score, the group's first-round average is the height of
+  the bell at the cutoff divided by the fraction kept:</p>
+
+  <p class="math">cutoff        z  =  the point with q of the class above it
+round 1 mean  =  &phi;(z) / q                 ( = 1.755 for the top 10% )
+round 2 mean  =  &rho; &middot; &phi;(z) / q
+the fall      =  (1 &minus; &rho;) &middot; &phi;(z) / q</p>
+
+  <p>Both factors do what you would expect. Choose a narrower slice and the group starts further out, so
+  it has further to fall. Use a flakier test and it keeps less of its lead. Neither factor knows anything
+  about the pupils, which is the point: the fall is a property of how they were chosen, not of them.</p>
+
+  <h2>How this manufactures results</h2>
+
+  <p>Now read it as an evaluation. Pick the worst-performing schools and send in support; pick the
+  patients with the highest blood pressure and treat them; pick the players in the worst slump and change
+  their technique. Measure again afterwards and every one of them improves. Push the coaching slider up
+  and watch the naive before-and-after number: it reports the real effect plus the fallback, and with the
+  effect at zero it still reports the fallback on its own.</p>
+
+  <p>The fix is in the design rather than in the statistics. Draw up the shortlist, then toss a coin for
+  each name on it: half get the coaching, half get nothing. The two halves are equally extreme, so they
+  fall back by exactly the same amount, and the difference between their two changes is the real effect
+  and nothing else. That is what the control readout does, and it stays near zero however hard the
+  selection is cranked. Taking the next-best pupils as a comparison would not do &mdash; they start lower,
+  so they fall less, and the gap reappears.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set your guess where you genuinely expect the second round to land before touching reveal. Most
+  people put it near where the group started. Then drag the reliability to 0.9 and guess again: the fall
+  is now small, and a study on a reliable measure is much harder to fool with. Finally set the coaching
+  to +0.5, reveal, and compare the naive verdict with the control comparison &mdash; one of them is
+  right.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+const TAU = Math.PI * 2;
+
+/* ---- MODEL: pure, no DOM ------------------------------------------------ */
+const Model = {
+  phi(z){ return Math.exp(-z * z / 2) / Math.sqrt(TAU); },
+
+  /* Numerical Recipes' Chebyshev erfc, good to about 1e-15 relative */
+  erfc(x){
+    const COF = [-1.3026537197817094, 6.4196979235649026e-1, 1.9476473204185836e-2,
+      -9.561514786808631e-3, -9.46595344482036e-4, 3.66839497852761e-4, 4.2523324806907e-5,
+      -2.0278578112534e-5, -1.624290004647e-6, 1.303655835580e-6, 1.5626441722e-8,
+      -8.5238095915e-8, 6.529054439e-9, 5.059343495e-9, -9.91364156e-10, -2.27365122e-10,
+      9.6467911e-11, 2.394038e-12, -6.886027e-12, 8.94487e-13, 3.13092e-13, -1.12708e-13,
+      3.81e-16, 7.106e-15];
+    const z = Math.abs(x), t = 2 / (2 + z), ty = 4 * t - 2;
+    let d = 0, dd = 0, tmp;
+    for (let j = COF.length - 1; j > 0; j--){ tmp = d; d = ty * d - dd + COF[j]; dd = tmp; }
+    const ans = t * Math.exp(-z * z + 0.5 * (COF[0] + ty * d) - dd);
+    return x >= 0 ? ans : 2 - ans;
+  },
+  Phi(z){ return 0.5 * Model.erfc(-z / Math.SQRT2); },
+
+  /* Acklam's rational start, then two Halley steps against Phi */
+  probit(p){
+    if (!(p > 0 && p < 1)) return p <= 0 ? -Infinity : Infinity;
+    const A = [-3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02,
+               1.383577518672690e+02, -3.066479806614716e+01, 2.506628277459239e+00];
+    const B = [-5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02,
+               6.680131188771972e+01, -1.328068155288572e+01];
+    const C = [-7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+00,
+               -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00];
+    const D = [7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00,
+               3.754408661907416e+00];
+    const LOW = 0.02425;
+    let q, r, x;
+    if (p < LOW){
+      q = Math.sqrt(-2 * Math.log(p));
+      x = (((((C[0]*q+C[1])*q+C[2])*q+C[3])*q+C[4])*q+C[5]) / ((((D[0]*q+D[1])*q+D[2])*q+D[3])*q+1);
+    } else if (p <= 1 - LOW){
+      q = p - 0.5; r = q * q;
+      x = (((((A[0]*r+A[1])*r+A[2])*r+A[3])*r+A[4])*r+A[5]) * q
+        / (((((B[0]*r+B[1])*r+B[2])*r+B[3])*r+B[4])*r+1);
+    } else {
+      q = Math.sqrt(-2 * Math.log(1 - p));
+      x = -(((((C[0]*q+C[1])*q+C[2])*q+C[3])*q+C[4])*q+C[5]) / ((((D[0]*q+D[1])*q+D[2])*q+D[3])*q+1);
+    }
+    for (let i = 0; i < 2; i++){
+      const e = Model.Phi(x) - p;
+      const u = e * Math.sqrt(TAU) * Math.exp(x * x / 2);
+      x = x - u / (1 + x * u / 2);
+    }
+    return x;
+  },
+
+  /* the average first-round score of the top fraction q: phi(z)/q */
+  selectionMean(q){
+    if (!(q > 0 && q < 1)) return 0;
+    return Model.phi(Model.probit(1 - q)) / q;
+  },
+  /* what that group averages next time, and how far it falls */
+  expectedSecond(rho, q){ return rho * Model.selectionMean(q); },
+  fallback(rho, q){ return (1 - rho) * Model.selectionMean(q); },
+
+  /* a cohort: score = sqrt(rho)*skill + sqrt(1-rho)*luck, so corr = rho */
+  cohort(n, rho, seed){
+    const r = mulberry32(seed);
+    const X = new Float64Array(n), Y = new Float64Array(n);
+    const s = Math.sqrt(Math.max(0, rho)), t = Math.sqrt(Math.max(0, 1 - rho));
+    for (let i = 0; i < n; i++){
+      const u1 = Math.max(1e-12, r()), u2 = r(), u3 = Math.max(1e-12, r()), u4 = r();
+      const g1 = Math.sqrt(-2 * Math.log(u1)), g2 = Math.sqrt(-2 * Math.log(u3));
+      const skill = g1 * Math.cos(TAU * u2), luck1 = g1 * Math.sin(TAU * u2);
+      const luck2 = g2 * Math.cos(TAU * u4);
+      X[i] = s * skill + t * luck1;
+      Y[i] = s * skill + t * luck2;
+    }
+    return { X: X, Y: Y, n: n };
+  },
+
+  /* by rank, which is what the page draws */
+  selectByRank(c, frac, rule, seed){
+    const k = Math.max(1, Math.round(frac * c.n));
+    const idx = [];
+    for (let i = 0; i < c.n; i++) idx.push(i);
+    if (rule === "random"){
+      const r = mulberry32(seed);
+      for (let i = idx.length - 1; i > 0; i--){
+        const j = Math.floor(r() * (i + 1));
+        const tmp = idx[i]; idx[i] = idx[j]; idx[j] = tmp;
+      }
+      return idx.slice(0, k);
+    }
+    idx.sort((a, b) => rule === "bottom" ? c.X[a] - c.X[b] : c.X[b] - c.X[a]);
+    return idx.slice(0, k);
+  },
+  /* by threshold, which is what the theory is about */
+  selectAbove(c, z){
+    const out = [];
+    for (let i = 0; i < c.n; i++) if (c.X[i] > z) out.push(i);
+    return out;
+  },
+  /* The honest control. The extreme pool is split at random, so both halves
+     are equally extreme and fall back by exactly the same amount. Taking the
+     next-best pupils instead would give a less extreme control that falls
+     back less, and the comparison would still be crooked. */
+  splitPool(pool, seed){
+    const idx = pool.slice();
+    const r = mulberry32(seed);
+    for (let i = idx.length - 1; i > 0; i--){
+      const j = Math.floor(r() * (i + 1));
+      const t = idx[i]; idx[i] = idx[j]; idx[j] = t;
+    }
+    const h = Math.ceil(idx.length / 2);
+    return { treated: idx.slice(0, h), control: idx.slice(h) };
+  },
+  meanOf(arr, idx){
+    if (!idx.length) return 0;
+    let s = 0;
+    for (const i of idx) s += arr[i];
+    return s / idx.length;
+  },
+  slope(c){
+    let sxy = 0, sxx = 0;
+    for (let i = 0; i < c.n; i++){ sxy += c.X[i] * c.Y[i]; sxx += c.X[i] * c.X[i]; }
+    return sxx > 0 ? sxy / sxx : 0;
+  }
+};
+
+/* ---- STATE + VIEW -------------------------------------------------------- */
+const defaults = { guess: 1.6, rho: 0.5, cut: 10, rule: "top", delta: 0, n: 800, showctrl: true };
+const state = Object.assign({}, defaults);
+let revealed = false, cohortIndex = 0;
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const SS = 2;
+let W = 620, H = 560, NARROW = false, G = {};
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(240, cv.parentNode.clientWidth - 20) : 620);
+  NARROW = avail < 470;
+  W = Math.max(280, Math.min(820, Math.round(avail)));
+  const g = {};
+  g.padL = NARROW ? 32 : 44;
+  g.padR = NARROW ? 14 : 20;
+  g.plotW = W - g.padL - g.padR;
+  g.scTitleY = NARROW ? 16 : 18;
+  g.scTop = g.scTitleY + (NARROW ? 10 : 12);
+  g.scH = Math.round(Math.max(150, Math.min(340, W * (NARROW ? 0.78 : 0.50))));
+  g.scAxisY = g.scTop + g.scH + (NARROW ? 20 : 22);
+  g.slTitleY = g.scAxisY + (NARROW ? 26 : 30);
+  g.slTop = g.slTitleY + (NARROW ? 12 : 14);
+  g.slH = Math.round(Math.max(120, Math.min(260, W * (NARROW ? 0.52 : 0.34))));
+  g.slFootY = g.slTop + g.slH + (NARROW ? 18 : 20);
+  H = Math.round(g.slFootY + (NARROW ? 18 : 20));
+  if (cv.width !== W * SS || cv.height !== H * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+  g.H = H;
+  G = g;
+}
+
+const LIM = 3.4;
+function sx(v){ return G.padL + (v + LIM) / (2 * LIM) * G.plotW; }
+function sy(v){ return G.scTop + G.scH - (v + LIM) / (2 * LIM) * G.scH; }
+
+function dashLine(x0, y0, x1, y1, colour, width, dash, label, MONO, side, below){
+  ctx.strokeStyle = colour; ctx.lineWidth = width; ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  ctx.setLineDash([]);
+  if (label){
+    ctx.fillStyle = colour; ctx.font = "700 " + (NARROW ? 9 : 10) + "px " + MONO;
+    ctx.textAlign = side === "left" ? "left" : "right";
+    ctx.textBaseline = below ? "top" : "bottom";
+    /* the descenders have to clear the 2px rule, so this is -5 and not -2 */
+    ctx.fillText(label, side === "left" ? x0 + 3 : x1 - 3, y1 + (below ? 4 : -5));
+  }
+}
+
+function drawScatter(c, sel, ctrl, stats, MONO){
+  const muted = css("--muted"), line = css("--line"), ink = css("--ink");
+  const hot = css("--hot"), accent = css("--accent"), cool = css("--cool"), guessC = css("--guess");
+  const fs = NARROW ? -1 : 0;
+  const x0 = G.padL, x1 = W - G.padR, base = G.scTop + G.scH;
+
+  /* frame and zero lines */
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.strokeRect(x0 + .5, G.scTop + .5, G.plotW - 1, G.scH - 1);
+  ctx.setLineDash([3, 4]); ctx.strokeStyle = line;
+  ctx.beginPath(); ctx.moveTo(x0, sy(0)); ctx.lineTo(x1, sy(0));
+  ctx.moveTo(sx(0), G.scTop); ctx.lineTo(sx(0), base); ctx.stroke(); ctx.setLineDash([]);
+
+  /* Until you reveal, the shortlist is ONE group. Splitting it earlier would
+     hand the answer over: the uncoached half is equally extreme, so where it
+     lands in round two is exactly what you are being asked to guess. */
+  const splitNow = revealed && state.showctrl;
+  const inShort = new Uint8Array(c.n);
+  for (const i of sel) inShort[i] = 1;
+  for (const i of ctrl) inShort[i] = 1;
+
+  /* everyone who was not shortlisted */
+  const r = Math.max(1.3, Math.min(2.6, 900 / c.n));
+  ctx.fillStyle = cool; ctx.globalAlpha = 0.42;
+  for (let i = 0; i < c.n; i++){
+    if (inShort[i]) continue;
+    ctx.beginPath(); ctx.arc(sx(c.X[i]), sy(c.Y[i]), r, 0, TAU); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  /* the uncoached half, once the two are told apart */
+  if (splitNow){
+    ctx.fillStyle = accent;
+    for (const i of ctrl){
+      ctx.beginPath(); ctx.arc(sx(c.X[i]), sy(c.Y[i]), r + 0.6, 0, TAU); ctx.fill();
+    }
+  }
+
+  /* the shortlist: second round withheld until revealed */
+  ctx.fillStyle = hot;
+  const shown = splitNow ? sel : sel.concat(ctrl);
+  for (const i of shown){
+    if (revealed){
+      ctx.beginPath(); ctx.arc(sx(c.X[i]), sy(stats.Y2[i]), r + 0.6, 0, TAU); ctx.fill();
+    } else {
+      ctx.fillRect(sx(c.X[i]) - 0.8, base - 7, 1.6, 7);
+    }
+  }
+
+  if (revealed){
+    /* the line the whole picture obeys: expected second score = rho * first */
+    dashLine(sx(-LIM), sy(-LIM * state.rho), sx(LIM), sy(LIM * state.rho),
+             ink, 1.6, [6, 4], null, MONO);
+    /* when the guess lands on the answer the two labels would overprint, so the
+       actual average drops below its own line instead */
+    const clash = Math.abs(sy(stats.mean2) - sy(state.guess)) < 15;
+    dashLine(x0, sy(stats.mean2), x1, sy(stats.mean2), hot, 2, [],
+             "their actual average " + stats.mean2.toFixed(2), MONO, "left", clash);
+  }
+  dashLine(x0, sy(state.guess), x1, sy(state.guess), css("--guess"), 2, [7, 5],
+           revealed ? "your guess " + state.guess.toFixed(2) : "your guess", MONO, "right");
+
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = muted; ctx.font = "600 " + (10 + fs) + "px " + MONO;
+  ctx.fillText(NARROW ? "round 2 against round 1" : "second round (up) against first round (across)",
+               x0, G.scTitleY);
+  ctx.textAlign = "right";
+  ctx.fillText(revealed ? "revealed" : "hidden until you reveal", x1, G.scTitleY);
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.font = "600 " + (9 + fs) + "px " + MONO;
+  ctx.fillText("−3 sd", x0, G.scAxisY - 12);
+  ctx.textAlign = "right";
+  ctx.fillText("+3 sd", x1, G.scAxisY - 12);
+}
+
+function drawSlope(c, sel, ctrl, stats, MONO){
+  const muted = css("--muted"), line = css("--line"), ink = css("--ink");
+  const hot = css("--hot"), accent = css("--accent"), guessC = css("--guess");
+  const fs = NARROW ? -1 : 0;
+  const xA = G.padL + (NARROW ? 24 : 42), xB = W - G.padR - (NARROW ? 24 : 42);
+  const ly = (v) => G.slTop + G.slH - (v + LIM) / (2 * LIM) * G.slH;
+
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(xA, G.slTop); ctx.lineTo(xA, G.slTop + G.slH);
+  ctx.moveTo(xB, G.slTop); ctx.lineTo(xB, G.slTop + G.slH);
+  ctx.stroke();
+  ctx.setLineDash([3, 4]); ctx.strokeStyle = line;
+  ctx.beginPath(); ctx.moveTo(xA, ly(0)); ctx.lineTo(xB, ly(0)); ctx.stroke(); ctx.setLineDash([]);
+  /* the gap between the shortlist and this line is the whole story */
+  ctx.fillStyle = muted; ctx.font = "600 " + (9 + fs) + "px " + MONO;
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText("the class average", (xA + xB) / 2, ly(0) + 4);
+
+  /* at most this many strands, so the picture stays readable */
+  const CAP = NARROW ? 40 : 70;
+  const thin = (list) => {
+    if (list.length <= CAP) return list;
+    const step = list.length / CAP, out = [];
+    for (let i = 0; i < CAP; i++) out.push(list[Math.floor(i * step)]);
+    return out;
+  };
+
+  /* the two halves are one shortlist until the reveal, for the same reason */
+  const splitNow = revealed && state.showctrl;
+  if (splitNow){
+    ctx.strokeStyle = accent; ctx.lineWidth = 1; ctx.globalAlpha = 0.30;
+    for (const i of thin(ctrl)){
+      ctx.beginPath(); ctx.moveTo(xA, ly(c.X[i])); ctx.lineTo(xB, ly(c.Y[i])); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+  ctx.strokeStyle = hot; ctx.lineWidth = 1; ctx.globalAlpha = 0.34;
+  for (const i of thin(splitNow ? sel : sel.concat(ctrl))){
+    ctx.beginPath();
+    ctx.moveTo(xA, ly(c.X[i]));
+    ctx.lineTo(xB, revealed ? ly(stats.Y2[i]) : ly(state.guess));
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  /* the averages, which are the only numbers that matter here */
+  /* the two halves land almost on top of each other, which is the point, so the
+     labels are pushed apart by hand rather than allowed to overprint */
+  const dot = (x, v, colour, label, side, nudge, rad) => {
+    ctx.fillStyle = colour;
+    ctx.beginPath(); ctx.arc(x, ly(v), rad || 4.6, 0, TAU); ctx.fill();
+    ctx.font = "700 " + (10 + fs) + "px " + MONO;
+    ctx.textAlign = side === "left" ? "right" : "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, side === "left" ? x - 7 : x + 7, ly(v) + (nudge || 0));
+  };
+  const apart = (a, b) => {
+    const d = Math.abs(ly(a) - ly(b));
+    return d >= 13 ? [0, 0] : [-(13 - d) / 2 - 1, (13 - d) / 2 + 1];
+  };
+  const start = splitNow ? stats.mean1 : (stats.mean1 * sel.length + stats.c1 * ctrl.length)
+                                          / Math.max(1, sel.length + ctrl.length);
+  const nA = splitNow ? apart(start, stats.c1) : [0, 0];
+  const nB = splitNow ? apart(stats.mean2, stats.c2) : [0, 0];
+  dot(xA, start, hot, start.toFixed(2), "left", nA[0]);
+  if (revealed) dot(xB, stats.mean2, hot, stats.mean2.toFixed(2), "right", nB[0]);
+  else dot(xB, state.guess, css("--guess"), "guess", "right");
+  if (splitNow){
+    dot(xA, stats.c1, accent, stats.c1.toFixed(2), "left", nA[1], 2.8);
+    dot(xB, stats.c2, accent, stats.c2.toFixed(2), "right", nB[1], 2.8);
+  }
+
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = muted; ctx.font = "600 " + (10 + fs) + "px " + MONO;
+  ctx.fillText(NARROW ? "each pupil, round 1 to round 2" : "the same pupils, round one to round two",
+               G.padL, G.slTitleY);
+  if (splitNow){
+    ctx.textAlign = "right";
+    ctx.font = "700 " + (9 + fs) + "px " + MONO;
+    ctx.fillStyle = accent; ctx.fillText("uncoached", W - G.padR, G.slTitleY);
+    const wu = ctx.measureText("uncoached").width;
+    ctx.fillStyle = hot; ctx.fillText("coached", W - G.padR - wu - 10, G.slTitleY);
+  }
+  ctx.fillStyle = muted;
+  ctx.textBaseline = "top"; ctx.font = "600 " + (9 + fs) + "px " + MONO;
+  ctx.textAlign = "center";
+  ctx.fillText("round 1", xA, G.slFootY - 10);
+  ctx.fillText("round 2", xB, G.slFootY - 10);
+}
+
+function compute(){
+  const c = Model.cohort(state.n, state.rho, SEED + cohortIndex * 7919);
+  const frac = state.cut / 100;
+  const pool = Model.selectByRank(c, frac, state.rule, SEED + cohortIndex * 104729 + 11);
+  const halves = Model.splitPool(pool, SEED + cohortIndex * 104729 + 23);
+  const sel = halves.treated, ctrl = halves.control;
+
+  /* only the coached half gets the real effect added */
+  const Y2 = new Float64Array(c.n);
+  for (let i = 0; i < c.n; i++) Y2[i] = c.Y[i];
+  for (const i of sel) Y2[i] += state.delta;
+
+  const stats = {
+    Y2: Y2,
+    mean1: Model.meanOf(c.X, sel), mean2: Model.meanOf(Y2, sel),
+    c1: Model.meanOf(c.X, ctrl), c2: Model.meanOf(Y2, ctrl),
+    k: sel.length, pool: pool.length
+  };
+  return { c: c, sel: sel, ctrl: ctrl, stats: stats, frac: frac };
+}
+
+function render(){
+  fitCanvas();
+  const R = compute();
+  const MONO = css("--font-mono");
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+  drawScatter(R.c, R.sel, R.ctrl, R.stats, MONO);
+  drawSlope(R.c, R.sel, R.ctrl, R.stats, MONO);
+
+  el("guessout").textContent = (state.guess >= 0 ? "+" : "−") + Math.abs(state.guess).toFixed(2);
+  el("rhoout").textContent = state.rho.toFixed(2);
+  el("cutout").textContent = state.cut + "%";
+  el("deltaout").textContent = (state.delta >= 0 ? "+" : "−") + Math.abs(state.delta).toFixed(2);
+  el("nout").textContent = String(state.n);
+
+  const theory = state.rule === "random" ? state.delta
+    : (state.rule === "bottom" ? -Model.expectedSecond(state.rho, R.frac) + state.delta
+                               :  Model.expectedSecond(state.rho, R.frac) + state.delta);
+  const naive = R.stats.mean2 - R.stats.mean1;
+  const did = naive - (R.stats.c2 - R.stats.c1);
+
+  el("rR1").textContent = R.stats.mean1.toFixed(3);
+  el("rR2").textContent = revealed ? R.stats.mean2.toFixed(3) : "hidden";
+  el("rTheory").textContent = revealed ? theory.toFixed(3) : "hidden";
+  el("rNaive").textContent = revealed
+    ? (naive >= 0 ? "+" : "−") + Math.abs(naive).toFixed(3) : "hidden";
+  el("rDid").textContent = revealed
+    ? (did >= 0 ? "+" : "−") + Math.abs(did).toFixed(3) : "hidden";
+  el("rScore").textContent = revealed
+    ? "out by " + Math.abs(state.guess - R.stats.mean2).toFixed(3) : "not yet revealed";
+  el("reveal").textContent = revealed ? "Revealed" : "Reveal the second round";
+}
+
+/* ---- WIRING -------------------------------------------------------------- */
+function bindRange(id, key, parse){
+  const node = el(id);
+  node.addEventListener("input", () => {
+    state[key] = parse(node.value);
+    if (key !== "guess") revealed = false;
+    render();
+  });
+}
+bindRange("guess", "guess", parseFloat);
+bindRange("rho", "rho", parseFloat);
+bindRange("cut", "cut", (v) => parseInt(v, 10));
+bindRange("delta", "delta", parseFloat);
+bindRange("n", "n", (v) => parseInt(v, 10));
+
+el("rule").addEventListener("change", () => {
+  state.rule = el("rule").value; revealed = false; render();
+});
+el("showctrl").addEventListener("change", () => {
+  state.showctrl = el("showctrl").checked; render();
+});
+el("reveal").addEventListener("click", () => { revealed = true; render(); });
+el("cohort").addEventListener("click", () => { cohortIndex++; revealed = false; render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  revealed = false; cohortIndex = 0;
+  el("guess").value = String(defaults.guess);
+  el("rho").value = String(defaults.rho);
+  el("cut").value = String(defaults.cut);
+  el("delta").value = String(defaults.delta);
+  el("n").value = String(defaults.n);
+  el("rule").value = defaults.rule;
+  el("showctrl").checked = defaults.showctrl;
+  render();
+});
+
+let rt = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(rt);
+  rt = setTimeout(render, 90);
+});
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+
+render();
+
+
+/* ---- SELFTEST ------------------------------------------------------------ */
+function selftest(){
+  const out = [], push = (name, pass, detail) => out.push({ name, pass: !!pass, detail });
+  const near = (a, b, t) => Math.abs(a - b) <= t;
+
+  /* ---- 1. the inverse normal against published quantiles ---------------- */
+  const QUANT = [[0.75, 0.6744897501960817], [0.9, 1.2815515655446004],
+                 [0.95, 1.6448536269514722], [0.975, 1.9599639845400545],
+                 [0.99, 2.3263478740408408]];
+  let qe = 0;
+  for (const [p, z] of QUANT) qe = Math.max(qe, Math.abs(Model.probit(p) - z));
+  push("inverse normal matches the published quantiles",
+       qe < 1e-9, "worst error over z(.75,.9,.95,.975,.99) = " + qe.toExponential(2));
+
+  /* ---- 2. Phi is its inverse, both ways --------------------------------- */
+  let re = 0, se = 0;
+  for (let k = 1; k < 200; k++){
+    const p = k / 200;
+    re = Math.max(re, Math.abs(Model.Phi(Model.probit(p)) - p));
+    se = Math.max(se, Math.abs(Model.probit(1 - p) + Model.probit(p)));
+  }
+  push("the normal CDF and its inverse undo each other",
+       re < 1e-12 && se < 1e-9,
+       "round trip " + re.toExponential(2) + ", symmetry z(1-p)+z(p) = " + se.toExponential(2));
+
+  /* ---- 3. the CDF itself against known values ---------------------------- */
+  const CDF = [[0, 0.5], [1, 0.8413447460685429], [-1, 0.15865525393145707],
+               [1.959963984540054, 0.975], [3, 0.9986501019683699]];
+  let ce = 0;
+  for (const [z, p] of CDF) ce = Math.max(ce, Math.abs(Model.Phi(z) - p));
+  push("the normal CDF matches its tabulated values",
+       ce < 1e-14, "worst error over Phi(0,±1,1.96,3) = " + ce.toExponential(2));
+
+  /* ---- 4. the generator really has correlation rho ----------------------- */
+  const N = 20000;
+  const RHOS = [0, 0.25, 0.5, 0.75, 1];
+  const cohorts = {}, ranked = {};
+  for (const rho of RHOS){
+    cohorts[rho] = Model.cohort(N, rho, SEED + 7);
+    /* Model.selectByRank sorts the whole class every call, so the descending
+       order is taken once here and the fractions are slices of it. */
+    ranked[rho] = Model.selectByRank(cohorts[rho], 1, "top", SEED);
+  }
+  const topQ = (rho, q) => ranked[rho].slice(0, Math.max(1, Math.round(q * N)));
+  let sl = 0;
+  for (const rho of RHOS) sl = Math.max(sl, Math.abs(Model.slope(cohorts[rho]) - rho));
+  push("the regression of round two on round one has slope rho",
+       sl < 0.03, "worst |slope - rho| over rho = 0, .25, .5, .75, 1 is " + sl.toFixed(4));
+
+  /* ---- 5. the marginals are standard normal and the residual is 1-rho^2 -- */
+  let me = 0, ve = 0, rv = 0;
+  for (const rho of RHOS){
+    const c = cohorts[rho];
+    let sx = 0, sxx = 0, sr = 0;
+    for (let i = 0; i < N; i++){
+      sx += c.X[i]; sxx += c.X[i] * c.X[i];
+      const r = c.Y[i] - rho * c.X[i]; sr += r * r;
+    }
+    me = Math.max(me, Math.abs(sx / N));
+    ve = Math.max(ve, Math.abs(sxx / N - 1));
+    rv = Math.max(rv, Math.abs(sr / N - (1 - rho * rho)));
+  }
+  push("scores are standard normal and the leftover variance is 1 - rho squared",
+       me < 0.02 && ve < 0.02 && rv < 0.02,
+       "|mean| " + me.toFixed(4) + ", |var-1| " + ve.toFixed(4) + ", |resid-(1-rho^2)| " + rv.toFixed(4));
+
+  /* ---- 6. the selection mean phi(z)/q ------------------------------------ */
+  const QS = [0.05, 0.1, 0.25, 0.5];
+  let lamE = 0;
+  for (const q of QS){
+    const sel = topQ(0.5, q);
+    const m1 = Model.meanOf(cohorts[0.5].X, sel);
+    lamE = Math.max(lamE, Math.abs(m1 / Model.selectionMean(q) - 1));
+  }
+  push("the chosen group starts at phi(z)/q, the height of the bell over the fraction kept",
+       lamE < 0.025, "worst relative error over q = 5, 10, 25, 50% is " + (lamE * 100).toFixed(2) + "%");
+
+  /* ---- 7. their second round is rho times their first -------------------- */
+  let ratE = 0;
+  for (const rho of RHOS){
+    for (const q of QS){
+      const c = cohorts[rho];
+      const sel = topQ(rho, q);
+      const m1 = Model.meanOf(c.X, sel), m2 = Model.meanOf(c.Y, sel);
+      ratE = Math.max(ratE, Math.abs(m2 / m1 - rho));
+    }
+  }
+  push("the same group's second round averages rho times its first",
+       ratE < 0.05, "worst |m2/m1 - rho| over 20 rho-by-q cases is " + ratE.toFixed(4));
+
+  /* ---- 8. and it matches the closed form rho * phi(z)/q ------------------ */
+  let thE = 0;
+  for (const rho of RHOS){
+    for (const q of QS){
+      const c = cohorts[rho];
+      const sel = topQ(rho, q);
+      thE = Math.max(thE, Math.abs(Model.meanOf(c.Y, sel) - Model.expectedSecond(rho, q)));
+    }
+  }
+  push("the fall matches the closed form rho times phi(z)/q",
+       thE < 0.08, "worst |simulated - rho*phi(z)/q| over 20 cases is " + thE.toFixed(4));
+
+  /* ---- 9. INDEPENDENT ROUTE: picking by rank and by threshold agree ------ */
+  let tgE = 0;
+  for (const rho of RHOS){
+    for (const q of QS){
+      const c = cohorts[rho];
+      const byRank = Model.meanOf(c.Y, topQ(rho, q));
+      const byCut = Model.meanOf(c.Y, Model.selectAbove(c, Model.probit(1 - q)));
+      tgE = Math.max(tgE, Math.abs(byRank - byCut));
+    }
+  }
+  push("taking the top q by rank and taking everyone above z agree",
+       tgE < 0.02, "worst gap between the two selection routes is " + tgE.toFixed(4));
+
+  /* ---- 10. rho = 1 leaves nothing to fall back from ---------------------- */
+  const c1 = cohorts[1];
+  let ident = true;
+  for (let i = 0; i < N; i++) if (c1.X[i] !== c1.Y[i]) { ident = false; break; }
+  const s1 = topQ(1, 0.1);
+  const fall1 = Model.meanOf(c1.X, s1) - Model.meanOf(c1.Y, s1);
+  push("with a perfectly reliable test there is no regression at all",
+       ident && fall1 === 0, "every second score equals its first, so the fall is exactly " + fall1);
+
+  /* ---- 11. rho = 0 wipes the lead out entirely --------------------------- */
+  const c0 = cohorts[0];
+  let zE = 0;
+  for (const q of QS) zE = Math.max(zE, Math.abs(Model.meanOf(c0.Y, topQ(0, q))));
+  push("with a purely random test the chosen group averages zero next time",
+       zE < 0.06, "worst |second-round mean| over q = 5, 10, 25, 50% is " + zE.toFixed(4));
+
+  /* ---- 12. the naive before-and-after lies with no treatment at all ------ */
+  let naiveE = 0, anyBig = true;
+  for (const rho of [0, 0.25, 0.5, 0.75]){
+    for (const q of QS){
+      const c = cohorts[rho];
+      const sel = topQ(rho, q);
+      const naive = Model.meanOf(c.Y, sel) - Model.meanOf(c.X, sel);
+      naiveE = Math.max(naiveE, Math.abs(naive + Model.fallback(rho, q)));
+      if (!(naive < -0.2)) anyBig = false;
+    }
+  }
+  push("with no treatment the naive before-and-after still reports -(1-rho) phi(z)/q",
+       anyBig && naiveE < 0.08,
+       "every one of 16 cases moves by at least 0.2 with nothing done; worst gap to theory "
+       + naiveE.toFixed(4));
+
+  /* ---- 13. splitting the shortlist recovers the real effect -------------- */
+  let didE = 0, matchE = 0;
+  for (const rho of [0, 0.5, 0.75]){
+    for (const q of [0.1, 0.25]){
+      for (const delta of [0, 0.4]){
+        const c = cohorts[rho];
+        const pool = topQ(rho, q);
+        const h = Model.splitPool(pool, SEED + 23);
+        const t1 = Model.meanOf(c.X, h.treated), k1 = Model.meanOf(c.X, h.control);
+        const t2 = Model.meanOf(c.Y, h.treated) + delta, k2 = Model.meanOf(c.Y, h.control);
+        matchE = Math.max(matchE, Math.abs(t1 - k1));
+        didE = Math.max(didE, Math.abs((t2 - t1) - (k2 - k1) - delta));
+      }
+    }
+  }
+  push("splitting the shortlist in two gives equally extreme halves and recovers the real effect",
+       matchE < 0.15 && didE < 0.15,
+       "halves start within " + matchE.toFixed(4) + "; difference-in-differences off by at most "
+       + didE.toFixed(4));
+
+  return out;
+}
+
+window.__SELFTEST = selftest;
+
+})();
+</script>
+</body>
+</html>

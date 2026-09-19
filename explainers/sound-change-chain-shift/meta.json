@@ -1,0 +1,36 @@
+{
+  "slug": "sound-change-chain-shift",
+  "title": "Seven Vowels Move and None Collide",
+  "domain": "linguistics",
+  "difficulty": 3,
+  "summary": "Step through the Great Vowel Shift one change at a time and watch seven long vowels cross the mouth over two centuries without any two of them ever landing on the same spot.",
+  "prerequisites": [],
+  "tags": [
+    "great-vowel-shift",
+    "chain-shift",
+    "historical-phonology",
+    "phonemic-contrast",
+    "vowel-space"
+  ],
+  "interaction_pattern": "step-through",
+  "sources": [
+    {
+      "title": "Great Vowel Shift",
+      "url": "https://en.wikipedia.org/wiki/Great_Vowel_Shift"
+    },
+    {
+      "title": "Chain shift: push chains and pull chains",
+      "url": "https://en.wikipedia.org/wiki/Chain_shift"
+    },
+    {
+      "title": "Wells's standard lexical sets",
+      "url": "https://en.wikipedia.org/wiki/Lexical_set"
+    },
+    {
+      "title": "The IPA vowel diagram",
+      "url": "https://en.wikipedia.org/wiki/Vowel_diagram"
+    }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}
