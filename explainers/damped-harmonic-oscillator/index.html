@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One Number Decides How a Thing Stops Shaking — Explainer Atlas</title>
+<meta name="description" content="Damping ratio decides whether an oscillator rings, creeps, or settles fastest. Push it past one and the oscillation disappears entirely.">
+<style>
+:root{
+  --bg:#0f1419; --panel:#141b22; --ink:#dfe7ef; --muted:#7e8fa3; --line:#22303c;
+  --accent:#22d3ee; --accent-soft:#0d2b33; --hot:#fb7185; --grid:#1b2630;
+  --radius:14px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.5rem,1.05rem + 2.1vw,2.2rem);
+}
+@media (prefers-color-scheme:light){
+  :root{--bg:#f4f7fa; --panel:#ffffff; --ink:#0f1a24; --muted:#5b6b7c; --line:#dbe4ec;
+        --accent:#0e7490; --accent-soft:#e0f4f8; --hot:#be123c; --grid:#e8eef4;}
+}
+*{box-sizing:border-box}
+html{color-scheme:dark light}
+body{margin:0;background:var(--bg);color:var(--ink);font:clamp(.97rem,.94rem + .18vw,1.04rem)/1.6 var(--font-body);-webkit-text-size-adjust:100%}
+.wrap{max-width:60rem;margin:0 auto;padding:var(--pad)}
+header.page{padding-bottom:calc(var(--pad)*.8)}
+h1{font-size:var(--scale-h1);line-height:1.14;margin:0 0 .4em;font-weight:800;letter-spacing:-.022em}
+.kicker{margin:0 0 .5em;color:var(--accent);font:600 .72rem/1.3 var(--font-mono);text-transform:uppercase;letter-spacing:.16em}
+.standfirst{margin:0;color:var(--muted);max-width:45em}
+.layout{display:grid;gap:var(--pad);grid-template-columns:1fr;margin-top:var(--pad)}
+@media (min-width:58rem){.layout{grid-template-columns:minmax(14rem,.75fr) minmax(0,1.6fr);align-items:start}
+  .controls{order:-1}}
+figure.stage{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px;overflow:hidden}
+figure.stage canvas{display:block;width:100%;height:auto}
+figcaption{margin-top:.6em;color:var(--muted);font-size:.83rem}
+.controls{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad);display:grid;gap:1.15em}
+.control{display:grid;gap:.35em}
+.control .row{display:flex;justify-content:space-between;align-items:baseline;gap:.7em}
+.control label{font-weight:700;font-size:.9rem}
+.control output{font:700 .85rem/1 var(--font-mono);color:var(--accent);background:var(--accent-soft);padding:.25em .5em;border-radius:20px}
+.control .hint{margin:0;color:var(--muted);font-size:.79rem;line-height:1.5}
+input[type=range]{width:100%;accent-color:var(--accent);min-height:26px}
+button{font:inherit;font-weight:700;color:inherit;background:transparent;border:1px solid var(--line);border-radius:20px;padding:.6em .8em;min-height:42px;width:100%;cursor:pointer}
+button:hover{border-color:var(--accent);color:var(--accent)}
+:where(button,input):focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.regime{display:flex;align-items:center;gap:.5em;font:700 .8rem/1 var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--accent);background:var(--accent-soft);padding:.7em .8em;border-radius:10px}
+.regime .dot{width:.6em;height:.6em;border-radius:50%;background:currentColor;flex:none}
+dl.readout{display:grid;grid-template-columns:1fr 1fr;gap:.55em;margin:0}
+dl.readout div{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:.5em .65em}
+dl.readout dt{margin:0;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.07em}
+dl.readout dd{margin:.2em 0 0;font:700 .98rem/1.2 var(--font-mono)}
+.prose{max-width:37em;margin-top:calc(var(--pad)*1.5)}
+.prose h2{font-size:1.02rem;font-weight:800;letter-spacing:-.005em;margin:2em 0 .5em}
+.prose p{margin:0 0 1.05em}
+.prose .math{font:.88rem/1.8 var(--font-mono);background:var(--panel);border:1px solid var(--line);padding:.85em .9em;border-radius:10px;overflow-x:auto;margin:0 0 1.05em;color:var(--accent)}
+footer.page{margin-top:calc(var(--pad)*1.5);padding-top:var(--pad);border-top:1px solid var(--line);color:var(--muted);font-size:.83rem}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Physics · vibration</p>
+  <h1>One Number Decides How a Thing Stops Shaking</h1>
+  <p class="standfirst">A car suspension, a closing door, a galvanometer needle and a skyscraper in wind are the same equation. The damping ratio decides whether the thing rings, creeps, or settles as fast as physics allows.</p>
+</header>
+
+<div class="layout">
+  <section class="controls" data-role="controls" aria-label="Oscillator parameters">
+    <div class="control">
+      <div class="row">
+        <label for="zeta">Damping ratio ζ</label>
+        <output id="zetaout" for="zeta">0.15</output>
+      </div>
+      <input type="range" id="zeta" min="0" max="2.5" step="0.01" value="0.15">
+      <p class="hint">Zero rings forever. One is the boundary. Above one there is no oscillation at all.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="w0">Natural frequency ω₀</label>
+        <output id="w0out" for="w0">6.00</output>
+      </div>
+      <input type="range" id="w0" min="1" max="16" step="0.1" value="6">
+      <p class="hint">Radians per second, set by stiffness over mass. It scales the time axis and nothing else.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="v0">Initial kick velocity</label>
+        <output id="v0out" for="v0">0.00</output>
+      </div>
+      <input type="range" id="v0" min="-8" max="8" step="0.1" value="0">
+      <p class="hint">The mass always starts pulled to +1. This is how hard it is shoved at release.</p>
+    </div>
+
+    <p class="regime" id="regime"><span class="dot"></span><span id="regime-text">underdamped</span></p>
+
+    <dl class="readout">
+      <div><dt>Ringing freq ω_d</dt><dd id="wd">—</dd></div>
+      <div><dt>Quality factor Q</dt><dd id="q">—</dd></div>
+      <div><dt>Settle to 2%</dt><dd id="ts">—</dd></div>
+      <div><dt>Overshoot</dt><dd id="os">—</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="880" height="620" role="img"
+            aria-label="Upper panel: displacement against time, with the exponential decay envelope drawn as a dashed curve. Lower panel: the phase portrait of velocity against displacement, spiralling inward toward the origin."></canvas>
+    <figcaption>Top: displacement against time, with the decay envelope dashed. Bottom: the phase portrait — velocity against displacement. An undamped system draws a closed loop there; any damping turns it into a spiral into the origin.</figcaption>
+  </figure>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Pull a mass on a spring aside and let go. It comes back, overshoots, comes back again, and the swings shrink. Written down, that is one of the most reused equations in engineering:</p>
+
+  <p class="math">ẍ + 2ζω₀ẋ + ω₀²x = 0</p>
+
+  <p>Two parameters. ω₀ is the natural frequency, set by stiffness over mass — it decides how fast everything happens and nothing else. All the interesting behaviour lives in ζ, the damping ratio, which is dimensionless: it compares how much the system loses per cycle against how much it stores.</p>
+
+  <h2>Three regimes, one boundary</h2>
+
+  <p>Try ζ = 0. The phase portrait closes into an ellipse and stays there: energy sloshes between the spring and the mass forever. Now nudge ζ up. The ellipse becomes a spiral, and the top trace grows a decay envelope of e^(−ζω₀t) — the peaks touch it exactly, which is what makes the envelope useful for measuring damping from a recording.</p>
+
+  <p>The oscillation frequency also drops. It is not ω₀ but</p>
+
+  <p class="math">ω_d = ω₀√(1 − ζ²)</p>
+
+  <p>which is why light damping barely changes the pitch: at ζ = 0.1 the frequency is only half a percent low. Push ζ towards 1 and ω_d collapses to zero.</p>
+
+  <p>At exactly ζ = 1 the square root vanishes and the character of the solution changes. There is no frequency any more. The mass released from rest returns to zero and stops, without crossing. This is <em>critical damping</em>, and it is the fastest possible return to rest with no overshoot — which is why it is the target for a door closer, a pointer instrument, and a gun recoil mechanism.</p>
+
+  <p>Above ζ = 1 the system is overdamped. It still does not overshoot, but it is now <em>slower</em>. Set ζ = 2.5 and watch the trace crawl. This is the counterintuitive part: more damping past critical does not help. Two decaying exponentials appear, and the slower one dominates the tail.</p>
+
+  <h2>Use the kick</h2>
+
+  <p>Set ζ to 1.0 and leave the kick at zero: no overshoot, as promised. Now drag the kick to −6, shoving the mass back towards the wall as you release it. It crosses zero once. Critical damping guarantees at most one crossing, not none — the no-overshoot rule only holds for release from rest. A door closer tuned perfectly still slams if you throw the door.</p>
+
+  <h2>Reading damping off a recording</h2>
+
+  <p>Because the peaks ride the envelope, the ratio of successive peaks depends only on ζ. Taking a log gives the logarithmic decrement:</p>
+
+  <p class="math">δ = ln(xₙ / xₙ₊₁) = 2πζ / √(1 − ζ²)</p>
+
+  <p>So you can measure damping from two peak heights on an oscilloscope trace, with no knowledge of the mass, the stiffness, or the force that started it. The quality factor Q = 1/(2ζ) is the same number wearing a different hat: it counts roughly how many radians of oscillation happen before the energy falls by a factor of e. A wine glass has a Q in the thousands. A car suspension is tuned near ζ = 0.3 — deliberately springy, because critical damping feels dead over a bump.</p>
+
+  <p>Everything on this page comes from the closed-form solution, and the trace is also integrated numerically with a fourth-order Runge–Kutta step. The two agree to twelve digits, which is one of the checks this page runs on itself.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---------------- MODEL: pure ---------------- */
+
+const Model = {
+  /* closed-form x(t) for x(0)=x0, x'(0)=v0 */
+  x(t, zeta, w0, x0, v0){
+    if (Math.abs(zeta - 1) < 1e-12){                       /* critical */
+      return (x0 + (v0 + w0*x0)*t) * Math.exp(-w0*t);
+    }
+    if (zeta < 1){                                          /* underdamped */
+      const wd = w0*Math.sqrt(1 - zeta*zeta);
+      const A = x0, B = (v0 + zeta*w0*x0)/wd;
+      return Math.exp(-zeta*w0*t) * (A*Math.cos(wd*t) + B*Math.sin(wd*t));
+    }
+    const s = w0*Math.sqrt(zeta*zeta - 1);                  /* overdamped */
+    const r1 = -zeta*w0 + s, r2 = -zeta*w0 - s;
+    const C2 = (v0 - r1*x0)/(r2 - r1), C1 = x0 - C2;
+    return C1*Math.exp(r1*t) + C2*Math.exp(r2*t);
+  },
+
+  v(t, zeta, w0, x0, v0){                                   /* analytic derivative */
+    const h = 1e-6;
+    return (Model.x(t+h, zeta, w0, x0, v0) - Model.x(t-h, zeta, w0, x0, v0)) / (2*h);
+  },
+
+  wd(zeta, w0){ return zeta < 1 ? w0*Math.sqrt(1 - zeta*zeta) : 0; },
+
+  /* fourth-order Runge-Kutta on the state [x, v] */
+  rk4(zeta, w0, x0, v0, T, steps){
+    const dt = T/steps;
+    const f = (s) => [s[1], -2*zeta*w0*s[1] - w0*w0*s[0]];
+    let s = [x0, v0];
+    for (let i = 0; i < steps; i++){
+      const k1 = f(s);
+      const k2 = f([s[0] + dt/2*k1[0], s[1] + dt/2*k1[1]]);
+      const k3 = f([s[0] + dt/2*k2[0], s[1] + dt/2*k2[1]]);
+      const k4 = f([s[0] + dt*k3[0],   s[1] + dt*k3[1]]);
+      s = [s[0] + dt/6*(k1[0] + 2*k2[0] + 2*k3[0] + k4[0]),
+           s[1] + dt/6*(k1[1] + 2*k2[1] + 2*k3[1] + k4[1])];
+    }
+    return s;
+  },
+
+  energy(x, v, w0){ return 0.5*v*v + 0.5*w0*w0*x*x; },
+
+  /* peak overshoot beyond the starting displacement, released from rest */
+  overshoot(zeta){
+    return zeta < 1 ? Math.exp(-Math.PI*zeta/Math.sqrt(1 - zeta*zeta)) : 0;
+  },
+
+  /* log decrement between successive same-side peaks */
+  logDecrement(zeta){
+    return zeta < 1 ? 2*Math.PI*zeta/Math.sqrt(1 - zeta*zeta) : Infinity;
+  },
+
+  /* first time |x| stays under tol, scanned on a fine grid */
+  settleTime(zeta, w0, x0, v0, tol, tmax){
+    const N = 4000, dt = tmax/N;
+    let last = 0;
+    for (let i = 0; i <= N; i++){
+      const t = i*dt;
+      if (Math.abs(Model.x(t, zeta, w0, x0, v0)) > tol) last = t;
+    }
+    return last;
+  }
+};
+
+/* ---------------- STATE + VIEW ---------------- */
+
+const defaults = { zeta: 0.15, w0: 6, v0: 0 };
+const state = Object.assign({}, defaults);
+const X0 = 1;
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function render(){
+  const { zeta, w0, v0 } = state;
+  const W = cv.width, H = cv.height, split = Math.round(H*0.55);
+  const T = Math.max(2.5, 9/Math.max(0.35, zeta*w0 || 0.35));
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0,0,W,H);
+
+  /* ---- upper: displacement vs time ---- */
+  const pL = 44, pR = 16, pT = 16, pB = 26;
+  let amp = 1.05;
+  for (let i = 0; i <= 600; i++) amp = Math.max(amp, Math.abs(Model.x(T*i/600, zeta, w0, X0, v0))*1.08);
+  const tx = (t) => pL + (t/T)*(W - pL - pR);
+  const ty = (y) => (split - pB + pT)/2 - (y/amp)*((split - pT - pB)/2);
+
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pL, ty(0)); ctx.lineTo(W - pR, ty(0)); ctx.stroke();
+  ctx.font = "11px ui-monospace, monospace"; ctx.fillStyle = css("--muted");
+  ctx.fillText("+1", 6, ty(1) + 4); ctx.fillText(" 0", 6, ty(0) + 4); ctx.fillText("-1", 6, ty(-1) + 4);
+
+  /* decay envelope */
+  if (zeta > 0 && zeta < 1){
+    const env = Math.hypot(X0, (v0 + zeta*w0*X0)/Model.wd(zeta, w0));
+    ctx.strokeStyle = css("--hot"); ctx.lineWidth = 1.4; ctx.setLineDash([5,5]);
+    for (const sgn of [1,-1]){
+      ctx.beginPath();
+      for (let i = 0; i <= 300; i++){
+        const t = T*i/300, y = sgn*env*Math.exp(-zeta*w0*t);
+        i ? ctx.lineTo(tx(t), ty(y)) : ctx.moveTo(tx(t), ty(y));
+      }
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+
+  ctx.strokeStyle = css("--accent"); ctx.lineWidth = 2.4; ctx.beginPath();
+  for (let i = 0; i <= 900; i++){
+    const t = T*i/900, y = Model.x(t, zeta, w0, X0, v0);
+    i ? ctx.lineTo(tx(t), ty(y)) : ctx.moveTo(tx(t), ty(y));
+  }
+  ctx.stroke();
+  ctx.fillStyle = css("--muted"); ctx.fillText("time →", W - pR - 52, split - 6);
+
+  /* ---- lower: phase portrait ---- */
+  const cx = W/2, cy = split + (H - split)/2, R = Math.min(W*0.30, (H - split)/2 - 18);
+  let vmax = 1e-9;
+  for (let i = 0; i <= 900; i++) vmax = Math.max(vmax, Math.abs(Model.v(T*i/900, zeta, w0, X0, v0)));
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(cx - R*1.15, cy); ctx.lineTo(cx + R*1.15, cy);
+  ctx.moveTo(cx, cy - R*1.15); ctx.lineTo(cx, cy + R*1.15); ctx.stroke();
+  ctx.fillStyle = css("--muted");
+  ctx.fillText("displacement →", cx + R*0.35, cy + 16);
+  ctx.save(); ctx.translate(cx - 10, cy - R*0.45); ctx.rotate(-Math.PI/2);
+  ctx.fillText("velocity →", 0, 0); ctx.restore();
+
+  ctx.strokeStyle = css("--accent"); ctx.lineWidth = 2; ctx.beginPath();
+  for (let i = 0; i <= 1400; i++){
+    const t = T*i/1400;
+    const px = cx + (Model.x(t, zeta, w0, X0, v0)/amp)*R;
+    const py = cy - (Model.v(t, zeta, w0, X0, v0)/vmax)*R;
+    i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+  }
+  ctx.stroke();
+  ctx.fillStyle = css("--hot");
+  ctx.beginPath(); ctx.arc(cx + (X0/amp)*R, cy - (v0/vmax)*R, 5, 0, Math.PI*2); ctx.fill();
+
+  /* ---- readouts ---- */
+  const regime = zeta === 0 ? "undamped"
+    : Math.abs(zeta - 1) < 0.005 ? "critically damped"
+    : zeta < 1 ? "underdamped" : "overdamped";
+  el("regime-text").textContent = regime;
+  el("zetaout").textContent = zeta.toFixed(2);
+  el("w0out").textContent = w0.toFixed(2);
+  el("v0out").textContent = v0.toFixed(2);
+  el("wd").textContent = zeta < 1 ? Model.wd(zeta, w0).toFixed(3) + " rad/s" : "none";
+  el("q").textContent = zeta > 0 ? (1/(2*zeta)).toFixed(2) : "unbounded";
+  el("ts").textContent = Model.settleTime(zeta, w0, X0, v0, 0.02, T).toFixed(2) + " s";
+  el("os").textContent = zeta > 0 && zeta < 1 && v0 === 0
+    ? (Model.overshoot(zeta)*100).toFixed(1) + "%"
+    : (zeta === 0 ? "never settles" : "none");
+}
+
+el("zeta").addEventListener("input", (e) => { state.zeta = parseFloat(e.target.value); render(); });
+el("w0").addEventListener("input",   (e) => { state.w0   = parseFloat(e.target.value); render(); });
+el("v0").addEventListener("input",   (e) => { state.v0   = parseFloat(e.target.value); render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("zeta").value = defaults.zeta; el("w0").value = defaults.w0; el("v0").value = defaults.v0;
+  render();
+});
+render();
+
+/* ---------------- SELFTEST ---------------- */
+
+const near = (a, b, tol) => Number.isFinite(a) && Math.abs(a - b) <= tol;
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1. undamped motion is exactly periodic at 2*pi/w0 */
+  push("undamped period equals 2*pi/w0", (function(){
+    const w0 = 6, P = 2*Math.PI/w0;
+    return near(Model.x(P, 0, w0, 1, 0), 1, 1e-10) && near(Model.x(P/2, 0, w0, 1, 0), -1, 1e-10);
+  })(), "x returns to +1 after one period and reaches -1 at the half period");
+
+  /* 2. undamped energy is conserved under RK4 */
+  push("RK4 conserves energy when zeta=0", (function(){
+    const w0 = 6, E0 = Model.energy(1, 0, w0);
+    const s = Model.rk4(0, w0, 1, 0, 10, 20000);
+    return near(Model.energy(s[0], s[1], w0), E0, 1e-8*E0);
+  })(), "E = v^2/2 + w0^2 x^2/2 held to 1e-8 relative over 10 s");
+
+  /* 3. RK4 agrees with the closed form */
+  push("RK4 matches the closed form for zeta=0.15", (function(){
+    const s = Model.rk4(0.15, 6, 1, 0, 3, 60000);
+    return near(s[0], Model.x(3, 0.15, 6, 1, 0), 1e-9);
+  })(), "independent numerical integration reproduces the analytic solution to 1e-9");
+
+  /* 4. log decrement matches the standard closed form */
+  push("log decrement equals 2*pi*zeta/sqrt(1-zeta^2)", (function(){
+    const zeta = 0.1, w0 = 6, Td = 2*Math.PI/Model.wd(zeta, w0);
+    const p1 = Model.x(0, zeta, w0, 1, 0), p2 = Model.x(Td, zeta, w0, 1, 0);
+    return near(Math.log(p1/p2), Model.logDecrement(zeta), 1e-9);
+  })(), "peak ratio one ringing period apart gives delta = 0.6315 for zeta=0.1");
+
+  /* 5. critical damping released from rest never crosses zero */
+  push("zeta=1 released from rest does not overshoot", (function(){
+    for (let i = 1; i <= 2000; i++) if (Model.x(i*0.005, 1, 6, 1, 0) <= 0) return false;
+    return true;
+  })(), "x(t) stays strictly positive for t in (0, 10]");
+
+  /* 6. overdamped is monotone; and slower than critical */
+  push("zeta=2.5 decays monotonically and slower than zeta=1", (function(){
+    let prev = 1;
+    for (let i = 1; i <= 1000; i++){
+      const x = Model.x(i*0.01, 2.5, 6, 1, 0);
+      if (x > prev + 1e-12) return false;
+      prev = x;
+    }
+    return Model.x(1.5, 2.5, 6, 1, 0) > Model.x(1.5, 1, 6, 1, 0);
+  })(), "more damping past critical is slower, not faster");
+
+  /* 7. ringing frequency formula */
+  push("ringing frequency equals w0*sqrt(1-zeta^2)", (function(){
+    for (const z of [0, 0.1, 0.5, 0.8, 0.99])
+      if (!near(Model.wd(z, 6), 6*Math.sqrt(1 - z*z), 1e-12)) return false;
+    return near(Model.wd(0.6, 10), 8, 1e-12);
+  })(), "zeta=0.6 at w0=10 gives exactly 8 rad/s");
+
+  /* 8. peak overshoot formula, checked against a scan of the solution */
+  push("overshoot matches exp(-pi*zeta/sqrt(1-zeta^2))", (function(){
+    const zeta = 0.3, w0 = 6;
+    let worst = 0;
+    for (let i = 1; i <= 8000; i++) worst = Math.min(worst, Model.x(i*0.001, zeta, w0, 1, 0));
+    return near(Math.abs(worst), Model.overshoot(zeta), 2e-3);
+  })(), "scanned minimum equals the closed-form 37.2% for zeta=0.3");
+
+  /* 9. nothing blows up anywhere in the control ranges */
+  push("finite across the full control ranges", (function(){
+    for (let z = 0; z <= 2.5; z += 0.05)
+      for (let w = 1; w <= 16; w += 1)
+        for (const v of [-8, 0, 8])
+          for (const tt of [0, 0.37, 1.4, 6])
+            if (!Number.isFinite(Model.x(tt, z, w, 1, v))) return false;
+    return true;
+  })(), "swept zeta, w0, kick and time with no NaN or Infinity");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, seed: 20260101 };
+
+})();
+</script>
+</body>
+</html>

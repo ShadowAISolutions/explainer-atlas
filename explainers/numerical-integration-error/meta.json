@@ -1,0 +1,16 @@
+{
+  "slug": "numerical-integration-error",
+  "title": "Why Simpson's Rule Beats the Trapezoid",
+  "domain": "mathematics",
+  "difficulty": 3,
+  "summary": "Race the trapezoid rule against Simpson's rule and see why one error falls four times faster per halving, for the same function evaluations.",
+  "prerequisites": [],
+  "tags": ["numerical-analysis", "integration", "convergence", "error-analysis", "calculus"],
+  "interaction_pattern": "race-two-methods",
+  "sources": [
+    { "title": "Numerical Recipes, 3rd ed., §4.1 Classical Formulas for Equally Spaced Abscissas", "url": "https://numerical.recipes/" },
+    { "title": "NIST Digital Library of Mathematical Functions, §3.5 Quadrature", "url": "https://dlmf.nist.gov/3.5" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 8
+}
