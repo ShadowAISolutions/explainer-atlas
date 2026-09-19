@@ -1,0 +1,17 @@
+{
+  "slug": "dijkstra-vs-astar",
+  "title": "A Guess About Distance Is Worth Half the Search",
+  "domain": "computer-science",
+  "difficulty": 3,
+  "summary": "Step two shortest-path searches through a maze one expansion at a time and watch a rough distance estimate halve the work without costing a step of path.",
+  "prerequisites": [],
+  "tags": ["a-star", "dijkstra", "heuristics", "admissibility", "graph-search", "pathfinding"],
+  "interaction_pattern": "step-through",
+  "sources": [
+    { "title": "A* search algorithm — Wikipedia", "url": "https://en.wikipedia.org/wiki/A*_search_algorithm" },
+    { "title": "Hart, Nilsson & Raphael (1968), A Formal Basis for the Heuristic Determination of Minimum Cost Paths", "url": "https://ieeexplore.ieee.org/document/4082128" },
+    { "title": "Amit Patel, Introduction to A* — Red Blob Games", "url": "https://www.redblobgames.com/pathfinding/a-star/introduction.html" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 11
+}
