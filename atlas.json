@@ -1,8 +1,9 @@
 {
   "generated_at": "2026-09-19",
-  "count": 23,
+  "count": 27,
   "domains": {
     "biology": [
+      "epidemic-r0-herd-immunity",
       "population-logistic-chaos",
       "predator-prey-cycles"
     ],
@@ -16,9 +17,11 @@
       "quicksort-pivot-choice"
     ],
     "earth-science": [
-      "greenhouse-energy-balance"
+      "greenhouse-energy-balance",
+      "radiometric-dating"
     ],
     "economics": [
+      "auction-formats-revenue",
       "supply-demand-tax-incidence"
     ],
     "engineering": [
@@ -42,7 +45,8 @@
       "numerical-integration-error"
     ],
     "music-theory": [
-      "equal-temperament"
+      "equal-temperament",
+      "harmonic-series-timbre"
     ],
     "physics": [
       "damped-harmonic-oscillator",
@@ -53,20 +57,48 @@
     ]
   },
   "interaction_patterns": {
-    "build-from-parts": 2,
+    "build-from-parts": 3,
     "compare-side-by-side": 2,
     "drag-parameter": 2,
     "draw-input": 2,
-    "guess-then-reveal": 2,
+    "guess-then-reveal": 3,
     "live-code": 1,
     "perturb-and-observe": 2,
-    "race-two-methods": 2,
+    "race-two-methods": 3,
     "spatial-explore": 2,
     "step-through": 2,
-    "time-scrubber": 2,
+    "time-scrubber": 3,
     "tune-to-match": 2
   },
   "explainers": [
+    {
+      "slug": "auction-formats-revenue",
+      "title": "Two Auctions, Two Sets of Bids, One Revenue",
+      "domain": "economics",
+      "difficulty": 4,
+      "summary": "Run a first-price and a second-price auction on exactly the same bidders. The bids look nothing alike and the seller earns the same.",
+      "prerequisites": [],
+      "tags": [
+        "auctions",
+        "mechanism-design",
+        "revenue-equivalence",
+        "vickrey",
+        "order-statistics"
+      ],
+      "interaction_pattern": "race-two-methods",
+      "sources": [
+        {
+          "title": "Vickrey, Counterspeculation, Auctions, and Competitive Sealed Tenders, J. Finance 16(1), 1961",
+          "url": "https://www.jstor.org/stable/2977633"
+        },
+        {
+          "title": "Myerson, Optimal Auction Design, Mathematics of Operations Research 6(1), 1981",
+          "url": "https://pubsonline.informs.org/doi/10.1287/moor.6.1.58"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
     {
       "slug": "central-limit-theorem",
       "title": "Draw Any Population You Like",
@@ -155,6 +187,34 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 11
+    },
+    {
+      "slug": "epidemic-r0-herd-immunity",
+      "title": "Herd Immunity Is Not Where It Stops",
+      "domain": "biology",
+      "difficulty": 3,
+      "summary": "Guess how many people an unmitigated epidemic infects, then watch it sail past the herd immunity threshold and keep going.",
+      "prerequisites": [],
+      "tags": [
+        "epidemiology",
+        "sir-model",
+        "reproduction-number",
+        "herd-immunity",
+        "differential-equations"
+      ],
+      "interaction_pattern": "guess-then-reveal",
+      "sources": [
+        {
+          "title": "Kermack and McKendrick, A Contribution to the Mathematical Theory of Epidemics, Proc. R. Soc. A 115, 1927",
+          "url": "https://royalsocietypublishing.org/doi/10.1098/rspa.1927.0118"
+        },
+        {
+          "title": "Miller, A Note on the Derivation of Epidemic Final Sizes, Bull. Math. Biol. 74(9), 2012",
+          "url": "https://link.springer.com/article/10.1007/s11538-012-9749-6"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
     },
     {
       "slug": "equal-temperament",
@@ -266,6 +326,34 @@
       ],
       "interaction_pattern": "drag-parameter",
       "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
+      "slug": "harmonic-series-timbre",
+      "title": "Timbre Is a List of Numbers",
+      "domain": "music-theory",
+      "difficulty": 2,
+      "summary": "Stack sine waves one harmonic at a time and watch a square, a sawtooth and a triangle assemble themselves out of nothing but amplitudes.",
+      "prerequisites": [],
+      "tags": [
+        "fourier-series",
+        "timbre",
+        "harmonics",
+        "additive-synthesis",
+        "gibbs-phenomenon"
+      ],
+      "interaction_pattern": "build-from-parts",
+      "sources": [
+        {
+          "title": "Gibbs, Fourier's Series, Nature 59, 1899",
+          "url": "https://www.nature.com/articles/059606a0"
+        },
+        {
+          "title": "Helmholtz, On the Sensations of Tone, 1877 (Ellis translation)",
+          "url": "https://archive.org/details/onsensationston00helmgoog"
+        }
+      ],
       "created_at": "2026-09-19",
       "assertions_count": 12
     },
@@ -567,6 +655,34 @@
       ],
       "interaction_pattern": "race-two-methods",
       "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
+      "slug": "radiometric-dating",
+      "title": "The Clock Does Not Care How Much You Started With",
+      "domain": "earth-science",
+      "difficulty": 3,
+      "summary": "Scrub through geological time and watch the parent-to-daughter ratio give the same age whatever the sample size, then see the isochron rescue the date when the daughter was there from the start.",
+      "prerequisites": [],
+      "tags": [
+        "radioactive-decay",
+        "geochronology",
+        "half-life",
+        "isochron",
+        "exponential-decay"
+      ],
+      "interaction_pattern": "time-scrubber",
+      "sources": [
+        {
+          "title": "Nicolaysen, Graphic Interpretation of Discordant Age Measurements on Metamorphic Rocks, Ann. NY Acad. Sci. 91, 1961",
+          "url": "https://nyaspubs.onlinelibrary.wiley.com/doi/10.1111/j.1749-6632.1961.tb35472.x"
+        },
+        {
+          "title": "IAEA Live Chart of Nuclides",
+          "url": "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html"
+        }
+      ],
       "created_at": "2026-09-19",
       "assertions_count": 12
     },
