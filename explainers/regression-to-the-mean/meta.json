@@ -1,0 +1,32 @@
+{
+  "slug": "regression-to-the-mean",
+  "title": "Nobody Did Anything and It Improved",
+  "domain": "statistics",
+  "difficulty": 3,
+  "summary": "Pick the top scorers and test them again. They fall back with no cause at all, and that alone is enough to manufacture a treatment effect that never happened.",
+  "prerequisites": [],
+  "tags": [
+    "regression-to-the-mean",
+    "selection-effect",
+    "normal-distribution",
+    "study-design",
+    "control-group"
+  ],
+  "interaction_pattern": "guess-then-reveal",
+  "sources": [
+    {
+      "title": "Galton, Regression Towards Mediocrity in Hereditary Stature (1886)",
+      "url": "https://galton.org/essays/1880-1889/galton-1886-jaigi-regression-stature.pdf"
+    },
+    {
+      "title": "Barnett, van der Pols and Dobson, Regression to the mean: what it is and how to deal with it",
+      "url": "https://academic.oup.com/ije/article/34/1/215/638499"
+    },
+    {
+      "title": "NIST/SEMATECH e-Handbook, Normal distribution",
+      "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm"
+    }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}
