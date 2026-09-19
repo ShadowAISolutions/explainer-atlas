@@ -1,0 +1,16 @@
+{
+  "slug": "eulers-identity-rotation",
+  "title": "Nothing Mystical Happens At Pi",
+  "domain": "mathematics",
+  "difficulty": 3,
+  "summary": "Multiplying by a number of length one is a turn. Build the turn out of many tiny multiplications and watch the polygon close onto the circle, with the Taylor series arriving at the same point by another road.",
+  "prerequisites": [],
+  "tags": ["complex-numbers", "eulers-identity", "taylor-series", "limits", "rotation"],
+  "interaction_pattern": "build-from-parts",
+  "sources": [
+    { "title": "NIST Digital Library of Mathematical Functions, 4.2 Exponential Function", "url": "https://dlmf.nist.gov/4.2" },
+    { "title": "NIST Digital Library of Mathematical Functions, 4.21 Identities (de Moivre)", "url": "https://dlmf.nist.gov/4.21" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}

@@ -97,10 +97,17 @@ batch/003.
       labels and no axis numbers, so scaling it into a 390px viewport costs
       nothing. Per the constraint below, a page that already reads acceptably
       at 390 is left alone.
-- [ ] batch/003 pages — `ph-buffer-capacity`, `levenshtein-distance`,
-      `greenhouse-energy-balance`, `shannon-channel-capacity`,
-      `special-relativity-time-dilation` remain. AUDIT/001 confirmed
-      `shannon-channel-capacity`'s chart axis labels vanish at 390.
+- [x] batch/003 pages — done in batch/012: `shannon-channel-capacity`
+      (container-tracking canvas; the rotated axis caption was sitting on the
+      tick numbers and the rate label was struck by the capacity curve),
+      `ph-buffer-capacity` (the side column now stacks below the plot at a
+      phone width, and the buffer-band label moved out of the band into a
+      reserved row under pH 1.1, which the model can never reach), and
+      `levenshtein-distance` (the table filled only the left half so a
+      commentary column could sit beside it; below 470 the commentary now
+      stacks underneath and the grid takes the full width).
+- [ ] batch/003 pages — `greenhouse-energy-balance` and
+      `special-relativity-time-dilation` remain.
 
 **Use the container-tracking pattern, not the two-fixed-sizes one.** Clamp the
 container width, set the backing store to twice it, scale the context by two,

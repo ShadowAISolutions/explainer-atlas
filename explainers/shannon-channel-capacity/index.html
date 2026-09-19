@@ -269,11 +269,40 @@ const state = Object.assign({}, defaults, { asked: 0, right: 0, guess: null });
 
 const el = (id) => document.getElementById(id);
 const cv = el("view"), ctx = cv.getContext("2d");
-const W = cv.width, H = cv.height;
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
-const PL = 74, PR = 34, PT = 30, PB = 56;
-const PW = W - PL - PR, PH = H - PT - PB;
+/* The canvas tracks its container rather than sitting at a fixed 920 by 470.
+   Clamp the container width, give the backing store twice that, scale the
+   context by two, and let one NARROW flag choose the arrangement and the
+   wording. Every padding and type size below is derived from the width, so
+   a phone gets a readable chart instead of a shrunken wall poster.        */
+const SS = 2;
+let W, H, NARROW, FS, FSB, PL, PR, PT, PB, PW, PH;
+
+function wid(t){ return ctx.measureText(t).width; }
+function pick(list, room){
+  for (let i = 0; i < list.length; i++) if (wid(list[i]) <= room) return list[i];
+  return "";
+}
+
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth - 28;
+  W = Math.max(280, Math.min(1000, avail || 900));
+  NARROW = W < 470;
+  FS = NARROW ? 11 : 13;
+  FSB = NARROW ? 12 : 15;
+  PL = NARROW ? 48 : 74;
+  PR = NARROW ? 16 : 34;
+  PT = NARROW ? 20 : 30;
+  PB = NARROW ? 40 : 56;
+  H = Math.round(NARROW ? W * 1.0 : W * 0.51);
+  PW = W - PL - PR; PH = H - PT - PB;
+  cv.width = Math.round(W * SS);
+  cv.height = Math.round(H * SS);
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
 const X = (p) => PL + PW * p;
 const Y = (c) => PT + PH * (1 - c);
 
@@ -285,6 +314,7 @@ const CURVE = (function(){
 })();
 
 function render(){
+  if (W === undefined) fitCanvas();
   const p = state.p, rate = state.rate;
   const C = Model.capacity(p);
   const ok = Model.achievable(p, rate);
@@ -304,28 +334,32 @@ function render(){
 
   /* grid */
   ctx.strokeStyle = grid; ctx.lineWidth = 1;
-  ctx.fillStyle = muted; ctx.font = "13px ui-monospace, monospace";
+  ctx.fillStyle = muted; ctx.font = FS + "px ui-monospace, monospace";
   ctx.textAlign = "right"; ctx.textBaseline = "middle";
   for (let c = 0; c <= 1.0001; c += 0.25){
     ctx.beginPath(); ctx.moveTo(PL, Y(c)); ctx.lineTo(PL + PW, Y(c)); ctx.stroke();
-    ctx.fillText(c.toFixed(2), PL - 10, Y(c));
+    ctx.fillText(NARROW ? c.toFixed(1) : c.toFixed(2), PL - 8, Y(c));
   }
   ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
   for (let q = 0; q <= 1.0001; q += 0.25){
     ctx.beginPath(); ctx.moveTo(X(q), PT); ctx.lineTo(X(q), PT + PH); ctx.stroke();
-    ctx.fillText(q.toFixed(2), X(q), PT + PH + 22);
+    ctx.fillText(NARROW ? q.toFixed(1) : q.toFixed(2), X(q), PT + PH + FS + 7);
   }
-  ctx.fillText("crossover probability  p", PL + PW / 2, PT + PH + 44);
-  ctx.save(); ctx.translate(22, PT + PH / 2); ctx.rotate(-Math.PI / 2);
-  ctx.fillText("bits per channel use", 0, 0); ctx.restore();
+  ctx.fillText(pick(["crossover probability  p", "crossover probability", "crossover p", "p"], PW),
+               PL + PW / 2, PT + PH + 2 * FS + 14);
+  ctx.save(); ctx.translate(FS + 1, PT + PH / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText(pick(["bits per channel use", "bits per use", "bits"], PH), 0, 0);
+  ctx.restore();
 
   /* region labels */
   ctx.textAlign = "center";
-  ctx.font = "700 15px ui-monospace, monospace";
+  ctx.font = "700 " + FSB + "px ui-monospace, monospace";
   ctx.fillStyle = go; ctx.globalAlpha = 0.85;
   ctx.fillText("ACHIEVABLE", X(0.5), Y(0.09));
   ctx.fillStyle = stop;
-  ctx.fillText("IMPOSSIBLE  —  no code exists at any block length", X(0.5), Y(0.92));
+  ctx.fillText(pick(["IMPOSSIBLE  —  no code exists at any block length",
+                     "IMPOSSIBLE — no code exists",
+                     "IMPOSSIBLE"], PW), X(0.5), Y(0.92));
   ctx.globalAlpha = 1;
 
   /* the capacity curve */
@@ -340,9 +374,15 @@ function render(){
   ctx.strokeStyle = ok ? go : stop; ctx.lineWidth = 1.6; ctx.setLineDash([6, 5]);
   ctx.beginPath(); ctx.moveTo(PL, Y(rate)); ctx.lineTo(PL + PW, Y(rate)); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.textAlign = "left"; ctx.font = "12px ui-monospace, monospace";
+  /* The rate label goes over the middle of the chart, not hung off the left
+     end of its own line: capacity is zero at p = 0.5, so the band above the
+     rate line is empty there for every rate, while at the left end the curve
+     is plunging through exactly where the words would sit. Above the line,
+     unless the rate is high enough to reach the IMPOSSIBLE caption.       */
+  ctx.textAlign = "center"; ctx.font = FS + "px ui-monospace, monospace";
   ctx.fillStyle = ok ? go : stop;
-  ctx.fillText("your rate " + rate.toFixed(3), PL + 8, Y(rate) - 8);
+  ctx.fillText(pick(["your rate " + rate.toFixed(3), rate.toFixed(3), ""], PW * 0.6),
+               X(0.5), rate > 0.8 ? Y(rate) + FS + 7 : Y(rate) - 8);
 
   /* the marker */
   ctx.beginPath(); ctx.arc(X(p), Y(rate), 8, 0, Math.PI * 2);
@@ -406,6 +446,18 @@ el("reset").addEventListener("click", function(){
   el("verdict").textContent = "Make a guess. The chart will show you the answer.";
   render();
 });
+
+let rt = 0;
+window.addEventListener("resize", function(){
+  clearTimeout(rt);
+  rt = setTimeout(function(){ fitCanvas(); render(); }, 120);
+});
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+  else if (mq.addListener) mq.addListener(render);
+}
+fitCanvas();
 render();
 
 /* ---- SELFTEST ---------------------------------------------------------- */

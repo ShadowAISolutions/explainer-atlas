@@ -1,0 +1,16 @@
+{
+  "slug": "earthquake-magnitude-energy",
+  "title": "Guess How Many Sixes Make An Eight",
+  "domain": "earth-science",
+  "difficulty": 2,
+  "summary": "Commit to a guess for how many small earthquakes carry the energy of one large one, then reveal it. One magnitude step is 31.6 times the energy and two are exactly a thousand.",
+  "prerequisites": [],
+  "tags": ["earthquakes", "logarithmic-scales", "gutenberg-richter", "energy", "seismology"],
+  "interaction_pattern": "guess-then-reveal",
+  "sources": [
+    { "title": "Wikipedia, Richter magnitude scale", "url": "https://en.wikipedia.org/wiki/Richter_magnitude_scale" },
+    { "title": "Wikipedia, Gutenberg-Richter law", "url": "https://en.wikipedia.org/wiki/Gutenberg%E2%80%93Richter_law" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}

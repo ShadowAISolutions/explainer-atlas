@@ -33,6 +33,44 @@ files in `AUDIT/` before starting any batch.
 
 ## Batches
 
+### batch/012 — 2026-09-19
+- merged: eulers-identity-rotation, hardy-weinberg, beam-bending-moment,
+  earthquake-magnitude-energy, plus a legibility repair of three batch/003
+  pages (shannon-channel-capacity, ph-buffer-capacity, levenshtein-distance)
+- blocked: none
+- patterns: build-from-parts, perturb-and-observe, tune-to-match,
+  guess-then-reveal (the repair carries no pattern of its own)
+- learned:
+  - **Two task files this batch asserted something false, and that is now
+    nine.** 018 asked for a Taylor series matching cos + i sin to 1e-12 at
+    twenty terms on [-pi, pi]; the true worst case there is pi^20/20! =
+    3.6e-9, and 1e-12 needs twenty-five terms. The page asserts both real
+    figures instead. Keep treating a task file's numbers as a claim to check,
+    never as a specification to satisfy.
+  - **Make a model total before asserting that its parts sum to one.**
+    hardy-weinberg's survivor frequencies returned NaN at p = 0 with s = 1,
+    because mean fitness is zero there and the normalisation divided by it.
+    The fix was an explicit extinction branch in the model, not a narrower
+    assertion — the corner is real and the page should state what happens in
+    it.
+  - **A caption anchored to a line gets struck by whatever crosses that
+    line.** Three separate defects this batch (the beam's span/360 limit, the
+    Shannon rate label, the pH buffer band label) were the same shape, and the
+    same fix worked on all three: give the caption a row or a band that
+    belongs to nobody else. For the buffer band that meant proving, by
+    sweeping the parameter space in node, that no pH below 1.1 is reachable —
+    a reserved row is only reserved if the model cannot get into it.
+  - **Screenshot review after a green verify caught a real defect on five of
+    the seven pages touched this batch**, which is now a six-batch streak.
+    Green means the model is right and nothing overflows; it does not mean the
+    drawing is readable. Crop and enlarge the artifacts with Pillow — at full
+    size a 10px label sitting on a curve looks fine.
+  - Set a tolerance to the measured floating-point floor rather than a round
+    number: hardy-weinberg's Hardy-Weinberg departure bottoms out at 2.1e-15
+    after three divisions, so 1e-15 fails and 1e-14 is honest. Probing the
+    constant in node before writing the assertion is cheaper than a sweep
+    failure.
+
 ### batch/011 — 2026-09-19
 - merged: bayes-base-rate, hash-collisions-birthday, ideal-gas-law,
   orbital-transfer-hohmann, rhythm-polymeter-cycle

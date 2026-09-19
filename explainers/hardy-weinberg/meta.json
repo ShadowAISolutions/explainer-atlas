@@ -1,0 +1,16 @@
+{
+  "slug": "hardy-weinberg",
+  "title": "The Null Model Every Population Fails",
+  "domain": "biology",
+  "difficulty": 2,
+  "summary": "Hardy-Weinberg drawn on a de Finetti triangle. Switch selection and mutation on and watch a population leave the curve and be dragged back onto it, and see how slowly a recessive can be removed.",
+  "prerequisites": [],
+  "tags": ["population-genetics", "hardy-weinberg", "selection", "mutation", "de-finetti-diagram"],
+  "interaction_pattern": "perturb-and-observe",
+  "sources": [
+    { "title": "Nature Education, Hardy-Weinberg Equilibrium", "url": "https://www.nature.com/scitable/definition/hardy-weinberg-equilibrium-122/" },
+    { "title": "NCBI Bookshelf, An Introduction to Genetic Analysis: Genetic Variation", "url": "https://www.ncbi.nlm.nih.gov/books/NBK21766/" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}

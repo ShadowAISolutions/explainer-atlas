@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guess How Many Sixes Make An Eight — Explainer Atlas</title>
+<meta name="description" content="Guess how many small earthquakes carry the energy of one large one, then find out. A step of one magnitude is 31.6 times the energy, and almost nobody guesses high enough.">
+<style>
+:root{
+  --bg:#f6f4f0; --panel:#fffefc; --ink:#15171c; --muted:#5c5f68; --line:#dedad2;
+  --accent:#15171c; --accent-soft:#e7e4dd; --alt:#d92b2b; --third:#a16207;
+  --quiet:#b9b4aa;
+  --radius:4px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.6rem,1.05rem + 2.4vw,2.6rem);
+  --scale-body:clamp(0.99rem,0.95rem + 0.2vw,1.07rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#111114; --panel:#1a1a1e; --ink:#eeece8; --muted:#9b9891; --line:#2b2b31;
+    --accent:#eeece8; --accent-soft:#242429; --alt:#ff5c5c; --third:#e0b04a;
+    --quiet:#4a4a52;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink); font:var(--scale-body)/1.62 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:62rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.05; margin:0 0 .4em; letter-spacing:-.025em; font-weight:800}
+.kicker{margin:0 0 .4em; color:var(--alt); font:700 .74rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.2em}
+.standfirst{margin:0; color:var(--muted); max-width:44em; font-size:1.06em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.4fr) minmax(15rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.85rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1em}
+.control{display:grid; gap:.28em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:700 .95rem/1 var(--font-mono); color:var(--alt)}
+.control .hint{color:var(--muted); font-size:.82rem; margin:0}
+input[type=range]{width:100%; accent-color:var(--alt); min-height:26px}
+button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:var(--radius); padding:.55em .7em; min-height:44px; cursor:pointer; font-weight:700; width:100%}
+#reveal{background:var(--alt); color:#fff; border-color:var(--alt); letter-spacing:.04em}
+button:hover{border-color:var(--alt)}
+:where(a,button,input,[tabindex]):focus-visible{outline:2.5px solid var(--third); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.2rem,1fr)); gap:.55em; margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:var(--radius); padding:.5em .65em}
+.readout dt{margin:0; color:var(--muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em}
+.readout dd{margin:.16em 0 0; font:700 1rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.2rem; margin:1.8em 0 .45em; letter-spacing:-.015em; font-weight:800}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); background:var(--accent-soft); padding:.7em .85em; border-radius:var(--radius); border-left:4px solid var(--alt); overflow-x:auto; font-size:.93em}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Earth science</p>
+  <h1>Guess How Many Sixes Make An Eight</h1>
+  <p class="standfirst">Answer before you read on. A magnitude 8 earthquake releases the energy of how many magnitude 6 earthquakes? Set your answer with the slider, then press reveal.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="620" role="img"
+            aria-label="Two squares of equal size side by side. The left one is a solid block standing for the energy of the larger earthquake. The right one fills from the bottom with grains, each grain the energy of one smaller earthquake, as many grains as the reader has guessed. Pressing reveal fills the right square to the top and prints how many grains that took."></canvas>
+    <figcaption>Both squares are the same size. Each grain on the right is one small earthquake, drawn to the same energy scale. Fill the right square to the brim and you have your answer.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row">
+        <label for="big">The large earthquake</label>
+        <output id="bigout" for="big">M 8.0</output>
+      </div>
+      <input type="range" id="big" min="40" max="95" step="1" value="80">
+      <p class="hint">Arrow keys step by a tenth of a magnitude.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="gap">Magnitudes below it</label>
+        <output id="gapout" for="gap">2.0</output>
+      </div>
+      <input type="range" id="gap" min="1" max="35" step="1" value="20">
+      <p class="hint">How far down the small earthquake sits.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="guess">Your answer</label>
+        <output id="guessout" for="guess">100</output>
+      </div>
+      <input type="range" id="guess" min="0" max="27" step="1" value="11">
+      <p class="hint">How many small ones you think it takes. Commit before revealing.</p>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Large one releases</dt><dd id="r1">&mdash;</dd></div>
+      <div><dt>Small one releases</dt><dd id="r2">&mdash;</dd></div>
+      <div><dt>Your answer covers</dt><dd id="r3">&mdash;</dd></div>
+      <div><dt>True number</dt><dd id="r4">&mdash;</dd></div>
+    </dl>
+
+    <button type="button" id="reveal">Reveal the answer</button>
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Most people answer somewhere between ten and a hundred. The slider starts
+     at a hundred, and the block on the right shows what a hundred magnitude 6
+     earthquakes look like against one magnitude 8: a tenth of it, a thin band
+     along the bottom. The true answer is a thousand. If you guessed low, you
+     are in the overwhelming majority, and the reason is worth more than the
+     number.</p>
+
+  <h2>Why a step is 32, not 10</h2>
+  <p>The magnitude scale is logarithmic in ground motion. One step up is ten
+     times the amplitude on the seismometer &mdash; that part almost everybody
+     knows, and it is where the bad intuition comes from, because ten times the
+     shaking sounds like ten times the earthquake. It is not. Energy does not
+     go as amplitude; it goes as amplitude to the power of one and a half,
+     because a larger earthquake ruptures a larger patch of fault and shakes
+     for longer as well as harder.</p>
+  <p class="math">energy in joules = 10^(1.5 M + 4.8)</p>
+  <p>So one step of magnitude is 10 to the power 1.5, which is 31.6227766 times
+     the energy. Two steps are 10 cubed, which is exactly a thousand &mdash; no
+     rounding, no approximation, just three halves times two. Three steps are
+     31,623. That clean factor of a thousand per two magnitudes is the single
+     most useful fact on this page, because it lets you do the arithmetic in
+     your head: every two steps, add three zeroes.</p>
+
+  <h2>What the scale hides</h2>
+  <p>A magnitude 6 releases about 63 terajoules, which is roughly the yield of
+     the Hiroshima bomb. A magnitude 8 releases 63 petajoules, about 15
+     megatons. The 1960 Valdivia earthquake, at magnitude 9.5, released around
+     11 exajoules &mdash; some 2,700 megatons, more than every nuclear device
+     ever detonated, and about 180,000 times the magnitude 6. Those three
+     numbers are two digits apart on the scale and five orders of magnitude
+     apart in energy.</p>
+  <p>A logarithmic scale is designed to make enormous ranges fit on one axis,
+     and it succeeds so well that it flattens the range out of the reader's
+     head along with the axis. The two squares on this page put the ratio back
+     the way it is: both are the same size, one grain is one small earthquake,
+     and you can see immediately whether your answer is in the right
+     neighbourhood or off by a factor of ten.</p>
+
+  <h2>Where the energy actually is</h2>
+  <p>This is why earthquake energy budgets are dominated by a handful of
+     events. Earthquakes follow the Gutenberg-Richter law: the number above any
+     magnitude falls tenfold for each magnitude step, when the b value is one.
+     So going up one step there are ten times fewer events, but each releases
+     31.6 times as much energy &mdash; and ten times fewer, each 31.6 times
+     bigger, means the band as a whole releases 3.16 times more.</p>
+  <p>Sum that upward and the arithmetic is stark: the top magnitude band on its
+     own carries 68.4 per cent of all the energy released by everything beneath
+     it, which is exactly one minus ten to the minus a half. Over a catalogue
+     running from magnitude 4 to magnitude 9, the largest tenth of events by
+     count carries 99.3 per cent of the energy. The self-test integrates the
+     catalogue numerically and checks it against that closed form. Counting
+     earthquakes tells you almost nothing about how much energy a region has
+     released; only the biggest few matter.</p>
+
+  <h2>What to try</h2>
+  <p>Reset, then set the gap to 3.5 without looking at the answer and guess
+     again. The true figure is 177,828, and the grains become a fine haze you
+     cannot count. Then hold the gap at 2.0 and drag the large magnitude from 4
+     to 9.5: the picture never changes at all, because the ratio depends only
+     on the gap. A magnitude 4 is a thousand magnitude 2 events, in exactly the
+     same way and for exactly the same reason that a 9 is a thousand 7s.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG. Never use bare Math.random(). ------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* The ladder the answer slider indexes. Its length and the slider's max are
+   checked against each other in the selftest -- a slider that runs past the
+   end of the table it indexes is the single easiest way to break a page.  */
+const GUESSES = [1, 2, 3, 5, 7, 10, 15, 20, 30, 50, 70, 100, 150, 200, 300,
+                 500, 700, 1000, 1500, 2000, 3000, 5000, 7000, 10000, 20000,
+                 50000, 100000, 200000];
+
+/* ---- MODEL: pure functions of the parameters. No DOM in here. ----------- */
+const Model = {
+  /* radiated energy in joules, Gutenberg and Richter's relation */
+  energy(M){ return Math.pow(10, 1.5 * M + 4.8); },
+
+  /* the same number built by repeated multiplication from magnitude zero,
+     which shares no code with the exponent above                          */
+  energyByFactor(M){
+    const step = Math.pow(10, 1.5);
+    const whole = Math.floor(M), frac = M - whole;
+    let e = Math.pow(10, 4.8);
+    for (let i = 0; i < whole; i++) e *= step;
+    return e * Math.pow(step, frac);
+  },
+
+  magnitude(E){ return (Math.log10(E) - 4.8) / 1.5; },
+
+  /* how many of the smaller one it takes */
+  ratio(gap){ return Math.pow(10, 1.5 * gap); },
+
+  /* the magnitude that n events of magnitude m add up to */
+  combined(m, n){ return m + Math.log10(n) / 1.5; },
+
+  /* Gutenberg and Richter again, this time for how often they happen */
+  count(a, b, M){ return Math.pow(10, a - b * M); },
+
+  /* energy released by every event in one unit-wide magnitude band, for a
+     catalogue with the given b value. Counts fall, energy per event rises. */
+  bandEnergy(a, b, M){
+    const steps = 400, dM = 1 / steps;
+    let s = 0;
+    for (let i = 0; i < steps; i++){
+      const m = M + (i + 0.5) * dM;
+      s += b * Math.LN10 * Model.count(a, b, m) * Model.energy(m) * dM;
+    }
+    return s;
+  },
+
+  /* the share of a catalogue's energy carried by events above a cut */
+  shareAbove(a, b, Mmin, Mmax, Mcut){
+    const tot = Model.catalogueEnergy(a, b, Mmin, Mmax);
+    return Model.catalogueEnergy(a, b, Mcut, Mmax) / tot;
+  },
+  catalogueEnergy(a, b, lo, hi){
+    const steps = 4000, dM = (hi - lo) / steps;
+    let s = 0;
+    for (let i = 0; i < steps; i++){
+      const m = lo + (i + 0.5) * dM;
+      s += b * Math.LN10 * Model.count(a, b, m) * Model.energy(m) * dM;
+    }
+    return s;
+  },
+  /* and the same share in closed form, for b = 1: the energy density goes
+     as 10^(0.5 M), so the integral is a pair of powers                    */
+  shareAboveExact(Mmin, Mmax, Mcut){
+    const f = (m) => Math.pow(10, 0.5 * m);
+    return (f(Mmax) - f(Mcut)) / (f(Mmax) - f(Mmin));
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { big: 80, gap: 20, guess: 11 };
+const state = Object.assign({}, defaults);
+let revealed = false;
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+const FONT = 'system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+const TIMES = String.fromCharCode(0x00D7);
+const PREFIX = ["J", "kJ", "MJ", "GJ", "TJ", "PJ", "EJ", "ZJ"];
+
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function wid(t){ return ctx.measureText(t).width; }
+function pick(list, room){
+  for (let i = 0; i < list.length; i++) if (wid(list[i]) <= room) return list[i];
+  return "";
+}
+function fmtE(E){
+  let i = 0, v = E;
+  while (v >= 1000 && i < PREFIX.length - 1){ v /= 1000; i++; }
+  return (v < 10 ? v.toFixed(1) : Math.round(v).toLocaleString()) + " " + PREFIX[i];
+}
+function fmtN(n){
+  if (n >= 1000) return Math.round(n).toLocaleString();
+  if (n >= 10) return n.toFixed(0);
+  return n.toFixed(1);
+}
+
+let G = null;
+
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth - 24;
+  const CW = Math.max(280, Math.min(1000, avail || 840));
+  const NARROW = CW < 470;
+  const P = NARROW ? 12 : 22;
+  const FS = NARROW ? 12 : 13;
+  const gapx = Math.max(20, Math.round(CW * 0.06));
+  const S = Math.min(Math.floor((CW - 2 * P - gapx) / 2), 320);
+  const HR = Math.round(0.36 * S);
+  const titleRow = P + FS;
+  const blockTop = titleRow + 8 + HR;
+  const blockBot = blockTop + S;
+  const cap1 = blockBot + 10;
+  const cap2 = cap1 + FS + 7;
+  const H = cap2 + FS + 10;
+  const xA = Math.round((CW - 2 * S - gapx) / 2);
+  const xB = xA + S + gapx;
+
+  cv.width = Math.round(CW * SS);
+  cv.height = Math.round(H * SS);
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+
+  G = { CW: CW, H: H, NARROW: NARROW, P: P, FS: FS, S: S, HR: HR,
+        titleRow: titleRow, blockTop: blockTop, blockBot: blockBot,
+        cap1: cap1, cap2: cap2, xA: xA, xB: xB };
+}
+
+function render(){
+  if (!G) fitCanvas();
+  const M = state.big / 10, gap = state.gap / 10, m = M - gap;
+  const n = Model.ratio(gap), guess = GUESSES[state.guess];
+  const EB = Model.energy(M), ES = Model.energy(m);
+
+  const panel = css("--panel"), ink = css("--ink"), muted = css("--muted");
+  const line = css("--line"), quiet = css("--quiet"), bg = css("--bg");
+  const accent = css("--accent"), alt = css("--alt"), third = css("--third");
+  const FS = G.FS, S = G.S;
+
+  ctx.clearRect(0, 0, G.CW, G.H);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, G.CW, G.H);
+  ctx.font = "600 " + FS + "px " + FONT;
+
+  /* each block names itself on a row of its own above the squares */
+  ctx.fillStyle = muted; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(pick(["one magnitude " + M.toFixed(1), "M " + M.toFixed(1)], S + 12),
+               G.xA + S / 2, G.titleRow);
+  ctx.fillText(pick(["magnitude " + m.toFixed(1) + " grains", "M " + m.toFixed(1) + " grains",
+                     "M " + m.toFixed(1)], S + 12),
+               G.xB + S / 2, G.titleRow);
+
+  /* the large earthquake, one solid block */
+  ctx.fillStyle = accent;
+  ctx.fillRect(G.xA, G.blockTop, S, S);
+
+  /* the pile of small ones, filling from the bottom */
+  const frac = Math.min(guess / n, 1.30);
+  const fillH = revealed ? S : S * frac;
+  ctx.strokeStyle = quiet; ctx.lineWidth = 1.2;
+  ctx.strokeRect(G.xB + 0.5, G.blockTop + 0.5, S - 1, S - 1);
+  ctx.fillStyle = revealed ? accent : alt;
+  ctx.fillRect(G.xB, G.blockBot - fillH, S, fillH);
+
+  /* one grain is one small earthquake, drawn to the same scale as the block
+     on the left: the side of a grain is the square root of the energy ratio */
+  const cell = S / Math.sqrt(n);
+  if (cell >= 4){
+    ctx.strokeStyle = muted; ctx.globalAlpha = 0.3; ctx.lineWidth = 0.7;
+    ctx.beginPath();
+    for (let x = G.xB + cell; x < G.xB + S - 0.5; x += cell){
+      ctx.moveTo(x, G.blockTop); ctx.lineTo(x, G.blockBot);
+    }
+    for (let y = G.blockBot - cell; y > G.blockBot - Math.max(fillH, S) + 0.5; y -= cell){
+      ctx.moveTo(G.xB, y); ctx.lineTo(G.xB + S, y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  /* once revealed, the reader's own answer stays on show as a red rule */
+  if (revealed){
+    const gy = G.blockBot - S * Math.min(guess / n, 1.30);
+    ctx.strokeStyle = alt; ctx.lineWidth = 2.4; ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(G.xB - 8, gy); ctx.lineTo(G.xB + S + 8, gy); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  /* captions get their own rows below the squares */
+  ctx.fillStyle = muted; ctx.textBaseline = "top"; ctx.textAlign = "center";
+  ctx.fillText(fmtE(EB), G.xA + S / 2, G.cap1);
+  ctx.fillText(fmtE(ES) + " each", G.xB + S / 2, G.cap1);
+
+  const verdict = revealed
+    ? "it takes " + fmtN(n) + " of them, and you said " + guess.toLocaleString()
+    : "your answer fills " + (frac * 100).toFixed(frac < 0.1 ? 1 : 0) + " per cent of the block";
+  ctx.fillStyle = revealed ? alt : muted;
+  ctx.fillText(pick([verdict,
+                     revealed ? fmtN(n) + " needed, you said " + guess.toLocaleString()
+                              : (frac * 100).toFixed(1) + " per cent filled", ""],
+                    G.CW - 2 * G.P),
+               G.CW / 2, G.cap2);
+
+  /* readouts */
+  el("bigout").textContent = "M " + M.toFixed(1);
+  el("gapout").textContent = gap.toFixed(1);
+  el("guessout").textContent = guess.toLocaleString();
+  el("r1").textContent = fmtE(EB);
+  el("r2").textContent = fmtE(ES);
+  el("r3").textContent = (guess / n * 100).toFixed(guess / n < 0.1 ? 2 : 1) + "%";
+  el("r4").textContent = revealed ? fmtN(n) : "hidden";
+  el("reveal").textContent = revealed ? "Hide the answer" : "Reveal the answer";
+}
+
+function bind(id, key){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parseInt(input.value, 10); render(); });
+}
+bind("big", "big"); bind("gap", "gap"); bind("guess", "guess");
+el("reveal").addEventListener("click", () => { revealed = !revealed; render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("big").value = defaults.big; el("gap").value = defaults.gap;
+  el("guess").value = defaults.guess;
+  revealed = false;
+  render();
+});
+
+let rt = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(rt);
+  rt = setTimeout(() => { fitCanvas(); render(); }, 120);
+});
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const onScheme = () => render();
+  if (mq.addEventListener) mq.addEventListener("change", onScheme);
+  else if (mq.addListener) mq.addListener(onScheme);
+}
+fitCanvas();
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const rel = (a, b) => Math.abs(a - b) / Math.abs(b);
+
+  /* 1 -- the energy law, checked against building it by repeated multiplying */
+  let w1 = 0;
+  for (let i = 0; i <= 60; i++){
+    const M = 3 + i * (7 / 60);
+    w1 = Math.max(w1, rel(Model.energyByFactor(M), Model.energy(M)));
+  }
+  push("E = 10^(1.5 M + 4.8) joules at 61 magnitudes", w1 <= 1e-9,
+       "worst relative difference against repeated multiplication " + w1.toExponential(2));
+
+  /* 2 -- one step */
+  let w2 = 0;
+  for (let i = 0; i <= 80; i++){
+    const M = 2 + i * 0.1;
+    w2 = Math.max(w2, Math.abs(Model.energy(M + 1) / Model.energy(M) - 31.6227766016838));
+  }
+  push("one magnitude step multiplies energy by 31.6227766", w2 <= 1e-7,
+       "worst departure from 10^1.5 " + w2.toExponential(2));
+
+  /* 3 -- two steps */
+  let w3 = 0;
+  for (let i = 0; i <= 80; i++){
+    const M = 2 + i * 0.1;
+    w3 = Math.max(w3, Math.abs(Model.energy(M + 2) / Model.energy(M) - 1000));
+  }
+  push("two magnitude steps multiply energy by exactly 1000", w3 <= 1e-9,
+       "worst departure from 1000 " + w3.toExponential(2));
+
+  /* 4 -- how often, not how big */
+  let w4 = 0;
+  for (let i = 0; i <= 40; i++){
+    const M = 3 + i * 0.15;
+    w4 = Math.max(w4, rel(Model.count(5, 1, M), Math.pow(10, 5 - M)),
+                      rel(Model.count(4.5, 0.9, M), Math.pow(10, 4.5 - 0.9 * M)));
+  }
+  push("Gutenberg-Richter counts follow 10^(a - b M) at 41 magnitudes", w4 <= 1e-10,
+       "worst relative difference " + w4.toExponential(2));
+
+  /* 5 -- energy and magnitude are inverses */
+  let w5 = 0;
+  for (let i = 0; i <= 100; i++){
+    const M = 1 + i * 0.09;
+    w5 = Math.max(w5, Math.abs(Model.magnitude(Model.energy(M)) - M));
+  }
+  push("magnitude recovers from energy exactly", w5 <= 1e-12,
+       "worst round trip error " + w5.toExponential(2));
+
+  /* 6 -- n small ones add up to one bigger one */
+  let w6 = 0;
+  [1, 5, 31.6227766, 100, 1000, 177828].forEach(function(n){
+    [4, 5.5, 7, 8.7].forEach(function(m){
+      w6 = Math.max(w6, rel(n * Model.energy(m), Model.energy(Model.combined(m, n))));
+    });
+  });
+  push("n events at m carry the energy of one at m + log10(n)/1.5", w6 <= 1e-9,
+       "worst relative difference over 24 pairs " + w6.toExponential(2));
+
+  /* 7 -- the ratio depends on the gap alone, not where you stand */
+  let w7 = 0;
+  for (let g = 1; g <= 35; g++){
+    const gap = g / 10, want = Model.ratio(gap);
+    for (let i = 0; i <= 20; i++){
+      const M = 4 + i * 0.275;
+      w7 = Math.max(w7, rel(Model.energy(M) / Model.energy(M - gap), want));
+    }
+  }
+  push("the number needed depends only on the gap, not on the magnitude", w7 <= 1e-9,
+       "worst relative difference over 735 pairs " + w7.toExponential(2));
+
+  /* 8 -- three anchors on the real scale */
+  const a95 = Model.energy(9.5), a80 = Model.energy(8.0), a60 = Model.energy(6.0);
+  push("M 9.5 is 1.1e19 J, M 8.0 is 6.3e16 J, M 6.0 is 6.3e13 J",
+       rel(a95, Math.pow(10, 19.05)) <= 1e-12 && rel(a80, Math.pow(10, 16.8)) <= 1e-12
+       && rel(a60, Math.pow(10, 13.8)) <= 1e-12 && rel(a80 / a60, 1000) <= 1e-9,
+       "M9.5 " + a95.toExponential(3) + " J, M8 " + a80.toExponential(3)
+       + " J, M6 " + a60.toExponential(3) + " J");
+
+  /* 9 -- with b = 1 each band beats the one below it by the square root of ten */
+  let w9 = 0;
+  for (let M = 4; M <= 8; M++)
+    w9 = Math.max(w9, rel(Model.bandEnergy(5, 1, M + 1) / Model.bandEnergy(5, 1, M),
+                          Math.pow(10, 0.5)));
+  push("with b = 1 each magnitude band releases 3.162 times the one below",
+       w9 <= 1e-6, "worst relative difference from 10^0.5 " + w9.toExponential(2));
+
+  /* 10 -- so the top band alone carries more than two thirds of everything */
+  const share = Model.shareAboveExact(-40, 9, 8);
+  push("the top band carries 68.4 per cent of all the energy beneath it",
+       Math.abs(share - (1 - Math.pow(10, -0.5))) <= 1e-12 && share > 0.6837 && share < 0.6838,
+       "share " + share.toFixed(6) + ", which is one minus ten to the minus a half");
+
+  /* 11 -- the task's claim, checked by integrating the catalogue */
+  const numeric = Model.shareAbove(5, 1, 4, 9, 5);
+  const exact = Model.shareAboveExact(4, 9, 5);
+  push("over M4 to M9 the top tenth of events by count carries 99 per cent of the energy",
+       rel(numeric, exact) <= 1e-6 && numeric > 0.99,
+       "numerically integrated " + (numeric * 100).toFixed(3) + " per cent against "
+       + (exact * 100).toFixed(3) + " in closed form");
+
+  /* 12 -- the answer slider cannot run off the end of the table it indexes,
+          and the table spans every ratio the other sliders can produce     */
+  const sliderMax = parseInt(document.getElementById("guess").max, 10);
+  push("the answer slider matches its table, and the table spans every reachable ratio",
+       sliderMax === GUESSES.length - 1
+       && GUESSES[0] <= Model.ratio(0.1) && GUESSES[GUESSES.length - 1] >= Model.ratio(3.5),
+       "slider max " + sliderMax + " for " + GUESSES.length + " entries; ratios run from "
+       + Model.ratio(0.1).toFixed(2) + " to " + Math.round(Model.ratio(3.5)).toLocaleString());
+
+  /* 13 -- nothing blows up anywhere the sliders can reach */
+  let ok13 = true, big = 0;
+  for (let b = 40; b <= 95; b++) for (let g = 1; g <= 35; g++){
+    const E = Model.energy(b / 10), e = Model.energy(b / 10 - g / 10), r = Model.ratio(g / 10);
+    if (!(Number.isFinite(E) && Number.isFinite(e) && Number.isFinite(r) && e > 0 && r >= 1))
+      ok13 = false;
+    big = Math.max(big, r);
+  }
+  push("every reachable setting gives a finite ratio of at least one", ok13,
+       "largest ratio anywhere in the control ranges " + Math.round(big).toLocaleString());
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

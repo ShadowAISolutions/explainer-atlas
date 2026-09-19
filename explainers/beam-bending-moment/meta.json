@@ -1,0 +1,16 @@
+{
+  "slug": "beam-bending-moment",
+  "title": "Depth Beats Width, Cubically",
+  "domain": "engineering",
+  "difficulty": 2,
+  "summary": "Tune a beam's section until it meets the span/360 sag limit. Depth is cubed in the answer and width appears once, which is why joists are tall and thin and why a plank laid flat is useless.",
+  "prerequisites": [],
+  "tags": ["beam-deflection", "second-moment-of-area", "bending", "structural-design", "serviceability"],
+  "interaction_pattern": "tune-to-match",
+  "sources": [
+    { "title": "Wikipedia, Deflection (engineering)", "url": "https://en.wikipedia.org/wiki/Deflection_(engineering)" },
+    { "title": "Wikipedia, Second moment of area", "url": "https://en.wikipedia.org/wiki/Second_moment_of_area" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}
