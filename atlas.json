@@ -1,8 +1,9 @@
 {
   "generated_at": "2026-09-19",
-  "count": 27,
+  "count": 31,
   "domains": {
     "biology": [
+      "enzyme-michaelis-menten",
       "epidemic-r0-herd-immunity",
       "population-logistic-chaos",
       "predator-prey-cycles"
@@ -14,7 +15,8 @@
     "computer-science": [
       "dijkstra-vs-astar",
       "floating-point-precision",
-      "quicksort-pivot-choice"
+      "quicksort-pivot-choice",
+      "regex-backtracking-blowup"
     ],
     "earth-science": [
       "greenhouse-energy-balance",
@@ -29,7 +31,8 @@
     ],
     "game-theory": [
       "monty-hall",
-      "prisoners-dilemma-iterated"
+      "prisoners-dilemma-iterated",
+      "schelling-segregation-model"
     ],
     "information-theory": [
       "huffman-coding",
@@ -50,6 +53,7 @@
     ],
     "physics": [
       "damped-harmonic-oscillator",
+      "double-slit-interference",
       "special-relativity-time-dilation"
     ],
     "statistics": [
@@ -57,13 +61,13 @@
     ]
   },
   "interaction_patterns": {
-    "build-from-parts": 3,
+    "build-from-parts": 4,
     "compare-side-by-side": 2,
     "drag-parameter": 2,
-    "draw-input": 2,
+    "draw-input": 3,
     "guess-then-reveal": 3,
-    "live-code": 1,
-    "perturb-and-observe": 2,
+    "live-code": 2,
+    "perturb-and-observe": 3,
     "race-two-methods": 3,
     "spatial-explore": 2,
     "step-through": 2,
@@ -187,6 +191,67 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 11
+    },
+    {
+      "slug": "double-slit-interference",
+      "title": "Two Terms, One Pattern",
+      "domain": "physics",
+      "difficulty": 3,
+      "summary": "Assemble the double-slit pattern one part at a time and see that the fringe spacing comes from the slit separation while the brightness envelope comes from the slit width.",
+      "prerequisites": [],
+      "tags": [
+        "diffraction",
+        "interference",
+        "optics",
+        "fraunhofer",
+        "grating",
+        "missing-orders"
+      ],
+      "interaction_pattern": "build-from-parts",
+      "sources": [
+        {
+          "title": "Hecht, Optics — Fraunhofer diffraction by a double slit",
+          "url": "https://en.wikipedia.org/wiki/Double-slit_experiment"
+        },
+        {
+          "title": "Diffraction grating",
+          "url": "https://en.wikipedia.org/wiki/Diffraction_grating"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
+      "slug": "enzyme-michaelis-menten",
+      "title": "Which Number Did the Poison Move?",
+      "domain": "biology",
+      "difficulty": 3,
+      "summary": "Add an inhibitor to an enzyme assay and watch which of the two parameters changes — the one that holds still names the mechanism.",
+      "prerequisites": [],
+      "tags": [
+        "enzyme-kinetics",
+        "michaelis-menten",
+        "inhibition",
+        "lineweaver-burk",
+        "curve-fitting"
+      ],
+      "interaction_pattern": "perturb-and-observe",
+      "sources": [
+        {
+          "title": "Michaelis–Menten kinetics",
+          "url": "https://en.wikipedia.org/wiki/Michaelis%E2%80%93Menten_kinetics"
+        },
+        {
+          "title": "Enzyme inhibitor — competitive, non-competitive and uncompetitive",
+          "url": "https://en.wikipedia.org/wiki/Enzyme_inhibitor"
+        },
+        {
+          "title": "Lineweaver–Burk plot and its statistical problems",
+          "url": "https://en.wikipedia.org/wiki/Lineweaver%E2%80%93Burk_plot"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
     },
     {
       "slug": "epidemic-r0-herd-immunity",
@@ -702,6 +767,67 @@
       ],
       "interaction_pattern": "tune-to-match",
       "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
+      "slug": "regex-backtracking-blowup",
+      "title": "The Pattern Is Fine. The Engine Is Not.",
+      "domain": "computer-science",
+      "difficulty": 3,
+      "summary": "Write a regular expression and watch a backtracking engine take exponential time on an input that a finite automaton finishes in a straight line.",
+      "prerequisites": [],
+      "tags": [
+        "regular-expressions",
+        "automata",
+        "backtracking",
+        "complexity",
+        "redos",
+        "glushkov"
+      ],
+      "interaction_pattern": "live-code",
+      "sources": [
+        {
+          "title": "Russ Cox — Regular Expression Matching Can Be Simple And Fast",
+          "url": "https://swtch.com/~rsc/regexp/regexp1.html"
+        },
+        {
+          "title": "OWASP — Regular expression Denial of Service (ReDoS)",
+          "url": "https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS"
+        },
+        {
+          "title": "Glushkov's construction (position automaton)",
+          "url": "https://en.wikipedia.org/wiki/Glushkov%27s_construction_algorithm"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
+      "slug": "schelling-segregation-model",
+      "title": "Nobody Wanted This",
+      "domain": "game-theory",
+      "difficulty": 2,
+      "summary": "Paint a mixed neighbourhood, give every square a mild preference for similar neighbours, and watch it separate anyway — the pattern does not reveal the preference.",
+      "prerequisites": [],
+      "tags": [
+        "schelling",
+        "emergence",
+        "segregation",
+        "agent-based-model",
+        "tipping-point"
+      ],
+      "interaction_pattern": "draw-input",
+      "sources": [
+        {
+          "title": "Thomas C. Schelling — Dynamic Models of Segregation (1971)",
+          "url": "https://www.tandfonline.com/doi/abs/10.1080/0022250X.1971.9989794"
+        },
+        {
+          "title": "Schelling's model of segregation",
+          "url": "https://en.wikipedia.org/wiki/Schelling%27s_model_of_segregation"
+        }
+      ],
       "created_at": "2026-09-19",
       "assertions_count": 12
     },

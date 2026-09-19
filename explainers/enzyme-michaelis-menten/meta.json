@@ -1,0 +1,17 @@
+{
+  "slug": "enzyme-michaelis-menten",
+  "title": "Which Number Did the Poison Move?",
+  "domain": "biology",
+  "difficulty": 3,
+  "summary": "Add an inhibitor to an enzyme assay and watch which of the two parameters changes — the one that holds still names the mechanism.",
+  "prerequisites": [],
+  "tags": ["enzyme-kinetics", "michaelis-menten", "inhibition", "lineweaver-burk", "curve-fitting"],
+  "interaction_pattern": "perturb-and-observe",
+  "sources": [
+    { "title": "Michaelis–Menten kinetics", "url": "https://en.wikipedia.org/wiki/Michaelis%E2%80%93Menten_kinetics" },
+    { "title": "Enzyme inhibitor — competitive, non-competitive and uncompetitive", "url": "https://en.wikipedia.org/wiki/Enzyme_inhibitor" },
+    { "title": "Lineweaver–Burk plot and its statistical problems", "url": "https://en.wikipedia.org/wiki/Lineweaver%E2%80%93Burk_plot" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}

@@ -108,7 +108,7 @@ footer.page a{color:var(--accent)}
   </section>
 
   <figure class="stage" data-role="stage">
-    <canvas id="view" width="880" height="620" role="img"
+    <canvas id="view" width="1240" height="968" role="img"
             aria-label="Upper panel: displacement against time, with the exponential decay envelope drawn as a dashed curve. Lower panel: the phase portrait of velocity against displacement, spiralling inward toward the origin."></canvas>
     <figcaption>Top: displacement against time, with the decay envelope dashed. Bottom: the phase portrait — velocity against displacement. An undamped system draws a closed loop there; any damping turns it into a spiral into the origin.</figcaption>
   </figure>
@@ -236,16 +236,31 @@ const el = (id) => document.getElementById(id);
 const cv = el("view"), ctx = cv.getContext("2d");
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
+/* The canvas tracks its container, so one canvas unit is one CSS pixel and a
+   13px label is drawn at 13px whatever the column width. Presentation only:
+   the model, the assertions and the prose are untouched. */
+const SS = 2;
+let W = 620, H = 470, NARROW = false;
+function layout(){
+  const avail = cv.parentNode ? (cv.parentNode.clientWidth || 620) : 620;
+  NARROW = avail < 470;
+  W = Math.max(300, Math.min(900, Math.round(avail)));
+  H = NARROW ? Math.round(W * 1.34) : Math.round(Math.min(650, Math.max(410, W * 0.80)));
+  if (cv.width !== W * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
 function render(){
   const { zeta, w0, v0 } = state;
-  const W = cv.width, H = cv.height, split = Math.round(H*0.55);
+  layout();
+  const split = Math.round(H * (NARROW ? 0.46 : 0.52));
   const T = Math.max(2.5, 9/Math.max(0.35, zeta*w0 || 0.35));
 
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle = css("--panel"); ctx.fillRect(0,0,W,H);
 
   /* ---- upper: displacement vs time ---- */
-  const pL = 44, pR = 16, pT = 16, pB = 26;
+  const pL = NARROW ? 40 : 48, pR = 14, pT = 20, pB = 30;
   let amp = 1.05;
   for (let i = 0; i <= 600; i++) amp = Math.max(amp, Math.abs(Model.x(T*i/600, zeta, w0, X0, v0))*1.08);
   const tx = (t) => pL + (t/T)*(W - pL - pR);
@@ -253,8 +268,13 @@ function render(){
 
   ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pL, ty(0)); ctx.lineTo(W - pR, ty(0)); ctx.stroke();
-  ctx.font = "11px ui-monospace, monospace"; ctx.fillStyle = css("--muted");
-  ctx.fillText("+1", 6, ty(1) + 4); ctx.fillText(" 0", 6, ty(0) + 4); ctx.fillText("-1", 6, ty(-1) + 4);
+  ctx.font = "13px ui-monospace, monospace"; ctx.fillStyle = css("--muted");
+  ctx.textAlign = "right";
+  ctx.fillText("+1", pL - 8, ty(1) + 5); ctx.fillText("0", pL - 8, ty(0) + 5); ctx.fillText("-1", pL - 8, ty(-1) + 5);
+  ctx.textAlign = "left";
+  ctx.fillStyle = css("--ink"); ctx.font = "600 13px ui-monospace, monospace";
+  ctx.fillText("displacement against time", pL, pT - 5);
+  ctx.font = "13px ui-monospace, monospace"; ctx.fillStyle = css("--muted");
 
   /* decay envelope */
   if (zeta > 0 && zeta < 1){
@@ -277,19 +297,28 @@ function render(){
     i ? ctx.lineTo(tx(t), ty(y)) : ctx.moveTo(tx(t), ty(y));
   }
   ctx.stroke();
-  ctx.fillStyle = css("--muted"); ctx.fillText("time →", W - pR - 52, split - 6);
+  ctx.fillStyle = css("--muted"); ctx.font = "13px ui-monospace, monospace";
+  ctx.textAlign = "right"; ctx.fillText("time →", W - pR, split - 10); ctx.textAlign = "left";
 
   /* ---- lower: phase portrait ---- */
-  const cx = W/2, cy = split + (H - split)/2, R = Math.min(W*0.30, (H - split)/2 - 18);
+  const padP = NARROW ? 46 : 58;
+  const paneT = split + (NARROW ? 26 : 30);
+  const R = Math.max(36, Math.min((W - 2*padP) / 2, (H - paneT - padP) / 2));
+  const cx = W/2, cy = paneT + R;
+  ctx.fillStyle = css("--ink"); ctx.font = "600 13px ui-monospace, monospace";
+  ctx.fillText("phase portrait", pL, split + (NARROW ? 10 : 12));
+  ctx.font = "13px ui-monospace, monospace";
   let vmax = 1e-9;
   for (let i = 0; i <= 900; i++) vmax = Math.max(vmax, Math.abs(Model.v(T*i/900, zeta, w0, X0, v0)));
   ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(cx - R*1.15, cy); ctx.lineTo(cx + R*1.15, cy);
   ctx.moveTo(cx, cy - R*1.15); ctx.lineTo(cx, cy + R*1.15); ctx.stroke();
-  ctx.fillStyle = css("--muted");
-  ctx.fillText("displacement →", cx + R*0.35, cy + 16);
-  ctx.save(); ctx.translate(cx - 10, cy - R*0.45); ctx.rotate(-Math.PI/2);
+  ctx.fillStyle = css("--muted"); ctx.font = "13px ui-monospace, monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("displacement →", cx, cy + R + 24);
+  ctx.save(); ctx.translate(cx - R - 22, cy); ctx.rotate(-Math.PI/2);
   ctx.fillText("velocity →", 0, 0); ctx.restore();
+  ctx.textAlign = "left";
 
   ctx.strokeStyle = css("--accent"); ctx.lineWidth = 2; ctx.beginPath();
   for (let i = 0; i <= 1400; i++){
@@ -326,6 +355,8 @@ el("reset").addEventListener("click", () => {
   el("zeta").value = defaults.zeta; el("w0").value = defaults.w0; el("v0").value = defaults.v0;
   render();
 });
+let __rt = 0;
+window.addEventListener("resize", () => { clearTimeout(__rt); __rt = setTimeout(render, 90); });
 render();
 
 /* ---------------- SELFTEST ---------------- */

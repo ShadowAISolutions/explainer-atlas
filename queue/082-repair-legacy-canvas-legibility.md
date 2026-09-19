@@ -38,6 +38,28 @@ Order: `numerical-integration-error`, `damped-harmonic-oscillator`,
 `huffman-coding` (batch/000), then the batch/001 pages, then batch/002, then
 batch/003.
 
+## Progress
+
+- [x] `numerical-integration-error` — batch/006. Container-tracking `layout()`,
+      13px decade labels right-aligned in the gutter, x ticks at powers of four,
+      a trapezoid/Simpson legend, and a shortened lower-pane title below 470px.
+- [x] `damped-harmonic-oscillator` — batch/006. Container-tracking `layout()`,
+      13px fonts, named panes, phase portrait re-centred on a radius computed
+      from the pane rather than a fixed 880x620 canvas.
+- [x] `huffman-coding` — batch/006. Container-tracking `fitCanvas()` (the page
+      already had a `layout()` for the tree, so the canvas sizer needed its own
+      name), taller aspect below 470px, padding scaled to the width.
+- [ ] batch/001 pages — `central-limit-theorem`, `monty-hall`,
+      `fourier-series-square-wave`, `population-logistic-chaos`
+      (`floating-point-precision` was repaired in batch/005 under task 081).
+- [ ] batch/002 pages
+- [ ] batch/003 pages
+
+**Use the container-tracking pattern, not the two-fixed-sizes one.** Clamp the
+container width, set the backing store to twice it, scale the context by two,
+and let the NARROW flag pick only the arrangement and the wording. The pages
+named in step 2 above predate that correction; see STATE.md batch/005.
+
 ## Constraints
 
 - Presentation only. No model, assertion or prose changes; `assertions_count`

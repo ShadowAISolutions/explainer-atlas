@@ -1,0 +1,16 @@
+{
+  "slug": "double-slit-interference",
+  "title": "Two Terms, One Pattern",
+  "domain": "physics",
+  "difficulty": 3,
+  "summary": "Assemble the double-slit pattern one part at a time and see that the fringe spacing comes from the slit separation while the brightness envelope comes from the slit width.",
+  "prerequisites": [],
+  "tags": ["diffraction", "interference", "optics", "fraunhofer", "grating", "missing-orders"],
+  "interaction_pattern": "build-from-parts",
+  "sources": [
+    { "title": "Hecht, Optics — Fraunhofer diffraction by a double slit", "url": "https://en.wikipedia.org/wiki/Double-slit_experiment" },
+    { "title": "Diffraction grating", "url": "https://en.wikipedia.org/wiki/Diffraction_grating" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}

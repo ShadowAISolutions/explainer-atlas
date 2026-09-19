@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Pattern Is Fine. The Engine Is Not. — Explainer Atlas</title>
+<meta name="description" content="Write a regular expression, then watch a backtracking engine take exponential time on an input a finite automaton finishes in a straight line.">
+<style>
+:root{
+  --bg:#f6f3ec; --panel:#fffdf7; --ink:#1b1a17; --muted:#6a6459; --line:#ddd7c9;
+  --accent:#b3311f; --accent-soft:#f6e6e1; --cool:#1d5f8a; --cool-soft:#e2edf4;
+  --radius:4px; --pad:clamp(13px,2.6vw,22px);
+  --font-body:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --font-read:Georgia,"Iowan Old Style",serif;
+  --scale-h1:clamp(1.4rem,1.02rem + 1.8vw,2.05rem);
+  --scale-body:clamp(0.95rem,0.92rem + 0.2vw,1.02rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#131210; --panel:#1c1a17; --ink:#ece7dc; --muted:#98917f; --line:#2f2b25;
+    --accent:#ef6a4c; --accent-soft:#2c1d18; --cool:#6fb3dd; --cool-soft:#152530;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:66rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:2px solid var(--ink); padding-bottom:calc(var(--pad)*.7)}
+h1{font-size:var(--scale-h1); line-height:1.12; margin:0 0 .35em; letter-spacing:-.02em}
+.kicker{margin:0 0 .3em; color:var(--accent); font:700 .72rem/1.3 var(--font-body); text-transform:uppercase; letter-spacing:.14em}
+.standfirst{margin:0; color:var(--muted); max-width:44em; font-family:var(--font-read); font-size:1.02rem}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:58rem){ .layout{grid-template-columns:minmax(17rem,20rem) minmax(0,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.55em; color:var(--muted); font-size:.8rem; line-height:1.45}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:.95em}
+.controls .editor{display:grid; gap:.3em; border-left:3px solid var(--accent); padding-left:.65em}
+.control{display:grid; gap:.25em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+label{font-weight:700; font-size:.82rem; letter-spacing:.02em}
+output{font:700 .86rem/1 var(--font-body); color:var(--accent); background:var(--accent-soft); padding:.24em .45em; border-radius:3px}
+.hint{color:var(--muted); font-size:.76rem; margin:0; line-height:1.4}
+input[type=text]{width:100%; font:600 .95rem/1.5 var(--font-body); color:var(--ink);
+  background:var(--bg); border:1px solid var(--line); border-radius:3px; padding:.45em .6em; min-height:40px}
+input[type=text].bad{border-color:var(--accent); background:var(--accent-soft)}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; font-size:.88rem; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:3px; padding:.45em .55em; min-height:40px; width:100%}
+button{cursor:pointer; font-weight:700}
+button:hover,select:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.statusbar{grid-column:1/-1; display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:1px;
+  background:var(--line); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin:0; padding:0}
+.statusbar div{background:var(--panel); padding:.5em .7em}
+.statusbar dt{margin:0; color:var(--muted); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em}
+.statusbar dd{margin:.15em 0 0; font:700 1rem/1.2 var(--font-body)}
+.prose{max-width:38em; margin-top:calc(var(--pad)*1.3); font-family:var(--font-read); font-size:1.03rem; line-height:1.68}
+.prose h2{font-family:var(--font-body); font-size:.94rem; text-transform:uppercase; letter-spacing:.1em; margin:2em 0 .5em; color:var(--accent)}
+.prose p{margin:0 0 1em}
+.prose code{font-family:var(--font-body); font-size:.92em; background:var(--cool-soft); padding:.1em .3em; border-radius:3px}
+.prose .math{font-family:var(--font-body); font-size:.9rem; background:var(--cool-soft); padding:.7em .8em; border-radius:3px; border-left:3px solid var(--cool); white-space:pre; overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.8rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">computer science</p>
+  <h1>The Pattern Is Fine. The Engine Is Not.</h1>
+  <p class="standfirst">Two programs are given the same regular expression and the same string. One answers in a straight line. The other takes longer than the age of the universe. Type a pattern and find out which you have.</p>
+</header>
+
+<div class="layout">
+  <section class="controls" data-role="controls" aria-label="Pattern editor and controls">
+    <div class="editor">
+      <label for="pat">pattern</label>
+      <input type="text" id="pat" value="(a+)+b" spellcheck="false" autocomplete="off" autocapitalize="off">
+      <p class="hint" id="paterr">Literals, <code>.</code>, <code>|</code>, <code>*</code>, <code>+</code>, <code>?</code> and parentheses.</p>
+    </div>
+
+    <div class="editor">
+      <label for="subj">test string</label>
+      <input type="text" id="subj" value="aaaab" spellcheck="false" autocomplete="off" autocapitalize="off">
+      <p class="hint">Traced through the automaton in the lower panel.</p>
+    </div>
+
+    <div class="editor">
+      <label for="unit">stress unit</label>
+      <input type="text" id="unit" value="a" spellcheck="false" autocomplete="off" autocapitalize="off">
+      <p class="hint">Repeated to build the inputs for the chart above.</p>
+    </div>
+
+    <div class="control">
+      <label for="preset">load an example</label>
+      <select id="preset">
+        <option value="(a+)+b;aaaab;a">(a+)+b &#8212; nested quantifier</option>
+        <option value="(a|a)*b;aaaab;a">(a|a)*b &#8212; identical branches</option>
+        <option value="(a*)*b;aaaab;a">(a*)*b &#8212; star of a star</option>
+        <option value="(a|aa)*b;aaaab;a">(a|aa)*b &#8212; branches of unequal length</option>
+        <option value="a+b;aaaab;a">a+b &#8212; unambiguous, safe</option>
+        <option value="(ab)*c;ababc;ab">(ab)*c &#8212; safe, two-letter unit</option>
+      </select>
+      <p class="hint">Sets all three fields at once.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="nmax">longest input plotted</label><output id="nmaxout" for="nmax">14</output></div>
+      <input type="range" id="nmax" min="4" max="16" step="1" value="14">
+      <p class="hint">The engines are run on the stress unit repeated 1 to this many times.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="ncur">reading at length</label><output id="ncurout" for="ncur">8</output></div>
+      <input type="range" id="ncur" min="1" max="16" step="1" value="8">
+      <p class="hint">Marks one input length and fills the numbers below.</p>
+    </div>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1240" height="960" role="img"
+            aria-label="Upper panel: work done against input length on a logarithmic scale, one curve for the backtracking engine and one for the finite automaton. Lower panel: a grid showing which automaton positions are live after each character of the test string."></canvas>
+    <figcaption>Above, the work each engine does as the input grows, on a logarithmic scale — a straight line on this scale is exponential. Below, the automaton reading the test string: every lit square is a position still in play.</figcaption>
+  </figure>
+
+  <dl class="statusbar" aria-live="polite">
+    <div><dt>backtracking steps</dt><dd id="r1">—</dd></div>
+    <div><dt>automaton steps</dt><dd id="r2">—</dd></div>
+    <div><dt>ratio</dt><dd id="r3">—</dd></div>
+    <div><dt>automaton states</dt><dd id="r4">—</dd></div>
+    <div><dt>test string</dt><dd id="r5">—</dd></div>
+  </dl>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>The pattern in the box is six characters long. Set the length slider to fourteen and read the first number under the stage. A backtracking engine needs sixty-five thousand steps to decide that fourteen letter <code>a</code>s are not matched by <code>(a+)+b</code>. The automaton needs fifteen. Push the slider to sixteen and the first number quadruples while the second goes up by two.</p>
+
+  <h2>Where the work comes from</h2>
+  <p>A backtracking engine is a depth-first search. To match <code>(a+)+</code> against a run of <code>a</code>s it must decide how many <code>a</code>s the inner <code>+</code> eats on each pass of the outer <code>+</code>. Every way of cutting the run into consecutive non-empty pieces is a distinct candidate. Cutting <em>k</em> letters is choosing which of the <em>k</em>−1 gaps to cut, so there are 2^(k−1) ways; and because the outer <code>+</code> may also stop short of the end, the engine tries this for every prefix length from one to <em>n</em>:</p>
+  <p class="math">attempts at the final b
+  = 1 + 2 + 4 + ... + 2^(n-1)
+  = 2^n - 1
+  n = 10  ->        1023
+  n = 20  ->     1048575
+  n = 40  ->  about 1.1e12</p>
+  <p>Every one of them fails, and only then does the engine back up and try the next. The pattern never mentions exponentials; the search order supplies them. The page counts those attempts with the engine, counts them again with a recurrence that knows nothing about regular expressions, and demands the two agree exactly — which is the evidence that the blow-up is combinatorial rather than a bug.</p>
+
+  <h2>Why the automaton is immune</h2>
+  <p>The other engine never chooses. It numbers the literal positions in the pattern, works out which positions can follow which, and then tracks the <em>set</em> of positions that are still live. Reading a character moves the whole set forward at once. There are only as many positions as there are literals, so the set has a bounded number of members and each character costs a bounded amount of work. Total cost: one step per character, plus one to start. That is the flat line in the chart, and it does not care how ambiguous the pattern is, because ambiguity is exactly what a set absorbs.</p>
+  <p>Both engines accept precisely the same strings. The page checks this by running every string over the alphabet up to six characters long through both, for every example pattern, and demanding they agree on all of them. Same language, same answers, wildly different bills.</p>
+
+  <h2>What to try</h2>
+  <p>Load <code>a+b</code>. The two curves lie on top of each other: an unambiguous pattern gives the backtracking engine nothing to choose, so it does linear work too. Now load <code>(a|a)*b</code>, where the branches of the alternation are identical and every one of them has to be tried. Then load <code>(a|aa)*b</code>, whose branches are merely of unequal length. The curve is still a straight line on the log scale, but a shallower one: the splits are now the ways to tile a run with pieces of size one and two, which is a Fibonacci number, so the work grows by a factor of 1.618 per character instead of 2. A gentler catastrophe is still a catastrophe.</p>
+  <p>Then change the test string to <code>aaaab</code>, which the pattern does match, and watch the lower panel. Greedy matching guesses right on the first pass, so the successful case costs one attempt at the final <code>b</code> and linear work overall. The disaster appears only when the match fails. That is why catastrophic patterns survive testing and die in production, where the failing input is the one somebody chose.
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---- MODEL: pure. A restricted regex, two engines, no DOM. ------------- */
+const Model = {
+
+  parse(src){
+    let i = 0, ids = 0;
+    const peek = () => src[i];
+    const eat = (c) => { if (src[i] !== c) throw new Error("expected " + c); i++; };
+    function alt(){ let n = cat(); while (peek() === "|"){ i++; n = { t:"alt", a:n, b:cat() }; } return n; }
+    function cat(){
+      let n = null;
+      while (i < src.length && peek() !== "|" && peek() !== ")"){
+        const r = rep(); n = n === null ? r : { t:"cat", a:n, b:r };
+      }
+      return n === null ? { t:"eps" } : n;
+    }
+    function rep(){
+      let n = atom();
+      for(;;){
+        const c = peek();
+        if (c === "*"){ i++; n = { t:"star", a:n }; }
+        else if (c === "+"){ i++; n = { t:"plus", a:n }; }
+        else if (c === "?"){ i++; n = { t:"opt", a:n }; }
+        else break;
+      }
+      return n;
+    }
+    function atom(){
+      const c = peek();
+      if (c === undefined) throw new Error("the pattern ends too early");
+      if (c === "("){ i++; const n = alt(); eat(")"); return n; }
+      if (c === ")" || c === "|" || c === "*" || c === "+" || c === "?")
+        throw new Error("unexpected " + c);
+      i++;
+      if (c === ".") return { t:"any", id: ++ids };
+      if (!/[A-Za-z0-9_-]/.test(c)) throw new Error("unsupported character " + c);
+      return { t:"char", c: c, id: ++ids };
+    }
+    const root = alt();
+    if (i !== src.length) throw new Error("unexpected " + src[i]);
+    if (ids === 0) throw new Error("the pattern needs at least one literal");
+    if (ids > 24) throw new Error("keep the pattern under 25 literals");
+    return { root: root, count: ids };
+  },
+
+  /* the id of the literal a left-to-right scan reaches last */
+  finalId(node){
+    switch(node.t){
+      case "char": case "any": return node.id;
+      case "eps": return 0;
+      case "cat": return this.finalId(node.b) || this.finalId(node.a);
+      case "alt": return Math.max(this.finalId(node.a), this.finalId(node.b));
+      default: return this.finalId(node.a);
+    }
+  },
+
+  /* depth-first search with the usual greedy order and an empty-loop guard */
+  backtrack(root, s, cap){
+    let steps = 0, capped = false;
+    const tries = new Map();
+    const bump = (id) => tries.set(id, (tries.get(id) || 0) + 1);
+    function m(node, i, k){
+      if (steps >= cap){ capped = true; return false; }
+      steps++;
+      switch(node.t){
+        case "eps": return k(i);
+        case "char": bump(node.id); return (i < s.length && s[i] === node.c) ? k(i+1) : false;
+        case "any":  bump(node.id); return (i < s.length) ? k(i+1) : false;
+        case "cat":  return m(node.a, i, (j) => m(node.b, j, k));
+        case "alt":  return m(node.a, i, k) || m(node.b, i, k);
+        case "opt":  return m(node.a, i, k) || k(i);
+        case "star": { const loop = (j) => m(node.a, j, (j2) => (j2 > j) && loop(j2)) || k(j);
+                       return loop(i); }
+        case "plus": { const loop = (j) => m(node.a, j, (j2) => (j2 > j) && loop(j2)) || k(j);
+                       return m(node.a, i, (j) => loop(j)); }
+      }
+      return false;
+    }
+    const ok = m(root, 0, (i) => i === s.length);
+    return { ok: ok, steps: steps, capped: capped, tries: tries };
+  },
+
+  /* Glushkov position automaton: one state per literal, plus a start state */
+  automaton(root, count){
+    const nullable = (n) => {
+      switch(n.t){
+        case "eps": return true;
+        case "char": case "any": return false;
+        case "cat": return nullable(n.a) && nullable(n.b);
+        case "alt": return nullable(n.a) || nullable(n.b);
+        case "star": case "opt": return true;
+        case "plus": return nullable(n.a);
+      }
+      return false;
+    };
+    const U = (a, b) => { for (const x of b) a.add(x); return a; };
+    const first = (n) => {
+      switch(n.t){
+        case "eps": return new Set();
+        case "char": case "any": return new Set([n.id]);
+        case "cat": { const s = new Set(first(n.a)); if (nullable(n.a)) U(s, first(n.b)); return s; }
+        case "alt": return U(new Set(first(n.a)), first(n.b));
+        default: return new Set(first(n.a));
+      }
+    };
+    const last = (n) => {
+      switch(n.t){
+        case "eps": return new Set();
+        case "char": case "any": return new Set([n.id]);
+        case "cat": { const s = new Set(last(n.b)); if (nullable(n.b)) U(s, last(n.a)); return s; }
+        case "alt": return U(new Set(last(n.a)), last(n.b));
+        default: return new Set(last(n.a));
+      }
+    };
+    const follow = new Map();
+    for (let k = 1; k <= count; k++) follow.set(k, new Set());
+    (function walk(n){
+      if (n.t === "cat"){ for (const x of last(n.a)) U(follow.get(x), first(n.b)); walk(n.a); walk(n.b); }
+      else if (n.t === "alt"){ walk(n.a); walk(n.b); }
+      else if (n.t === "star" || n.t === "plus"){ for (const x of last(n.a)) U(follow.get(x), first(n.a)); walk(n.a); }
+      else if (n.t === "opt"){ walk(n.a); }
+    })(root);
+    const sym = new Map();
+    (function walk(n){
+      if (n.t === "char") sym.set(n.id, n.c);
+      else if (n.t === "any") sym.set(n.id, null);
+      else { if (n.a) walk(n.a); if (n.b) walk(n.b); }
+    })(root);
+    const accept = new Set(last(root));
+    if (nullable(root)) accept.add(0);
+    const trans = new Map();
+    trans.set(0, first(root));
+    for (let k = 1; k <= count; k++) trans.set(k, follow.get(k));
+    return { states: count + 1, trans: trans, accept: accept, sym: sym };
+  },
+
+  run(au, s){
+    let cur = new Set([0]);
+    const trace = [new Set(cur)];
+    let steps = 1;
+    for (const ch of s){
+      const next = new Set();
+      for (const i of cur) for (const j of au.trans.get(i)){
+        const k = au.sym.get(j);
+        if (k === null || k === ch) next.add(j);
+      }
+      cur = next; steps++; trace.push(new Set(cur));
+    }
+    let ok = false;
+    for (const i of cur) if (au.accept.has(i)) ok = true;
+    return { ok: ok, steps: steps, trace: trace };
+  },
+
+  /* attempts on the pattern's last literal, for the stress input repeated n times */
+  attempts(src, unit, n, cap){
+    const P = this.parse(src);
+    const id = this.finalId(P.root);
+    const r = this.backtrack(P.root, unit.repeat(n), cap === undefined ? 4e6 : cap);
+    return { attempts: r.tries.get(id) || 0, steps: r.steps, capped: r.capped, ok: r.ok };
+  },
+
+  /* independent count: ways to cut k items into ordered pieces of the allowed
+     sizes, summed over every prefix length. No regex engine involved. */
+  cutsUpTo(n, sizes){
+    const c = new Array(n + 1).fill(0);
+    c[0] = 1;
+    for (let k = 1; k <= n; k++)
+      for (const z of sizes) if (z <= k) c[k] += c[k - z];
+    let total = 0;
+    for (let k = 0; k <= n; k++) total += c[k];
+    return { perLength: c, total: total };
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------ */
+const defaults = { pat:"(a+)+b", subj:"aaaab", unit:"a", nmax:14, ncur:8 };
+const state = Object.assign({}, defaults);
+const STEP_CAP = 3e6;
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const SS = 2;
+let W = 620, H = 480, NARROW = false;
+
+/* The canvas tracks its container so one canvas unit is one CSS pixel and a
+   13px label is 13px at every viewport. */
+function layout(){
+  const avail = cv.parentNode ? (cv.parentNode.clientWidth || 620) : 620;
+  NARROW = avail < 470;
+  W = Math.max(300, Math.min(940, Math.round(avail)));
+  H = NARROW ? 640 : Math.round(Math.min(680, Math.max(440, W * 0.82)));
+  if (cv.width !== W * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function compile(){
+  try {
+    const P = Model.parse(state.pat);
+    return { ok:true, P: P, au: Model.automaton(P.root, P.count), err:"" };
+  } catch (e){
+    return { ok:false, P:null, au:null, err: e.message };
+  }
+}
+
+function series(c){
+  const unit = state.unit.length ? state.unit : "a";
+  const out = [];
+  for (let n = 1; n <= state.nmax; n++){
+    const s = unit.repeat(n);
+    const b = Model.backtrack(c.P.root, s, STEP_CAP);
+    const a = Model.run(c.au, s);
+    out.push({ n:n, len:s.length, bt:b.steps, capped:b.capped, nfa:a.steps });
+  }
+  return out;
+}
+
+function fmt(x){
+  if (!Number.isFinite(x)) return "—";
+  if (x < 10000) return String(x);
+  if (x < 1e6) return (x/1000).toFixed(1) + "k";
+  return (x/1e6).toFixed(2) + "M";
+}
+
+function render(){
+  layout();
+  const c = compile();
+  el("pat").classList.toggle("bad", !c.ok);
+  el("paterr").textContent = c.ok
+    ? "Literals, . | * + ? and parentheses."
+    : "cannot read this pattern: " + c.err;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+
+  if (!c.ok){
+    ctx.fillStyle = css("--muted");
+    ctx.font = "600 15px ui-monospace,monospace";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("fix the pattern to draw the chart", W/2, H/2);
+    ctx.textAlign = "left";
+    for (const id of ["r1","r2","r3","r4","r5"]) el(id).textContent = "—";
+    el("r4").textContent = "—";
+    return;
+  }
+
+  const data = series(c);
+  const nSel = Math.min(state.ncur, state.nmax);
+  const sel = data[nSel - 1];
+
+  /* ---------- upper panel: work against input length, log scale ---------- */
+  const L = NARROW ? 54 : 62, R = W - 16, T = NARROW ? 44 : 40;
+  const B = Math.round(H * (NARROW ? 0.42 : 0.46));
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line");
+  const hot = css("--accent"), cool = css("--cool");
+
+  ctx.font = "700 13px ui-monospace,monospace";
+  ctx.fillStyle = ink; ctx.textBaseline = "alphabetic";
+  ctx.fillText("steps taken", L, NARROW ? 18 : 20);
+  ctx.font = "12px ui-monospace,monospace";
+  ctx.fillStyle = muted;
+  ctx.fillText(NARROW ? "log scale" : "log scale — a straight line means exponential", L, NARROW ? 32 : 34);
+
+  let top = 10;
+  for (const d of data) top = Math.max(top, d.bt, d.nfa);
+  const decades = Math.max(1, Math.ceil(Math.log10(top)));
+  const yOf = (v) => B - (Math.log10(Math.max(1, v)) / decades) * (B - T);
+  const xOf = (n) => L + ((n - 1) / Math.max(1, state.nmax - 1)) * (R - L);
+
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.textAlign = "right"; ctx.font = "11px ui-monospace,monospace";
+  for (let d = 0; d <= decades; d++){
+    const v = Math.pow(10, d), y = Math.round(yOf(v)) + 0.5;
+    ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(R, y); ctx.stroke();
+    ctx.fillStyle = muted;
+    ctx.fillText(d === 0 ? "1" : "1e" + d, L - 7, y + 4);
+  }
+  ctx.textAlign = "left";
+
+  /* highlighted length */
+  const xs = Math.round(xOf(nSel)) + 0.5;
+  ctx.strokeStyle = muted; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(xs, T - 6); ctx.lineTo(xs, B); ctx.stroke();
+  ctx.setLineDash([]);
+
+  const drawSeries = (key, colour) => {
+    ctx.strokeStyle = colour; ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    data.forEach((d, i) => { const x = xOf(d.n), y = yOf(d[key]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke();
+    ctx.fillStyle = colour;
+    for (const d of data){ ctx.beginPath(); ctx.arc(xOf(d.n), yOf(d[key]), 2.6, 0, Math.PI*2); ctx.fill(); }
+  };
+  drawSeries("nfa", cool);
+  drawSeries("bt", hot);
+
+  /* axis */
+  ctx.strokeStyle = ink; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(L, B + 0.5); ctx.lineTo(R, B + 0.5); ctx.stroke();
+  ctx.fillStyle = muted; ctx.font = "11px ui-monospace,monospace";
+  const tick = state.nmax > 10 ? 3 : 2;
+  for (let n = 1; n <= state.nmax; n += tick){
+    ctx.textAlign = "center"; ctx.fillText(String(n), xOf(n), B + 15);
+  }
+  ctx.textAlign = "left";
+  ctx.fillStyle = ink; ctx.font = "12px ui-monospace,monospace";
+  ctx.fillText("copies of “" + (state.unit || "a") + "”", L, B + 30);
+
+  /* labels for the two curves, parked at their right-hand ends */
+  const labelAt = (key, colour, text) => {
+    const d = data[data.length - 1];
+    let y = yOf(d[key]);
+    y = Math.max(T + 12, Math.min(B - 4, y));
+    ctx.fillStyle = colour; ctx.font = "700 12px ui-monospace,monospace";
+    ctx.textAlign = "right";
+    ctx.fillText(text, R - 4, y - 8);
+    ctx.textAlign = "left";
+  };
+  labelAt("bt", hot, "backtracking");
+  labelAt("nfa", cool, "automaton");
+
+  /* ---------- lower panel: the automaton reading the test string -------- */
+  const gT = B + (NARROW ? 82 : 88);
+  const s = state.subj;
+  const res = Model.run(c.au, s);
+  const cols = c.au.states;
+  const availH = H - gT - 34;
+  const labelW = 18;
+  const availW = W - 32 - labelW;
+  const cell = Math.max(9, Math.min(30,
+    Math.floor(availW / Math.max(1, cols)),
+    Math.floor(availH / Math.max(1, res.trace.length))));
+  const rows = Math.max(1, Math.min(res.trace.length, Math.floor(availH / cell)));
+  const clipped = rows < res.trace.length;
+  const gridW = cell * cols;
+  const gL = Math.max(labelW + 6, Math.round((W - gridW + labelW) / 2));
+
+  ctx.fillStyle = ink; ctx.font = "700 13px ui-monospace,monospace"; ctx.textAlign = "left";
+  ctx.fillText("automaton on the test string", 16, gT - 26);
+  ctx.fillStyle = muted; ctx.font = "11px ui-monospace,monospace";
+  ctx.fillText(NARROW ? "row = character, column = position"
+                      : "one row per character read, one column per position in the pattern",
+               16, gT - 11);
+
+  ctx.font = "10px ui-monospace,monospace"; ctx.textAlign = "center";
+  for (let j = 0; j < cols; j++){
+    const sm = j === 0 ? "▶" : (c.au.sym.get(j) === null ? "." : c.au.sym.get(j));
+    ctx.fillStyle = muted;
+    ctx.fillText(sm, gL + j*cell + cell/2, gT - 1);
+  }
+  for (let r = 0; r < rows; r++){
+    const y = gT + r*cell;
+    ctx.textAlign = "right"; ctx.fillStyle = muted; ctx.font = "11px ui-monospace,monospace";
+    ctx.fillText(r === 0 ? "·" : s[r-1], gL - 5, y + cell*0.72);
+    for (let j = 0; j < cols; j++){
+      const on = res.trace[r].has(j);
+      const acc = c.au.accept.has(j);
+      const done = acc && r === res.trace.length - 1;
+      ctx.fillStyle = on ? (done ? cool : css("--cool-soft")) : css("--panel");
+      ctx.fillRect(gL + j*cell + 1, y + 1, cell - 2, cell - 2);
+      ctx.strokeStyle = line; ctx.lineWidth = 1;
+      ctx.strokeRect(gL + j*cell + 1.5, y + 1.5, cell - 3, cell - 3);
+      if (on){
+        ctx.fillStyle = done ? css("--panel") : cool;
+        ctx.beginPath(); ctx.arc(gL + j*cell + cell/2, y + cell/2, Math.max(2, cell*0.18), 0, Math.PI*2); ctx.fill();
+      }
+    }
+  }
+  ctx.textAlign = "left";
+  const vy = gT + rows*cell + 16;
+  if (vy < H - 2){
+    ctx.fillStyle = res.ok ? cool : hot;
+    ctx.font = "700 12px ui-monospace,monospace";
+    ctx.fillText(res.ok ? "accepted" : "rejected", 16, vy);
+    if (clipped){
+      ctx.fillStyle = muted; ctx.font = "11px ui-monospace,monospace";
+      ctx.fillText("first " + (rows - 1) + " characters shown", 100, vy);
+    }
+  }
+  /* ---------- readouts --------------------------------------------------- */
+  el("nmaxout").textContent = String(state.nmax);
+  el("ncurout").textContent = String(nSel);
+  el("r1").textContent = (sel.capped ? "> " : "") + fmt(sel.bt);
+  el("r2").textContent = fmt(sel.nfa);
+  const ratio = sel.nfa > 0 ? sel.bt / sel.nfa : 0;
+  el("r3").textContent = (sel.capped ? "> " : "") + (ratio >= 100 ? Math.round(ratio) + "×" : ratio.toFixed(1) + "×");
+  el("r4").textContent = String(c.au.states);
+  el("r5").textContent = res.ok ? "accepted" : "rejected";
+}
+
+/* ---- wiring ------------------------------------------------------------ */
+function bindText(id, key){
+  const n = el(id);
+  n.addEventListener("input", () => { state[key] = n.value; render(); });
+}
+bindText("pat", "pat"); bindText("subj", "subj"); bindText("unit", "unit");
+
+el("preset").addEventListener("change", () => {
+  const parts = el("preset").value.split(";");
+  state.pat = parts[0]; state.subj = parts[1]; state.unit = parts[2];
+  el("pat").value = state.pat; el("subj").value = state.subj; el("unit").value = state.unit;
+  render();
+});
+for (const [id, key] of [["nmax","nmax"], ["ncur","ncur"]]){
+  el(id).addEventListener("input", () => { state[key] = parseInt(el(id).value, 10); render(); });
+}
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("pat").value = defaults.pat; el("subj").value = defaults.subj; el("unit").value = defaults.unit;
+  el("nmax").value = defaults.nmax; el("ncur").value = defaults.ncur;
+  el("preset").selectedIndex = 0;
+  render();
+});
+let rt = 0;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 90); });
+render();
+
+/* ---- SELFTEST ---------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+
+  /* 1. the headline number, derived twice. The engine's attempt count at the
+        final literal of (a+)+b, against the closed form 2^n - 1.           */
+  (function(){
+    let worst = 0, bad = "";
+    for (let n = 1; n <= 14; n++){
+      const got = Model.attempts("(a+)+b", "a", n).attempts;
+      const want = Math.pow(2, n) - 1;
+      if (got !== want){ bad = "n=" + n + " got " + got + " want " + want; break; }
+      worst = got;
+    }
+    push("nested quantifier: final-literal attempts equal 2^n - 1 for n up to 14",
+         bad === "", bad || ("exact through n=14, " + worst + " attempts"));
+  })();
+
+  /* 2. the same number a second, independent way: count the ways to cut a run
+        into ordered non-empty pieces, summed over every prefix. No engine.  */
+  (function(){
+    const sizes = []; for (let z = 1; z <= 14; z++) sizes.push(z);
+    let bad = "";
+    for (let n = 1; n <= 14; n++){
+      const combinatorial = Model.cutsUpTo(n, sizes).total - 1;
+      const engine = Model.attempts("(a+)+b", "a", n).attempts;
+      if (combinatorial !== engine){ bad = "n=" + n + ": " + combinatorial + " vs " + engine; break; }
+    }
+    push("combinatorial cut count reproduces the engine's attempts exactly",
+         bad === "", bad || "agree for every n up to 14");
+  })();
+
+  /* 3. branches of unequal length give the Fibonacci growth, not doubling.  */
+  (function(){
+    let bad = "";
+    for (let n = 1; n <= 14; n++){
+      const engine = Model.attempts("(a|aa)*b", "a", n).attempts;
+      const tilings = Model.cutsUpTo(n, [1, 2]).total;
+      if (engine !== tilings){ bad = "n=" + n + ": " + engine + " vs " + tilings; break; }
+    }
+    const r = Model.attempts("(a|aa)*b", "a", 14).attempts / Model.attempts("(a|aa)*b", "a", 13).attempts;
+    const phi = (1 + Math.sqrt(5)) / 2;
+    push("unequal branches: attempts are the 1-2 tiling count, ratio tends to phi",
+         bad === "" && near(r, phi, 1e-3),
+         bad || ("ratio " + r.toFixed(6) + " against phi " + phi.toFixed(6)));
+  })();
+
+  /* 4. the automaton costs one step per character plus one, for every pattern,
+        and has exactly one state per literal plus a start state.            */
+  (function(){
+    const pats = ["(a+)+b", "(a|a)*b", "(a*)*b", "(a|aa)*b", "a+b", "(ab)*c", "a?b*c", "(a|b)*a(a|b)", "a.c"];
+    let bad = "";
+    for (const p of pats){
+      const P = Model.parse(p), au = Model.automaton(P.root, P.count);
+      if (au.states !== P.count + 1){ bad = p + " has " + au.states + " states for " + P.count + " literals"; break; }
+      for (let n = 0; n <= 20; n++){
+        const r = Model.run(au, "a".repeat(n));
+        if (r.steps !== n + 1){ bad = p + " took " + r.steps + " steps on " + n + " characters"; break; }
+      }
+      if (bad) break;
+    }
+    push("automaton: states equal literals plus one, cost is length plus one",
+         bad === "", bad || (pats.length + " patterns, lengths 0 to 20"));
+  })();
+
+  /* 5. both engines accept exactly the same strings: every string over {a,b}
+        up to six characters, for every pattern above.                       */
+  (function(){
+    const pats = ["(a+)+b", "(a|a)*b", "(a*)*b", "(a|aa)*b", "a+b", "(ab)*c", "a?b*c", "(a|b)*a(a|b)", "((a)?b)+", "b|ab|aab"];
+    let compared = 0, bad = "";
+    for (const p of pats){
+      const P = Model.parse(p), au = Model.automaton(P.root, P.count);
+      for (let len = 0; len <= 6 && !bad; len++){
+        for (let mask = 0; mask < (1 << len); mask++){
+          let s = "";
+          for (let k = 0; k < len; k++) s += ((mask >> k) & 1) ? "b" : "a";
+          const x = Model.backtrack(P.root, s, 200000).ok;
+          const y = Model.run(au, s).ok;
+          compared++;
+          if (x !== y){ bad = p + " disagrees on \"" + s + "\": " + x + " vs " + y; break; }
+        }
+      }
+      if (bad) break;
+    }
+    push("the two engines agree on every string over {a,b} up to length six",
+         bad === "" && compared >= 1200, bad || (compared + " strings compared, no disagreement"));
+  })();
+
+  /* 6. the same, on seeded random patterns and inputs rather than a fixed list */
+  (function(){
+    let a = 20260919 >>> 0;
+    const rnd = () => { a = (a + 0x6D2B79F5) | 0; let x = Math.imul(a ^ (a >>> 15), 1 | a);
+      x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; };
+    const pick = (arr) => arr[Math.floor(rnd() * arr.length) % arr.length];
+    let made = 0, bad = "";
+    while (made < 500 && !bad){
+      let p = "";
+      const parts = 1 + Math.floor(rnd() * 3);
+      for (let i = 0; i < parts; i++){
+        let piece = pick(["a", "b", "ab", "a|b", "ab|a", "a|aa", "b"]);
+        if (piece.length > 1 && rnd() < 0.7) piece = "(" + piece + ")";
+        if (piece.length > 1 || rnd() < 0.5) piece += pick(["", "*", "+", "?"]);
+        p += piece;
+      }
+      let P;
+      try { P = Model.parse(p); } catch (e){ continue; }
+      made++;
+      const au = Model.automaton(P.root, P.count);
+      const len = Math.floor(rnd() * 7);
+      let s = "";
+      for (let k = 0; k < len; k++) s += rnd() < 0.5 ? "a" : "b";
+      const x = Model.backtrack(P.root, s, 200000);
+      const y = Model.run(au, s);
+      if (x.capped) continue;
+      if (x.ok !== y.ok) bad = p + " on \"" + s + "\": " + x.ok + " vs " + y.ok;
+    }
+    push("500 seeded random patterns and inputs: no disagreement",
+         bad === "" && made === 500, bad || (made + " seeded pairs agreed"));
+  })();
+
+  /* 7. adding one character at least doubles the work on every catastrophic
+        pattern, and never does on the safe ones.                            */
+  (function(){
+    const boom = ["(a+)+b", "(a|a)*b", "(a*)*b"];
+    const safe = ["a+b", "(ab)*c", "a?b*c", "b|ab|aab"];
+    let bad = "";
+    for (const p of boom){
+      const P = Model.parse(p);
+      for (let n = 3; n <= 12; n++){
+        const x = Model.backtrack(P.root, "a".repeat(n), STEP_CAP).steps;
+        const y = Model.backtrack(P.root, "a".repeat(n + 1), STEP_CAP).steps;
+        if (y < 2 * x - 2){ bad = p + " grew only " + x + " -> " + y + " at n=" + n; break; }
+      }
+      if (bad) break;
+    }
+    for (const p of safe){
+      if (bad) break;
+      const P = Model.parse(p);
+      const x = Model.backtrack(P.root, "a".repeat(8), STEP_CAP).steps;
+      const y = Model.backtrack(P.root, "a".repeat(16), STEP_CAP).steps;
+      if (y > 4 * x){ bad = p + " is not linear: " + x + " -> " + y; }
+    }
+    push("catastrophic patterns at least double per character, safe ones do not",
+         bad === "", bad || "3 exponential and 4 linear patterns behave as claimed");
+  })();
+
+  /* 8. greedy matching finds the successful match on the first pass, so the
+        blow-up only appears when the match fails.                           */
+  (function(){
+    const P = Model.parse("(a+)+b");
+    const id = Model.finalId(P.root);
+    let bad = "";
+    for (let n = 1; n <= 14; n++){
+      const r = Model.backtrack(P.root, "a".repeat(n) + "b", STEP_CAP);
+      const tries = r.tries.get(id) || 0;
+      if (!r.ok || tries !== 1){ bad = "n=" + n + ": ok=" + r.ok + " tries=" + tries; break; }
+      if (r.steps > 6 * n + 12){ bad = "n=" + n + " took " + r.steps + " steps"; break; }
+    }
+    push("with a matching input the same pattern succeeds on the first attempt",
+         bad === "", bad || "one attempt at the final literal, linear work, n up to 14");
+  })();
+
+  /* 9. the parser is total on the control surface: every preset and every
+        stress unit parses, and no engine returns a non-finite count.        */
+  (function(){
+    const presets = ["(a+)+b", "(a|a)*b", "(a*)*b", "(a|aa)*b", "a+b", "(ab)*c"];
+    let bad = "";
+    for (const p of presets){
+      for (const u of ["a", "ab", "b"]){
+        for (let n = 1; n <= 16; n += 5){
+          const r = Model.attempts(p, u, n, 200000);
+          if (!Number.isFinite(r.steps) || !Number.isFinite(r.attempts)){ bad = p + " @" + u + " n=" + n; break; }
+        }
+      }
+    }
+    push("every preset and stress unit produces finite counts",
+         bad === "", bad || "6 patterns by 3 units, no NaN or Infinity");
+  })();
+
+  /* 10. the empty-loop guard: a star whose body matches the empty string
+         terminates, and accepts exactly what it should.                     */
+  (function(){
+    const P = Model.parse("(a*)*b");
+    const au = Model.automaton(P.root, P.count);
+    let bad = "";
+    for (const [s, want] of [["b", true], ["ab", true], ["aaab", true], ["", false], ["a", false], ["ba", false]]){
+      const r = Model.backtrack(P.root, s, STEP_CAP);
+      if (r.capped || r.ok !== want){ bad = "\"" + s + "\" gave " + r.ok + (r.capped ? " (capped)" : ""); break; }
+      if (Model.run(au, s).ok !== want){ bad = "automaton disagrees on \"" + s + "\""; break; }
+    }
+    push("a star over an empty-matching body terminates and decides correctly",
+         bad === "", bad || "6 cases, both engines, no runaway loop");
+  })();
+
+  /* 11. the position automaton's transition relation is what Glushkov says:
+         every live position after reading c carries the symbol c.           */
+  (function(){
+    const pats = ["(a+)+b", "(a|aa)*b", "(a|b)*a(a|b)", "a?b*c", "(ab)*c"];
+    let bad = "", checked = 0;
+    for (const p of pats){
+      const P = Model.parse(p), au = Model.automaton(P.root, P.count);
+      for (const s of ["", "a", "ab", "aab", "abab", "bbac", "aaaab"]){
+        const r = Model.run(au, s);
+        for (let step = 1; step < r.trace.length; step++){
+          for (const j of r.trace[step]){
+            const sym = au.sym.get(j);
+            checked++;
+            if (sym !== null && sym !== s[step - 1]){ bad = p + " kept position " + j + " after '" + s[step-1] + "'"; break; }
+          }
+          if (bad) break;
+        }
+        if (bad) break;
+      }
+      if (bad) break;
+    }
+    push("every live position after a character carries that character",
+         bad === "" && checked > 40, bad || (checked + " live positions checked"));
+  })();
+
+  /* 12. the counts do not depend on how the model is called: the same query
+         twice gives the same answer, and the cut count is monotone.         */
+  (function(){
+    const a1 = Model.attempts("(a+)+b", "a", 11).attempts;
+    const a2 = Model.attempts("(a+)+b", "a", 11).attempts;
+    const sizes = [1, 2, 3];
+    let mono = true, prev = -1;
+    for (let n = 0; n <= 18; n++){
+      const v = Model.cutsUpTo(n, sizes).total;
+      if (!(v > prev)) mono = false;
+      prev = v;
+    }
+    const tribo = Model.cutsUpTo(6, [1,2,3]).perLength;
+    const wantTribo = [1, 1, 2, 4, 7, 13, 24];
+    let triboOk = true;
+    for (let k = 0; k <= 6; k++) if (tribo[k] !== wantTribo[k]) triboOk = false;
+    push("counts are deterministic and the cut recurrence is the tribonacci one",
+         a1 === a2 && a1 === 2047 && mono && triboOk,
+         "repeat gave " + a1 + ", 1-2-3 cuts " + tribo.join(",") + " against 1,1,2,4,7,13,24");
+  })();
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: 20260919 };
+
+})();
+</script>
+</body>
+</html>

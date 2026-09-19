@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nobody Wanted This — Explainer Atlas</title>
+<meta name="description" content="Paint a mixed neighbourhood, give everyone a mild preference for similar neighbours, and watch it separate anyway. The pattern does not reveal the preference.">
+<style>
+:root{
+  --bg:#eeeae2; --panel:#faf8f4; --ink:#22262b; --muted:#6d7480; --line:#d6d0c4;
+  --accent:#0d6a63; --accent-soft:#dceeec; --ochre:#b5741a; --ochre-soft:#f5e7d2;
+  --radius:14px; --pad:clamp(14px,2.8vw,24px);
+  --font-body:"Avenir Next",Avenir,"Segoe UI",system-ui,-apple-system,sans-serif;
+  --font-read:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.7rem,1.15rem + 2.4vw,2.7rem);
+  --scale-body:clamp(0.97rem,0.93rem + 0.2vw,1.05rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#15181c; --panel:#1e2228; --ink:#e7eaee; --muted:#98a1ad; --line:#2d333b;
+    --accent:#4fc5b5; --accent-soft:#12302d; --ochre:#e5a752; --ochre-soft:#332512;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:60rem; margin:0 auto; padding:var(--pad)}
+header.page{text-align:center; padding-bottom:calc(var(--pad)*.6)}
+h1{font-size:var(--scale-h1); line-height:1.08; margin:0 0 .3em; letter-spacing:-.025em; font-weight:800}
+.kicker{margin:0 0 .5em; color:var(--accent); font:700 .7rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.18em}
+.standfirst{margin:0 auto; color:var(--muted); max-width:34em; font-family:var(--font-read); font-size:1.06rem}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden; box-shadow:0 1px 2px rgba(0,0,0,.05)}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:none; border-radius:8px; cursor:crosshair}
+figure.stage canvas:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.83rem; line-height:1.5}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad);
+  display:grid; gap:1.1em 1.6em; grid-template-columns:1fr}
+@media (min-width:40rem){ .controls{grid-template-columns:repeat(3,minmax(0,1fr))} }
+.control{display:grid; gap:.3em; align-content:start}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+label{font-weight:700; font-size:.84rem}
+output{font:700 .85rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.24em .5em; border-radius:999px}
+.hint{color:var(--muted); font-size:.77rem; margin:0; line-height:1.4}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; font-size:.87rem; color:inherit; background:var(--bg); border:1px solid var(--line);
+  border-radius:999px; padding:.5em .9em; min-height:42px; width:100%}
+button{cursor:pointer; font-weight:700}
+button.go{background:var(--accent); color:var(--panel); border-color:var(--accent)}
+button:hover,select:hover{border-color:var(--accent)}
+.buttons{display:grid; gap:.5em; grid-column:1/-1; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr))}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7rem,1fr)); gap:.55em; margin:0; padding:0; grid-column:1/-1}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:.5em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.68rem; text-transform:uppercase; letter-spacing:.07em}
+.readout dd{margin:.15em 0 0; font:700 1.08rem/1.2 var(--font-mono)}
+.prose{max-width:36em; margin:calc(var(--pad)*1.5) auto 0; font-family:var(--font-read); font-size:1.06rem; line-height:1.7}
+.prose h2{font-family:var(--font-body); font-weight:800; font-size:1.08rem; margin:2em 0 .5em; letter-spacing:-.01em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.86rem; background:var(--accent-soft); padding:.75em .9em; border-radius:10px; white-space:pre; overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.82rem; text-align:center}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">game theory</p>
+  <h1>Nobody Wanted This</h1>
+  <p class="standfirst">Every square on this board is content to be outnumbered. Give them the mildest preference for neighbours like themselves, let them move, and the board sorts itself into blocks anyway.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1240" height="800" tabindex="0" role="img"
+            aria-label="Left: a grid of teal and ochre squares with some empty cells, the neighbourhood being simulated. Right: a chart of the segregation index against the round number, with the starting value marked."></canvas>
+    <figcaption>Left, the neighbourhood. Click or drag on it to paint with the current brush; arrow keys move the cursor and Enter paints. Right, how mixed the board is, round by round.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row"><label for="tol">wants at least</label><output id="tolout" for="tol">37.5%</output></div>
+      <input type="range" id="tol" min="0" max="0.75" step="0.0625" value="0.375">
+      <p class="hint">Share of a square's occupied neighbours that must be its own colour before it stays put.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="empty">empty cells</label><output id="emptyout" for="empty">10%</output></div>
+      <input type="range" id="empty" min="0.02" max="0.3" step="0.02" value="0.1">
+      <p class="hint">Somewhere to move to. Applies when the board is regenerated.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="size">board size</label><output id="sizeout" for="size">20</output></div>
+      <input type="range" id="size" min="10" max="26" step="2" value="20">
+      <p class="hint">Squares along each edge. Regenerates the board.</p>
+    </div>
+
+    <div class="control">
+      <label for="start">starting board</label>
+      <select id="start">
+        <option value="mix">random mix</option>
+        <option value="checker">perfect checkerboard</option>
+        <option value="stripes">vertical stripes</option>
+        <option value="blocks">already two blocks</option>
+        <option value="blank">empty, paint your own</option>
+      </select>
+      <p class="hint">Regenerates the board from scratch.</p>
+    </div>
+
+    <div class="control">
+      <label for="brush">brush</label>
+      <select id="brush">
+        <option value="1">teal</option>
+        <option value="2">ochre</option>
+        <option value="0">empty</option>
+      </select>
+      <p class="hint">What clicking on the board paints.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="seed">shuffle</label><output id="seedout" for="seed">1</output></div>
+      <input type="range" id="seed" min="1" max="30" step="1" value="1">
+      <p class="hint">A different random board and a different sequence of moves.</p>
+    </div>
+
+    <div class="buttons">
+      <button type="button" id="step">Move once</button>
+      <button type="button" id="run" class="go">Run to a standstill</button>
+      <button type="button" id="regen">New board</button>
+      <button type="button" id="reset">Reset to defaults</button>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>same-colour pairs</dt><dd id="r1">—</dd></div>
+      <div><dt>at the start</dt><dd id="r2">—</dd></div>
+      <div><dt>discontented</dt><dd id="r3">—</dd></div>
+      <div><dt>rounds run</dt><dd id="r4">—</dd></div>
+      <div><dt>teal / ochre</dt><dd id="r5">—</dd></div>
+    </dl>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Set the tolerance to 37.5 per cent and press <em>Run to a standstill</em>. Every square on the board has just declared that it is happy to be a minority — three like neighbours out of eight is enough — and the board still lands somewhere near three-quarters same-colour, in solid patches with clean edges. Nobody on this board wants segregation. They got it anyway.</p>
+
+  <h2>What each square is doing</h2>
+  <p>A square looks at its eight neighbours, ignores the empty ones, and works out what fraction of the rest share its colour. If that fraction is below the threshold it moves to an empty cell; otherwise it stays. That is the whole rule. There is no preference for a block, no aversion to the other colour, no coordination, and no planner.</p>
+  <p>The board is scored by the simplest measure available: take every pair of neighbouring occupied cells and ask what share of those pairs are the same colour.</p>
+  <p class="math">segregation
+  = same-colour adjacent pairs
+    -------------------------
+    all adjacent occupied pairs
+
+side n = 20, no empty cells:
+  checkerboard  (n-1)/(2n-1)  -> 0.487
+  stripes       n/(2(2n-1))   -> 0.256
+  two blocks    1 - (3n-2)/E  -> 0.961
+  E = 2(n-1)(2n-1) adjacent pairs</p>
+  <p>A random mix sits at about 0.50 because a coin flip makes half the pairs match. Load each of those three starting boards in turn and the readout will show you those exact numbers before you press anything — the page checks its own scoring against all three closed forms, and computes the score a second time by a different route, pair by pair rather than square by square, and demands the two agree.</p>
+
+  <h2>Why the drift only goes one way</h2>
+  <p>Dissatisfaction is local, but a move is not. When a square leaves, it takes its colour out of one neighbourhood and puts it into another, which makes some of its new neighbours more content and some of its old ones less. Contentment does not rise steadily — push the tolerance high and the count of discontented squares bounces around for a while. What does rise is the score, because every move that fixes a square's own neighbourhood does so by putting like next to like, and there is no move in the opposite direction. The asymmetry is the whole mechanism.</p>
+  <p>Push the threshold up in steps and watch where the curve bends. Below about a quarter almost nothing happens. Between a quarter and a half the board goes from barely sorted to strongly sorted. Above a half everyone is demanding a majority, and the outcome is near-total separation — but that is the boring case, because there the outcome does match the preference.</p>
+
+  <h2>What to try</h2>
+  <p>Load the perfect checkerboard, set the tolerance to 37.5 per cent, and run it. Every square starts in a four-out-of-eight tie and the board is the most integrated arrangement that exists; it still falls apart. Then load <em>already two blocks</em> and run it with the tolerance at zero: nothing moves, because nobody is discontented, and segregation is perfectly stable once reached even though nobody is enforcing it.</p>
+  <p>Then paint your own. Choose the blank board, draw whatever arrangement you think should survive, and press run. The point of the page is not that the model predicts any real neighbourhood — it does not. The point is that a photograph of the finished board tells you almost nothing about what the squares wanted.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL: pure. 0 = empty, 1 = teal, 2 = ochre. ---------------------- */
+const Model = {
+
+  build(kind, N, empty, seed){
+    const g = new Int8Array(N * N);
+    if (kind === "blank") return g;
+    if (kind === "checker"){ for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) g[r*N+c] = ((r + c) % 2) ? 1 : 2; return g; }
+    if (kind === "stripes"){ for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) g[r*N+c] = (c % 2) ? 1 : 2; return g; }
+    if (kind === "blocks"){ for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) g[r*N+c] = (c < N / 2) ? 1 : 2; return g; }
+    const rnd = mulberry32(seed);
+    for (let i = 0; i < N * N; i++) g[i] = rnd() < empty ? 0 : (rnd() < 0.5 ? 1 : 2);
+    return g;
+  },
+
+  /* a square is content when at least `tol` of its occupied neighbours match */
+  content(g, N, i, tol){
+    const me = g[i];
+    if (!me) return true;
+    const r = (i / N) | 0, c = i % N;
+    let occ = 0, same = 0;
+    for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++){
+      if (!dr && !dc) continue;
+      const rr = r + dr, cc = c + dc;
+      if (rr < 0 || rr >= N || cc < 0 || cc >= N) continue;
+      const v = g[rr*N+cc];
+      if (v){ occ++; if (v === me) same++; }
+    }
+    return occ === 0 ? true : (same / occ) >= tol - 1e-12;
+  },
+
+  discontented(g, N, tol){
+    let k = 0;
+    for (let i = 0; i < g.length; i++) if (g[i] && !this.content(g, N, i, tol)) k++;
+    return k;
+  },
+
+  /* one sweep in index order. Returns the new board and the moves that made
+     it, so the move list can be replayed against the old board. */
+  step(g, N, tol, rnd){
+    const out = Int8Array.from(g);
+    const empties = [];
+    for (let i = 0; i < out.length; i++) if (!out[i]) empties.push(i);
+    const moves = [];
+    for (let i = 0; i < out.length; i++){
+      if (!out[i] || this.content(out, N, i, tol)) continue;
+      if (!empties.length) break;
+      const me = out[i];
+      let pick = -1;
+      for (let t = 0; t < 10; t++){
+        const k = Math.floor(rnd() * empties.length) % empties.length;
+        const j = empties[k];
+        out[j] = me; out[i] = 0;
+        const ok = this.content(out, N, j, tol);
+        out[j] = 0; out[i] = me;
+        if (ok){ pick = k; break; }
+      }
+      if (pick < 0) pick = Math.floor(rnd() * empties.length) % empties.length;
+      const j = empties[pick];
+      out[j] = me; out[i] = 0; empties[pick] = i;
+      moves.push([i, j]);
+    }
+    return { grid: out, moves: moves };
+  },
+
+  run(g, N, tol, seed, maxRounds){
+    const rnd = mulberry32(seed);
+    let cur = g, rounds = 0, last = 1;
+    const history = [this.index(cur, N)];
+    for (let k = 0; k < maxRounds; k++){
+      const s = this.step(cur, N, tol, rnd);
+      cur = s.grid; rounds++; last = s.moves.length;
+      history.push(this.index(cur, N));
+      if (!last) break;
+    }
+    return { grid: cur, rounds: rounds, settled: last === 0, history: history };
+  },
+
+  /* segregation index, route A: each unordered adjacent pair visited once */
+  index(g, N){
+    let same = 0, tot = 0;
+    const off = [[0,1],[1,0],[1,1],[1,-1]];
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++){
+      const a = g[r*N+c];
+      if (!a) continue;
+      for (let k = 0; k < 4; k++){
+        const rr = r + off[k][0], cc = c + off[k][1];
+        if (rr < 0 || rr >= N || cc < 0 || cc >= N) continue;
+        const b = g[rr*N+cc];
+        if (!b) continue;
+        tot++; if (a === b) same++;
+      }
+    }
+    return tot ? same / tot : 0;
+  },
+
+  /* route B: every square counts all eight of its neighbours; halve the total */
+  indexByCell(g, N){
+    let same = 0, tot = 0;
+    for (let i = 0; i < g.length; i++){
+      const a = g[i];
+      if (!a) continue;
+      const r = (i / N) | 0, c = i % N;
+      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++){
+        if (!dr && !dc) continue;
+        const rr = r + dr, cc = c + dc;
+        if (rr < 0 || rr >= N || cc < 0 || cc >= N) continue;
+        const b = g[rr*N+cc];
+        if (!b) continue;
+        tot++; if (a === b) same++;
+      }
+    }
+    return tot ? same / tot : 0;
+  },
+
+  counts(g){
+    let a = 0, b = 0, e = 0;
+    for (const v of g){ if (v === 1) a++; else if (v === 2) b++; else e++; }
+    return { teal: a, ochre: b, empty: e };
+  },
+
+  /* closed forms for the three hand-built boards on an n by n king grid */
+  pairsTotal(N){ return 2 * (N - 1) * (2 * N - 1); },
+  closedChecker(N){ return (N - 1) / (2 * N - 1); },
+  closedStripes(N){ return N / (2 * (2 * N - 1)); },
+  closedBlocks(N){ return 1 - (3 * N - 2) / this.pairsTotal(N); }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------ */
+const defaults = { tol:0.375, empty:0.10, size:20, start:"mix", brush:1, seed:1 };
+const state = Object.assign({}, defaults);
+let grid = null, startIndex = 0, rounds = 0, history = [], rnd = null, cursor = 0;
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const SS = 2;
+let W = 620, H = 400, NARROW = false;
+
+/* the canvas tracks its container: one canvas unit is one CSS pixel */
+function layout(){
+  const avail = cv.parentNode ? (cv.parentNode.clientWidth || 620) : 620;
+  NARROW = avail < 520;
+  W = Math.max(300, Math.min(920, Math.round(avail)));
+  H = NARROW ? (W - 20) + 30 + 200 : Math.round(W * 0.56);
+  if (cv.width !== W * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function regenerate(){
+  grid = Model.build(state.start, state.size, state.empty, 4100 + state.seed * 37);
+  rnd = mulberry32(9000 + state.seed * 101);
+  startIndex = Model.index(grid, state.size);
+  rounds = 0; history = [startIndex]; cursor = 0;
+  render();
+}
+
+function boardBox(){
+  const pad = 10;
+  const chartW = NARROW ? W - 2*pad : Math.round(W * 0.34);
+  const bw = NARROW ? W - 2*pad : (W - 3*pad - chartW);
+  const bh = NARROW ? bw : (H - 2*pad);
+  const side = Math.min(bw, bh);
+  return { x: pad, y: pad, side: side, chartX: NARROW ? pad : (pad*2 + side), chartW: chartW,
+           chartY: NARROW ? (pad*2 + side) : pad, chartH: NARROW ? (H - side - 3*pad) : (H - 2*pad) };
+}
+
+function render(){
+  layout();
+  const N = state.size;
+  const box = boardBox();
+  const cell = box.side / N;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+
+  /* ---- the board ---- */
+  const teal = css("--accent"), ochre = css("--ochre"), line = css("--line");
+  ctx.fillStyle = css("--bg");
+  ctx.fillRect(box.x, box.y, box.side, box.side);
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++){
+    const v = grid[r*N+c];
+    if (!v) continue;
+    const happy = Model.content(grid, N, r*N+c, state.tol);
+    ctx.fillStyle = v === 1 ? teal : ochre;
+    ctx.globalAlpha = happy ? 1 : 0.42;
+    ctx.fillRect(box.x + c*cell + 0.8, box.y + r*cell + 0.8, cell - 1.6, cell - 1.6);
+    ctx.globalAlpha = 1;
+    if (!happy){
+      ctx.strokeStyle = v === 1 ? teal : ochre; ctx.lineWidth = 1.6;
+      ctx.strokeRect(box.x + c*cell + 1.4, box.y + r*cell + 1.4, cell - 2.8, cell - 2.8);
+    }
+  }
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.strokeRect(box.x + 0.5, box.y + 0.5, box.side, box.side);
+
+  if (document.activeElement === cv){
+    const cr = (cursor / N) | 0, cc = cursor % N;
+    ctx.strokeStyle = css("--ink"); ctx.lineWidth = 2.4;
+    ctx.strokeRect(box.x + cc*cell, box.y + cr*cell, cell, cell);
+  }
+
+  /* ---- the chart ---- */
+  const cx = box.chartX, cy = box.chartY, cw = box.chartW, ch = box.chartH;
+  const T = cy + 48, B = cy + ch - 28, Lx = cx + 36, Rx = cx + cw - 8;
+  const ink = css("--ink"), muted = css("--muted");
+  ctx.fillStyle = ink; ctx.font = "700 13px " + css("--font-body");
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("same-colour pairs", cx, cy + 14);
+  ctx.fillStyle = muted; ctx.font = "11px " + css("--font-mono");
+  ctx.fillText("by round", cx, cy + 28);
+
+  const yOf = (v) => B - v * (B - T);
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.textAlign = "right"; ctx.font = "10px " + css("--font-mono"); ctx.fillStyle = muted;
+  for (const v of [0, 0.25, 0.5, 0.75, 1]){
+    const y = Math.round(yOf(v)) + 0.5;
+    ctx.beginPath(); ctx.moveTo(Lx, y); ctx.lineTo(Rx, y); ctx.stroke();
+    ctx.fillText(v.toFixed(2), Lx - 6, y + 3.5);
+  }
+  ctx.textAlign = "left";
+
+  const span = Math.max(8, history.length - 1);
+  const xOf = (i) => Lx + (i / span) * (Rx - Lx);
+
+  ctx.strokeStyle = muted; ctx.setLineDash([3,3]); ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(Lx, yOf(startIndex)); ctx.lineTo(Rx, yOf(startIndex)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle = teal; ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  history.forEach((v, i) => { const x = xOf(i), y = yOf(v); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+  ctx.stroke();
+  ctx.fillStyle = teal;
+  const lastI = history.length - 1;
+  ctx.beginPath(); ctx.arc(xOf(lastI), yOf(history[lastI]), 3.4, 0, Math.PI*2); ctx.fill();
+
+  ctx.strokeStyle = ink; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(Lx, B + 0.5); ctx.lineTo(Rx, B + 0.5); ctx.stroke();
+  ctx.fillStyle = muted; ctx.font = "10px " + css("--font-mono");
+  ctx.fillText("0", Lx, B + 14);
+  ctx.textAlign = "right"; ctx.fillText(String(lastI), Rx, B + 14); ctx.textAlign = "left";
+  ctx.fillStyle = muted; ctx.font = "11px " + css("--font-mono");
+  ctx.fillText("dashed: where it started", cx, B + 26 > cy + ch ? B + 14 : B + 27);
+
+  /* ---- readouts ---- */
+  const now = Model.index(grid, N);
+  const cnt = Model.counts(grid);
+  el("tolout").textContent = (state.tol * 100).toFixed(1).replace(/\.0$/, "") + "%";
+  el("emptyout").textContent = Math.round(state.empty * 100) + "%";
+  el("sizeout").textContent = String(state.size);
+  el("seedout").textContent = String(state.seed);
+  el("r1").textContent = now.toFixed(3);
+  el("r2").textContent = startIndex.toFixed(3);
+  el("r3").textContent = String(Model.discontented(grid, N, state.tol));
+  el("r4").textContent = String(rounds);
+  el("r5").textContent = cnt.teal + " / " + cnt.ochre;
+}
+
+/* ---- painting ---------------------------------------------------------- */
+let painting = false;
+function cellAt(ev){
+  const rect = cv.getBoundingClientRect();
+  const scale = W / rect.width;
+  const x = (ev.clientX - rect.left) * scale, y = (ev.clientY - rect.top) * scale;
+  const box = boardBox(), cell = box.side / state.size;
+  const c = Math.floor((x - box.x) / cell), r = Math.floor((y - box.y) / cell);
+  if (r < 0 || c < 0 || r >= state.size || c >= state.size) return -1;
+  return r * state.size + c;
+}
+function paint(ev){
+  const i = cellAt(ev);
+  if (i < 0) return;
+  grid[i] = state.brush;
+  startIndex = Model.index(grid, state.size);
+  rounds = 0; history = [startIndex];
+  render();
+}
+cv.addEventListener("pointerdown", (ev) => { painting = true; cv.setPointerCapture(ev.pointerId); paint(ev); ev.preventDefault(); });
+cv.addEventListener("pointermove", (ev) => { if (painting) paint(ev); });
+cv.addEventListener("pointerup", () => { painting = false; });
+cv.addEventListener("pointercancel", () => { painting = false; });
+cv.addEventListener("focus", render);
+cv.addEventListener("blur", render);
+cv.addEventListener("keydown", (ev) => {
+  const N = state.size;
+  const r = (cursor / N) | 0, c = cursor % N;
+  let nr = r, nc = c, used = true;
+  if (ev.key === "ArrowUp") nr = Math.max(0, r - 1);
+  else if (ev.key === "ArrowDown") nr = Math.min(N - 1, r + 1);
+  else if (ev.key === "ArrowLeft") nc = Math.max(0, c - 1);
+  else if (ev.key === "ArrowRight") nc = Math.min(N - 1, c + 1);
+  else if (ev.key === "Enter" || ev.key === " "){
+    grid[cursor] = state.brush;
+    startIndex = Model.index(grid, N); rounds = 0; history = [startIndex];
+  } else used = false;
+  if (!used) return;
+  cursor = nr * N + nc;
+  ev.preventDefault();
+  render();
+});
+
+/* ---- wiring ------------------------------------------------------------ */
+function bindRange(id, key, parse, regen){
+  el(id).addEventListener("input", () => {
+    state[key] = parse(el(id).value);
+    if (regen) regenerate(); else render();
+  });
+}
+bindRange("tol", "tol", parseFloat, false);
+bindRange("empty", "empty", parseFloat, true);
+bindRange("size", "size", (v) => parseInt(v, 10), true);
+bindRange("seed", "seed", (v) => parseInt(v, 10), true);
+el("start").addEventListener("change", () => { state.start = el("start").value; regenerate(); });
+el("brush").addEventListener("change", () => { state.brush = parseInt(el("brush").value, 10); });
+
+el("step").addEventListener("click", () => {
+  const s = Model.step(grid, state.size, state.tol, rnd);
+  grid = s.grid; rounds++;
+  history.push(Model.index(grid, state.size));
+  if (history.length > 400) history = history.slice(-400);
+  render();
+});
+el("run").addEventListener("click", () => {
+  for (let k = 0; k < 60; k++){
+    const s = Model.step(grid, state.size, state.tol, rnd);
+    grid = s.grid; rounds++;
+    history.push(Model.index(grid, state.size));
+    if (!s.moves.length) break;
+  }
+  if (history.length > 400) history = history.slice(-400);
+  render();
+});
+el("regen").addEventListener("click", regenerate);
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("tol").value = defaults.tol; el("empty").value = defaults.empty;
+  el("size").value = defaults.size; el("seed").value = defaults.seed;
+  el("start").value = defaults.start; el("brush").value = String(defaults.brush);
+  regenerate();
+});
+let rt = 0;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 90); });
+regenerate();
+
+/* ---- SELFTEST ---------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+
+  /* 1. the score against three closed forms, on three hand-built boards */
+  (function(){
+    let bad = "";
+    for (const N of [10, 16, 20, 26]){
+      const c = Model.index(Model.build("checker", N, 0, 1), N);
+      const s = Model.index(Model.build("stripes", N, 0, 1), N);
+      const b = Model.index(Model.build("blocks",  N, 0, 1), N);
+      if (!near(c, Model.closedChecker(N), 1e-14)) bad = "checkerboard n=" + N + ": " + c;
+      else if (!near(s, Model.closedStripes(N), 1e-14)) bad = "stripes n=" + N + ": " + s;
+      else if (!near(b, Model.closedBlocks(N), 1e-14)) bad = "blocks n=" + N + ": " + b;
+      if (bad) break;
+    }
+    push("scoring matches the closed form for checkerboard, stripes and two blocks",
+         bad === "", bad || "four board sizes, agreement to 1e-14");
+  })();
+
+  /* 2. the same score a second way: per-square counting, halved, must agree
+        exactly with the pair-by-pair route on every board the page can make */
+  (function(){
+    let bad = "", checked = 0;
+    for (const kind of ["mix", "checker", "stripes", "blocks", "blank"]){
+      for (const N of [10, 14, 20]){
+        for (let sd = 1; sd <= 4; sd++){
+          const g = Model.build(kind, N, 0.12, 4100 + sd * 37);
+          const a = Model.index(g, N), b = Model.indexByCell(g, N);
+          checked++;
+          if (a !== b){ bad = kind + " n=" + N + " seed " + sd + ": " + a + " vs " + b; break; }
+        }
+        if (bad) break;
+      }
+      if (bad) break;
+    }
+    push("the two ways of counting adjacent pairs agree bit for bit",
+         bad === "" && checked === 60, bad || (checked + " boards, identical to the last bit"));
+  })();
+
+  /* 3. an all-one-colour board scores exactly 1, an empty board exactly 0,
+        and the pair total matches 2(n-1)(2n-1)                              */
+  (function(){
+    let bad = "";
+    for (const N of [10, 14, 20, 26]){
+      const solid = new Int8Array(N * N).fill(1);
+      if (Model.index(solid, N) !== 1){ bad = "solid n=" + N + " scored " + Model.index(solid, N); break; }
+      if (Model.index(new Int8Array(N * N), N) !== 0){ bad = "empty n=" + N + " did not score 0"; break; }
+      let tot = 0;
+      const off = [[0,1],[1,0],[1,1],[1,-1]];
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++)
+        for (const o of off){ const rr = r + o[0], cc = c + o[1];
+          if (rr >= 0 && rr < N && cc >= 0 && cc < N) tot++; }
+      if (tot !== Model.pairsTotal(N)){ bad = "n=" + N + " has " + tot + " pairs, formula says " + Model.pairsTotal(N); break; }
+    }
+    push("solid board scores 1, empty board scores 0, pair count is 2(n-1)(2n-1)",
+         bad === "", bad || "four sizes, all exact");
+  })();
+
+  /* 4. with a threshold of zero nobody is discontented and nothing moves */
+  (function(){
+    let bad = "";
+    for (let sd = 1; sd <= 12; sd++){
+      const N = 16;
+      const g = Model.build("mix", N, 0.10, 4100 + sd * 37);
+      if (Model.discontented(g, N, 0) !== 0){ bad = "seed " + sd + " had discontented squares at threshold 0"; break; }
+      const r = Model.run(Int8Array.from(g), N, 0, 9000 + sd, 10);
+      for (let i = 0; i < g.length; i++) if (r.grid[i] !== g[i]){ bad = "seed " + sd + " moved a square at threshold 0"; break; }
+      if (bad) break;
+    }
+    push("at a threshold of zero the board is unchanged, cell for cell",
+         bad === "", bad || "12 seeded boards, identical before and after");
+  })();
+
+  /* 5. every move is made by a discontented square, and replaying the move
+        list against the old board reproduces the new board exactly          */
+  (function(){
+    let moves = 0, happyMovers = 0, mismatches = 0;
+    for (let sd = 1; sd <= 10; sd++){
+      const N = 14;
+      let cur = Model.build("mix", N, 0.10, 4100 + sd * 37);
+      const rnd2 = mulberry32(9000 + sd * 101);
+      for (let k = 0; k < 6; k++){
+        const before = Int8Array.from(cur);
+        const s = Model.step(cur, N, 0.5, rnd2);
+        const sim = Int8Array.from(before);
+        for (const mv of s.moves){
+          moves++;
+          if (Model.content(sim, N, mv[0], 0.5)) happyMovers++;
+          sim[mv[1]] = sim[mv[0]]; sim[mv[0]] = 0;
+        }
+        for (let i = 0; i < sim.length; i++) if (sim[i] !== s.grid[i]) mismatches++;
+        cur = s.grid;
+      }
+    }
+    push("every mover was discontented at the moment it moved, and the move list explains the board",
+         happyMovers === 0 && mismatches === 0 && moves > 300,
+         moves + " moves replayed, " + happyMovers + " content movers, " + mismatches + " cells unexplained");
+  })();
+
+  /* 6. colour counts and the empty count are conserved exactly, always */
+  (function(){
+    let bad = "";
+    for (let sd = 1; sd <= 12; sd++){
+      const N = 14;
+      const g0 = Model.build("mix", N, 0.10, 4100 + sd * 37);
+      const c0 = Model.counts(g0);
+      const r = Model.run(Int8Array.from(g0), N, 0.5, 9000 + sd * 101, 30);
+      const c1 = Model.counts(r.grid);
+      if (c0.teal !== c1.teal || c0.ochre !== c1.ochre || c0.empty !== c1.empty){
+        bad = "seed " + sd + ": " + JSON.stringify(c0) + " became " + JSON.stringify(c1); break;
+      }
+    }
+    push("nobody is created or destroyed: colour and vacancy counts are conserved",
+         bad === "", bad || "12 runs to a standstill, counts unchanged");
+  })();
+
+  /* 7. the headline: a threshold that leaves every square content to be a
+        minority still sorts the board well past a random mix               */
+  (function(){
+    let worst = 1, best = 0, sum = 0, minGain = 1, n = 0;
+    for (let sd = 1; sd <= 30; sd++){
+      const N = 18;
+      const g = Model.build("mix", N, 0.10, 4100 + sd * 37);
+      const before = Model.index(g, N);
+      const r = Model.run(g, N, 0.375, 9000 + sd * 101, 60);
+      const after = Model.index(r.grid, N);
+      worst = Math.min(worst, after); best = Math.max(best, after);
+      sum += after; minGain = Math.min(minGain, after - before); n++;
+    }
+    const mean = sum / n;
+    push("at a 37.5% threshold every seeded board sorts well past a random mix",
+         n === 30 && worst > 0.62 && mean > 0.70 && minGain > 0.10,
+         "30 boards: worst " + worst.toFixed(3) + ", mean " + mean.toFixed(3) +
+         ", best " + best.toFixed(3) + ", smallest gain " + minGain.toFixed(3));
+  })();
+
+  /* 8. the outcome rises with the threshold, monotonically across the ladder */
+  (function(){
+    const ladder = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75];
+    const means = [];
+    for (const tol of ladder){
+      let s = 0;
+      for (let sd = 1; sd <= 12; sd++){
+        const N = 18;
+        const g = Model.build("mix", N, 0.10, 4100 + sd * 37);
+        s += Model.index(Model.run(g, N, tol, 9000 + sd * 101, 60).grid, N);
+      }
+      means.push(s / 12);
+    }
+    let mono = true;
+    for (let i = 1; i < means.length; i++) if (!(means[i] > means[i-1] + 1e-6)) mono = false;
+    push("the settled score rises strictly with the threshold across the whole ladder",
+         mono && near(means[0], 0.5, 0.03) && means[means.length-1] > 0.95,
+         means.map((v) => v.toFixed(3)).join(" "));
+  })();
+
+  /* 9. determinism: the same seed gives the same board, different seeds do not */
+  (function(){
+    const N = 16;
+    const g = Model.build("mix", N, 0.10, 4100 + 5 * 37);
+    const a = Model.run(Int8Array.from(g), N, 0.5, 777, 40).grid;
+    const b = Model.run(Int8Array.from(g), N, 0.5, 777, 40).grid;
+    let identical = true;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) identical = false;
+    const seen = new Set();
+    for (let sd = 1; sd <= 30; sd++){
+      const g2 = Model.build("mix", 18, 0.10, 4100 + sd * 37);
+      seen.add(Model.index(Model.run(g2, 18, 0.375, 9000 + sd * 101, 60).grid, 18).toFixed(9));
+    }
+    push("the same seed reproduces the board exactly, and 30 seeds give 30 distinct outcomes",
+         identical && seen.size > 25,
+         "repeat run identical: " + identical + ", distinct settled scores: " + seen.size + " of 30");
+  })();
+
+  /* 10. a run that reports a standstill really has one: nobody is discontented
+         and a further sweep moves nobody                                     */
+  (function(){
+    let settled = 0, bad = "";
+    for (let sd = 1; sd <= 12; sd++){
+      const N = 16;
+      const g = Model.build("mix", N, 0.10, 4100 + sd * 37);
+      const r = Model.run(g, N, 0.25, 9000 + sd * 101, 80);
+      if (!r.settled) continue;
+      settled++;
+      if (Model.discontented(r.grid, N, 0.25) !== 0){ bad = "seed " + sd + " reported a standstill with discontented squares"; break; }
+      const extra = Model.step(Int8Array.from(r.grid), N, 0.25, mulberry32(3));
+      if (extra.moves.length !== 0){ bad = "seed " + sd + " moved after the standstill"; break; }
+    }
+    push("a reported standstill has nobody discontented and survives another sweep",
+         bad === "" && settled >= 8, bad || (settled + " of 12 runs settled, all genuinely still"));
+  })();
+
+  /* 11. contentment is what the definition says: recompute it by hand for
+         every square of a board and compare                                  */
+  (function(){
+    const N = 12, tol = 0.4;
+    const g = Model.build("mix", N, 0.12, 4100 + 3 * 37);
+    let bad = "", checked = 0;
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++){
+      const i = r*N+c, me = g[i];
+      if (!me) continue;
+      let occ = 0, same = 0;
+      for (const o of [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]){
+        const rr = r + o[0], cc = c + o[1];
+        if (rr < 0 || rr >= N || cc < 0 || cc >= N) continue;
+        const v = g[rr*N+cc];
+        if (v){ occ++; if (v === me) same++; }
+      }
+      const want = occ === 0 ? true : (same / occ) >= tol - 1e-12;
+      checked++;
+      if (Model.content(g, N, i, tol) !== want){ bad = "square " + i; break; }
+    }
+    push("contentment recomputed from the definition agrees for every square",
+         bad === "" && checked > 100, bad || (checked + " squares checked by hand"));
+  })();
+
+  /* 12. an already-sorted board is a fixed point at any threshold up to the
+         share of like neighbours it actually provides                        */
+  (function(){
+    let bad = "";
+    for (const N of [12, 20]){
+      const g = Model.build("blocks", N, 0, 1);
+      for (const tol of [0, 0.25, 0.5]){
+        const r = Model.run(Int8Array.from(g), N, tol, 555, 20);
+        let same = true;
+        for (let i = 0; i < g.length; i++) if (r.grid[i] !== g[i]) same = false;
+        if (!same){ bad = "two blocks n=" + N + " moved at threshold " + tol; break; }
+      }
+      if (bad) break;
+    }
+    push("two solid blocks are a fixed point at every threshold up to a half",
+         bad === "", bad || "no square moves on a sorted board, two sizes, three thresholds");
+  })();
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED };
+
+})();
+</script>
+</body>
+</html>

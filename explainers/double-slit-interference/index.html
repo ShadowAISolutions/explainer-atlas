@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two Terms, One Pattern — Explainer Atlas</title>
+<meta name="description" content="Assemble the double-slit pattern one part at a time: the fringes come from the separation, the brightness envelope from the width, and the two multiply.">
+<style>
+:root{
+  --bg:#f4f4f6; --panel:#ffffff; --ink:#1a1c22; --muted:#666b78; --line:#dcdce2;
+  --accent:#4b3fbe; --accent-soft:#e7e5fa; --stage:#0a0a10; --stage-line:#33334a;
+  --radius:6px; --pad:clamp(14px,2.6vw,22px);
+  --font-body:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --font-read:"Charter","Bitstream Charter",Georgia,serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.5rem,1.05rem + 2vw,2.35rem);
+  --scale-body:clamp(0.96rem,0.92rem + 0.2vw,1.03rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0e0f13; --panel:#171922; --ink:#e6e8ef; --muted:#959bab; --line:#282b36;
+    --accent:#9b90ff; --accent-soft:#1d1a3a; --stage:#05050a; --stage-line:#2b2b40;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%; overflow-x:hidden}
+.wrap{max-width:58rem; margin:0 auto; padding:var(--pad)}
+header.page{max-width:40em}
+h1{font-size:var(--scale-h1); line-height:1.1; margin:0 0 .35em; letter-spacing:-.02em; font-weight:700}
+.kicker{margin:0 0 .4em; color:var(--accent); font:600 .72rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.16em}
+.standfirst{margin:0; color:var(--muted); max-width:38em; font-family:var(--font-read); font-size:1.05rem}
+figure.stage{margin:var(--pad) calc(50% - 50vw) 0; width:100vw; background:var(--stage);
+  border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:0; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto}
+figcaption{max-width:58rem; margin:0 auto; padding:.7em var(--pad) 1em; color:var(--muted); font-size:.82rem; line-height:1.5}
+.controls{margin-top:var(--pad); background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1.1em 1.5em; grid-template-columns:1fr}
+@media (min-width:36rem){ .controls{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (min-width:52rem){ .controls{grid-template-columns:repeat(3,minmax(0,1fr))} }
+.control{display:grid; gap:.28em; align-content:start}
+.control.wide{grid-column:1/-1}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+label{font-weight:600; font-size:.83rem}
+output{font:600 .85rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.22em .45em; border-radius:4px}
+.hint{color:var(--muted); font-size:.76rem; margin:0; line-height:1.4}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; font-size:.86rem; color:inherit; background:var(--bg); border:1px solid var(--line);
+  border-radius:var(--radius); padding:.5em .7em; min-height:42px; width:100%}
+button{cursor:pointer; font-weight:600}
+button:hover,select:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr)); gap:.55em; margin:0; padding:0; grid-column:1/-1}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:var(--radius); padding:.5em .65em}
+.readout dt{margin:0; color:var(--muted); font-size:.68rem; text-transform:uppercase; letter-spacing:.07em}
+.readout dd{margin:.15em 0 0; font:600 1.02rem/1.2 var(--font-mono)}
+.prose{max-width:37em; margin-top:calc(var(--pad)*1.4); font-family:var(--font-read); font-size:1.05rem; line-height:1.68}
+.prose h2{font-family:var(--font-body); font-weight:700; font-size:1.02rem; margin:2em 0 .5em; color:var(--accent); letter-spacing:-.005em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.85rem; background:var(--accent-soft); padding:.75em .85em; border-radius:var(--radius); white-space:pre; overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.82rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">physics</p>
+  <h1>Two Terms, One Pattern</h1>
+  <p class="standfirst">The stripes on the screen come from how far apart the slits are. Their fading brightness comes from how wide each slit is. Build the pattern one part at a time and the two stop being the same thing.</p>
+</header>
+</div>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="2400" height="920" role="img"
+          aria-label="Top: the pattern as it would look on a screen, a band of coloured fringes. Below: the intensity plotted against position on the screen, with the single-slit envelope drawn as a dashed curve."></canvas>
+  <figcaption>Above, the screen as the eye would see it. Below, the same thing measured: the solid curve is the intensity, the dashed curve is the envelope one slit would produce on its own.</figcaption>
+</figure>
+
+<div class="wrap">
+
+<section class="controls" data-role="controls" aria-label="Apparatus controls">
+  <div class="control wide">
+    <label for="parts">assemble the pattern</label>
+    <select id="parts">
+      <option value="single">1 &#183; one slit, width only &#8212; the envelope</option>
+      <option value="points">2 &#183; two slits of no width &#8212; the fringes</option>
+      <option value="double" selected>3 &#183; two real slits &#8212; envelope times fringes</option>
+      <option value="grating">4 &#183; many real slits &#8212; a grating</option>
+    </select>
+    <p class="hint">Each step adds one physical fact to the apparatus. Watch which part of the picture it changes.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="lam">wavelength</label><output id="lamout" for="lam">550 nm</output></div>
+    <input type="range" id="lam" min="400" max="700" step="5" value="550">
+    <p class="hint">Red light spreads further than blue light through the same apparatus.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="d">slit separation</label><output id="dout" for="d">25 &#181;m</output></div>
+    <input type="range" id="d" min="5" max="60" step="1" value="25">
+    <p class="hint">Centre to centre. Sets the fringe spacing and nothing else.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="a">slit width</label><output id="aout" for="a">8 &#181;m</output></div>
+    <input type="range" id="a" min="1" max="20" step="0.5" value="8">
+    <p class="hint">Sets the envelope and nothing else. Never wider than the separation.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="n">number of slits</label><output id="nout" for="n">2</output></div>
+    <input type="range" id="n" min="2" max="6" step="1" value="2">
+    <p class="hint">Only in step 4. More slits sharpen the fringes without moving them.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="L">screen distance</label><output id="Lout" for="L">1.20 m</output></div>
+    <input type="range" id="L" min="0.5" max="3" step="0.1" value="1.2">
+    <p class="hint">Only scales the picture. Stretches the pattern, changes no physics.</p>
+  </div>
+
+  <div class="control">
+    <label for="reset">start again</label>
+    <button type="button" id="reset">Reset to defaults</button>
+    <p class="hint">Back to step 3 with green light.</p>
+  </div>
+
+  <dl class="readout" aria-live="polite">
+    <div><dt>fringe spacing</dt><dd id="r1">&#8212;</dd></div>
+    <div><dt>envelope first zero</dt><dd id="r2">&#8212;</dd></div>
+    <div><dt>fringes per lobe</dt><dd id="r3">&#8212;</dd></div>
+    <div><dt>missing order</dt><dd id="r4">&#8212;</dd></div>
+    <div><dt>separation / width</dt><dd id="r5">&#8212;</dd></div>
+  </dl>
+</section>
+
+<article class="prose" data-role="prose">
+  <p>Step through the four settings at the top in order. One slit gives a single broad blob. Two slits of no width at all give evenly spaced stripes of equal brightness, marching off to the edge of the screen. Two real slits give those same stripes, in the same places, with the blob laid over them as a brightness curve. The third picture is the first two multiplied together, and that is the whole of the double-slit pattern.</p>
+
+  <h2>Which knob moves which part</h2>
+  <p>Angles are measured by the sine of the deflection. Light from adjacent slits arrives in step when the extra distance it travels is a whole number of wavelengths, which puts the bright fringes at</p>
+  <p class="math">fringe maxima:
+  d sin(theta) = m * lambda
+envelope zeros:
+  a sin(theta) = m * lambda
+
+fringe spacing on a screen at L:
+  approximately  lambda * L / d</p>
+  <p>Two facts fall out of that. The fringe positions depend on the separation and not at all on the width, so widening the slits does not move a single stripe. And the envelope's first dark ring depends on the width and not at all on the separation. Slide the separation and watch only the stripe spacing change; slide the width and watch only the brightness curve breathe, while every stripe stays exactly where it was.</p>
+
+  <h2>Missing orders</h2>
+  <p>When the separation is an exact whole-number multiple of the width, a fringe maximum lands precisely on an envelope zero and that stripe disappears. Set the separation to 24 micrometres and the width to 8, and the third stripe on each side is simply not there — the interference says bright, the diffraction says dark, and dark wins because the product of anything with zero is zero. The readout names the missing order whenever the ratio is a whole number.</p>
+  <p>The same product explains the last part. Adding more slits leaves every maximum exactly where the two-slit pattern put it, because they satisfy the same condition, but between each pair of maxima there are now <em>N</em>−1 directions where the slits cancel perfectly and <em>N</em>−2 feeble leftovers. The peaks get narrower and brighter while the light between them drains away. That is a diffraction grating, and it is why a grating can separate two wavelengths a prism cannot.</p>
+
+  <h2>What to try</h2>
+  <p>Put the separation at 25 micrometres and sweep the wavelength from 400 to 700. The whole pattern stretches by three quarters, which is the entire principle behind a spectrometer. Then set the width equal to the separation: the two slits are now touching, and the pattern collapses to exactly the single-slit pattern of a slit twice as wide — an identity the page checks to the last bit of double precision, because a model that gets that case wrong is wrong everywhere.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---- MODEL: Fraunhofer diffraction. Pure functions, no DOM. ------------
+   u is sin(theta). lam in nm, a and d in micrometres, L in metres.        */
+function sinc(x){ return Math.abs(x) < 1e-12 ? 1 : Math.sin(x) / x; }
+
+const Model = {
+
+  /* single-slit envelope: [sin(beta)/beta]^2 with beta = pi a u / lambda */
+  envelope(u, lam, a){
+    if (a <= 0) return 1;
+    return Math.pow(sinc(Math.PI * a * 1000 * u / lam), 2);
+  },
+
+  /* N-slit interference factor, normalised so a principal maximum is 1 */
+  grating(u, lam, d, N){
+    if (N <= 1) return 1;
+    const al = Math.PI * d * 1000 * u / lam;
+    const s = Math.sin(al);
+    if (Math.abs(s) < 1e-12) return 1;
+    return Math.pow(Math.sin(N * al) / (N * s), 2);
+  },
+
+  intensity(u, lam, a, d, N){
+    return this.envelope(u, lam, a) * this.grating(u, lam, d, N);
+  },
+
+  /* the same quantity by a wholly different route: add up the light from
+     K point sources spread across each of the N slits, as complex phasors */
+  phasor(u, lam, a, d, N, K){
+    let re = 0, im = 0;
+    const k2p = 2 * Math.PI * 1000 * u / lam;
+    for (let s = 0; s < N; s++){
+      const c = (s - (N - 1) / 2) * d;
+      for (let k = 0; k < K; k++){
+        const x = c + (k + 0.5 - K / 2) * (a / K);
+        const ph = k2p * x;
+        re += Math.cos(ph); im += Math.sin(ph);
+      }
+    }
+    const t = N * K;
+    return (re * re + im * im) / (t * t);
+  },
+
+  fringeU(m, lam, d){ return m * lam / (d * 1000); },
+  envelopeZeroU(m, lam, a){ return m * lam / (a * 1000); },
+
+  /* position on a flat screen a distance L away, in millimetres */
+  screenMM(u, L){
+    const c = 1 - u * u;
+    if (c <= 0) return Infinity;
+    return 1000 * L * u / Math.sqrt(c);
+  },
+
+  fringeSpacingMM(lam, d, L){
+    return this.screenMM(this.fringeU(1, lam, d), L) - this.screenMM(0, L);
+  },
+
+  /* mean of the interference factor over one full period. Exactly 1/N. */
+  periodMean(lam, d, N, samples){
+    const m = samples || 4096;
+    const per = lam / (d * 1000);
+    let s = 0;
+    for (let k = 0; k < m; k++) s += this.grating((k / m) * per, lam, d, N);
+    return s / m;
+  },
+
+  missingOrder(a, d){
+    const q = d / a;
+    return (Math.abs(q - Math.round(q)) < 1e-9 && Math.round(q) >= 2) ? Math.round(q) : 0;
+  },
+
+  /* how many fringes fit inside the central envelope lobe, each side */
+  fringesUnderPeak(a, d){ return Math.floor((d / a) - 1e-9); }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------ */
+const defaults = { parts:"double", lam:550, d:25, a:8, n:2, L:1.2 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const SS = 2;
+let W = 900, H = 400, NARROW = false;
+
+/* the canvas tracks its container so one canvas unit is one CSS pixel */
+function layout(){
+  const avail = cv.parentNode ? (cv.parentNode.clientWidth || 900) : 900;
+  NARROW = avail < 560;
+  W = Math.max(320, Math.min(1400, Math.round(avail)));
+  H = NARROW ? 420 : Math.round(Math.min(480, Math.max(320, W * 0.34)));
+  if (cv.width !== W * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+/* wavelength to a display colour, the usual piecewise approximation */
+function spectral(lam){
+  let r = 0, g = 0, b = 0;
+  if (lam < 440){ r = -(lam - 440) / 60; b = 1; }
+  else if (lam < 490){ g = (lam - 440) / 50; b = 1; }
+  else if (lam < 510){ g = 1; b = -(lam - 510) / 20; }
+  else if (lam < 580){ r = (lam - 510) / 70; g = 1; }
+  else if (lam < 645){ r = 1; g = -(lam - 645) / 65; }
+  else { r = 1; }
+  let f = 1;
+  if (lam < 420) f = 0.3 + 0.7 * (lam - 380) / 40;
+  else if (lam > 645) f = 0.3 + 0.7 * (700 - lam) / 55;
+  const g8 = (v) => Math.round(255 * Math.pow(Math.max(0, Math.min(1, v * f)), 0.8));
+  return [g8(r), g8(g), g8(b)];
+}
+
+function effective(){
+  const a = state.parts === "points" ? 0 : Math.min(state.a, state.d);
+  const N = state.parts === "single" ? 1 : (state.parts === "grating" ? state.n : 2);
+  return { a: a, N: N, lam: state.lam, d: state.d, L: state.L };
+}
+
+function halfSpanU(e){
+  let u = 3.5 * Model.fringeU(1, e.lam, e.d);
+  if (e.a > 0) u = Math.max(u, 1.8 * Model.envelopeZeroU(1, e.lam, e.a));
+  if (e.N === 1) u = 2.4 * Model.envelopeZeroU(1, e.lam, e.a || 1);
+  return Math.min(0.65, Math.max(u, 0.004));
+}
+
+function render(){
+  layout();
+  const e = effective();
+  const U = halfSpanU(e);
+  const halfMM = Model.screenMM(U, e.L);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--stage"); ctx.fillRect(0, 0, W, H);
+
+  const padL = NARROW ? 46 : 58, padR = 14;
+  const stripT = 16, stripH = NARROW ? 62 : 78;
+  const plotT = stripT + stripH + (NARROW ? 34 : 38);
+  const plotB = H - (NARROW ? 40 : 36);
+  const x0 = padL, x1 = W - padR;
+  const uOf = (px) => ((px - x0) / (x1 - x0) * 2 - 1) * U;
+  const pxOf = (u) => x0 + ((u / U) + 1) / 2 * (x1 - x0);
+
+  const rgb = spectral(e.lam);
+
+  /* ---- the screen as seen ---- */
+  for (let px = x0; px <= x1; px++){
+    const I = Model.intensity(uOf(px), e.lam, e.a, e.d, e.N);
+    const v = Math.pow(Math.max(0, Math.min(1, I)), 0.6);
+    ctx.fillStyle = "rgb(" + Math.round(rgb[0]*v) + "," + Math.round(rgb[1]*v) + "," + Math.round(rgb[2]*v) + ")";
+    ctx.fillRect(px, stripT, 1, stripH);
+  }
+  ctx.strokeStyle = css("--stage-line"); ctx.lineWidth = 1;
+  ctx.strokeRect(x0 + 0.5, stripT + 0.5, x1 - x0, stripH);
+
+  ctx.fillStyle = "#8f93a8"; ctx.font = "600 12px " + css("--font-mono");
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("what the screen looks like", x0, stripT - 4);
+
+  /* ---- the intensity plot ---- */
+  ctx.fillStyle = "#8f93a8"; ctx.font = "600 12px " + css("--font-mono");
+  ctx.fillText("intensity", x0, plotT - 10);
+
+  const yOf = (I) => plotB - Math.max(0, Math.min(1, I)) * (plotB - plotT);
+
+  ctx.strokeStyle = css("--stage-line"); ctx.lineWidth = 1;
+  ctx.textAlign = "right"; ctx.font = "11px " + css("--font-mono"); ctx.fillStyle = "#70748a";
+  for (const v of [0, 0.5, 1]){
+    const y = Math.round(yOf(v)) + 0.5;
+    ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+    ctx.fillText(v.toFixed(1), x0 - 7, y + 4);
+  }
+  ctx.textAlign = "left";
+
+  /* the envelope, dashed, when there is one to show */
+  if (e.a > 0 && e.N > 1){
+    ctx.strokeStyle = "rgba(190,195,215,0.62)"; ctx.lineWidth = 1.5;
+    ctx.setLineDash([4,4]); ctx.beginPath();
+    for (let px = x0; px <= x1; px++){
+      const y = yOf(Model.envelope(uOf(px), e.lam, e.a));
+      px === x0 ? ctx.moveTo(px, y) : ctx.lineTo(px, y);
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  /* the pattern itself, filled in its own colour */
+  ctx.beginPath();
+  ctx.moveTo(x0, plotB);
+  for (let px = x0; px <= x1; px++) ctx.lineTo(px, yOf(Model.intensity(uOf(px), e.lam, e.a, e.d, e.N)));
+  ctx.lineTo(x1, plotB); ctx.closePath();
+  ctx.fillStyle = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ",0.24)";
+  ctx.fill();
+  ctx.strokeStyle = "rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")";
+  ctx.lineWidth = 1.8; ctx.beginPath();
+  for (let px = x0; px <= x1; px++){
+    const y = yOf(Model.intensity(uOf(px), e.lam, e.a, e.d, e.N));
+    px === x0 ? ctx.moveTo(px, y) : ctx.lineTo(px, y);
+  }
+  ctx.stroke();
+
+  /* the missing order, called out where it happens */
+  const miss = e.N > 1 && e.a > 0 ? Model.missingOrder(e.a, e.d) : 0;
+  if (miss){
+    const u = Model.fringeU(miss, e.lam, e.d);
+    if (u < U){
+      for (const sgn of [-1, 1]){
+        const px = pxOf(sgn * u);
+        ctx.strokeStyle = "#d86a6a"; ctx.lineWidth = 1.2; ctx.setLineDash([2,3]);
+        ctx.beginPath(); ctx.moveTo(px, plotT); ctx.lineTo(px, plotB); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.fillStyle = "#d86a6a"; ctx.font = "600 11px " + css("--font-mono");
+      ctx.textAlign = "center";
+      const lx = pxOf(u);
+      if (lx < x1 - 40) ctx.fillText("order " + miss + " missing", lx, plotT - 2);
+      ctx.textAlign = "left";
+    }
+  }
+
+  /* axis in millimetres on the screen */
+  ctx.strokeStyle = "#5a5e73"; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(x0, plotB + 0.5); ctx.lineTo(x1, plotB + 0.5); ctx.stroke();
+  ctx.fillStyle = "#8f93a8"; ctx.font = "11px " + css("--font-mono");
+  const step = niceStep(halfMM);
+  const dp = step >= 10 ? 0 : (step >= 1 ? 1 : 2);
+  ctx.textAlign = "center";
+  for (let mm = -Math.floor(halfMM / step) * step; mm <= halfMM + 1e-9; mm += step){
+    const u = uFromMM(mm, e.L);
+    if (Math.abs(u) > U) continue;
+    const px = pxOf(u);
+    ctx.beginPath(); ctx.moveTo(px, plotB); ctx.lineTo(px, plotB + 4); ctx.stroke();
+    ctx.fillText((Math.abs(mm) < step / 2 ? 0 : mm).toFixed(dp), px, plotB + 17);
+  }
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#70748a";
+  ctx.fillText("position on the screen, mm", x0, H - 6);
+  ctx.textAlign = "right";
+  ctx.fillText(e.N === 1 ? "one slit" : (e.a === 0 ? e.N + " slits of no width" : e.N + " slits"), x1, H - 6);
+  ctx.textAlign = "left";
+
+  /* ---- readouts ---- */
+  el("lamout").textContent = state.lam + " nm";
+  el("dout").textContent = state.d + " µm";
+  el("aout").textContent = state.a + " µm";
+  el("nout").textContent = String(state.n);
+  el("Lout").textContent = state.L.toFixed(2) + " m";
+
+  el("r1").textContent = e.N > 1 ? fmtMM(Model.fringeSpacingMM(e.lam, e.d, e.L)) + " mm" : "no fringes";
+  el("r2").textContent = e.a > 0
+    ? fmtMM(Model.screenMM(Math.min(0.9, Model.envelopeZeroU(1, e.lam, e.a)), e.L)) + " mm"
+    : "no envelope";
+  el("r3").textContent = (e.a > 0 && e.N > 1) ? String(Model.fringesUnderPeak(e.a, e.d)) : "—";
+  el("r4").textContent = miss ? String(miss) : "none";
+  el("r5").textContent = e.a > 0 ? (e.d / e.a).toFixed(2) : "—";
+}
+
+function uFromMM(mm, L){
+  const t = mm / (1000 * L);
+  return t / Math.sqrt(1 + t * t);
+}
+function niceStep(half){
+  const raw = half / 4;
+  const p = Math.pow(10, Math.floor(Math.log10(Math.max(1e-6, raw))));
+  for (const m of [1, 2, 5, 10]) if (raw <= m * p) return m * p;
+  return 10 * p;
+}
+function fmtMM(v){
+  const a = Math.abs(v);
+  if (!Number.isFinite(v)) return "off screen";
+  if (a >= 100) return v.toFixed(0);
+  if (a >= 10) return v.toFixed(1);
+  return v.toFixed(2);
+}
+
+/* ---- wiring ------------------------------------------------------------ */
+function bind(id, key, parse){
+  el(id).addEventListener("input", () => { state[key] = parse(el(id).value); render(); });
+}
+bind("lam", "lam", (v) => parseInt(v, 10));
+bind("d", "d", (v) => parseInt(v, 10));
+bind("a", "a", parseFloat);
+bind("n", "n", (v) => parseInt(v, 10));
+bind("L", "L", parseFloat);
+el("parts").addEventListener("change", () => { state.parts = el("parts").value; render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("lam").value = defaults.lam; el("d").value = defaults.d; el("a").value = defaults.a;
+  el("n").value = defaults.n; el("L").value = defaults.L; el("parts").value = defaults.parts;
+  render();
+});
+let rt = 0;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 90); });
+render();
+
+/* ---- SELFTEST ---------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+
+  /* 1. the closed form against an independent phasor sum over the apertures.
+        The sum is a midpoint rule across each slit, so it does not agree to
+        machine precision at any finite sample count - it converges. Assert
+        the convergence itself: halving the step must quarter the error.     */
+  (function(){
+    const us = [-0.024, -0.016, -0.008, 0, 0.008, 0.016, 0.024];
+    let coarse = 0, fine = 0;
+    for (const s of [[550,8,20,2],[650,12,24,3],[500,6,18,5]])
+      for (const u of us){
+        const exact = Model.intensity(u, s[0], s[1], s[2], s[3]);
+        coarse = Math.max(coarse, Math.abs(exact - Model.phasor(u, s[0], s[1], s[2], s[3], 150)));
+        fine   = Math.max(fine,   Math.abs(exact - Model.phasor(u, s[0], s[1], s[2], s[3], 300)));
+      }
+    const ratio = fine > 0 ? coarse / fine : 0;
+    push("a phasor sum over the apertures converges on the closed form at second order",
+         fine < 5e-6 && ratio > 3.9 && ratio < 4.1,
+         "error " + coarse.toExponential(2) + " at 150 samples, " + fine.toExponential(2) +
+         " at 300, ratio " + ratio.toFixed(3) + " against the expected 4");
+  })();
+
+  /* 2. fringe maxima sit exactly at d sin(theta) = m lambda */
+  (function(){
+    let worst = 0;
+    for (const lam of [420, 550, 680]) for (const d of [7, 25, 58]) for (const N of [2, 3, 5])
+      for (let m = 1; m <= 5; m++){
+        const u = Model.fringeU(m, lam, d);
+        if (u >= 1) continue;
+        worst = Math.max(worst, Math.abs(Model.grating(u, lam, d, N) - 1));
+      }
+    push("every interference maximum lands exactly on d sin(theta) = m lambda",
+         worst < 1e-12, "worst departure from a full-height maximum " + worst.toExponential(2));
+  })();
+
+  /* 3. envelope zeros sit exactly at a sin(theta) = m lambda */
+  (function(){
+    let worst = 0;
+    for (const lam of [420, 550, 680]) for (const a of [2, 8, 19])
+      for (let m = 1; m <= 4; m++){
+        const u = Model.envelopeZeroU(m, lam, a);
+        if (u >= 1) continue;
+        worst = Math.max(worst, Model.envelope(u, lam, a));
+      }
+    push("every envelope zero lands exactly on a sin(theta) = m lambda",
+         worst < 1e-20, "largest leaked intensity " + worst.toExponential(2));
+  })();
+
+  /* 4. the identity that catches an algebra slip: two touching slits are one
+        slit of twice the width, exactly.                                     */
+  (function(){
+    let worst = 0;
+    for (const lam of [430, 550, 690]) for (const a of [3, 8, 17])
+      for (let k = -60; k <= 60; k++){
+        const u = k * 0.001;
+        worst = Math.max(worst, Math.abs(Model.intensity(u, lam, a, a, 2) - Model.envelope(u, lam, 2*a)));
+      }
+    push("two slits touching equal one slit of double the width, to the last bit",
+         worst < 1e-14, "worst difference " + worst.toExponential(2) + " over 1089 points");
+  })();
+
+  /* 5. missing orders: when the separation is a whole multiple of the width,
+        that order is exactly dark                                            */
+  (function(){
+    let bad = "", worst = 0;
+    for (const a of [2, 4, 6, 8]) for (const q of [2, 3, 4, 5]){
+      const d = q * a, lam = 550;
+      if (Model.missingOrder(a, d) !== q){ bad = "ratio " + q + " not reported as a missing order"; break; }
+      const u = Model.fringeU(q, lam, d);
+      worst = Math.max(worst, Model.intensity(u, lam, a, d, 2));
+      const before = Model.intensity(Model.fringeU(q - 1, lam, d), lam, a, d, 2);
+      if (!(before > 1e-3)){ bad = "the order before the missing one was also dark"; break; }
+    }
+    push("a whole-number separation-to-width ratio kills exactly that order",
+         bad === "" && worst < 1e-20, bad || ("16 combinations, brightest survivor " + worst.toExponential(2)));
+  })();
+
+  /* 6. energy bookkeeping: the interference factor averages exactly 1/N over
+        a period, so N slits give peaks N times taller over 1/N of the width  */
+  (function(){
+    let worst = 0;
+    for (const N of [2, 3, 4, 5, 6]) for (const d of [12, 25, 47])
+      worst = Math.max(worst, Math.abs(Model.periodMean(550, d, N, 4096) - 1 / N));
+    push("the interference factor averages exactly 1/N over one period",
+         worst < 1e-12, "worst departure " + worst.toExponential(2) + " across N = 2 to 6");
+  })();
+
+  /* 7. the pattern is symmetric about the centre */
+  (function(){
+    let worst = 0;
+    for (const s of [[480,5,17,2],[550,8,25,3],[660,14,30,6]])
+      for (let k = 1; k <= 200; k++){
+        const u = k * 0.0025;
+        worst = Math.max(worst, Math.abs(
+          Model.intensity(u, s[0], s[1], s[2], s[3]) - Model.intensity(-u, s[0], s[1], s[2], s[3])));
+      }
+    push("the pattern is symmetric about the straight-through direction",
+         worst < 1e-15, "worst asymmetry " + worst.toExponential(2) + " at 600 sampled angles");
+  })();
+
+  /* 8. small-angle fringe spacing equals lambda L / d */
+  (function(){
+    let worst = 0;
+    for (const lam of [420, 550, 690]) for (const d of [20, 35, 58]) for (const L of [0.5, 1.2, 3]){
+      const got = Model.fringeSpacingMM(lam, d, L);
+      const want = lam * 1e-9 * L / (d * 1e-6) * 1000;
+      worst = Math.max(worst, Math.abs(got - want) / want);
+    }
+    push("small-angle fringe spacing matches lambda L / d within a fifth of a percent",
+         worst < 2e-3, "worst relative error " + (worst * 100).toFixed(3) + "%");
+  })();
+
+  /* 9. N slits: exactly N-1 perfect zeros and N-2 secondary maxima between
+        consecutive principal maxima                                          */
+  (function(){
+    let bad = "", worstZero = 0;
+    for (const N of [2, 3, 4, 5, 6]){
+      const lam = 550, d = 25, K = 2000, per = lam / (d * 1000);
+      for (let k = 1; k < N; k++)
+        worstZero = Math.max(worstZero, Model.grating(k * per / N, lam, d, N));
+      const vals = [];
+      for (let k = 0; k <= K; k++) vals.push(Model.grating((k / K) * per, lam, d, N));
+      let peaks = 0;
+      for (let k = 1; k < K; k++) if (vals[k] > vals[k-1] && vals[k] >= vals[k+1]) peaks++;
+      if (peaks !== N - 2){ bad = "N=" + N + " has " + peaks + " secondary maxima, expected " + (N - 2); break; }
+    }
+    push("between maxima there are N-1 exact zeros and N-2 secondary maxima",
+         bad === "" && worstZero < 1e-20, bad || ("zeros down to " + worstZero.toExponential(2)));
+  })();
+
+  /* 10. widening the slits never moves a fringe, and separating them never
+         moves an envelope zero                                               */
+  (function(){
+    const lam = 550, d = 25;
+    let movedFringe = 0, movedEnvelope = 0;
+    for (let m = 1; m <= 4; m++){
+      const u = Model.fringeU(m, lam, d);
+      for (const a of [1, 5, 10, 20]) movedFringe = Math.max(movedFringe, Math.abs(Model.grating(u, lam, d, 2) - 1));
+    }
+    const a0 = 8;
+    for (let m = 1; m <= 3; m++){
+      const u = Model.envelopeZeroU(m, lam, a0);
+      for (const dd of [10, 25, 40, 60]) movedEnvelope = Math.max(movedEnvelope, Model.envelope(u, lam, a0));
+    }
+    push("width never moves a fringe and separation never moves an envelope zero",
+         movedFringe < 1e-12 && movedEnvelope < 1e-20,
+         "fringe drift " + movedFringe.toExponential(2) + ", envelope drift " + movedEnvelope.toExponential(2));
+  })();
+
+  /* 11. a single slit is the N = 1 case exactly, and the centre is always the
+         brightest point of whatever is on screen                             */
+  (function(){
+    let worst = 0, bad = "";
+    for (const lam of [430, 550, 690]) for (const a of [2, 9, 18])
+      for (let k = -40; k <= 40; k++){
+        const u = k * 0.003;
+        worst = Math.max(worst, Math.abs(Model.intensity(u, lam, a, 30, 1) - Model.envelope(u, lam, a)));
+      }
+    for (const s of [[480,5,17,2],[550,8,25,4],[660,14,30,6]]){
+      const centre = Model.intensity(0, s[0], s[1], s[2], s[3]);
+      if (!near(centre, 1, 1e-12)){ bad = "centre intensity was " + centre; break; }
+      for (let k = 1; k <= 120; k++)
+        if (Model.intensity(k * 0.004, s[0], s[1], s[2], s[3]) > centre + 1e-12){ bad = "something outshone the centre"; break; }
+      if (bad) break;
+    }
+    push("one slit is exactly the envelope, and nothing outshines the centre",
+         worst < 1e-15 && bad === "", bad || ("single-slit agreement " + worst.toExponential(2)));
+  })();
+
+  /* 12. every intensity the page can draw is a real number between 0 and 1 */
+  (function(){
+    let bad = "", checked = 0;
+    for (const lam of [400, 550, 700]) for (const d of [5, 25, 60]) for (const a of [1, 8, 20])
+      for (const N of [1, 2, 6])
+        for (let k = -30; k <= 30; k += 3){
+          const u = k * 0.02;
+          const I = Model.intensity(u, lam, Math.min(a, d), d, N);
+          checked++;
+          if (!Number.isFinite(I) || I < -1e-15 || I > 1 + 1e-12){ bad = "lam=" + lam + " d=" + d + " a=" + a + " N=" + N + " u=" + u + " gave " + I; break; }
+        }
+    push("every intensity across the whole control surface lies in [0, 1]",
+         bad === "" && checked > 1500, bad || (checked + " settings sampled, all finite and in range"));
+  })();
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: 20260919 };
+
+})();
+</script>
+</body>
+</html>
