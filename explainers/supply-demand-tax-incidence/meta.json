@@ -1,0 +1,17 @@
+{
+  "slug": "supply-demand-tax-incidence",
+  "title": "The Law Says Who Pays, the Market Decides Who Bears It",
+  "domain": "economics",
+  "difficulty": 2,
+  "summary": "Drag two elasticities and watch a tax burden slide between buyers and sellers, while the side the law taxes makes no difference at all.",
+  "prerequisites": [],
+  "tags": ["tax-incidence", "elasticity", "deadweight-loss", "supply-and-demand", "public-finance", "surplus"],
+  "interaction_pattern": "drag-parameter",
+  "sources": [
+    { "title": "Tax incidence — Wikipedia", "url": "https://en.wikipedia.org/wiki/Tax_incidence" },
+    { "title": "Deadweight loss — Wikipedia", "url": "https://en.wikipedia.org/wiki/Deadweight_loss" },
+    { "title": "Price elasticity of demand — Wikipedia", "url": "https://en.wikipedia.org/wiki/Price_elasticity_of_demand" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}

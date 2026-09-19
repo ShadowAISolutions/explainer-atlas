@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Law Says Who Pays, the Market Decides Who Bears It — Explainer Atlas</title>
+<meta name="description" content="Drag the two elasticities and watch a tax burden slide between buyers and sellers, while the side the law taxes makes no difference whatsoever.">
+<style>
+:root{
+  --bg:#f7f4ee; --panel:#fffefb; --ink:#14120f; --muted:#5f584c; --line:#d6cfc1;
+  --buy:#b03a1a; --buy-soft:#f6e3db; --sell:#1d4e89; --sell-soft:#dee7f2; --dwl:#6b6257;
+  --radius:0px; --pad:clamp(14px,2.8vw,26px);
+  --font-body:"Inter",system-ui,-apple-system,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.55rem,1.05rem + 2.3vw,2.35rem);
+  --scale-body:clamp(0.95rem,0.92rem + 0.18vw,1.02rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#131210; --panel:#1a1815; --ink:#efece5; --muted:#9a9286; --line:#2c2823;
+    --buy:#e8785a; --buy-soft:#2d1913; --sell:#69a8e8; --sell-soft:#121f2c; --dwl:#8d8578;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.63 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:61rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:4px double var(--ink); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.12; margin:0 0 .3em; letter-spacing:-.025em; font-weight:800; max-width:20em}
+.kicker{margin:0 0 .45em; color:var(--buy); font:700 .68rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.2em}
+.standfirst{margin:0; color:var(--muted); max-width:42em}
+figure.stage{margin:var(--pad) 0 0; background:var(--panel); border:1px solid var(--line); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.8rem; line-height:1.5}
+.controls{margin-top:var(--pad); display:grid; gap:1.1em var(--pad);
+  grid-template-columns:repeat(auto-fit,minmax(13rem,1fr)); align-items:end;
+  border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:var(--pad) 0}
+.control{display:grid; gap:.28em; min-width:0}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.5em}
+.control label{font:700 .71rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.1em}
+.control output{font:700 .92rem/1 var(--font-mono)}
+.control .hint{margin:0; color:var(--muted); font-size:.75rem; line-height:1.45}
+#ed{accent-color:var(--buy)} #es{accent-color:var(--sell)} #tax{accent-color:var(--ink)}
+label[for=ed],#edout{color:var(--buy)} label[for=es],#esout{color:var(--sell)}
+input[type=range]{width:100%; min-height:24px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--ink); border-radius:0; padding:.5em .65em; min-height:40px; width:100%}
+button{cursor:pointer; font:700 .76rem/1 var(--font-mono); text-transform:uppercase; letter-spacing:.08em}
+button:hover{background:var(--ink); color:var(--bg)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--buy); outline-offset:2px}
+.split{margin:var(--pad) 0 0; display:flex; height:2.6rem; border:1px solid var(--ink); overflow:hidden}
+.split div{display:flex; align-items:center; justify-content:center; font:700 .8rem/1 var(--font-mono); color:#fff; white-space:nowrap; overflow:hidden}
+.split .b{background:var(--buy)} .split .s{background:var(--sell)}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:.55em; margin:.8em 0 0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font:400 .67rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.1em}
+.readout dd{margin:.15em 0 0; font:700 1.05rem/1.2 var(--font-mono)}
+.prose{max-width:36em; margin:calc(var(--pad)*1.6) 0 0}
+.prose h2{font:800 .74rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.15em; color:var(--sell); margin:2.1em 0 .5em}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.86em; background:var(--panel); padding:.7em .85em; border:1px solid var(--line); border-left:3px solid var(--buy); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.8); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.8rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">economics</p>
+  <h1>The Law Says Who Pays, the Market Decides Who Bears It</h1>
+  <p class="standfirst">A tax has a name on the paperwork. It has a completely different name on the invoice. Which one ends up carrying it is settled by two numbers, and neither of them is in the statute.</p>
+</header>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="940" height="560" role="img"
+          aria-label="A supply and demand diagram. A tax drives a vertical wedge between the price buyers pay and the price sellers keep. The area above the old price is shaded as the buyers' burden, the area below as the sellers', and the triangle to the right of the new quantity is the deadweight loss."></canvas>
+  <figcaption>The wedge is the tax. Everything above the old equilibrium price is paid by buyers, everything below is absorbed by sellers, and the triangle on the right is the trade that simply stops happening.</figcaption>
+</figure>
+
+<div class="split" id="split" role="img" aria-label="Burden split between buyers and sellers">
+  <div class="b" id="splitb" style="width:50%">buyers 50%</div>
+  <div class="s" id="splits" style="width:50%">sellers 50%</div>
+</div>
+
+<section class="controls" data-role="controls" aria-label="Market parameters">
+  <div class="control">
+    <div class="row"><label for="ed">Demand elasticity</label><output id="edout" for="ed">1.00</output></div>
+    <input type="range" id="ed" min="0" max="4" step="0.01" value="1">
+    <p class="hint">How sharply buyers cut back when the price rises. Zero means they buy the same amount whatever it costs.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="es">Supply elasticity</label><output id="esout" for="es">1.00</output></div>
+    <input type="range" id="es" min="0" max="4" step="0.01" value="1">
+    <p class="hint">How readily sellers produce more when the price rises. Zero means the quantity is fixed.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="tax">Tax per unit</label><output id="taxout" for="tax">2.00</output></div>
+    <input type="range" id="tax" min="0" max="4" step="0.05" value="2">
+    <p class="hint">In the same units as the price, which starts at 10.</p>
+  </div>
+
+  <div class="control">
+    <label for="side">Who the law taxes</label>
+    <select id="side">
+      <option value="seller" selected>the sellers</option>
+      <option value="buyer">the buyers</option>
+    </select>
+    <p class="hint">Change it and watch nothing at all happen to the numbers.</p>
+  </div>
+
+  <div class="control">
+    <button type="button" id="reset">Reset</button>
+  </div>
+</section>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Price buyers pay</dt><dd id="r1">&mdash;</dd></div>
+  <div><dt>Price sellers keep</dt><dd id="r2">&mdash;</dd></div>
+  <div><dt>Quantity traded</dt><dd id="r3">&mdash;</dd></div>
+  <div><dt>Tax revenue</dt><dd id="r4">&mdash;</dd></div>
+  <div><dt>Deadweight loss</dt><dd id="r5">&mdash;</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>Before the tax, the market clears at a price of 10 and a quantity of 100. Introduce a tax of t per unit and two prices appear where there was one: the price a buyer hands over, and the smaller amount a seller is left holding. The gap between them is exactly t, by definition, and the quantity traded falls until supply and demand agree on that gap.</p>
+
+  <h2>The split is arithmetic, not politics</h2>
+
+  <p>Let Ed be the elasticity of demand and Es the elasticity of supply — the percentage change in quantity per percentage change in price, taken as positive numbers. Solving the two curves with a wedge of t between them gives the rise in the buyer's price directly:</p>
+
+  <p class="math">buyers' share&nbsp;=&nbsp;Es / (Es + Ed)<br>sellers' share&nbsp;=&nbsp;Ed / (Es + Ed)</p>
+
+  <p>Read that carefully: <em>your</em> share of the burden is governed by the <em>other</em> side's elasticity. Whoever can more easily walk away pays less. If buyers are unresponsive and sellers are flexible, the tax lands almost entirely on buyers, because sellers simply reduce output until the price rises to cover it. Reverse the elasticities and the burden reverses with them.</p>
+
+  <p>Set both sliders to 0 on demand and watch: the buyers' share goes to 100%, the quantity does not move at all, and the tax raises the maximum possible revenue with no lost trade. That is the theoretical case for taxing things people will buy regardless — and the practical reason those taxes feel so unavoidable.</p>
+
+  <h2>Why the statutory side is irrelevant</h2>
+
+  <p>Change the last control from sellers to buyers. Every number on the page stays exactly where it was. The algebra is the same either way, because the market only ever responds to the two prices, and the law fixes only the distance between them, not where that gap sits.</p>
+
+  <p>This is not a modelling trick; it is the definition of the equilibrium. A payroll tax split half and half between employer and employee is, in economic terms, the same tax as one levied wholly on either side, and it is borne in whatever proportion the elasticities of labour supply and labour demand dictate. The line on the payslip records an accounting convention.</p>
+
+  <h2>What the triangle costs</h2>
+
+  <p>Some trades were worth doing before the tax and are not worth doing with it. Those trades do not move elsewhere; they stop. The value they would have created is the triangle to the right of the new quantity:</p>
+
+  <p class="math">deadweight loss = &frac12; &middot; t &middot; (fall in quantity)</p>
+
+  <p>Because the fall in quantity is itself proportional to t, the loss grows with the square of the tax: double the rate and the waste quadruples, while the revenue does not. That asymmetry is why a broad low tax on many things generally destroys less value than a steep one on a few, and why the loss is smallest exactly where the quantity moves least.</p>
+
+  <h2>What to try</h2>
+
+  <p>Put the tax at 2 and set demand elasticity to 0.2 with supply at 3. The buyers carry about 94% of it. Now swap the two numbers and the sellers carry the same 94%. Nothing about the tax changed — only who could more easily do without the trade.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL: linear curves pinned to an equilibrium by their elasticities -- */
+const P0 = 10, Q0 = 100;
+
+const Model = {
+  P0: P0, Q0: Q0,
+
+  /* quantity demanded / supplied at a price, from the point elasticities */
+  demandQ(Ed, P){ return Q0 * (1 - Ed * (P - P0) / P0); },
+  supplyQ(Es, P){ return Q0 * (1 + Es * (P - P0) / P0); },
+
+  /* the same curves read the other way: the price at which a quantity clears */
+  demandP(Ed, Q){ return Ed === 0 ? Infinity : P0 * (1 + (1 - Q / Q0) / Ed); },
+  supplyP(Es, Q){ return Es === 0 ? -Infinity : P0 * (1 + (Q / Q0 - 1) / Es); },
+
+  /* solve the wedge from first principles for whichever side is taxed.
+     `side` changes only which curve the tax is subtracted from. */
+  solve(Ed, Es, tax, side){
+    const sum = Ed + Es;
+    let buyerP, sellerP;
+    if (sum === 0){
+      /* both sides completely rigid: quantity cannot move, price is indeterminate,
+         so the wedge is split by convention at the old price */
+      buyerP = P0 + tax; sellerP = P0;
+    } else if (side === "buyer"){
+      /* buyers pay P + tax on top of the seller's price */
+      sellerP = P0 - tax * Ed / sum;
+      buyerP = sellerP + tax;
+    } else {
+      buyerP = P0 + tax * Es / sum;
+      sellerP = buyerP - tax;
+    }
+    const quantity = sum === 0 ? Q0 : this.demandQ(Ed, buyerP);
+    return {
+      buyerP: buyerP, sellerP: sellerP, quantity: quantity,
+      buyerBurden: buyerP - P0, sellerBurden: P0 - sellerP,
+      buyerShare: sum === 0 ? 1 : Es / sum,
+      revenue: tax * quantity,
+      deadweight: 0.5 * tax * (Q0 - quantity)
+    };
+  },
+
+  /* the loss measured independently: integrate the gap between what a buyer
+     would pay and what a seller would accept, over the trades that stopped */
+  deadweightByIntegral(Ed, Es, tax, steps){
+    const r = this.solve(Ed, Es, tax, "seller");
+    const n = steps || 20000, lo = r.quantity, hi = Q0;
+    if (hi - lo <= 0) return 0;
+    let s = 0;
+    for (let i = 0; i < n; i++){
+      const q = lo + (hi - lo) * (i + 0.5) / n;
+      const d = Ed === 0 ? r.buyerP : this.demandP(Ed, q);
+      const p = Es === 0 ? r.sellerP : this.supplyP(Es, q);
+      s += d - p;
+    }
+    return s * (hi - lo) / n;
+  },
+
+  /* consumer and producer surplus, by the same integration */
+  surpluses(Ed, Es, tax, steps){
+    const r = this.solve(Ed, Es, tax, "seller");
+    const n = steps || 20000;
+    let cs = 0, ps = 0;
+    for (let i = 0; i < n; i++){
+      const q = r.quantity * (i + 0.5) / n;
+      const d = Ed === 0 ? r.buyerP : this.demandP(Ed, q);
+      const p = Es === 0 ? r.sellerP : this.supplyP(Es, q);
+      cs += d - r.buyerP;
+      ps += r.sellerP - p;
+    }
+    const w = r.quantity / n;
+    return { cs: cs * w, ps: ps * w };
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { Ed: 1, Es: 1, tax: 2, side: "seller" };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+const L = 62, R = 24, T = 26, B = 46;
+const QMAX = 200, PMAX = 22;
+
+function render(){
+  const muted = css("--muted"), line = css("--line"), panel = css("--panel"),
+        buy = css("--buy"), buySoft = css("--buy-soft"), sell = css("--sell"),
+        sellSoft = css("--sell-soft"), dwl = css("--dwl"), ink = css("--ink");
+
+  const r = Model.solve(state.Ed, state.Es, state.tax, state.side);
+
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.font = "12px ui-monospace, monospace";
+
+  const x1 = cv.width - R, y1 = cv.height - B;
+  const qx = (q) => L + (q / QMAX) * (x1 - L);
+  const py = (p) => y1 - (p / PMAX) * (y1 - T);
+
+  /* axes */
+  ctx.strokeStyle = line; ctx.lineWidth = 1; ctx.textAlign = "right"; ctx.fillStyle = muted;
+  for (let p = 0; p <= PMAX; p += 5){
+    ctx.beginPath(); ctx.moveTo(L, py(p)); ctx.lineTo(x1, py(p)); ctx.stroke();
+    ctx.fillText(String(p), L - 8, py(p) + 4);
+  }
+  ctx.textAlign = "center";
+  for (let q = 0; q <= QMAX; q += 50){
+    ctx.beginPath(); ctx.moveTo(qx(q), y1); ctx.lineTo(qx(q), y1 + 5); ctx.stroke();
+    ctx.fillText(String(q), qx(q), y1 + 20);
+  }
+  ctx.textAlign = "left"; ctx.fillText("price", L, T - 9);
+  ctx.textAlign = "right"; ctx.fillText("quantity", x1, y1 + 36);
+
+  /* the shaded burdens, drawn as rectangles over the traded quantity */
+  ctx.fillStyle = buySoft;
+  ctx.fillRect(qx(0), py(r.buyerP), qx(r.quantity) - qx(0), py(P0) - py(r.buyerP));
+  ctx.fillStyle = sellSoft;
+  ctx.fillRect(qx(0), py(P0), qx(r.quantity) - qx(0), py(r.sellerP) - py(P0));
+
+  /* the deadweight triangle */
+  if (Q0 - r.quantity > 0.01){
+    ctx.beginPath();
+    ctx.moveTo(qx(r.quantity), py(r.buyerP));
+    ctx.lineTo(qx(r.quantity), py(r.sellerP));
+    ctx.lineTo(qx(Q0), py(P0));
+    ctx.closePath();
+    ctx.fillStyle = dwl; ctx.globalAlpha = 0.45; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = dwl; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.fillStyle = dwl; ctx.textAlign = "left"; ctx.font = "11px ui-monospace, monospace";
+    ctx.fillText("lost trade", qx(r.quantity) + 6, py(P0) + 26);
+    ctx.font = "12px ui-monospace, monospace";
+  }
+
+  /* the curves */
+  function curve(fn, colour, label, atStart){
+    ctx.strokeStyle = colour; ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    let started = false, fx = 0, fy = 0, lastX = 0, lastY = 0;
+    for (let q = 0; q <= QMAX; q += 2){
+      const p = fn(q);
+      if (!Number.isFinite(p) || p < 0 || p > PMAX) continue;
+      const X = qx(q), Y = py(p);
+      if (!started){ ctx.moveTo(X, Y); started = true; fx = X; fy = Y; } else ctx.lineTo(X, Y);
+      lastX = X; lastY = Y;
+    }
+    if (!started){
+      /* a vertical curve: perfectly rigid on that side */
+      ctx.moveTo(qx(Q0), py(0)); ctx.lineTo(qx(Q0), py(PMAX));
+      fx = lastX = qx(Q0); fy = lastY = py(PMAX) + 20;
+    }
+    ctx.stroke();
+    ctx.fillStyle = colour;
+    ctx.textAlign = atStart ? "left" : "right";
+    const lx = atStart ? Math.max(fx + 6, L + 4) : Math.min(lastX, x1 - 4);
+    const ly = atStart ? Math.max(fy + 14, T + 14) : Math.max(lastY - 6, T + 12);
+    ctx.fillText(label, lx, ly);
+  }
+  curve((q) => Model.demandP(state.Ed, q), buy, "demand", true);
+  curve((q) => Model.supplyP(state.Es, q), sell, "supply", false);
+
+  /* the wedge */
+  ctx.strokeStyle = ink; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(qx(r.quantity), py(r.sellerP));
+  ctx.lineTo(qx(r.quantity), py(r.buyerP));
+  ctx.stroke();
+  for (const p of [r.buyerP, r.sellerP]){
+    ctx.beginPath(); ctx.arc(qx(r.quantity), py(p), 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = ink; ctx.fill();
+  }
+  ctx.strokeStyle = ink; ctx.globalAlpha = 0.3; ctx.setLineDash([3, 4]); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(L, py(P0)); ctx.lineTo(x1, py(P0)); ctx.stroke();
+  ctx.setLineDash([]); ctx.globalAlpha = 1;
+
+  ctx.fillStyle = ink; ctx.textAlign = "left"; ctx.font = "700 12px ui-monospace, monospace";
+  if (state.tax > 0.01)
+    ctx.fillText("tax = " + state.tax.toFixed(2), qx(r.quantity) + 8, (py(r.buyerP) + py(r.sellerP)) / 2 + 4);
+  ctx.font = "12px ui-monospace, monospace";
+
+  /* readouts */
+  const sharePct = r.buyerShare * 100;
+  el("edout").textContent = state.Ed.toFixed(2);
+  el("esout").textContent = state.Es.toFixed(2);
+  el("taxout").textContent = state.tax.toFixed(2);
+  el("splitb").style.width = Math.max(0, Math.min(100, sharePct)) + "%";
+  el("splits").style.width = Math.max(0, Math.min(100, 100 - sharePct)) + "%";
+  el("splitb").textContent = sharePct >= 12 ? "buyers " + sharePct.toFixed(0) + "%" : "";
+  el("splits").textContent = sharePct <= 88 ? "sellers " + (100 - sharePct).toFixed(0) + "%" : "";
+  el("r1").textContent = r.buyerP.toFixed(3);
+  el("r2").textContent = r.sellerP.toFixed(3);
+  el("r3").textContent = r.quantity.toFixed(2);
+  el("r4").textContent = r.revenue.toFixed(2);
+  el("r5").textContent = r.deadweight < 0.005 ? "none" : r.deadweight.toFixed(2);
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  const handler = () => { state[key] = parse(input); render(); };
+  input.addEventListener("input", handler);
+  input.addEventListener("change", handler);
+}
+bind("ed", "Ed", (i) => parseFloat(i.value));
+bind("es", "Es", (i) => parseFloat(i.value));
+bind("tax", "tax", (i) => parseFloat(i.value));
+bind("side", "side", (i) => i.value);
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("ed").value = String(defaults.Ed);
+  el("es").value = String(defaults.Es);
+  el("tax").value = String(defaults.tax);
+  el("side").value = defaults.side;
+  render();
+});
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+
+  push("the buyers' share is Es/(Es+Ed)", (function(){
+    for (let Ed = 0.1; Ed <= 4; Ed += 0.3)
+      for (let Es = 0.1; Es <= 4; Es += 0.3)
+        for (const tax of [0.5, 2, 4]){
+          const r = M.solve(Ed, Es, tax, "seller");
+          if (!near(r.buyerBurden / tax, Es / (Es + Ed), 1e-10)) return false;
+          if (!near(r.sellerBurden / tax, Ed / (Es + Ed), 1e-10)) return false;
+        }
+    return true;
+  })(), "the measured price rise divided by the tax matches the formula to 1e-10 everywhere");
+
+  push("the two burdens add up to exactly the tax", (function(){
+    for (let Ed = 0; Ed <= 4; Ed += 0.25)
+      for (let Es = 0; Es <= 4; Es += 0.25)
+        for (const tax of [0, 0.75, 2.5, 4]){
+          const r = M.solve(Ed, Es, tax, "seller");
+          if (!near(r.buyerBurden + r.sellerBurden, tax, 1e-12)) return false;
+          if (!near(r.buyerP - r.sellerP, tax, 1e-12)) return false;
+        }
+    return true;
+  })(), "the wedge is the tax, and the two halves of it account for all of it");
+
+  push("taxing buyers gives exactly the same outcome as taxing sellers", (function(){
+    for (let Ed = 0; Ed <= 4; Ed += 0.2)
+      for (let Es = 0; Es <= 4; Es += 0.2)
+        for (const tax of [0.35, 1.5, 3, 4]){
+          const a = M.solve(Ed, Es, tax, "seller"), b = M.solve(Ed, Es, tax, "buyer");
+          if (!near(a.buyerP, b.buyerP, 1e-12)) return false;
+          if (!near(a.sellerP, b.sellerP, 1e-12)) return false;
+          if (!near(a.quantity, b.quantity, 1e-12)) return false;
+          if (!near(a.revenue, b.revenue, 1e-12)) return false;
+        }
+    return true;
+  })(), "441 elasticity pairs x 4 tax rates: identical prices, quantity and revenue either way");
+
+  push("deadweight loss is half the tax times the lost quantity", (function(){
+    for (const pr of [[0.4, 2], [1, 1], [2, 0.5], [3, 3], [0.8, 2.6]])
+      for (const tax of [0.5, 1.5, 3]){
+        const r = M.solve(pr[0], pr[1], tax, "seller");
+        const want = 0.5 * tax * (M.Q0 - r.quantity);
+        if (!near(r.deadweight, want, 1e-12)) return false;
+        /* and the same number by integrating the gap between the curves */
+        if (!near(M.deadweightByIntegral(pr[0], pr[1], tax, 40000), want, 1e-6)) return false;
+      }
+    return true;
+  })(), "the triangle formula agrees with a 40000-step integral of the lost gains from trade to 1e-6");
+
+  push("revenue is the tax times the quantity that still trades", (function(){
+    for (let Ed = 0; Ed <= 4; Ed += 0.4)
+      for (let Es = 0; Es <= 4; Es += 0.4)
+        for (const tax of [0, 1, 2.2, 4]){
+          const r = M.solve(Ed, Es, tax, "seller");
+          if (!near(r.revenue, tax * r.quantity, 1e-12)) return false;
+        }
+    return true;
+  })(), "exactly, at every sampled point of the control ranges");
+
+  push("perfectly inelastic demand puts the whole burden on buyers", (function(){
+    for (let Es = 0.1; Es <= 4; Es += 0.1)
+      for (const tax of [0.5, 2, 4]){
+        const r = M.solve(0, Es, tax, "seller");
+        if (!near(r.buyerShare, 1, 1e-12)) return false;
+        if (!near(r.buyerBurden, tax, 1e-12)) return false;
+        if (!near(r.quantity, M.Q0, 1e-10)) return false;
+        if (!near(r.deadweight, 0, 1e-10)) return false;
+        if (!near(r.revenue, tax * M.Q0, 1e-10)) return false;
+      }
+    return true;
+  })(), "share 1, quantity unchanged, no deadweight loss, maximum revenue");
+
+  push("perfectly inelastic supply puts the whole burden on sellers", (function(){
+    for (let Ed = 0.1; Ed <= 4; Ed += 0.1){
+      const r = M.solve(Ed, 0, 2, "seller");
+      if (!near(r.buyerShare, 0, 1e-12)) return false;
+      if (!near(r.sellerBurden, 2, 1e-12)) return false;
+      if (!near(r.buyerP, M.P0, 1e-12)) return false;
+    }
+    return true;
+  })(), "the buyers' price does not move at all when supply cannot");
+
+  push("equal elasticities split the tax down the middle", (function(){
+    for (let E = 0.25; E <= 4; E += 0.25)
+      for (const tax of [0.5, 2, 3.5]){
+        const r = M.solve(E, E, tax, "seller");
+        if (!near(r.buyerShare, 0.5, 1e-12)) return false;
+        if (!near(r.buyerBurden, r.sellerBurden, 1e-12)) return false;
+      }
+    return true;
+  })(), "share exactly 0.5 whatever the common elasticity is");
+
+  push("surplus accounting balances", (function(){
+    for (const pr of [[0.5, 1.5], [1, 1], [2.5, 0.7], [3, 3]]){
+      const tax = 2;
+      const before = M.surpluses(pr[0], pr[1], 0, 40000);
+      const after = M.surpluses(pr[0], pr[1], tax, 40000);
+      const r = M.solve(pr[0], pr[1], tax, "seller");
+      const lost = (before.cs - after.cs) + (before.ps - after.ps);
+      if (!near(lost, r.revenue + r.deadweight, 1e-4)) return false;
+    }
+    return true;
+  })(), "what buyers and sellers lose equals the revenue plus the deadweight triangle, to 1e-4");
+
+  push("the burden moves the right way with each elasticity", (function(){
+    let prev = -1;
+    for (let Es = 0.1; Es <= 4; Es += 0.1){
+      const s = M.solve(1, Es, 2, "seller").buyerShare;
+      if (!(s > prev)) return false;
+      prev = s;
+    }
+    prev = 2;
+    for (let Ed = 0.1; Ed <= 4; Ed += 0.1){
+      const s = M.solve(Ed, 1, 2, "seller").buyerShare;
+      if (!(s < prev)) return false;
+      prev = s;
+    }
+    return true;
+  })(), "buyers' share rises strictly with Es and falls strictly with Ed");
+
+  push("the loss grows with the square of the tax", (function(){
+    for (const pr of [[0.6, 1.4], [1, 1], [2, 2]]){
+      const a = M.solve(pr[0], pr[1], 1, "seller").deadweight;
+      const b = M.solve(pr[0], pr[1], 2, "seller").deadweight;
+      if (!near(b / a, 4, 1e-9)) return false;
+      const c = M.solve(pr[0], pr[1], 3, "seller").deadweight;
+      if (!near(c / a, 9, 1e-9)) return false;
+    }
+    return true;
+  })(), "doubling the rate quadruples the triangle, tripling it multiplies by nine");
+
+  push("quantity, prices and revenue stay sensible over the whole range", (function(){
+    for (let Ed = 0; Ed <= 4; Ed += 0.2)
+      for (let Es = 0; Es <= 4; Es += 0.2)
+        for (let tax = 0; tax <= 4; tax += 0.25)
+          for (const side of ["seller", "buyer"]){
+            const r = M.solve(Ed, Es, tax, side);
+            if (!Number.isFinite(r.quantity) || r.quantity <= 0 || r.quantity > M.Q0 + 1e-9) return false;
+            if (!Number.isFinite(r.buyerP) || !Number.isFinite(r.sellerP)) return false;
+            if (!Number.isFinite(r.revenue) || r.revenue < -1e-12) return false;
+            if (!Number.isFinite(r.deadweight) || r.deadweight < -1e-12) return false;
+          }
+    return true;
+  })(), "441 elasticity pairs x 17 tax rates x 2 statutory sides, all finite with quantity in (0, 100]");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
