@@ -297,7 +297,41 @@ const state = Object.assign({}, defaults);
 
 const el = (id) => document.getElementById(id);
 const cv = el("view"), ctx = cv.getContext("2d");
-const W = cv.width, H = cv.height;
+/* The canvas tracks its container instead of sitting at a fixed 920 x 470.
+   At a phone width the old layout squeezed the whole table into the left half
+   so it could keep a commentary column on the right, and both went unreadable.
+   Below 470 CSS pixels the commentary is stacked underneath the table instead,
+   which is the only arrangement that leaves the grid legible.                */
+const SS = 2;
+const MAXCELL = 58;
+let W, H, NARROW, FS, FSB, FSL, GX, GY, CELL, GW, GH, SX, SY, SW;
+
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth - 28;
+  W = Math.max(280, Math.min(1000, avail || 900));
+  NARROW = W < 470;
+  FS  = NARROW ? 11 : 12;
+  FSB = NARROW ? 12 : 13;
+  FSL = NARROW ? 13 : 15;
+  const m = state.b.length, n = state.a.length;
+  if (NARROW){
+    GX = 46; GY = 52;
+    CELL = Math.max(20, Math.min(MAXCELL, Math.floor((W - GX - 10) / (m + 1))));
+    GW = CELL * (m + 1); GH = CELL * (n + 1);
+    SX = 8; SY = GY + GH + 30; SW = W - 16;
+    H = SY + 168;
+  } else {
+    GX = 96; GY = 70;
+    const panel = 250;
+    CELL = Math.max(20, Math.min(MAXCELL, Math.floor((W - GX - panel) / (m + 1))));
+    GW = CELL * (m + 1); GH = CELL * (n + 1);
+    SX = GX + GW + 40; SY = GY + 4; SW = W - SX - 12;
+    H = Math.max(GY + GH + 40, 470);
+  }
+  cv.width = Math.round(W * SS); cv.height = Math.round(H * SS);
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
 let cache = null;
@@ -320,24 +354,37 @@ function render(){
   const accent = css("--accent"), keep = css("--keep"), keepSoft = css("--keep-soft");
   const live = css("--live"), liveSoft = css("--live-soft"), panel = css("--panel");
 
+  fitCanvas();
+  const cell = CELL, gw = GW, gh = GH;
+
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = panel; ctx.fillRect(0, 0, W, H);
 
-  /* grid geometry: (n+1) x (m+1) cells plus a header row and column */
-  const GX = 96, GY = 70;
-  const cell = Math.min(58, Math.floor((W - GX - 250) / (m + 1)), Math.floor((H - GY - 40) / (n + 1)));
-  const gw = cell * (m + 1), gh = cell * (n + 1);
-
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
 
-  /* letter headers */
-  ctx.font = "600 15px ui-monospace, monospace"; ctx.fillStyle = accent;
-  for (let j = 1; j <= m; j++) ctx.fillText(b.charAt(j - 1), GX + cell * j + cell / 2, GY - 20);
-  for (let i = 1; i <= n; i++) ctx.fillText(a.charAt(i - 1), GX - 22, GY + cell * i + cell / 2);
-  ctx.font = "11px ui-monospace, monospace"; ctx.fillStyle = muted;
-  ctx.fillText(b, GX + gw / 2, GY - 46);
-  ctx.save(); ctx.translate(GX - 52, GY + gh / 2); ctx.rotate(-Math.PI / 2);
-  ctx.fillText(a, 0, 0); ctx.restore();
+  /* letter headers. The two whole words are labels for the axes; at a phone
+     width there is no room for the rotated one beside the letter column, so
+     the side word is written flat above the grid next to the top word.      */
+  ctx.font = "600 " + FSL + "px ui-monospace, monospace"; ctx.fillStyle = accent;
+  for (let j = 1; j <= m; j++) ctx.fillText(b.charAt(j - 1), GX + cell * j + cell / 2, GY - (NARROW ? 14 : 20));
+  for (let i = 1; i <= n; i++) ctx.fillText(a.charAt(i - 1), GX - (NARROW ? 15 : 22), GY + cell * i + cell / 2);
+  ctx.font = FS + "px ui-monospace, monospace"; ctx.fillStyle = muted;
+  if (NARROW){
+    ctx.textAlign = "left";
+    /* a phrasing ladder rather than a breakpoint: whichever wording still
+       fits the container gets drawn, so a longer pair of words shortens the
+       sentence instead of running off the right edge.                      */
+    const cand = [a + "  down the side,  " + b + "  across the top",
+                  a + "  down,  " + b + "  across", a + " / " + b, ""];
+    let capt = "";
+    for (const t of cand){ if (ctx.measureText(t).width <= W - 12){ capt = t; break; } }
+    ctx.fillText(capt, 6, GY - 36);
+    ctx.textAlign = "center";
+  } else {
+    ctx.fillText(b, GX + gw / 2, GY - 46);
+    ctx.save(); ctx.translate(GX - 52, GY + gh / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText(a, 0, 0); ctx.restore();
+  }
 
   /* cells */
   for (let i = 0; i <= n; i++){
@@ -397,17 +444,24 @@ function render(){
     }
   }
 
-  /* side panel: the decision at the current cell */
-  const SX = GX + gw + 40;
+  /* the commentary: beside the grid when there is room, underneath it when
+     there is not. Narrow also lays the alignment out in two columns, so the
+     tallest branch still fits the reserved band rather than running off.    */
+  const LEAD = NARROW ? 16 : 17;
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
-  ctx.font = "600 13px ui-monospace, monospace"; ctx.fillStyle = ink;
-  let sy = GY + 4;
+  ctx.font = "600 " + FSB + "px ui-monospace, monospace"; ctx.fillStyle = ink;
+  let sy = SY;
+  if (NARROW){
+    ctx.strokeStyle = line; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(SX, SY - 20); ctx.lineTo(SX + SW, SY - 20); ctx.stroke();
+    ctx.fillStyle = ink;
+  }
   if (cur){
     const c = Model.candidates(a, b, cur.i, cur.j);
-    ctx.fillText("Deciding cell (" + cur.i + ", " + cur.j + ")", SX, sy); sy += 26;
-    ctx.font = "12px ui-monospace, monospace"; ctx.fillStyle = muted;
-    ctx.fillText("comparing  " + a.charAt(cur.i - 1) + "  against  " + b.charAt(cur.j - 1), SX, sy); sy += 18;
-    ctx.fillText(c.match ? "they match, so no cost" : "they differ, so cost 1", SX, sy); sy += 26;
+    ctx.fillText("Deciding cell (" + cur.i + ", " + cur.j + ")", SX, sy); sy += LEAD + 9;
+    ctx.font = FS + "px ui-monospace, monospace"; ctx.fillStyle = muted;
+    ctx.fillText("comparing  " + a.charAt(cur.i - 1) + "  against  " + b.charAt(cur.j - 1), SX, sy); sy += LEAD + 1;
+    ctx.fillText(c.match ? "they match, so no cost" : "they differ, so cost 1", SX, sy); sy += LEAD + 9;
     const rows = [
       ["delete", c.del, "from above"],
       ["insert", c.ins, "from the left"],
@@ -416,34 +470,37 @@ function render(){
     for (const r of rows){
       const chosen = r[1] === c.value;
       ctx.fillStyle = chosen ? (r[0] === "keep" ? keep : accent) : muted;
-      ctx.font = (chosen ? "600 " : "400 ") + "12px ui-monospace, monospace";
+      ctx.font = (chosen ? "600 " : "400 ") + FS + "px ui-monospace, monospace";
       ctx.fillText((chosen ? "→ " : "   ") + r[0].padEnd(11) + String(r[1]).padStart(2) + "   " + r[2], SX, sy);
-      sy += 19;
+      sy += LEAD + 2;
     }
     sy += 12;
-    ctx.fillStyle = ink; ctx.font = "600 13px ui-monospace, monospace";
+    ctx.fillStyle = ink; ctx.font = "600 " + FSB + "px ui-monospace, monospace";
     ctx.fillText("answer  " + c.value, SX, sy);
   } else if (complete && total > 0){
-    ctx.fillText("Table complete", SX, sy); sy += 26;
-    ctx.font = "12px ui-monospace, monospace"; ctx.fillStyle = muted;
-    ctx.fillText("distance  " + T[n][m], SX, sy); sy += 24;
-    ctx.fillText("alignment:", SX, sy); sy += 20;
+    ctx.fillText("Table complete", SX, sy); sy += LEAD + 9;
+    ctx.font = FS + "px ui-monospace, monospace"; ctx.fillStyle = muted;
+    ctx.fillText("distance  " + T[n][m], SX, sy); sy += LEAD + 7;
+    ctx.fillText("alignment:", SX, sy); sy += LEAD + 3;
     const label = { keep: "keep", substitute: "sub", "delete": "del", insert: "ins" };
-    for (const o of path){
-      const isKeep = o.op === "keep";
-      ctx.fillStyle = isKeep ? keep : accent;
+    const perCol = NARROW ? Math.ceil(path.length / 2) : path.length;
+    const top = sy;
+    for (let k = 0; k < path.length; k++){
+      const o = path[k];
+      ctx.fillStyle = (o.op === "keep") ? keep : accent;
       const left = o.op === "insert" ? "–" : a.charAt(o.i - 1);
       const right = o.op === "delete" ? "–" : b.charAt(o.j - 1);
-      ctx.fillText(left + "  →  " + right + "    " + label[o.op], SX, sy);
-      sy += 17;
-      if (sy > H - 20) break;
+      const col = Math.floor(k / perCol), row = k % perCol;
+      const y = top + row * LEAD;
+      if (y > H - 10) break;
+      ctx.fillText(left + "  →  " + right + "    " + label[o.op], SX + col * Math.min(150, SW / 2), y);
     }
   } else {
-    ctx.fillText("Borders filled", SX, sy); sy += 26;
-    ctx.font = "12px ui-monospace, monospace"; ctx.fillStyle = muted;
-    ctx.fillText("Turning nothing into a prefix of", SX, sy); sy += 17;
-    ctx.fillText("length k costs k insertions, so", SX, sy); sy += 17;
-    ctx.fillText("row 0 and column 0 count upward.", SX, sy); sy += 24;
+    ctx.fillText("Borders filled", SX, sy); sy += LEAD + 9;
+    ctx.font = FS + "px ui-monospace, monospace"; ctx.fillStyle = muted;
+    ctx.fillText("Turning nothing into a prefix of", SX, sy); sy += LEAD;
+    ctx.fillText("length k costs k insertions, so", SX, sy); sy += LEAD;
+    ctx.fillText("row 0 and column 0 count upward.", SX, sy); sy += LEAD + 7;
     ctx.fillText("Step forward to start deciding.", SX, sy);
   }
 
@@ -503,6 +560,16 @@ el("reset").addEventListener("click", function(){
 });
 resizeStepper();
 render();
+
+let rzT = 0;
+addEventListener("resize", function(){
+  clearTimeout(rzT);
+  rzT = setTimeout(render, 90);
+});
+if (matchMedia) {
+  const mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
 
 /* ---- SELFTEST ---------------------------------------------------------- */
 const rngT = mulberry32(SEED);

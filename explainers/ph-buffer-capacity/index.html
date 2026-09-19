@@ -297,12 +297,60 @@ const state = Object.assign({}, defaults);
 
 const el = (id) => document.getElementById(id);
 const cv = el("view"), ctx = cv.getContext("2d");
-const W = cv.width, H = cv.height;
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
-const PL = 66, PR = 232, PT = 26, PB = 56;         /* plot box padding */
-const PW = W - PL - PR, PH = H - PT - PB;
+/* The canvas tracks its container rather than sitting at a fixed 920 by 520.
+   Clamp the container width, give the backing store twice that, scale the
+   context by two, and derive every padding and type size from the width.
+   Below 470 the side column moves under the plot instead of beside it, so
+   the titration curve keeps the full width rather than losing 232 pixels
+   of a 340 pixel canvas to a panel.                                      */
+const SS = 2;
 const VMAX = 0.1;                                   /* 100 mL of base, in litres */
+let W, H, NARROW, FS, FSS, FSB, PL, PR, PT, PB, PW, PH;
+let SIDEX, SIDEY, SIDEW, BARH, CAPH;
+
+function wid(t){ return ctx.measureText(t).width; }
+function pick(list, room){
+  for (let i = 0; i < list.length; i++) if (wid(list[i]) <= room) return list[i];
+  return "";
+}
+
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth - 28;
+  W = Math.max(280, Math.min(1000, avail || 900));
+  NARROW = W < 470;
+  FS = NARROW ? 11 : 12;
+  FSS = NARROW ? 10 : 11;
+  FSB = NARROW ? 12 : 13;
+  PL = NARROW ? 34 : 66;
+  PT = NARROW ? 20 : 26;
+  PB = NARROW ? 44 : 56;
+  BARH = NARROW ? 84 : 150;
+  CAPH = NARROW ? 76 : 92;
+  if (NARROW){
+    PR = 14;
+    PW = W - PL - PR;
+    PH = Math.round(W * 0.72);
+    SIDEW = PW;
+    SIDEX = PL;
+    SIDEY = PT + PH + PB + 20;
+    H = SIDEY + BARH + 46 + CAPH + 26;
+  } else {
+    PR = 232;
+    PW = W - PL - PR;
+    PH = Math.round(W * 0.565) - PT - PB;
+    SIDEW = 150;
+    SIDEX = PL + PW + 34;
+    SIDEY = PT + 34;
+    H = PT + PH + PB;
+  }
+  cv.width = Math.round(W * SS);
+  cv.height = Math.round(H * SS);
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
 const X = (vb) => PL + PW * vb / VMAX;
 const Y = (pH) => PT + PH * (14 - pH) / 14;
 
@@ -315,6 +363,7 @@ function curveFor(pKa, conc){
 }
 
 function render(){
+  if (W === undefined) fitCanvas();
   const s = Model.state(state.pKa, state.conc, state.conc, state.vb);
   const pts = curveFor(state.pKa, state.conc);
   const ink = css("--ink"), muted = css("--muted"), line = css("--line");
@@ -327,9 +376,13 @@ function render(){
   ctx.fillStyle = band; ctx.globalAlpha = 0.5;
   ctx.fillRect(PL, Y(state.pKa + 1), PW, Y(state.pKa - 1) - Y(state.pKa + 1));
   ctx.globalAlpha = 1;
-  ctx.fillStyle = muted; ctx.font = "11px ui-monospace, monospace";
-  ctx.textAlign = "left";
-  ctx.fillText("buffer region, pKa ± 1", PL + 8, Y(state.pKa + 1) + 14);
+  /* The band's own label is NOT written inside the band. The curve climbs
+     through the band from below, and where it crosses depends on the pKa, so
+     no corner of the stripe is safe for every setting -- past equivalence a
+     pKa of 10 leaves the curve 0.17 units BELOW the band's top edge. The
+     label goes in a reserved row instead: the strip under pH 1.1 at the right
+     of the plot, which the model can never reach (the lowest pH anywhere in
+     the parameter space is 1.18, at v = 0, hard against the left axis).     */
 
   /* axes + gridlines */
   ctx.strokeStyle = line; ctx.lineWidth = 1;
@@ -339,13 +392,14 @@ function render(){
     ctx.fillText(String(p), PL - 9, Y(p) + 4);
   }
   ctx.textAlign = "center";
-  for (let v = 0; v <= 100; v += 20){
+  for (let v = 0; v <= 100; v += (NARROW ? 25 : 20)){
     const x = X(v / 1000);
     ctx.beginPath(); ctx.moveTo(x, PT); ctx.lineTo(x, PT + PH); ctx.stroke();
-    ctx.fillText(String(v), x, PT + PH + 20);
+    ctx.fillText(String(v), x, PT + PH + FSS + 8);
   }
-  ctx.fillText("base added, mL", PL + PW / 2, PT + PH + 42);
-  ctx.save(); ctx.translate(20, PT + PH / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText(pick(["base added, mL", "base, mL", "mL"], PW),
+               PL + PW / 2, PT + PH + 2 * FSS + 18);
+  ctx.save(); ctx.translate(FSS + 2, PT + PH / 2); ctx.rotate(-Math.PI / 2);
   ctx.fillText("pH", 0, 0); ctx.restore();
 
   /* neutral line */
@@ -380,26 +434,44 @@ function render(){
   ctx.beginPath(); ctx.moveTo(X(ve), PT); ctx.lineTo(X(ve), PT + PH); ctx.stroke();
   ctx.setLineDash([]); ctx.globalAlpha = 1;
   ctx.fillStyle = muted; ctx.textAlign = "center";
-  ctx.fillText("equivalence", X(ve), PT + 14);
+  ctx.fillText(pick(["equivalence", "eq.", ""], PW * 0.5), X(ve), PT + FSS + 3);
+
+  /* buffer-band legend, in the reserved row described above */
+  const lrow = Y(0.44), lsw = 13;
+  const ltxt = pick(["buffer region, pKa ± 1", "buffer, pKa ± 1", "pKa ± 1", ""],
+                    PW * 0.5 - lsw - 26);
+  if (ltxt){
+    ctx.font = FSS + "px ui-monospace, monospace";
+    const lw = ctx.measureText(ltxt).width + lsw + 6;
+    const lx = PL + PW - 8 - lw;
+    ctx.fillStyle = css("--panel");
+    ctx.fillRect(lx - 5, lrow - FSS - 3, lw + 10, FSS + 9);
+    ctx.fillStyle = band; ctx.globalAlpha = 0.5;
+    ctx.fillRect(lx, lrow - FSS + 1, lsw, FSS - 1); ctx.globalAlpha = 1;
+    ctx.strokeStyle = line; ctx.lineWidth = 1;
+    ctx.strokeRect(lx + 0.5, lrow - FSS + 1.5, lsw - 1, FSS - 2);
+    ctx.fillStyle = muted; ctx.textAlign = "left";
+    ctx.fillText(ltxt, lx + lsw + 6, lrow);
+  }
 
   /* species bars on the right */
-  const BX = PL + PW + 34, BW = 150, BY = PT + 34, BH = 150;
-  ctx.fillStyle = ink; ctx.font = "600 12px " + (css("--font-display") || "sans-serif");
+  const BX = SIDEX, BW = SIDEW, BY = SIDEY, BH = BARH;
+  ctx.fillStyle = ink; ctx.font = "600 " + FSB + "px " + (css("--font-display") || "sans-serif");
   ctx.textAlign = "left";
-  ctx.fillText("What is in the flask", BX, BY - 14);
+  ctx.fillText(pick(["What is in the flask", "In the flask"], BW), BX, BY - 9);
   const frac = s.fraction;
   ctx.fillStyle = acid; ctx.fillRect(BX, BY, BW, BH * (1 - frac));
   ctx.fillStyle = base; ctx.fillRect(BX, BY + BH * (1 - frac), BW, BH * frac);
   ctx.strokeStyle = line; ctx.strokeRect(BX, BY, BW, BH);
-  ctx.font = "11px ui-monospace, monospace";
+  ctx.font = FS + "px ui-monospace, monospace";
   ctx.fillStyle = css("--panel");
   if (1 - frac > 0.14) ctx.fillText("HA  " + (100 * (1 - frac)).toFixed(0) + "%", BX + 10, BY + BH * (1 - frac) / 2 + 4);
   if (frac > 0.14) ctx.fillText("A⁻  " + (100 * frac).toFixed(0) + "%", BX + 10, BY + BH * (1 - frac / 2) + 4);
 
   /* capacity curve, small, beneath the bars */
-  const CY = BY + BH + 46, CH = 92;
-  ctx.fillStyle = ink; ctx.font = "600 12px " + (css("--font-display") || "sans-serif");
-  ctx.fillText("Buffer capacity vs pH", BX, CY - 12);
+  const CY = BY + BH + 40, CH = CAPH;
+  ctx.fillStyle = ink; ctx.font = "600 " + FSB + "px " + (css("--font-display") || "sans-serif");
+  ctx.fillText(pick(["Buffer capacity vs pH", "Capacity vs pH", "Capacity"], BW), BX, CY - 9);
   const peak = Model.peakCapacity(state.conc);
   ctx.strokeStyle = accent; ctx.lineWidth = 2; ctx.beginPath();
   for (let i = 0; i <= 120; i++){
@@ -410,9 +482,9 @@ function render(){
   ctx.stroke();
   ctx.strokeStyle = line; ctx.lineWidth = 1;
   ctx.strokeRect(BX, CY, BW, CH);
-  ctx.fillStyle = muted; ctx.font = "10px ui-monospace, monospace";
-  ctx.fillText("pH 0", BX, CY + CH + 14);
-  ctx.textAlign = "right"; ctx.fillText("14", BX + BW, CY + CH + 14); ctx.textAlign = "left";
+  ctx.fillStyle = muted; ctx.font = FSS + "px ui-monospace, monospace";
+  ctx.fillText("pH 0", BX, CY + CH + FSS + 4);
+  ctx.textAlign = "right"; ctx.fillText("14", BX + BW, CY + CH + FSS + 4); ctx.textAlign = "left";
   const px = BX + BW * state.pKa / 14;
   ctx.strokeStyle = acid; ctx.setLineDash([2, 3]);
   ctx.beginPath(); ctx.moveTo(px, CY); ctx.lineTo(px, CY + CH); ctx.stroke(); ctx.setLineDash([]);
@@ -458,6 +530,17 @@ el("reset").addEventListener("click", function(){
   el("vb").value = "0"; el("pka").value = String(defaults.pKa); el("conc").value = String(defaults.conc);
   render();
 });
+let rt = 0;
+window.addEventListener("resize", function(){
+  clearTimeout(rt);
+  rt = setTimeout(function(){ fitCanvas(); render(); }, 120);
+});
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+  else if (mq.addListener) mq.addListener(render);
+}
+fitCanvas();
 render();
 
 /* ---- SELFTEST ---------------------------------------------------------- */
