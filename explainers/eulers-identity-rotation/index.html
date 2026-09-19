@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nothing Mystical Happens At Pi — Explainer Atlas</title>
+<meta name="description" content="Build a rotation out of many tiny multiplications and watch the polygon close onto the unit circle. Two independent constructions land on the same point.">
+<style>
+:root{
+  --bg:#faf9f7; --panel:#ffffff; --ink:#16161d; --muted:#5b5e6c; --line:#e3e1dc;
+  --accent:#4535a8; --accent-soft:#ecebfa; --alt:#c05621; --third:#1f7a63;
+  --quiet:#b9b7c6;
+  --radius:3px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.55rem,1.1rem + 2vw,2.35rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.06rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f0f15; --panel:#17171f; --ink:#e9e8ef; --muted:#9a99a8; --line:#282833;
+    --accent:#9b8cf0; --accent-soft:#1d1a33; --alt:#e9a06a; --third:#5fc9a8;
+    --quiet:#4a4958;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink); font:var(--scale-body)/1.62 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.13; margin:0 0 .4em; letter-spacing:-.015em}
+.kicker{margin:0 0 .35em; color:var(--accent); font:600 .78rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.11em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.3fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.86rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:var(--radius)}
+.control .hint{color:var(--muted); font-size:.83rem; margin:0}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:var(--radius); padding:.5em .7em; min-height:40px; cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:var(--radius)}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.4rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:var(--radius); padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.74rem; text-transform:uppercase; letter-spacing:.07em}
+.readout dd{margin:.18em 0 0; font:600 1rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.15rem; margin:1.8em 0 .45em; letter-spacing:-.005em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); background:var(--accent-soft); padding:.7em .85em; border-radius:var(--radius); border-left:3px solid var(--accent); overflow-x:auto; font-size:.95em}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Mathematics</p>
+  <h1>Nothing Mystical Happens At Pi</h1>
+  <p class="standfirst">Multiplying by a complex number of length one is a turn, and nothing else. Build the turn out of many tiny multiplications and the famous identity stops being a magic trick.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="980" role="img"
+            aria-label="An Argand diagram. The horizontal axis is the real part, the vertical axis the imaginary part. A unit circle carries an arc of the chosen angle. A terracotta polygon, built from equally sized multiplications, starts at one and walks toward the end of that arc. A green path shows where the Taylor series has reached after the chosen number of terms."></canvas>
+    <figcaption>The plane of complex numbers. The terracotta polygon multiplies by the same small number over and over; the green path adds Taylor terms. Raise either and watch both land on the arc.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row">
+        <label for="theta">Angle to turn through</label>
+        <output id="thetaout" for="theta">180&deg;</output>
+      </div>
+      <input type="range" id="theta" min="0" max="360" step="1" value="180">
+      <p class="hint">180&deg; is half a turn, which is where the identity lives. Arrow keys step one degree; Home and End jump.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="steps">Turns it is cut into</label>
+        <output id="stepsout" for="steps">8</output>
+      </div>
+      <input type="range" id="steps" min="3" max="60" step="1" value="8">
+      <p class="hint">Each step multiplies by the same number, 1 plus a small imaginary part.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="terms">Taylor terms kept</label>
+        <output id="termsout" for="terms">6</output>
+      </div>
+      <input type="range" id="terms" min="1" max="20" step="1" value="6">
+      <p class="hint">The second route to the same point, added one power at a time.</p>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Polygon length</dt><dd id="r1">&mdash;</dd></div>
+      <div><dt>Polygon angle</dt><dd id="r2">&mdash;</dd></div>
+      <div><dt>Taylor length</dt><dd id="r3">&mdash;</dd></div>
+      <div><dt>Taylor error</dt><dd id="r4">&mdash;</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Set the angle to 180 degrees and cut it into three steps. The terracotta
+     path starts at 1, takes three equal turns and lands a long way outside the
+     frame &mdash; nowhere near the ring that marks where half a turn should
+     end. Now push the step count up. The polygon shortens, curls inward, and
+     by about forty steps its last vertex is sitting inside the ring. Nothing
+     was smoothed or fitted to make that happen. The same multiplication was
+     simply done more times, each time by less.</p>
+
+  <h2>A turn is a multiplication</h2>
+  <p>Every complex number has a length and a direction, and multiplying two of
+     them multiplies the lengths and adds the directions. That is the whole
+     content of complex multiplication. A number whose length is exactly one
+     therefore does nothing at all to length and everything to direction:
+     multiplying by it is a pure turn. The circle in the picture is the set of
+     all such numbers, and &ldquo;rotate by an angle&rdquo; and &ldquo;multiply
+     by the point at that angle on the circle&rdquo; are the same
+     instruction.</p>
+
+  <h2>Where e comes in</h2>
+  <p>Cut the turn into n equal pieces. Each piece ought to be a multiplication
+     by something barely off 1, and the natural guess is 1 + i&theta;/n: keep
+     the length, nudge sideways by a fraction of the way round.</p>
+  <p class="math">e^(i&theta;) = the limit of (1 + i&theta;/n)^n as n grows</p>
+  <p>The guess is slightly wrong, and the picture shows exactly how. A sideways
+     nudge from a point on the circle leaves the circle, because the tangent
+     runs outside it. Every vertex of the terracotta polygon therefore sits a
+     little too far out, and the finished polygon is too long by about
+     &theta;&sup2;/2n &mdash; which is why the polygon length readout reaches
+     1.0000 only in the limit. Its angle falls short by about
+     &theta;&sup3;/3n&sup2;, for the same reason in reverse: chords cut corners.
+     One error dies as 1/n and the other as 1/n&sup2;, which is why forty steps
+     already looks like a circle while three does not.</p>
+  <p>That limit is the definition of the exponential, and putting &theta; = &pi;
+     into it makes the turn a half turn, which sends 1 to &minus;1. The famous
+     identity is not a coincidence between three celebrated constants. It is
+     the sentence &ldquo;half a turn is a reflection&rdquo;, written in the
+     notation that turns turning into multiplying.</p>
+
+  <h2>The second route</h2>
+  <p>The green path is the Taylor series, added one power at a time: 1, then
+     i&theta;, then (i&theta;)&sup2;/2, and onward. Each term is a quarter turn
+     from the one before and shorter by a factor of &theta;/k, so the path
+     spirals inward and closes on the same point the polygon is crawling
+     towards. At a half turn the early terms are larger than 1 &mdash; the third alone is
+     nearly 5 &mdash; so with six of them the path swings right out of the frame
+     and comes back, landing near 0.12 + 0.52i, which is still nowhere near
+     &minus;1. Each further term shrinks the gap by roughly &theta;/k, so the
+     error falls off a cliff once k passes &theta;.</p>
+  <p>The self-test pins that down rather than asserting it loosely: across five
+     angles and every cut point from four terms to eighteen, the distance from
+     the truncated sum to the true point is never larger than the size of the
+     very next term dropped, and never smaller than sixty per cent of it. Two
+     constructions that share no machinery &mdash; repeated multiplication and
+     an infinite sum &mdash; land on the same point, and neither one had to be
+     told what a cosine is.</p>
+
+  <h2>What to try</h2>
+  <p>Set the angle to 90 degrees and the terms to 3. The series has only reached
+     &minus;0.23 + 1.57i, well outside the circle, and needs four more terms
+     before it is within a hundredth of i. Then set the angle to 360 degrees and
+     leave the steps at three: the polygon is more than twelve times too long
+     and runs clean off the frame without completing a single turn. Drag the
+     step count from there and watch it fall back through the circle and settle
+     on 1, which is where a whole turn has to end.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG. Never use bare Math.random(). ------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL: pure functions of the parameters. No DOM in here. ----------- */
+const Model = {
+  mul(a, b){ return { re: a.re * b.re - a.im * b.im, im: a.re * b.im + a.im * b.re }; },
+  abs(z){ return Math.hypot(z.re, z.im); },
+  arg(z){ return Math.atan2(z.im, z.re); },
+
+  /* route one: the exact rotation, as the trig functions give it */
+  exact(th){ return { re: Math.cos(th), im: Math.sin(th) }; },
+
+  /* route two: n equal multiplications by (1 + i*th/n).
+     Returns every vertex, so the drawing and the assertions share one path. */
+  polygon(th, n){
+    const stepC = { re: 1, im: th / n };
+    const pts = [{ re: 1, im: 0 }];
+    let z = { re: 1, im: 0 };
+    for (let k = 0; k < n; k++){ z = Model.mul(z, stepC); pts.push(z); }
+    return pts;
+  },
+
+  /* route three: the Taylor series of exp, one power at a time.
+     Terms are generated by the recurrence t_{k+1} = t_k * i*th/(k+1), which
+     never forms a factorial and so never overflows. */
+  taylor(th, k){
+    const pts = [{ re: 0, im: 0 }];
+    let re = 0, im = 0, tr = 1, ti = 0;
+    for (let j = 0; j < k; j++){
+      re += tr; im += ti;
+      pts.push({ re: re, im: im });
+      const nr = -ti * th, ni = tr * th;
+      tr = nr / (j + 1); ti = ni / (j + 1);
+    }
+    return pts;
+  },
+  taylorAt(th, k){ const p = Model.taylor(th, k); return p[p.length - 1]; },
+
+  /* the magnitude of the k-th Taylor term, |th|^k / k! */
+  termSize(th, k){
+    let v = 1;
+    for (let j = 1; j <= k; j++) v = v * Math.abs(th) / j;
+    return v;
+  },
+
+  /* route four: halve the angle m times, series the small angle, then square
+     back up. Squaring is exact multiplication, so this tests the series only
+     where it converges fastest. */
+  bySquaring(th, m, k){
+    let z = Model.taylorAt(th / Math.pow(2, m), k);
+    for (let j = 0; j < m; j++) z = Model.mul(z, z);
+    return z;
+  },
+
+  /* integer powers by repeated multiplication, for de Moivre */
+  pow(z, n){
+    let r = { re: 1, im: 0 };
+    for (let j = 0; j < n; j++) r = Model.mul(r, z);
+    return r;
+  },
+
+  /* angle between two unit numbers, wrapped into (-pi, pi] */
+  wrap(a){
+    const TAU = 2 * Math.PI;
+    let x = a % TAU;
+    if (x <= -Math.PI) x += TAU;
+    if (x > Math.PI) x -= TAU;
+    return x;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { theta: 180, steps: 8, terms: 6 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;                       /* backing store scale */
+const HW = 1.9;                     /* half-width of the frame, in units    */
+const FONT = 'system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+const MINUS = String.fromCharCode(0x2212);
+const DEG = String.fromCharCode(0x00B0);
+
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function wid(t){ return ctx.measureText(t).width; }
+function pick(list, room){
+  for (let i = 0; i < list.length; i++) if (wid(list[i]) <= room) return list[i];
+  return "";
+}
+
+let G = null;
+
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth - 24;
+  const CW = Math.max(280, Math.min(1000, avail || 820));
+  const NARROW = CW < 470;
+  const P = NARROW ? 16 : 26;
+  const FS = NARROW ? 12 : 13;
+  const gutterL = NARROW ? 18 : 24;
+  const gutterB = FS + 12;
+
+  ctx.font = "600 " + FS + "px " + FONT;
+  const L1 = ["the true turn", "true turn"];
+  const L2 = ["equal small turns", "small turns"];
+  const L3 = ["Taylor terms", "Taylor"];
+  const oneRow = 3 * 20 + wid(L1[0]) + wid(L2[0]) + wid(L3[0]) + 40 <= CW - 2 * P;
+  const legRows = oneRow ? 1 : 3;
+  const legendH = 6 + legRows * (FS + 7) + 8;
+
+  const PS = CW - 2 * P - gutterL;
+  const H = legendH + PS + gutterB + 6;
+
+  cv.width = Math.round(CW * SS);
+  cv.height = Math.round(H * SS);
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+
+  G = {
+    CW: CW, H: H, NARROW: NARROW, P: P, FS: FS,
+    legendH: legendH, legRows: legRows, oneRow: oneRow,
+    L1: L1, L2: L2, L3: L3,
+    planeX: P + gutterL, planeY: legendH, PS: PS,
+    cx: P + gutterL + PS / 2, cy: legendH + PS / 2,
+    scale: (PS / 2) / HW
+  };
+}
+
+const X = (u) => G.cx + u * G.scale;
+const Y = (v) => G.cy - v * G.scale;
+
+function path(pts, colour, lw, dot){
+  ctx.strokeStyle = colour; ctx.lineWidth = lw;
+  ctx.lineJoin = "round"; ctx.lineCap = "round";
+  ctx.beginPath();
+  for (let i = 0; i < pts.length; i++){
+    const x = X(pts[i].re), y = Y(pts[i].im);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  if (dot > 0){
+    ctx.fillStyle = colour;
+    for (let i = 0; i < pts.length; i++){
+      ctx.beginPath(); ctx.arc(X(pts[i].re), Y(pts[i].im), dot, 0, 6.2832); ctx.fill();
+    }
+  }
+}
+
+function legendRow(sw, label, x, y, FS){
+  ctx.strokeStyle = sw; ctx.lineWidth = 3.4; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 16, y); ctx.stroke();
+  ctx.fillStyle = css("--muted"); ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.fillText(label, x + 22, y);
+  return x + 22 + wid(label);
+}
+
+function render(){
+  if (!G) fitCanvas();
+  const th = state.theta * Math.PI / 180;
+  const poly = Model.polygon(th, state.steps);
+  const tay = Model.taylor(th, state.terms);
+  const ex = Model.exact(th);
+  const pEnd = poly[poly.length - 1], tEnd = tay[tay.length - 1];
+
+  const panel = css("--panel"), ink = css("--ink"), muted = css("--muted");
+  const line = css("--line"), quiet = css("--quiet");
+  const accent = css("--accent"), alt = css("--alt"), third = css("--third");
+  const FS = G.FS;
+
+  ctx.clearRect(0, 0, G.CW, G.H);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, G.CW, G.H);
+  ctx.font = "600 " + FS + "px " + FONT;
+
+  /* the legend owns its own rows at the top, so nothing can land on it */
+  const l1 = pick(G.L1, G.CW), l2 = pick(G.L2, G.CW), l3 = pick(G.L3, G.CW);
+  if (G.oneRow){
+    const y = 6 + (FS + 7) / 2;
+    let x = G.P;
+    x = legendRow(accent, l1, x, y, FS) + 20;
+    x = legendRow(alt, l2, x, y, FS) + 20;
+    legendRow(third, l3, x, y, FS);
+  } else {
+    const swatches = [accent, alt, third], labels = [l1, l2, l3];
+    for (let i = 0; i < 3; i++)
+      legendRow(swatches[i], labels[i], G.P, 6 + (i + 0.5) * (FS + 7), FS);
+  }
+
+  /* --- the plane, everything inside it clipped to the frame -------------- */
+  ctx.save();
+  ctx.beginPath(); ctx.rect(G.planeX, G.planeY, G.PS, G.PS); ctx.clip();
+
+  ctx.fillStyle = css("--bg"); ctx.fillRect(G.planeX, G.planeY, G.PS, G.PS);
+
+  ctx.strokeStyle = quiet; ctx.lineWidth = 0.6; ctx.globalAlpha = 0.55;
+  for (let u = -1.5; u <= 1.5001; u += 0.5){
+    if (Math.abs(u) < 1e-9) continue;
+    ctx.beginPath(); ctx.moveTo(X(u), G.planeY); ctx.lineTo(X(u), G.planeY + G.PS); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(G.planeX, Y(u)); ctx.lineTo(G.planeX + G.PS, Y(u)); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.strokeStyle = muted; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(G.planeX, Y(0)); ctx.lineTo(G.planeX + G.PS, Y(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(X(0), G.planeY); ctx.lineTo(X(0), G.planeY + G.PS); ctx.stroke();
+
+  /* every number of length one */
+  ctx.strokeStyle = quiet; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.arc(X(0), Y(0), G.scale, 0, 6.2832); ctx.stroke();
+
+  /* the turn itself, swept anticlockwise from 1 */
+  ctx.strokeStyle = accent; ctx.lineWidth = 4; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.arc(X(0), Y(0), G.scale, 0, -th, true); ctx.stroke();
+
+  /* the two constructions */
+  path(tay, third, 1.8, G.NARROW ? 2 : 2.6);
+  path(poly, alt, 2.4, G.NARROW ? 2.2 : 3);
+
+  /* the polygon's own endpoint, filled, then the true point as a ring over
+     it: at high step counts they coincide, and a ring over a disc keeps both
+     readable instead of one hiding the other.                               */
+  ctx.fillStyle = alt;
+  ctx.beginPath(); ctx.arc(X(pEnd.re), Y(pEnd.im), 5, 0, 6.2832); ctx.fill();
+  ctx.strokeStyle = accent; ctx.lineWidth = 2.4;
+  ctx.beginPath(); ctx.arc(X(ex.re), Y(ex.im), 8.5, 0, 6.2832); ctx.stroke();
+
+  ctx.restore();
+
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.strokeRect(G.planeX + 0.5, G.planeY + 0.5, G.PS - 1, G.PS - 1);
+
+  /* ticks live in the gutters, outside the clip, so no path can cover them */
+  ctx.font = FS - 1 + "px " + FONT;
+  ctx.fillStyle = muted; ctx.textBaseline = "top"; ctx.textAlign = "center";
+  ctx.fillText(MINUS + "1", X(-1), G.planeY + G.PS + 6);
+  ctx.fillText("1", X(1), G.planeY + G.PS + 6);
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText("i", G.planeX - 5, Y(1));
+  ctx.fillText(MINUS + "i", G.planeX - 5, Y(-1));
+
+  /* readouts */
+  el("thetaout").textContent = state.theta + DEG;
+  el("stepsout").textContent = String(state.steps);
+  el("termsout").textContent = String(state.terms);
+  el("r1").textContent = Model.abs(pEnd).toFixed(4);
+  const degs = Model.arg(pEnd) * 180 / Math.PI;
+  el("r2").textContent = ((degs < -0.00005 ? MINUS : "") + Math.abs(degs).toFixed(2)) + DEG;
+  el("r3").textContent = Model.abs(tEnd).toFixed(4);
+  const err = Math.hypot(tEnd.re - ex.re, tEnd.im - ex.im);
+  el("r4").textContent = err < 1e-4 ? err.toExponential(1) : err.toFixed(4);
+}
+
+function bind(id, key){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parseInt(input.value, 10); render(); });
+}
+bind("theta", "theta"); bind("steps", "steps"); bind("terms", "terms");
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("theta").value = defaults.theta;
+  el("steps").value = defaults.steps;
+  el("terms").value = defaults.terms;
+  render();
+});
+
+let rt = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(rt);
+  rt = setTimeout(() => { fitCanvas(); render(); }, 120);
+});
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const onScheme = () => render();
+  if (mq.addEventListener) mq.addEventListener("change", onScheme);
+  else if (mq.addListener) mq.addListener(onScheme);
+}
+fitCanvas();
+render();
+
+/* ---- SELFTEST: assert the model against closed forms and known values. -- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const TAU = 2 * Math.PI;
+
+  /* 1 -- a rotation never changes length */
+  let worstAbs = 0;
+  for (let i = 0; i < 100; i++){
+    const th = -TAU + i * (2 * TAU / 99);
+    worstAbs = Math.max(worstAbs, Math.abs(Model.abs(Model.exact(th)) - 1));
+  }
+  push("|e^(i.theta)| = 1 at 100 angles", worstAbs <= 1e-15,
+       "worst deviation from one " + worstAbs.toExponential(2));
+
+  /* 2 -- the identity itself */
+  const idn = Model.abs({ re: Model.exact(Math.PI).re + 1, im: Model.exact(Math.PI).im });
+  push("e^(i.pi) + 1 is zero", idn < 1e-15, "modulus " + idn.toExponential(3));
+
+  /* 3 -- multiplying adds the angles */
+  let worstArg = 0;
+  for (let i = 0; i < 200; i++){
+    const a = -Math.PI + i * (TAU / 199), b = Math.PI - i * (TAU / 199) * 0.7;
+    const p = Model.mul(Model.exact(a), Model.exact(b));
+    worstArg = Math.max(worstArg, Math.abs(Model.wrap(Model.arg(p) - a - b)));
+  }
+  push("arg(z.w) = arg z + arg w, 200 pairs", worstArg <= 1e-14,
+       "worst wrapped angle error " + worstArg.toExponential(2) + " radians");
+
+  /* 4 -- how close a truncated series really gets on [-pi, pi]. The task
+         asked for 1e-12 at twenty terms; the true worst case there is
+         pi^20/20! = 3.6e-9, and 1e-12 needs twenty-five. Both are asserted. */
+  let worstTay = 0, worst25 = 0;
+  for (let i = 0; i <= 120; i++){
+    const th = -Math.PI + i * (TAU / 120);
+    const a = Model.taylorAt(th, 20), b = Model.taylorAt(th, 25), e = Model.exact(th);
+    worstTay = Math.max(worstTay, Math.hypot(a.re - e.re, a.im - e.im));
+    worst25 = Math.max(worst25, Math.hypot(b.re - e.re, b.im - e.im));
+  }
+  push("20 Taylor terms reach pi^20/20!, and 25 terms reach 1e-12",
+       worstTay <= Model.termSize(Math.PI, 20) && worstTay > 1e-12 && worst25 <= 1e-12,
+       "worst distance at 20 terms " + worstTay.toExponential(2) + " against the bound "
+       + Model.termSize(Math.PI, 20).toExponential(2) + "; at 25 terms "
+       + worst25.toExponential(2));
+
+  /* 5 -- de Moivre */
+  let worstDM = 0;
+  for (let n = 1; n <= 12; n++)
+    for (let i = 0; i <= 24; i++){
+      const th = -Math.PI + i * (TAU / 24);
+      const a = Model.pow(Model.exact(th), n), b = Model.exact(n * th);
+      worstDM = Math.max(worstDM, Math.hypot(a.re - b.re, a.im - b.im));
+    }
+  push("de Moivre: (e^(i.theta))^n = e^(i.n.theta), n up to 12", worstDM <= 1e-12,
+       "worst distance " + worstDM.toExponential(2));
+
+  /* 6 -- the drawn polygon equals its closed form, so the picture and the
+         algebra are the same object */
+  let worstPoly = 0;
+  [Math.PI / 3, Math.PI / 2, Math.PI, TAU].forEach(function(th){
+    [3, 7, 20, 60].forEach(function(n){
+      const z = Model.polygon(th, n)[n];
+      const M = Math.pow(1 + th * th / (n * n), n / 2), A = n * Math.atan(th / n);
+      worstPoly = Math.max(worstPoly,
+        Math.hypot(z.re - M * Math.cos(A), z.im - M * Math.sin(A)));
+    });
+  });
+  push("looped polygon equals (1 + i.theta/n)^n in closed form", worstPoly <= 1e-12,
+       "worst distance over 16 cases " + worstPoly.toExponential(2));
+
+  /* 7 -- its angle falls short of theta by exactly theta^3/(3n^2) */
+  let okArg = true, worstRatio = 0;
+  [Math.PI / 2, Math.PI, TAU].forEach(function(th){
+    for (let n = 20; n <= 4000; n += 37){
+      const miss = th - n * Math.atan(th / n), bound = th * th * th / (3 * n * n);
+      if (!(miss > 0 && miss <= bound)) okArg = false;
+      worstRatio = Math.max(worstRatio, miss / bound);
+    }
+  });
+  push("polygon angle falls short of theta by at most theta^3/(3n^2)", okArg,
+       "largest share of the bound used " + worstRatio.toFixed(6));
+
+  /* 8 -- and its length exceeds one by theta^2/(2n) */
+  let okMod = true;
+  [Math.PI / 2, Math.PI, TAU].forEach(function(th){
+    for (let n = 20; n <= 4000; n += 37){
+      const M = Math.pow(1 + th * th / (n * n), n / 2);
+      if (!(Math.abs(n * (M - 1) - th * th / 2) <= th * th * th * th / n)) okMod = false;
+    }
+  });
+  push("polygon length exceeds one by theta^2/(2n)", okMod,
+       "n(M-1) approaches theta^2/2 within theta^4/n at every n from 20 to 4000");
+
+  /* 9 -- even terms are cos, odd terms are sin */
+  let worstSplit = 0;
+  for (let i = 0; i <= 40; i++){
+    const th = -Math.PI + i * (TAU / 40);
+    const z = Model.taylorAt(th, 24);
+    let c = 0, s = 0, tc = 1, ts = th;
+    for (let k = 0; k < 12; k++){
+      c += tc; s += ts;
+      tc = -tc * th * th / ((2 * k + 1) * (2 * k + 2));
+      ts = -ts * th * th / ((2 * k + 2) * (2 * k + 3));
+    }
+    worstSplit = Math.max(worstSplit, Math.hypot(z.re - c, z.im - s));
+  }
+  push("even powers build cos, odd powers build sin", worstSplit <= 1e-14,
+       "worst distance " + worstSplit.toExponential(2));
+
+  /* 10 -- halve the angle eight times, series it, square back up */
+  let worstSq = 0;
+  for (let i = 0; i <= 60; i++){
+    const th = -TAU + i * (2 * TAU / 60);
+    const z = Model.bySquaring(th, 8, 12), e = Model.exact(th);
+    worstSq = Math.max(worstSq, Math.hypot(z.re - e.re, z.im - e.im));
+  }
+  push("small-angle series squared back up 8 times matches", worstSq <= 1e-12,
+       "worst distance over [-2pi, 2pi] " + worstSq.toExponential(2));
+
+  /* 11 -- the k-th term really is theta^k / k! */
+  let worstTerm = 0;
+  [0.5, 1, Math.PI, TAU].forEach(function(th){
+    let f = 1;
+    for (let k = 0; k <= 15; k++){
+      if (k > 0) f *= k;
+      const want = Math.pow(th, k) / f;
+      worstTerm = Math.max(worstTerm, Math.abs(Model.termSize(th, k) / want - 1));
+    }
+  });
+  push("term k has size theta^k / k!", worstTerm <= 1e-14,
+       "worst relative difference " + worstTerm.toExponential(2));
+
+  /* 12 -- the truncation error is the size of the first term dropped */
+  let okTrunc = true, minShare = 1;
+  [0.5, 1, Math.PI / 2, Math.PI, TAU].forEach(function(th){
+    for (let N = 4; N <= 18; N++){
+      const lead = Model.termSize(th, N);
+      if (lead < 1e-13) continue;
+      const z = Model.taylorAt(th, N), e = Model.exact(th);
+      const err = Math.hypot(z.re - e.re, z.im - e.im);
+      if (!(err <= lead * (1 + 1e-9))) okTrunc = false;
+      minShare = Math.min(minShare, err / lead);
+    }
+  });
+  push("truncation error never exceeds the first dropped term", okTrunc && minShare > 0.6,
+       "smallest share of that term actually used " + minShare.toFixed(4));
+
+  /* 13 -- turning and turning back, and a whole turn */
+  const back = Model.mul(Model.exact(1.234), Model.exact(-1.234));
+  const full = Model.exact(TAU);
+  push("turn and turn back is 1, and a whole turn is 1",
+       Math.hypot(back.re - 1, back.im) <= 1e-15 && Math.hypot(full.re - 1, full.im) <= 1e-15,
+       "distances " + Math.hypot(back.re - 1, back.im).toExponential(2) + " and "
+       + Math.hypot(full.re - 1, full.im).toExponential(2));
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
