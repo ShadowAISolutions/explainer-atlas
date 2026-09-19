@@ -1,0 +1,17 @@
+{
+  "slug": "checksum-vs-crc-collisions",
+  "title": "The Error Your Checksum Can't See",
+  "domain": "information-theory",
+  "difficulty": 3,
+  "summary": "Corrupt a message four different ways and watch a checksum and a CRC of the same width disagree about whether anything happened.",
+  "prerequisites": [],
+  "tags": ["error-detection", "crc", "checksum", "polynomials", "coding-theory"],
+  "interaction_pattern": "race-two-methods",
+  "sources": [
+    { "title": "Peterson and Brown, Cyclic Codes for Error Detection (Proc. IRE, 1961)", "url": "https://doi.org/10.1109/JRPROC.1961.287814" },
+    { "title": "RFC 1071, Computing the Internet Checksum", "url": "https://www.rfc-editor.org/rfc/rfc1071" },
+    { "title": "Koopman and Chakravarty, CRC Polynomial Selection for Embedded Networks (DSN, 2004)", "url": "https://doi.org/10.1109/DSN.2004.1311885" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}
