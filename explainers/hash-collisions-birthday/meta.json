@@ -1,0 +1,17 @@
+{
+  "slug": "hash-collisions-birthday",
+  "title": "Your Hash Is Half As Wide As You Think",
+  "domain": "computer-science",
+  "difficulty": 2,
+  "summary": "A 32-bit hash has four billion slots and reaches even odds of a collision at seventy-seven thousand items. The square root halves your bits, and every table size has the same curve.",
+  "prerequisites": [],
+  "tags": ["hashing", "probability", "birthday-paradox", "collisions", "asymptotics"],
+  "interaction_pattern": "drag-parameter",
+  "sources": [
+    { "title": "Birthday problem", "url": "https://en.wikipedia.org/wiki/Birthday_problem" },
+    { "title": "Birthday attack", "url": "https://en.wikipedia.org/wiki/Birthday_attack" },
+    { "title": "Knuth, The Art of Computer Programming, Vol. 3, section 6.4", "url": "https://www-cs-faculty.stanford.edu/~knuth/taocp.html" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}
