@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Every Group One Way, Everyone the Other — Explainer Atlas</title>
+<meta name="description" content="Build a table where one group is admitted at a higher rate in every programme and a lower rate overall, then watch the same arithmetic explain Berkeley 1973 and a kidney stone trial.">
+<style>
+:root{
+  --bg:#f6f4ee; --panel:#fffdf8; --ink:#191714; --muted:#6b6459; --line:#ddd7c9;
+  --rule:#b8ae99;
+  --armA:#3d5c88; --armB:#a5392a; --accent:#a5392a; --accent-soft:#f3e6e2;
+  --flag:#8a6d1f; --flag-soft:#f5eeda;
+  --radius:4px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.5rem,1.05rem + 2vw,2.25rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.06rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#14130f; --panel:#1c1a15; --ink:#ece7dc; --muted:#a09889; --line:#312d24;
+    --rule:#544d3f;
+    --armA:#81a9e0; --armB:#e08a6e; --accent:#e08a6e; --accent-soft:#2b1f1a;
+    --flag:#d8bb6a; --flag-soft:#2b2617;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:66rem; margin:0 auto; padding:var(--pad)}
+header.page{text-align:center; border-top:3px double var(--rule); border-bottom:1px solid var(--rule); padding:calc(var(--pad)*0.7) 0}
+h1{font:600 var(--scale-h1)/1.12 var(--font-display); margin:0 0 .35em; letter-spacing:-.005em}
+.kicker{margin:0 0 .5em; color:var(--muted); font:600 .72rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.14em}
+.standfirst{margin:0 auto; color:var(--muted); max-width:40em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+.stagecol{display:grid; gap:.9em; align-content:start; min-width:0}
+@media (min-width:58rem){
+  .layout{grid-template-columns:minmax(15rem,0.8fr) minmax(0,1.75fr); align-items:start}
+  .stagecol{grid-column:2; grid-row:1}
+  .controls{grid-column:1; grid-row:1}
+}
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.7em; color:var(--muted); font-size:.85rem; border-top:1px solid var(--line); padding-top:.6em}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:.95em}
+.control{display:grid; gap:.28em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600; font-size:.93rem}
+.control output{font:600 .86rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.26em .48em; border-radius:3px}
+.control .hint{color:var(--muted); font-size:.8rem; margin:0}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:3px; padding:.5em .6em; min-height:40px; width:100%}
+button{cursor:pointer; font-weight:600; font-family:var(--font-display)}
+button:hover,select:hover{border-color:var(--accent)}
+:where(a,button,input,select):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.verdict{border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); padding:.6em .2em; margin:0; font-size:.88rem}
+.verdict b{font-family:var(--font-mono); font-size:.92em}
+.ledger{width:100%; border-collapse:collapse; font:0.8rem/1.4 var(--font-mono)}
+.ledger caption{text-align:left; font:600 .72rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.1em; color:var(--muted); padding-bottom:.4em}
+.ledger th{text-align:right; font-weight:600; color:var(--muted); border-bottom:1px solid var(--rule); padding:.25em .3em}
+.ledger th:first-child{text-align:left}
+.ledger td{text-align:right; padding:.25em .3em; border-bottom:1px solid var(--line)}
+.ledger td:first-child{text-align:left; font-family:var(--font-body)}
+.ledger tr:last-child td{border-bottom:1px solid var(--rule); font-weight:700}
+.a{color:var(--armA)} .b{color:var(--armB)}
+.prose{max-width:40em; margin:calc(var(--pad)*1.2) auto 0}
+.prose h2{font:600 1.1rem/1.3 var(--font-display); margin:1.9em 0 .45em; text-transform:uppercase; letter-spacing:.06em; font-size:.92rem; color:var(--accent)}
+.prose p{margin:0 0 1em}
+.prose .math{font:0.86rem/1.7 var(--font-mono); white-space:pre; background:var(--panel); padding:.8em .9em; border-radius:var(--radius); border-left:3px solid var(--rule); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:3px double var(--rule); color:var(--muted); font-size:.85rem; text-align:center}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Statistics &middot; Confounding</p>
+  <h1>Every Group One Way, Everyone the Other</h1>
+  <p class="standfirst">Group B is admitted at a higher rate in the selective programme, and at a higher rate in the open one. Pooled, Group B is admitted at a lower rate than Group A. Nothing has been faked. Both statements are arithmetic, and both are true.</p>
+</header>
+
+<div class="layout">
+  <div class="stagecol">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1240" height="1000" role="img"
+            aria-label="A ledger chart: admission rates for two groups within each programme, a ribbon showing how each group's applicants are distributed across the programmes, and the pooled rates below, with a flag when the pooled direction disagrees with every programme."></canvas>
+    <figcaption>Top: the rate each group is admitted at, within each row. Middle: where each group's applicants actually went. Bottom: the two rates you get by pooling. The reversal lives entirely in the middle band.</figcaption>
+  </figure>
+
+  <p class="verdict" id="verdict" aria-live="polite">&mdash;</p>
+
+  <table class="ledger" id="ledger">
+    <caption id="lcap">the table</caption>
+    <thead><tr><th id="h0">Row</th><th class="a" id="ha">A</th><th class="b" id="hb">B</th><th>gap</th></tr></thead>
+    <tbody id="lbody"></tbody>
+  </table>
+  </div>
+
+  <section class="controls" data-role="controls" aria-label="Table construction and reference cases">
+    <div class="control">
+      <label for="preset">Case</label>
+      <select id="preset">
+        <option value="built" selected>Built by you</option>
+        <option value="berkeley">Berkeley admissions, 1973</option>
+        <option value="stones">Kidney stone trial, 1986</option>
+        <option value="matched">Matched mix (reversal impossible)</option>
+      </select>
+      <p class="hint">Moving any slider below returns to your own table.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="rsel">Selective programme rate</label><output id="rselout" for="rsel">20%</output></div>
+      <input type="range" id="rsel" min="2" max="90" step="1" value="20">
+      <p class="hint">How often Group A gets in there.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="ropen">Open programme rate</label><output id="ropenout" for="ropen">75%</output></div>
+      <input type="range" id="ropen" min="2" max="95" step="1" value="75">
+      <p class="hint">Same, for the easier programme.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="delta">Group B advantage</label><output id="deltaout" for="delta">+6.0 pp</output></div>
+      <input type="range" id="delta" min="0" max="20" step="0.5" value="6">
+      <p class="hint">Added to Group B's rate in <em>both</em> rows, so B is ahead everywhere whenever this is positive.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="mixa">Group A applying to selective</label><output id="mixaout" for="mixa">25%</output></div>
+      <input type="range" id="mixa" min="0" max="100" step="1" value="25">
+      <p class="hint">The rest apply to the open programme.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="mixb">Group B applying to selective</label><output id="mixbout" for="mixb">80%</output></div>
+      <input type="range" id="mixb" min="0" max="100" step="1" value="80">
+      <p class="hint">Drag this down to meet the slider above and the reversal dies.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="n">Applicants per group</label><output id="nout" for="n">1000</output></div>
+      <input type="range" id="n" min="200" max="2000" step="100" value="1000">
+      <p class="hint">Rates do not care. Counts are conserved: every applicant lands in exactly one row.</p>
+    </div>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Two programmes admit applicants. The selective one takes one in five; the
+  open one takes three in four. Group B is a little stronger, so in each
+  programme it is admitted a few points more often than Group A. Read the top
+  band: two rows, and in both of them the red bar is longer than the blue one.
+  Then read the bottom band, where the same applicants have simply been added
+  together, and the blue bar is longer by twenty-four points.</p>
+
+  <p>No row was altered between the two bands. The only thing that changed is
+  which rows the applicants were counted in.</p>
+
+  <h2>A rate is an average with weights</h2>
+
+  <p>A pooled rate is not the average of the row rates. It is the average
+  weighted by where that group's applicants actually are:</p>
+
+  <p class="math">pooled = SUM  w(row) * rate(row)
+                over rows
+
+          that group's applicants
+          in the row
+w(row) =  ----------------------
+          that group's applicants
+          in total</p>
+
+  <p>Each group brings its own weights. Group A puts a quarter of itself into
+  the selective programme; Group B puts four fifths. So even with identical
+  row rates the two pooled numbers would differ, because they are averages of
+  the same list taken with different weights. Group B is mostly being averaged
+  over the hard row.</p>
+
+  <h2>Splitting the gap in two</h2>
+
+  <p>The pooled gap comes apart exactly, with no remainder, into the part that
+  is about treatment and the part that is about placement:</p>
+
+  <p class="math">within = SUM  wB * [ rateB - rateA ]
+mix    = SUM [ wB - wA ] * rateA
+
+gap    = within + mix
+         (exactly, no remainder)
+
+all sums run over the rows, and
+w is that group's share of its
+own applicants in the row</p>
+
+  <p>The first sum asks what happens if you keep Group B where it is and give
+  it Group A's rates: it is the advantage, averaged over B's own rows. The
+  second asks what happens if you keep Group A's rates and only move people
+  around. At the default settings the first sum is worth about six points in
+  B's favour and the second about thirty against, and thirty beats six. That
+  is the whole paradox, and the page shows both numbers under the chart.</p>
+
+  <p>It also tells you when a reversal is impossible. If both groups spread
+  themselves across the rows in the same proportions, the two weightings are
+  identical, the mix term is zero, and the pooled gap is a weighted average of
+  the row gaps. An average cannot be outside the range of what it averages, so
+  if every row favours B, the pooled figure must too. Drag the two mix sliders
+  together and watch the flag disappear. Choose the matched-mix case and no
+  setting of the other sliders can bring it back.</p>
+
+  <h2>Berkeley, and a warning about the story</h2>
+
+  <p>The famous case is the 1973 graduate admissions at Berkeley. Men were
+  admitted at 44.5 per cent and women at 30.4, a fourteen-point gap that looks
+  damning until you split by department, where women were admitted at the
+  higher rate in four of the six largest. Splitting the gap gives a within
+  term of one tenth of a point and a mix term of fourteen. Essentially the
+  entire difference is placement: women applied in far greater numbers to the
+  departments that admitted almost nobody.</p>
+
+  <p>Note what the decomposition does not say. It does not say the mix is
+  innocent. Something put those applicants in those departments, and the
+  arithmetic is silent on what. Simpson's paradox is not a debunking device;
+  it is a warning that a pooled number answers a different question from the
+  one you probably asked.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set both mix sliders to the same value and sweep the rate sliders through
+  their whole range: the flag never lights. Then separate the mixes by ten
+  points and find the smallest Group B advantage that still reverses. Switch
+  to the kidney stone trial, where open surgery beat the keyhole procedure on
+  small stones and on large stones and lost overall, because the surgeons sent
+  the hard cases to surgery. Then ask which number you would want if the stone
+  were yours.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+
+/* ---------------- MODEL ---------------- */
+/* A case is { labels:{row,a,b}, rows:[{name, apA, adA, apB, adB}] } where
+   ap = applied, ad = admitted, A and B are the two arms being compared.   */
+
+const Model = {
+  rate(admitted, applied){ return applied > 0 ? admitted / applied : 0; },
+
+  pooled(rows){
+    let apA = 0, adA = 0, apB = 0, adB = 0;
+    for (const r of rows){ apA += r.apA; adA += r.adA; apB += r.apB; adB += r.adB; }
+    const rA = Model.rate(adA, apA), rB = Model.rate(adB, apB);
+    return { apA: apA, adA: adA, apB: apB, adB: adB, rA: rA, rB: rB, gap: rB - rA };
+  },
+
+  perRow(rows){
+    return rows.map(function(r){
+      const rA = Model.rate(r.adA, r.apA), rB = Model.rate(r.adB, r.apB);
+      return { name: r.name, rA: rA, rB: rB, diff: rB - rA,
+               apA: r.apA, adA: r.adA, apB: r.apB, adB: r.adB };
+    });
+  },
+
+  /* weight of each row inside one arm — the numbers the pooled rate averages with */
+  weights(rows, arm){
+    const key = arm === "A" ? "apA" : "apB";
+    let tot = 0;
+    for (const r of rows) tot += r[key];
+    return rows.map(function(r){ return tot > 0 ? r[key] / tot : 0; });
+  },
+
+  /* exact split of the pooled gap into a within-row part and a placement part */
+  decompose(rows){
+    const p = Model.pooled(rows);
+    let within = 0, mix = 0;
+    for (const r of rows){
+      const wA = p.apA > 0 ? r.apA / p.apA : 0;
+      const wB = p.apB > 0 ? r.apB / p.apB : 0;
+      const rA = Model.rate(r.adA, r.apA), rB = Model.rate(r.adB, r.apB);
+      within += wB * (rB - rA);
+      mix    += (wB - wA) * rA;
+    }
+    return { within: within, mix: mix, total: within + mix, gap: p.gap };
+  },
+
+  /* a reversal: every row agrees on a direction and the pooled figure disagrees */
+  reversal(rows){
+    const pr = Model.perRow(rows), p = Model.pooled(rows);
+    if (!pr.length) return 0;
+    const EPS = 1e-12;
+    if (pr.every(function(r){ return r.diff >  EPS; }) && p.gap < -EPS) return -1;
+    if (pr.every(function(r){ return r.diff < -EPS; }) && p.gap >  EPS) return  1;
+    return 0;
+  },
+
+  build(rSel, rOpen, delta, mixA, mixB, n){
+    const mk = function(name, base, shareA, shareB){
+      const apA = Math.round(n * shareA), apB = Math.round(n * shareB);
+      const pA = Math.max(0, Math.min(1, base));
+      const pB = Math.max(0, Math.min(1, base + delta));
+      return { name: name, apA: apA, adA: Math.round(apA * pA),
+                           apB: apB, adB: Math.round(apB * pB) };
+    };
+    return [ mk("Selective", rSel, mixA, mixB),
+             mk("Open",      rOpen, 1 - mixA, 1 - mixB) ];
+  }
+};
+
+/* Published reference tables. Berkeley: Bickel, Hammel & O'Connell, Science 187
+   (1975), the six largest departments. Stones: Charig et al., BMJ 292 (1986). */
+const CASES = {
+  berkeley: {
+    labels: { row: "Department", a: "Men", b: "Women", unit: "admitted" },
+    caption: "berkeley 1973, six largest departments",
+    rows: [
+      { name: "A", apA: 825, adA: 512, apB: 108, adB:  89 },
+      { name: "B", apA: 560, adA: 353, apB:  25, adB:  17 },
+      { name: "C", apA: 325, adA: 120, apB: 593, adB: 202 },
+      { name: "D", apA: 417, adA: 138, apB: 375, adB: 131 },
+      { name: "E", apA: 191, adA:  53, apB: 393, adB:  94 },
+      { name: "F", apA: 373, adA:  22, apB: 341, adB:  24 }
+    ]
+  },
+  stones: {
+    labels: { row: "Stone size", a: "Open surgery", b: "Keyhole", unit: "cured" },
+    caption: "kidney stone trial, 1986",
+    rows: [
+      { name: "Small", apA:  87, adA:  81, apB: 270, adB: 234 },
+      { name: "Large", apA: 263, adA: 192, apB:  80, adB:  55 }
+    ]
+  }
+};
+
+/* ---------------- STATE ---------------- */
+const defaults = { preset: "built", rsel: 20, ropen: 75, delta: 6, mixa: 25, mixb: 80, n: 1000 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function currentCase(){
+  if (state.preset === "berkeley") return CASES.berkeley;
+  if (state.preset === "stones")   return CASES.stones;
+  const mixA = state.mixa / 100;
+  const mixB = state.preset === "matched" ? mixA : state.mixb / 100;
+  return {
+    labels: { row: "Programme", a: "Group A", b: "Group B", unit: "admitted" },
+    caption: state.preset === "matched" ? "matched mix — both groups spread alike" : "the table you built",
+    rows: Model.build(state.rsel / 100, state.ropen / 100, state.delta / 100, mixA, mixB, state.n)
+  };
+}
+
+/* ---------------- CANVAS LAYOUT ---------------- */
+/* Every vertical position is derived once, here, so nothing can collide and
+   the backing store is exactly as tall as the drawing needs.               */
+const SS = 2;
+let W = 620, H = 462, NARROW = false, G = null;
+
+function fitCanvas(nRows){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(200, cv.parentNode.clientWidth - 24) : 620);
+  NARROW = avail < 470;
+  W = Math.max(280, Math.min(900, Math.round(avail)));
+
+  const g = {};
+  /* Below 470px the row names do not fit in a left gutter without eating the
+     plot, so every label moves onto its own line above the bars it names.   */
+  g.above  = NARROW;
+  g.lead   = NARROW ? 17 : 0;
+  g.padL   = NARROW ?  6 : 92;
+  g.padR   = NARROW ? 46 : 66;
+  g.plotW  = W - g.padL - g.padR;
+  g.barH   = NARROW ? 14 : 18;
+  g.ribH   = NARROW ? 20 : 26;
+  g.pbH    = NARROW ? 20 : 26;
+  g.rowH   = NARROW ? (g.lead + 2 * g.barH + 18) : 64;
+  g.titleY = 20;
+  g.tickY  = g.titleY + 20;
+  g.rowsTop = g.tickY + 10;
+  g.rowsBot = g.rowsTop + nRows * g.rowH;
+  g.mixTitleY = g.rowsBot + 26;
+  g.ribTop    = g.mixTitleY + 10;
+  g.ribStep   = g.lead + g.ribH + 14;
+  g.ribBot    = g.ribTop + 2 * g.ribStep - 14;
+  g.ruleY     = g.ribBot + 22;
+  g.poolTitleY = g.ruleY + 20;
+  g.pbTop      = g.poolTitleY + 10 + g.lead;
+  g.pbBot      = g.pbTop + 2 * g.pbH + 6;
+  g.verdictY   = g.pbBot + 28;
+  g.decY       = g.verdictY + 34;
+  H = g.decY + 14;
+  G = g;
+
+  if (cv.width !== W * SS || cv.height !== H * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+const pct1 = (x) => (x * 100).toFixed(1);
+const pp = (x) => (x >= 0 ? "+" : "−") + Math.abs(x * 100).toFixed(1);
+
+function bar(x, y, w, h, fill){ ctx.fillStyle = fill; ctx.fillRect(x, y, Math.max(0, w), h); }
+
+function render(){
+  const kase = currentCase();
+  const rows = kase.rows, L = kase.labels;
+  const pr = Model.perRow(rows), P = Model.pooled(rows);
+  const dec = Model.decompose(rows);
+  const flag = Model.reversal(rows);
+  fitCanvas(rows.length);
+  const g = G, xOf = (v) => g.padL + v * g.plotW;
+
+  const INK = css("--ink"), MUT = css("--muted"), LINE = css("--line"),
+        RULE = css("--rule"), CA = css("--armA"), CB = css("--armB"),
+        PANEL = css("--panel"), FLAG = css("--flag"), FSOFT = css("--flag-soft"),
+        MONO = css("--font-mono"), DISP = css("--font-display");
+  const fs = (n) => (NARROW ? n - 1 : n);
+
+  ctx.fillStyle = PANEL; ctx.fillRect(0, 0, W, H);
+
+  /* ---- headings and the percentage axis ---- */
+  ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+  ctx.fillStyle = INK; ctx.font = "600 " + fs(14) + "px " + DISP;
+  ctx.fillText("rate within each " + L.row.toLowerCase(), 4, g.titleY);
+
+  ctx.font = "600 " + fs(11) + "px " + MONO; ctx.textAlign = "center";
+  for (let t = 0; t <= 4; t++){
+    const v = t / 4, x = xOf(v);
+    ctx.strokeStyle = LINE; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, g.tickY + 6); ctx.lineTo(x, g.pbBot); ctx.stroke();
+    ctx.fillStyle = MUT; ctx.fillText((v * 100).toFixed(0) + "%", x, g.tickY);
+  }
+
+  /* ---- one paired bar per row ---- */
+  ctx.textBaseline = "middle";
+  for (let i = 0; i < pr.length; i++){
+    const r = pr[i], top = g.rowsTop + i * g.rowH, bt = top + 2 + g.lead;
+    ctx.textAlign = "left"; ctx.fillStyle = INK;
+    ctx.font = "600 " + fs(12.5) + "px " + MONO;
+    ctx.fillText(r.name, 4, g.above ? top + 8 : bt + g.barH + 2);
+
+    bar(g.padL, bt, r.rA * g.plotW, g.barH, CA);
+    bar(g.padL, bt + 4 + g.barH, r.rB * g.plotW, g.barH, CB);
+
+    ctx.textAlign = "right"; ctx.font = "600 " + fs(11.5) + "px " + MONO;
+    ctx.fillStyle = CA; ctx.fillText(pct1(r.rA), W - 4, bt + g.barH / 2);
+    ctx.fillStyle = CB; ctx.fillText(pct1(r.rB), W - 4, bt + 4 + g.barH * 1.5);
+
+    ctx.strokeStyle = LINE; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(4, top + g.rowH - 8); ctx.lineTo(W - 4, top + g.rowH - 8); ctx.stroke();
+  }
+
+  /* ---- where each arm's applicants actually are ---- */
+  ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+  ctx.fillStyle = INK; ctx.font = "600 " + fs(14) + "px " + DISP;
+  ctx.fillText("where each group's applicants went", 4, g.mixTitleY);
+  ctx.textBaseline = "middle";
+
+  const mixes = [[Model.weights(rows, "A"), CA, L.a], [Model.weights(rows, "B"), CB, L.b]];
+  for (let k = 0; k < mixes.length; k++){
+    const ws = mixes[k][0], col = mixes[k][1], name = mixes[k][2];
+    const top = g.ribTop + k * g.ribStep + g.lead;
+    ctx.font = "600 " + fs(11) + "px " + MONO; ctx.fillStyle = col;
+    if (g.above){ ctx.textAlign = "left"; ctx.fillText(name, 4, top - 8); }
+    else { ctx.textAlign = "right"; ctx.fillText(name, g.padL - 8, top + g.ribH / 2); }
+    let x = g.padL;
+    for (let i = 0; i < ws.length; i++){
+      const w = ws[i] * g.plotW;
+      ctx.globalAlpha = 0.34 + 0.6 * (1 - i / Math.max(1, ws.length - 1));
+      bar(x, top, w, g.ribH, col);
+      ctx.globalAlpha = 1;
+      if (w > 30){
+        ctx.fillStyle = PANEL; ctx.font = "700 " + fs(10.5) + "px " + MONO;
+        ctx.textAlign = "center";
+        ctx.fillText(pr[i].name, x + w / 2, top + g.ribH / 2);
+      }
+      ctx.strokeStyle = PANEL; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + g.ribH); ctx.stroke();
+      x += w;
+    }
+  }
+
+  /* ---- the pooled band ---- */
+  ctx.strokeStyle = RULE; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(4, g.ruleY); ctx.lineTo(W - 4, g.ruleY); ctx.stroke();
+
+  ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+  ctx.fillStyle = INK; ctx.font = "600 " + fs(14) + "px " + DISP;
+  ctx.fillText("pooled, every " + L.row.toLowerCase() + " together", 4, g.poolTitleY);
+  ctx.textBaseline = "middle";
+
+  ctx.textAlign = "left"; ctx.fillStyle = INK; ctx.font = "600 " + fs(12.5) + "px " + MONO;
+  ctx.fillText("all rows", 4, g.above ? g.pbTop - 8 : g.pbTop + g.pbH + 3);
+  bar(g.padL, g.pbTop, P.rA * g.plotW, g.pbH, CA);
+  bar(g.padL, g.pbTop + 6 + g.pbH, P.rB * g.plotW, g.pbH, CB);
+  ctx.textAlign = "right"; ctx.font = "700 " + fs(12) + "px " + MONO;
+  ctx.fillStyle = CA; ctx.fillText(pct1(P.rA), W - 4, g.pbTop + g.pbH / 2);
+  ctx.fillStyle = CB; ctx.fillText(pct1(P.rB), W - 4, g.pbTop + 6 + g.pbH * 1.5);
+
+  /* ---- the verdict, and the exact split underneath it ---- */
+  ctx.textAlign = "center";
+  if (flag !== 0){
+    ctx.fillStyle = FSOFT; ctx.fillRect(4, g.verdictY - 13, W - 8, 26);
+    ctx.strokeStyle = FLAG; ctx.lineWidth = 1;
+    ctx.strokeRect(4.5, g.verdictY - 12.5, W - 9, 25);
+    ctx.fillStyle = FLAG; ctx.font = "700 " + fs(12) + "px " + MONO;
+    ctx.fillText(NARROW ? "REVERSED"
+                        : "REVERSED — every row disagrees with the pooled figure",
+                 W / 2, g.verdictY);
+  } else {
+    ctx.fillStyle = MUT; ctx.font = "600 " + fs(12) + "px " + MONO;
+    ctx.fillText("no reversal at these settings", W / 2, g.verdictY);
+  }
+
+  ctx.fillStyle = MUT; ctx.font = "600 " + fs(11.5) + "px " + MONO;
+  ctx.fillText(NARROW
+      ? pp(dec.within) + " within  " + pp(dec.mix) + " mix  = " + pp(dec.gap) + " pp"
+      : "within " + pp(dec.within) + " pp   +   mix " + pp(dec.mix) +
+        " pp   =   gap " + pp(dec.gap) + " pp", W / 2, g.decY);
+
+  paint(kase, pr, P, dec, flag);
+}
+
+/* ---------------- DOM READOUTS ---------------- */
+function paint(kase, pr, P, dec, flag){
+  const L = kase.labels;
+  el("rselout").textContent  = state.rsel + "%";
+  el("ropenout").textContent = state.ropen + "%";
+  el("deltaout").textContent = "+" + state.delta.toFixed(1) + " pp";
+  el("mixaout").textContent  = state.mixa + "%";
+  el("mixbout").textContent  = (state.preset === "matched" ? state.mixa : state.mixb) + "%";
+  el("nout").textContent     = String(state.n);
+
+  const ahead = pr.filter(function(r){ return r.diff > 0; }).length;
+  el("verdict").innerHTML = flag !== 0
+    ? "<b>" + L.b + "</b> leads in all " + pr.length + " rows and trails by <b>" +
+      Math.abs(dec.gap * 100).toFixed(1) + " pp</b> pooled."
+    : "<b>" + L.b + "</b> leads in " + ahead + " of " + pr.length + " rows; pooled gap <b>" +
+      pp(dec.gap) + " pp</b> (within " + pp(dec.within) + ", mix " + pp(dec.mix) + ").";
+
+  el("lcap").textContent = kase.caption;
+  el("h0").textContent = L.row;
+  el("ha").textContent = L.a;
+  el("hb").textContent = L.b;
+  const body = pr.map(function(r){
+    return "<tr><td>" + r.name + "</td>" +
+      '<td class="a">' + r.adA + "/" + r.apA + "</td>" +
+      '<td class="b">' + r.adB + "/" + r.apB + "</td>" +
+      "<td>" + pp(r.diff) + "</td></tr>";
+  }).join("");
+  el("lbody").innerHTML = body +
+    "<tr><td>pooled</td>" +
+    '<td class="a">' + P.adA + "/" + P.apA + "</td>" +
+    '<td class="b">' + P.adB + "/" + P.apB + "</td>" +
+    "<td>" + pp(P.gap) + "</td></tr>";
+}
+
+/* ---------------- WIRING ---------------- */
+function bindRange(id, key){
+  el(id).addEventListener("input", function(e){
+    state[key] = parseFloat(e.target.value);
+    if (state.preset === "berkeley" || state.preset === "stones"){
+      state.preset = "built"; el("preset").value = "built";
+    }
+    render();
+  });
+}
+bindRange("rsel", "rsel");
+bindRange("ropen", "ropen");
+bindRange("delta", "delta");
+bindRange("mixa", "mixa");
+bindRange("mixb", "mixb");
+bindRange("n", "n");
+el("preset").addEventListener("change", function(e){ state.preset = e.target.value; render(); });
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults);
+  el("preset").value = defaults.preset;
+  el("rsel").value = defaults.rsel; el("ropen").value = defaults.ropen;
+  el("delta").value = defaults.delta; el("mixa").value = defaults.mixa;
+  el("mixb").value = defaults.mixb; el("n").value = defaults.n;
+  render();
+});
+
+let __rt = 0;
+window.addEventListener("resize", function(){ clearTimeout(__rt); __rt = setTimeout(render, 90); });
+render();
+
+/* ---------------- SELFTEST ---------------- */
+const near = (a, b, tol) => Number.isFinite(a) && Math.abs(a - b) <= tol;
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const B = CASES.berkeley.rows, S = CASES.stones.rows;
+
+  /* 1. the published Berkeley pooled figures */
+  push("Berkeley 1973 pooled rates match the published figures", (function(){
+    const p = Model.pooled(B);
+    return p.apA === 2691 && p.adA === 1198 && p.apB === 1835 && p.adB === 557 &&
+           near(p.rA, 0.4452, 5e-5) && near(p.rB, 0.3035, 5e-5);
+  })(), "men 1198/2691 = 44.52%, women 557/1835 = 30.35%, a gap of 14.16 points");
+
+  /* 2. the reversal at Berkeley is PARTIAL — four of six, not six of six */
+  push("women led in four of Berkeley's six departments, not all six", (function(){
+    const pr = Model.perRow(B);
+    const ahead = pr.filter(function(r){ return r.diff > 0; }).map(function(r){ return r.name; });
+    return ahead.length === 4 && ahead.join("") === "ABDF" && Model.reversal(B) === 0;
+  })(), "A, B, D and F favoured women; C and E did not, so this is not a full reversal");
+
+  /* 3. the 1986 kidney stone trial IS a full reversal, against real counts */
+  push("kidney stone trial reverses on both stone sizes", (function(){
+    const pr = Model.perRow(S), p = Model.pooled(S);
+    return near(pr[0].rA, 81/87, 1e-12) && near(pr[0].rB, 234/270, 1e-12) &&
+           near(pr[1].rA, 192/263, 1e-12) && near(pr[1].rB, 55/80, 1e-12) &&
+           p.apA === 350 && p.apB === 350 &&
+           near(p.rA, 0.78, 1e-12) && near(p.rB, 289/350, 1e-12) &&
+           Model.reversal(S) === 1;
+  })(), "surgery 93.1% and 73.0% beats keyhole 86.7% and 68.8%, then loses 78.0% to 82.6%");
+
+  /* 4. pooled rate IS the weighted average — the identity the page is built on */
+  push("pooled rate equals the applicant-weighted average of the row rates", (function(){
+    const rnd = mulberry32(SEED);
+    let worst = 0;
+    for (let i = 0; i < 300; i++){
+      const rows = Model.build(0.02 + 0.93*rnd(), 0.02 + 0.93*rnd(), -0.3 + 0.6*rnd(),
+                               rnd(), rnd(), 50 + Math.floor(2000*rnd()));
+      const p = Model.pooled(rows);
+      const wA = Model.weights(rows, "A"), wB = Model.weights(rows, "B");
+      let sA = 0, sB = 0;
+      for (let k = 0; k < rows.length; k++){
+        sA += wA[k] * Model.rate(rows[k].adA, rows[k].apA);
+        sB += wB[k] * Model.rate(rows[k].adB, rows[k].apB);
+      }
+      worst = Math.max(worst, Math.abs(sA - p.rA), Math.abs(sB - p.rB));
+    }
+    return worst <= 1e-12;
+  })(), "300 seeded tables, worst disagreement at most 1e-12");
+
+  /* 5. the decomposition is exact, not approximate */
+  push("within plus mix reproduces the pooled gap exactly", (function(){
+    const rnd = mulberry32(SEED + 7);
+    let worst = 0;
+    for (let i = 0; i < 300; i++){
+      const rows = Model.build(0.02 + 0.93*rnd(), 0.02 + 0.93*rnd(), -0.3 + 0.6*rnd(),
+                               rnd(), rnd(), 50 + Math.floor(2000*rnd()));
+      const d = Model.decompose(rows);
+      worst = Math.max(worst, Math.abs(d.total - d.gap));
+    }
+    return worst <= 1e-12;
+  })(), "300 seeded tables, worst residual at most 1e-12");
+
+  /* 6. Berkeley's gap is almost entirely placement — the second derivation */
+  push("Berkeley's fourteen-point gap is mix, not admission rates", (function(){
+    const d = Model.decompose(B);
+    return near(d.within,  0.00109, 5e-5) &&
+           near(d.mix,    -0.14273, 5e-5) &&
+           near(d.gap,    -0.14165, 5e-5) &&
+           Math.abs(d.mix) > 100 * Math.abs(d.within);
+  })(), "within +0.11 pp, mix -14.27 pp; the mix term is over 100 times the other");
+
+  /* 7. matched mixes make a reversal arithmetically impossible */
+  push("no reversal in 20000 seeded tables with matched mixes", (function(){
+    const rnd = mulberry32(SEED + 11);
+    for (let i = 0; i < 20000; i++){
+      const m = 0.02 + 0.96*rnd();
+      const rows = Model.build(0.02 + 0.93*rnd(), 0.02 + 0.93*rnd(), -0.3 + 0.6*rnd(),
+                               m, m, 50 + Math.floor(3000*rnd()));
+      if (Model.reversal(rows) !== 0) return false;
+    }
+    return true;
+  })(), "both groups spread alike, so the pooled gap is an average of the row gaps");
+
+  /* 8. and the containment that explains why */
+  push("with matched mixes the pooled gap lies between the row gaps", (function(){
+    const rnd = mulberry32(SEED + 13);
+    let worst = 0;
+    for (let i = 0; i < 4000; i++){
+      const m = 0.02 + 0.96*rnd();
+      const rows = Model.build(0.02 + 0.93*rnd(), 0.02 + 0.93*rnd(), -0.3 + 0.6*rnd(),
+                               m, m, 50 + Math.floor(3000*rnd()));
+      const pr = Model.perRow(rows), g = Model.pooled(rows).gap;
+      const lo = Math.min.apply(null, pr.map(function(r){ return r.diff; }));
+      const hi = Math.max.apply(null, pr.map(function(r){ return r.diff; }));
+      worst = Math.max(worst, lo - g, g - hi);
+    }
+    return worst <= 1e-12;
+  })(), "4000 seeded tables, worst excursion outside the row-gap range at most 1e-12");
+
+  /* 9. free mixes do permit it, so assertion 7 is not vacuous */
+  push("unmatched mixes produce reversals in about one table in six", (function(){
+    const rnd = mulberry32(SEED + 17);
+    let hits = 0;
+    for (let i = 0; i < 20000; i++){
+      const rows = Model.build(0.02 + 0.93*rnd(), 0.02 + 0.93*rnd(), -0.3 + 0.6*rnd(),
+                               0.02 + 0.96*rnd(), 0.02 + 0.96*rnd(), 50 + Math.floor(3000*rnd()));
+      if (Model.reversal(rows) !== 0) hits++;
+    }
+    return hits === 3199;
+  })(), "same generator, mixes drawn independently: 3199 reversals rather than none");
+
+  /* 10. exhaustive proof over a finite family of integer tables */
+  push("no reversal among 614656 enumerated tables with matched mixes", (function(){
+    const S2 = [2, 3, 4, 6, 8];
+    let seen = 0, reversals = 0, matchedReversals = 0;
+    for (const a1 of S2) for (const a2 of S2) for (const b1 of S2) for (const b2 of S2){
+      const matched = Math.abs(a1/(a1+a2) - b1/(b1+b2)) < 1e-12;
+      for (let x1 = 0; x1 <= a1; x1++) for (let y1 = 0; y1 <= b1; y1++){
+        const d1 = y1/b1 - x1/a1;
+        for (let x2 = 0; x2 <= a2; x2++) for (let y2 = 0; y2 <= b2; y2++){
+          seen++;
+          const d2 = y2/b2 - x2/a2;
+          if (!((d1 > 1e-12 && d2 > 1e-12) || (d1 < -1e-12 && d2 < -1e-12))) continue;
+          const g = (y1+y2)/(b1+b2) - (x1+x2)/(a1+a2);
+          if ((d1 > 0 && g < -1e-12) || (d1 < 0 && g > 1e-12)){
+            reversals++; if (matched) matchedReversals++;
+          }
+        }
+      }
+    }
+    return seen === 614656 && reversals === 1864 && matchedReversals === 0;
+  })(), "1864 reversals found, none of them with matched mixes");
+
+  /* 11. counts are conserved at every slider position */
+  push("every applicant lands in exactly one row, at every setting", (function(){
+    for (let mixa = 0; mixa <= 100; mixa += 5) for (const n of [200, 700, 1300, 2000]){
+      const rows = Model.build(0.2, 0.75, 0.06, mixa/100, 0.8, n);
+      const p = Model.pooled(rows);
+      if (p.apA !== n || p.apB !== n) return false;
+      for (const r of rows) if (r.adA > r.apA || r.adB > r.apB || r.adA < 0 || r.adB < 0) return false;
+    }
+    return true;
+  })(), "applied totals stay at n for both groups and admitted never exceeds applied");
+
+  /* 12. pushing group B into the hard row can only hurt its pooled rate */
+  push("pooled gap falls monotonically as Group B moves into the selective row", (function(){
+    let prev = Infinity;
+    for (let k = 0; k <= 100; k++){
+      const g = Model.pooled(Model.build(0.2, 0.75, 0.06, 0.25, k/100, 1000)).gap;
+      if (!Number.isFinite(g) || g > prev + 1e-12) return false;
+      prev = g;
+    }
+    const at0 = Model.pooled(Model.build(0.2, 0.75, 0.06, 0.25, 0, 1000)).gap;
+    const at1 = Model.pooled(Model.build(0.2, 0.75, 0.06, 0.25, 1, 1000)).gap;
+    const at80 = Model.pooled(Model.build(0.2, 0.75, 0.06, 0.25, 0.8, 1000)).gap;
+    return near(at0, 0.197, 1e-9) && near(at1, -0.353, 1e-9) && near(at80, -0.243, 1e-9);
+  })(), "101 steps, never rising; +19.7 pp at zero, -24.3 pp at the default 80%, -35.3 pp at 100%");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, cases: CASES, seed: SEED };
+
+})();
+</script>
+</body>
+</html>
