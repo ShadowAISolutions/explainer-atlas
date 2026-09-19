@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Error Tells You Where It Is — Explainer Atlas</title>
+<meta name="description" content="Three parity checks over seven bits. Flip any one of them and the checks that fail spell out, in binary, the number of the bit you flipped.">
+<style>
+:root{
+  --bg:#f3f4f8; --panel:#ffffff; --ink:#15161d; --muted:#5d6272; --line:#dfe1ea;
+  --accent:#4a46b8; --accent-soft:#e9e8f7; --ok:#2f7d4f; --bad:#bb2d3b;
+  --cA:#7b4bd8; --cB:#0f8a9c; --cC:#c8781a;
+  --radius:11px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.5rem,1.05rem + 2.1vw,2.25rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.05rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f1116; --panel:#171a21; --ink:#e7e9ef; --muted:#98a0b2; --line:#272b36;
+    --accent:#9d9bf0; --accent-soft:#1c1d33; --ok:#63c08e; --bad:#f07a86;
+    --cA:#a988f0; --cB:#43bccd; --cC:#e5a457;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.13; margin:0 0 .35em; letter-spacing:-.018em}
+.kicker{margin:0 0 .4em; color:var(--accent); font:700 .74rem/1.3 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.14em}
+.standfirst{margin:0; color:var(--muted); max-width:45em}
+
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:58rem){ .layout{grid-template-columns:minmax(0,1.5fr) minmax(17rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y; cursor:pointer}
+figcaption{margin-top:.55em; color:var(--muted); font-size:.85rem}
+
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control label{font-weight:650}
+.control output{font:700 .88rem/1 var(--font-mono); color:var(--accent);
+  background:var(--accent-soft); padding:.26em .5em; border-radius:5px}
+.control .hint{margin:0; color:var(--muted); font-size:.82rem; line-height:1.45}
+.bitrow{display:flex; flex-wrap:wrap; gap:.4em .55em}
+.bitrow label{display:inline-flex; align-items:center; gap:.3em; font:650 .82rem/1 var(--font-mono);
+  border:1px solid var(--line); border-radius:7px; padding:.36em .45em; cursor:pointer}
+.bitrow input{width:1em; height:1em; margin:0; accent-color:var(--accent)}
+.bitrow label.err{border-color:var(--bad)}
+.bitrow label.inert{opacity:.45}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line);
+  border-radius:8px; padding:.5em .7em; min-height:40px}
+button{cursor:pointer; font-weight:650; width:100%}
+button:hover{border-color:var(--accent)}
+.check{display:flex; align-items:flex-start; gap:.55em}
+.check input{margin-top:.25em; width:1.05em; height:1.05em; accent-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8rem,1fr)); gap:.5em; margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .6em}
+.readout dt{margin:0; color:var(--muted); font-size:.7rem; text-transform:uppercase; letter-spacing:.08em}
+.readout dd{margin:.18em 0 0; font:700 1rem/1.2 var(--font-mono)}
+
+.prose{max-width:39em; margin-top:calc(var(--pad)*1.4)}
+.prose h2{font-size:1.02rem; margin:2em 0 .5em; padding-top:.5em; border-top:2px solid var(--accent);
+  display:inline-block; letter-spacing:-.005em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.88rem; background:var(--accent-soft);
+  padding:.75em .9em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto; white-space:pre}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line);
+  color:var(--muted); font-size:.85rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Information theory · coding</p>
+  <h1>The Error Tells You Where It Is</h1>
+  <p class="standfirst">Four bits of message, three bits of parity, and the three checks are arranged so
+  that the ones which fail spell out, in binary, the number of the bit that broke. Flip a bit and watch
+  the circles answer.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1800" height="1500" role="img"
+      aria-label="Three overlapping circles, one per parity check. Each of the seven bit positions sits in its own region, and the circles whose parity has failed are outlined in red; the region where exactly those circles overlap is the broken bit. Below, the sent, received and decoded words are shown as rows of cells with the syndrome."></canvas>
+    <figcaption>Click any bit in the diagram or the rows below to flip it in transit. A circle turns red
+    when the number of ones inside it is odd. The red circles meet on exactly one region, and that is
+    what the decoder repairs.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Codeword controls">
+    <div class="control">
+      <div class="row"><label id="msglabel">Message bits</label></div>
+      <div class="bitrow" role="group" aria-labelledby="msglabel">
+        <label for="d0"><input type="checkbox" id="d0">m1</label>
+        <label for="d1"><input type="checkbox" id="d1" checked>m2</label>
+        <label for="d2"><input type="checkbox" id="d2">m3</label>
+        <label for="d3"><input type="checkbox" id="d3" checked>m4</label>
+      </div>
+      <p class="hint">The four bits you actually want to send. They land in positions 3, 5, 6 and 7.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label id="errlabel">Flip in transit</label><output id="errout" for="errlabel">bit 6</output></div>
+      <div class="bitrow" role="group" aria-labelledby="errlabel">
+        <label for="e1"><input type="checkbox" id="e1">1</label>
+        <label for="e2"><input type="checkbox" id="e2">2</label>
+        <label for="e3"><input type="checkbox" id="e3">3</label>
+        <label for="e4"><input type="checkbox" id="e4">4</label>
+        <label for="e5"><input type="checkbox" id="e5">5</label>
+        <label for="e6"><input type="checkbox" id="e6" checked>6</label>
+        <label for="e7"><input type="checkbox" id="e7">7</label>
+        <label for="e8"><input type="checkbox" id="e8">8</label>
+      </div>
+      <p class="hint">Corrupt the word on its way. One flip is repaired; two are not. Bit 8 exists only
+      when the extra check is switched on.</p>
+    </div>
+
+    <div class="control">
+      <div class="check">
+        <input type="checkbox" id="extended">
+        <label for="extended">Add an eighth bit checking all seven</label>
+      </div>
+      <p class="hint">Raises the minimum distance from 3 to 4, which is what lets a double error be told
+      apart from a single one instead of being miscorrected.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="perr">Channel error rate</label><output id="perrout" for="perr">1.0%</output></div>
+      <input type="range" id="perr" min="0" max="0.5" step="0.005" value="0.01">
+      <p class="hint">Chance each bit flips independently. The readouts compare four bits sent raw
+      against the same four inside a codeword.</p>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Syndrome</dt><dd id="rSyn">—</dd></div>
+      <div><dt>Verdict</dt><dd id="rVerdict">—</dd></div>
+      <div><dt>Message recovered</dt><dd id="rOk">—</dd></div>
+      <div><dt>Rate</dt><dd id="rRate">—</dd></div>
+      <div><dt>Raw fails</dt><dd id="rRaw">—</dd></div>
+      <div><dt>Coded fails</dt><dd id="rCoded">—</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Bit 6 is broken. Two of the three circles have gone red, and they overlap on exactly one region,
+  which holds bit 6. Nothing told the decoder where to look. It ran three parity checks, wrote down
+  which ones failed as a three-digit binary number, and that number was the answer.</p>
+
+  <h2>Why the checks land on the position</h2>
+
+  <p>Number the seven slots 1 to 7 and write each number in binary. Check A covers every position whose
+  binary form has the ones digit set, which is 1, 3, 5 and 7. Check B covers the twos digit: 2, 3, 6, 7.
+  Check C covers the fours digit: 4, 5, 6, 7. Every position is in a different combination of checks,
+  because every number from 1 to 7 has a different binary form. That is the whole trick.</p>
+
+  <p class="math">failed checks      C B A
+bit 6 broken        1 1 0   =  6
+bit 3 broken        0 1 1   =  3
+nothing broken      0 0 0   =  no error</p>
+
+  <p>Positions 1, 2 and 4 belong to one check each, so each is used as that check's parity bit, set to
+  whatever makes its circle even. The other four positions carry the message. Flip a message bit and
+  several circles go red; flip a parity bit and exactly one does. Either way the red ones name the
+  position, so the code repairs its own repair machinery as readily as the message.</p>
+
+  <h2>Sixteen spheres that fill the space exactly</h2>
+
+  <p>There are 2⁷ = 128 possible seven-bit words and only 16 of them are valid. Around each valid word
+  sit the seven words one flip away, giving 16 × 8 = 128. The spheres do not overlap and they leave
+  nothing out; every one of the 128 words is either a codeword or one flip from exactly one codeword.
+  A code that fills the space with no slack is called perfect, and there are very few of them.</p>
+
+  <p>The exactness has a cost. With nothing left over there is no room to say &ldquo;this word is
+  suspicious&rdquo;. Tick two flips and watch: the syndrome is never zero, so the decoder is sure it
+  has found a single error, and it confidently flips a third bit. Three bits then differ from what you
+  sent, every time. Adding the eighth bit buys the slack back &mdash; with the overall count also
+  checked, a double error keeps the overall parity even while the syndrome stays nonzero, and that
+  contradiction is the decoder saying it cannot fix this one.</p>
+
+  <h2>What it buys</h2>
+
+  <p>Seven bits carry four, a rate of 4/7. At a one percent error rate, four raw bits arrive intact
+  about 96.1% of the time; the same four inside a codeword arrive intact 99.8% of the time, a twentyfold
+  cut in failures for three extra bits. Simply sending everything three times and voting does slightly
+  better still, but it costs twelve bits instead of seven. Push the slider to 0.5 and the two lines meet
+  exactly at 15/16, which is the same 1 + 7 = 8 turning up again: when every bit is a coin toss the code
+  has nothing to work with.</p>
+
+  <h2>What to try</h2>
+
+  <p>Flip bit 1, the parity bit for check A. Only one circle reddens and the syndrome reads 1. Now flip
+  bits 3 and 5 together and read the decoded row: the syndrome says 6, the decoder flips bit 6, and the
+  word now differs from yours in three places. Switch the eighth bit on, leave both flips in place, and
+  the verdict changes from a confident repair to a refusal.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+const TAU = Math.PI * 2;
+
+/* ---- MODEL: pure, no DOM ------------------------------------------------ */
+/* Positions are numbered 1..7 and the numbering is the code. Check k covers
+   every position whose binary form includes k, for k in {1,2,4}; position k
+   itself is therefore in exactly one check and is used as its parity bit. */
+const CHECKS = [1, 2, 4];
+const DATA = [3, 5, 6, 7];
+
+const Model = {
+  checks: CHECKS,
+  data: DATA,
+
+  /* four message bits in, eight slots out (slot 8 is the overall check) */
+  encode(msg){
+    const b = new Array(9).fill(0);
+    for (let i = 0; i < 4; i++) b[DATA[i]] = msg[i] & 1;
+    for (const c of CHECKS){
+      let s = 0;
+      for (let i = 1; i <= 7; i++) if (i !== c && (i & c)) s ^= b[i];
+      b[c] = s;
+    }
+    let t = 0;
+    for (let i = 1; i <= 7; i++) t ^= b[i];
+    b[8] = t;
+    return b;
+  },
+
+  /* does check c come out even? */
+  checkParity(b, c){
+    let s = 0;
+    for (let i = 1; i <= 7; i++) if (i & c) s ^= b[i];
+    return s;
+  },
+
+  /* the three failures read as a binary number, which is the position */
+  syndrome(b){
+    let s = 0;
+    for (const c of CHECKS) if (Model.checkParity(b, c)) s |= c;
+    return s;
+  },
+
+  overall(b, extended){
+    let t = 0;
+    for (let i = 1; i <= (extended ? 8 : 7); i++) t ^= b[i];
+    return t;
+  },
+
+  message(b){ return DATA.map((p) => b[p]); },
+
+  /* the decoder, believing what the checks tell it */
+  decode(recv, extended){
+    const s = Model.syndrome(recv);
+    const out = recv.slice();
+    if (!extended){
+      if (s) out[s] ^= 1;
+      return { syndrome: s, flipped: s || 0, out: out,
+               verdict: s ? "repaired bit " + s : "clean" };
+    }
+    const o = Model.overall(recv, true);
+    if (o === 1){
+      /* an odd number of flips: assume one, and it is at s, or at slot 8 */
+      const at = s || 8;
+      out[at] ^= 1;
+      return { syndrome: s, flipped: at, out: out, verdict: "repaired bit " + at };
+    }
+    if (s !== 0) return { syndrome: s, flipped: 0, out: out, verdict: "double error, refused" };
+    return { syndrome: 0, flipped: 0, out: out, verdict: "clean" };
+  },
+
+  codewords(extended){
+    const out = [];
+    for (let n = 0; n < 16; n++)
+      out.push(Model.encode([(n >> 3) & 1, (n >> 2) & 1, (n >> 1) & 1, n & 1]));
+    if (extended) return out;
+    return out.map((b) => { const c = b.slice(); c[8] = 0; return c; });
+  },
+  distance(a, b, len){
+    let d = 0;
+    for (let i = 1; i <= len; i++) if (a[i] !== b[i]) d++;
+    return d;
+  },
+  minDistance(extended){
+    const w = Model.codewords(extended), len = extended ? 8 : 7;
+    let m = Infinity;
+    for (let i = 0; i < 16; i++)
+      for (let j = i + 1; j < 16; j++) m = Math.min(m, Model.distance(w[i], w[j], len));
+    return m;
+  },
+  weights(extended){
+    const w = Model.codewords(extended), len = extended ? 8 : 7, out = {};
+    for (const b of w){
+      let x = 0;
+      for (let i = 1; i <= len; i++) x += b[i];
+      out[x] = (out[x] || 0) + 1;
+    }
+    return out;
+  },
+
+  /* chance the four message bits do NOT survive */
+  rawFail(p){ return 1 - Math.pow(1 - p, 4); },
+  codedFail(p){ return 1 - Math.pow(1 - p, 7) - 7 * p * Math.pow(1 - p, 6); },
+  repeatFail(p){
+    const bit = 3 * p * p * (1 - p) + p * p * p;
+    return 1 - Math.pow(1 - bit, 4);
+  }
+};
+
+/* ---- STATE + VIEW -------------------------------------------------------- */
+const defaults = { msg: [0, 1, 0, 1], err: [false,false,false,false,false,true,false,false],
+                   extended: false, perr: 0.01 };
+const state = { msg: defaults.msg.slice(), err: defaults.err.slice(),
+                extended: defaults.extended, perr: defaults.perr };
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const SS = 2;
+let W = 620, H = 520, NARROW = false, G = {};
+
+/* The seven regions are found by sampling rather than by trigonometry, so a
+   label always lands inside the region it names however the circles move. */
+function regionCentroids(cx, cy, R, d){
+  const cent = [];
+  for (let k = 0; k < 3; k++){
+    const a = -Math.PI / 2 + k * TAU / 3;
+    cent.push([cx + d * Math.cos(a), cy + d * Math.sin(a)]);
+  }
+  const acc = {};
+  const x0 = cx - d - R, x1 = cx + d + R, y0 = cy - d - R, y1 = cy + d + R;
+  const N = 110;
+  for (let i = 0; i < N; i++){
+    for (let j = 0; j < N; j++){
+      const x = x0 + (i + 0.5) * (x1 - x0) / N, y = y0 + (j + 0.5) * (y1 - y0) / N;
+      let mask = 0;
+      for (let k = 0; k < 3; k++){
+        const dx = x - cent[k][0], dy = y - cent[k][1];
+        if (dx * dx + dy * dy <= R * R) mask |= CHECKS[k];
+      }
+      if (!mask) continue;
+      const a = acc[mask] || (acc[mask] = [0, 0, 0]);
+      a[0] += x; a[1] += y; a[2]++;
+    }
+  }
+  const out = {};
+  for (const m in acc) if (acc[m][2] > 0) out[m] = [acc[m][0] / acc[m][2], acc[m][1] / acc[m][2]];
+  return { centres: cent, slots: out };
+}
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(240, cv.parentNode.clientWidth - 20) : 620);
+  NARROW = avail < 470;
+  W = Math.max(280, Math.min(760, Math.round(avail)));
+
+  const g = {};
+  g.n = state.extended ? 8 : 7;
+  g.R = Math.min(W * 0.285, NARROW ? 108 : 158);
+  g.d = g.R * 0.58;
+  g.cx = W / 2;
+  g.legendY = NARROW ? 14 : 16;
+  g.vTop = NARROW ? 40 : 44;
+  g.cy = g.vTop + g.d + g.R;
+  g.vBot = g.cy + g.d + g.R;
+
+  g.rowsTop = g.vBot + (NARROW ? 26 : 32);
+  g.labW = NARROW ? 62 : 78;
+  g.gap = NARROW ? 4 : 6;
+  g.cell = Math.max(20, Math.min(NARROW ? 32 : 44,
+             (W - 2 * (NARROW ? 8 : 14) - g.labW - (g.n - 1) * g.gap) / g.n));
+  g.rowH = g.cell + (NARROW ? 12 : 14);
+  g.rowsLeft = (NARROW ? 8 : 14) + g.labW;
+  H = Math.round(g.rowsTop + 3 * g.rowH + (NARROW ? 26 : 30));
+
+  if (cv.width !== W * SS || cv.height !== H * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+  const rc = regionCentroids(g.cx, g.cy, g.R, g.d);
+  g.centres = rc.centres; g.slots = rc.slots;
+  g.H = H;
+  G = g;
+}
+
+function roundRect(x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function bitCell(x, y, s, value, opts){
+  const MONO = css("--font-mono");
+  ctx.lineWidth = opts.flipped ? 2.4 : 1.2;
+  ctx.strokeStyle = opts.flipped ? css("--bad")
+                  : (opts.parity ? css("--muted") : css("--accent"));
+  ctx.fillStyle = value ? (opts.parity ? css("--accent-soft") : css("--accent")) : css("--panel");
+  roundRect(x - s / 2, y - s / 2, s, s, 6);
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = value ? (opts.parity ? css("--ink") : css("--panel")) : css("--muted");
+  ctx.font = "700 " + Math.round(s * 0.46) + "px " + MONO;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(String(value), x, y + 1);
+  if (opts.label){
+    ctx.fillStyle = css("--muted");
+    ctx.font = "600 " + Math.max(8, Math.round(s * 0.30)) + "px " + MONO;
+    ctx.textBaseline = "top";
+    ctx.fillText(opts.label, x, y + s / 2 + 3);
+  }
+}
+
+function drawVenn(recv, dec){
+  const MONO = css("--font-mono"), muted = css("--muted");
+  const cols = [css("--cA"), css("--cB"), css("--cC")];
+  const fs = NARROW ? -1 : 0;
+
+  for (let k = 0; k < 3; k++){
+    const c = G.centres[k], failed = Model.checkParity(recv, CHECKS[k]);
+    ctx.beginPath(); ctx.arc(c[0], c[1], G.R, 0, TAU);
+    ctx.fillStyle = cols[k]; ctx.globalAlpha = 0.13; ctx.fill(); ctx.globalAlpha = 1;
+    if (failed){
+      ctx.strokeStyle = css("--bad"); ctx.lineWidth = 3.2; ctx.setLineDash([7, 5]);
+    } else {
+      ctx.strokeStyle = cols[k]; ctx.lineWidth = 2; ctx.setLineDash([]);
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  /* the check names live in a legend row, not squeezed against the circles */
+  ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  ctx.font = "700 " + (11 + fs) + "px " + MONO;
+  const items = [];
+  let total = 0;
+  for (let k = 0; k < 3; k++){
+    const failed = Model.checkParity(recv, CHECKS[k]);
+    const label = "check " + CHECKS[k] + (failed ? ": odd" : ": even");
+    const wid = 14 + ctx.measureText(label).width;
+    items.push([label, failed, wid, k]);
+    total += wid;
+  }
+  const spacing = NARROW ? 10 : 22;
+  total += spacing * 2;
+  let lx = Math.max(6, (W - total) / 2);
+  for (const it of items){
+    ctx.beginPath(); ctx.arc(lx + 4, G.legendY, 4.5, 0, TAU);
+    ctx.fillStyle = cols[it[3]]; ctx.fill();
+    if (it[1]){ ctx.strokeStyle = css("--bad"); ctx.lineWidth = 1.6; ctx.stroke(); }
+    ctx.fillStyle = it[1] ? css("--bad") : muted;
+    ctx.fillText(it[0], lx + 13, G.legendY);
+    lx += it[2] + spacing;
+  }
+
+  const s = Math.max(22, Math.min(NARROW ? 30 : 40, G.R * 0.40));
+  for (let pos = 1; pos <= 7; pos++){
+    const c = G.slots[pos];
+    if (!c) continue;
+    bitCell(c[0], c[1], s, recv[pos], {
+      parity: CHECKS.indexOf(pos) >= 0,
+      flipped: !!state.err[pos - 1],
+      label: String(pos)
+    });
+  }
+
+  /* the eighth bit has no region: it watches the whole diagram */
+  if (state.extended){
+    const x = NARROW ? (W - 26) : (W - 32), y = G.vTop + 16;
+    bitCell(x, y, s * 0.86, recv[8], { parity: true, flipped: !!state.err[7], label: "8" });
+  }
+}
+
+function drawRows(sent, recv, dec){
+  const MONO = css("--font-mono"), muted = css("--muted"), ink = css("--ink");
+  const fs = NARROW ? -1 : 0;
+  const rows = [["sent", sent], ["received", recv], ["decoded", dec.out]];
+  const s = G.cell;
+  rows.forEach(function(row, r){
+    const y = G.rowsTop + r * G.rowH + s / 2;
+    ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.fillStyle = muted; ctx.font = "600 " + (11 + fs) + "px " + MONO;
+    ctx.fillText(row[0], NARROW ? 8 : 14, y);
+    for (let i = 0; i < G.n; i++){
+      const pos = i + 1, x = G.rowsLeft + i * (s + G.gap) + s / 2;
+      const differs = (r > 0) && (row[1][pos] !== sent[pos]);
+      bitCell(x, y, s, row[1][pos], {
+        parity: CHECKS.indexOf(pos) >= 0 || pos === 8,
+        flipped: differs,
+        label: r === 2 ? String(pos) : null
+      });
+    }
+  });
+  /* the syndrome, written where the decoder reads it */
+  const y0 = G.rowsTop + G.rowH + s / 2;
+  const x0 = G.rowsLeft + G.n * (s + G.gap) + 4;
+  if (x0 < W - 30){
+    ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.fillStyle = dec.syndrome ? css("--bad") : css("--ok");
+    ctx.font = "700 " + (12 + fs) + "px " + MONO;
+    ctx.fillText(dec.syndrome ? String(dec.syndrome) : "0", x0, y0);
+  }
+}
+
+function render(){
+  fitCanvas();
+  const sent = Model.encode(state.msg);
+  const recv = sent.slice();
+  for (let i = 0; i < 8; i++) if (state.err[i]) recv[i + 1] ^= 1;
+  if (!state.extended) recv[8] = sent[8];
+  const dec = Model.decode(recv, state.extended);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+  drawVenn(recv, dec);
+  drawRows(sent, recv, dec);
+
+  /* readouts */
+  const flips = state.err.slice(0, state.extended ? 8 : 7).filter(Boolean).length;
+  const bin = CHECKS.map((c) => Model.checkParity(recv, c) ? "1" : "0").reverse().join("");
+  el("errout").textContent = flips === 0 ? "none"
+    : flips === 1 ? ("bit " + (state.err.findIndex(Boolean) + 1)) : (flips + " bits");
+  el("perrout").textContent = (state.perr * 100).toFixed(1) + "%";
+  el("rSyn").textContent = bin + " = " + dec.syndrome;
+  el("rVerdict").textContent = dec.verdict;
+
+  const got = Model.message(dec.out), want = Model.message(sent);
+  const okMsg = got.every((v, i) => v === want[i]);
+  el("rOk").textContent = okMsg ? "yes" : "no, " + got.reduce((a, v, i) => a + (v === want[i] ? 0 : 1), 0) + " bits wrong";
+  el("rRate").textContent = state.extended ? "4 / 8 = 0.500" : "4 / 7 = 0.571";
+  el("rRaw").textContent = (Model.rawFail(state.perr) * 100).toFixed(2) + "%";
+  el("rCoded").textContent = (Model.codedFail(state.perr) * 100).toFixed(2) + "%";
+
+  /* keep the error checkboxes' frames in step with the state */
+  /* Nothing inside the controls landmark is ever disabled: the verifier
+     sweeps every control and a disabled one stalls it. Bit 8 is simply inert
+     until the extra check exists, and its label says so by fading. */
+  for (let i = 1; i <= 8; i++){
+    const box = el("e" + i);
+    const inert = (i === 8) && !state.extended;
+    box.parentNode.classList.toggle("err", box.checked && !inert);
+    box.parentNode.classList.toggle("inert", inert);
+  }
+}
+
+/* ---- WIRING -------------------------------------------------------------- */
+function syncErr(){
+  for (let i = 1; i <= 8; i++) state.err[i - 1] = el("e" + i).checked;
+}
+function toggleError(pos){
+  if (pos === 8 && !state.extended) return;
+  const box = el("e" + pos);
+  box.checked = !box.checked;
+  syncErr(); render();
+}
+
+for (let i = 0; i < 4; i++){
+  el("d" + i).addEventListener("change", () => {
+    state.msg[i] = el("d" + i).checked ? 1 : 0; render();
+  });
+}
+for (let i = 1; i <= 8; i++){
+  el("e" + i).addEventListener("change", () => { syncErr(); render(); });
+}
+el("extended").addEventListener("change", () => { state.extended = el("extended").checked; render(); });
+el("perr").addEventListener("input", () => { state.perr = parseFloat(el("perr").value); render(); });
+el("reset").addEventListener("click", () => {
+  state.msg = defaults.msg.slice();
+  state.err = defaults.err.slice();
+  state.extended = defaults.extended;
+  state.perr = defaults.perr;
+  for (let i = 0; i < 4; i++) el("d" + i).checked = !!defaults.msg[i];
+  for (let i = 1; i <= 8; i++) el("e" + i).checked = !!defaults.err[i - 1];
+  el("extended").checked = defaults.extended;
+  el("perr").value = String(defaults.perr);
+  render();
+});
+
+/* clicking a region, or a cell in the rows, flips that bit in transit */
+cv.addEventListener("click", (ev) => {
+  const r = cv.getBoundingClientRect();
+  if (!(r.width > 0)) return;
+  const sc = W / r.width;
+  const x = (ev.clientX - r.left) * sc, y = (ev.clientY - r.top) * sc;
+
+  if (y < G.vBot + 10){
+    let best = 0, bestD = Infinity;
+    for (let pos = 1; pos <= 7; pos++){
+      const c = G.slots[pos];
+      if (!c) continue;
+      const dd = (x - c[0]) * (x - c[0]) + (y - c[1]) * (y - c[1]);
+      if (dd < bestD){ bestD = dd; best = pos; }
+    }
+    if (best && bestD < Math.pow(G.R * 0.55, 2)) toggleError(best);
+    return;
+  }
+  const s = G.cell;
+  const i = Math.floor((x - G.rowsLeft) / (s + G.gap));
+  if (i >= 0 && i < G.n && x >= G.rowsLeft) toggleError(i + 1);
+});
+
+let resizeTimer = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(render, 90);
+});
+render();
+
+/* ---- SELFTEST ------------------------------------------------------------ */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+  const words = Model.codewords(false);
+
+  /* 1. minimum distance 3, and the exact weight enumerator */
+  const w = Model.weights(false);
+  push("minimum distance 3, weights 1 + 7z^3 + 7z^4 + z^7",
+       Model.minDistance(false) === 3 && w[0] === 1 && w[3] === 7 && w[4] === 7 && w[7] === 1
+       && Object.keys(w).length === 4,
+       "16 codewords: one of weight 0, seven of 3, seven of 4, one of 7");
+
+  /* 2. the syndrome IS the position, for every codeword and every flip */
+  let ok2 = true;
+  for (const b of words)
+    for (let f = 1; f <= 7; f++){
+      const c = b.slice(); c[f] ^= 1;
+      if (Model.syndrome(c) !== f) ok2 = false;
+    }
+  push("every single flip gives a syndrome equal to its position", ok2,
+       "16 codewords x 7 positions = 112 cases, all exact");
+
+  /* 3. and the decoder therefore returns the original word every time */
+  let ok3 = true;
+  for (const b of words)
+    for (let f = 1; f <= 7; f++){
+      const c = b.slice(); c[f] ^= 1;
+      const d = Model.decode(c, false);
+      for (let i = 1; i <= 7; i++) if (d.out[i] !== b[i]) ok3 = false;
+    }
+  push("all 112 single-bit errors decode back to the sent word", ok3,
+       "including flips of the parity bits themselves");
+
+  /* 4. zero syndrome happens for the 16 codewords and nothing else */
+  let zeros = 0, cwHits = 0;
+  for (let v = 0; v < 128; v++){
+    const b = new Array(9).fill(0);
+    for (let k = 1; k <= 7; k++) b[k] = (v >> (k - 1)) & 1;
+    if (Model.syndrome(b) === 0){
+      zeros++;
+      if (words.some((c) => Model.distance(c, b, 7) === 0)) cwHits++;
+    }
+  }
+  push("a clean syndrome means a codeword, over all 128 words",
+       zeros === 16 && cwHits === 16,
+       zeros + " of 128 words check out, and all 16 are codewords");
+
+  /* 5. sphere packing: the code is perfect */
+  let covered = 0, ambiguous = 0;
+  for (let v = 0; v < 128; v++){
+    const b = new Array(9).fill(0);
+    for (let k = 1; k <= 7; k++) b[k] = (v >> (k - 1)) & 1;
+    let within = 0;
+    for (const c of words) if (Model.distance(c, b, 7) <= 1) within++;
+    if (within === 1) covered++;
+    if (within > 1) ambiguous++;
+  }
+  push("the 16 spheres of radius one tile all 128 words exactly",
+       covered === 128 && ambiguous === 0 && 16 * (1 + 7) === 128,
+       "16 x (1 + 7) = 128 = 2^7, with no word left over and none claimed twice");
+
+  /* 6. two flips: never a clean syndrome, and always miscorrected into three */
+  let ok6a = true, ok6b = true, cases6 = 0;
+  for (const b of words)
+    for (let f = 1; f <= 7; f++)
+      for (let g = f + 1; g <= 7; g++){
+        const c = b.slice(); c[f] ^= 1; c[g] ^= 1;
+        cases6++;
+        if (Model.syndrome(c) === 0) ok6a = false;
+        const d = Model.decode(c, false);
+        if (Model.distance(d.out, b, 7) !== 3) ok6b = false;
+      }
+  push("two flips are always seen, and always miscorrected to three wrong bits",
+       ok6a && ok6b && cases6 === 336,
+       "all " + cases6 + " double errors: syndrome nonzero, and the repair adds a third error");
+
+  /* 7. the syndrome of a double error is the XOR of the two positions */
+  let ok7 = true;
+  for (const b of words)
+    for (let f = 1; f <= 7; f++)
+      for (let g = f + 1; g <= 7; g++){
+        const c = b.slice(); c[f] ^= 1; c[g] ^= 1;
+        if (Model.syndrome(c) !== (f ^ g)) ok7 = false;
+      }
+  push("a double error's syndrome is the two positions XORed", ok7,
+       "which is why flips at 3 and 5 send the decoder to bit 6");
+
+  /* 8. linearity: the code is closed under XOR */
+  let ok8 = true;
+  for (const a of words)
+    for (const b of words){
+      const x = new Array(9).fill(0);
+      for (let i = 1; i <= 7; i++) x[i] = a[i] ^ b[i];
+      if (Model.syndrome(x) !== 0) ok8 = false;
+    }
+  push("the code is closed under XOR", ok8, "all 256 pairs sum to another codeword");
+
+  /* 9. the extended code: distance 4, and the refusal it pays for */
+  const we = Model.weights(true);
+  let ok9 = true, refused = 0, doubles = 0;
+  for (const b of Model.codewords(true))
+    for (let f = 1; f <= 8; f++)
+      for (let g = f + 1; g <= 8; g++){
+        const c = b.slice(); c[f] ^= 1; c[g] ^= 1;
+        doubles++;
+        const d = Model.decode(c, true);
+        if (d.verdict.indexOf("refused") >= 0) refused++; else ok9 = false;
+      }
+  push("the eighth bit lifts the distance to 4 and refuses every double error",
+       Model.minDistance(true) === 4 && we[0] === 1 && we[4] === 14 && we[8] === 1
+       && ok9 && refused === doubles,
+       "weights 1 + 14z^4 + z^8; all " + doubles + " double errors refused rather than miscorrected");
+
+  /* 10. the extended code still repairs every single error */
+  let ok10 = true;
+  for (const b of Model.codewords(true))
+    for (let f = 1; f <= 8; f++){
+      const c = b.slice(); c[f] ^= 1;
+      const d = Model.decode(c, true);
+      if (Model.distance(d.out, b, 8) !== 0) ok10 = false;
+    }
+  push("and still repairs all 128 single errors", ok10,
+       "16 codewords x 8 positions, the overall check bit included");
+
+  /* 11. the coded and raw failure curves meet exactly at p = 1/2, at 15/16 */
+  const half = 0.5;
+  let ok11 = near(Model.codedFail(half), 15 / 16, 1e-15)
+          && near(Model.rawFail(half), 15 / 16, 1e-15);
+  for (const p of [0.001, 0.01, 0.05, 0.1, 0.2, 0.3, 0.45])
+    if (!(Model.codedFail(p) < Model.rawFail(p))) ok11 = false;
+  ok11 = ok11 && near(Model.codedFail(0.01), 0.002031041634940084, 1e-15)
+              && near(Model.rawFail(0.01), 0.03940399000000003, 1e-15)
+              && Model.repeatFail(0.01) < Model.codedFail(0.01);
+  push("coded beats raw below p = 1/2 and ties exactly at it", ok11,
+       "at p = 0.5 both are 15/16 = " + Model.codedFail(0.5).toFixed(15)
+       + "; at p = 0.01, 0.203% against 3.940%");
+
+  /* 12. the parity-check matrix is just the numbers 1 to 7 in binary */
+  let ok12 = true;
+  const seen = {};
+  for (let pos = 1; pos <= 7; pos++){
+    let col = 0;
+    for (const c of CHECKS){
+      const b = new Array(9).fill(0); b[pos] = 1;
+      if (Model.checkParity(b, c)) col |= c;
+    }
+    if (col !== pos || seen[col]) ok12 = false;
+    seen[col] = true;
+  }
+  push("each position's column of checks is its own number in binary", ok12,
+       "seven distinct nonzero columns, which is the entire design");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

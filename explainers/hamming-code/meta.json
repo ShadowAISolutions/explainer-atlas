@@ -1,0 +1,17 @@
+{
+  "slug": "hamming-code",
+  "title": "The Error Tells You Where It Is",
+  "domain": "information-theory",
+  "difficulty": 2,
+  "summary": "Three parity checks over seven bits, arranged so the checks that fail spell out, in binary, the number of the bit that broke. Flip a bit and watch the circles answer.",
+  "prerequisites": [],
+  "tags": ["error-correction", "parity", "hamming-distance", "perfect-code", "binary", "venn"],
+  "interaction_pattern": "perturb-and-observe",
+  "sources": [
+    { "title": "Hamming(7,4)", "url": "https://en.wikipedia.org/wiki/Hamming(7,4)" },
+    { "title": "Hamming bound and perfect codes", "url": "https://en.wikipedia.org/wiki/Hamming_bound" },
+    { "title": "R. W. Hamming, Error Detecting and Error Correcting Codes (1950)", "url": "https://ieeexplore.ieee.org/document/6772729" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}
