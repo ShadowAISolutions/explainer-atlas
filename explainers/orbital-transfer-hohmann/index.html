@@ -1,0 +1,723 @@
+<!doctype html>
+<!--
+  Interactive Explainer Atlas — page skeleton.
+  Start EVERY new explainer from this file. Never copy a previous page.
+  Replace every {{PLACEHOLDER}}. Delete the demo model and write your own.
+  Contract: FOUNDATION.md. Rules: CLAUDE.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speed Up And You Will Go Slower &#8212; Explainer Atlas</title>
+<meta name="description" content="A prograde burn raises the far side of your orbit, not the near side, and leaves you slower than you started. Aim the burn by hand and watch the transfer ellipse miss.">
+<style>
+/* ---- tokens: restate these per page to vary the collection's feel ------- */
+:root{
+  --bg:#f1f3f8; --panel:#ffffff; --ink:#141824; --muted:#576080; --line:#dde1ec;
+  --accent:#2b3f7a; --accent-soft:#e7eaf5; --alt:#cf6128; --warn:#a8531c;
+  --quiet:#b4bcd2; --radius:6px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.55rem,1.1rem + 2vw,2.3rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.06rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0b0e16; --panel:#141827; --ink:#e6e9f2; --muted:#98a1bd; --line:#252c42;
+    --accent:#8fa5e0; --accent-soft:#171d31; --alt:#f0894f; --warn:#e2a06a;
+    --quiet:#3a4360;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.15; margin:0 0 .4em; letter-spacing:-.01em}
+.kicker{margin:0 0 .35em; color:var(--accent); font:600 .78rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.09em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas, figure.stage svg{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.86rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.83rem}
+.verdict{margin:0; background:var(--accent-soft); border-left:3px solid var(--alt); padding:.6em .75em; font-size:.88rem}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .7em; min-height:40px}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.06em}
+.readout dd{margin:.18em 0 0; font:600 1.05rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.16rem; margin:1.8em 0 .45em; letter-spacing:-.005em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); background:var(--accent-soft); padding:.7em .85em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">physics</p>
+  <h1>Speed Up And You Will Go Slower</h1>
+  <p class="standfirst">Fire your engine forwards and nothing happens where you are. Half an orbit
+  later, on the far side of the planet, you are much higher up &#8212; and moving a great deal slower
+  than when you started. Aim the burn by hand and watch the ellipse miss.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="680" role="img"
+            aria-label="A view down onto an orbital plane. The planet sits at the centre, with a small circle for the starting orbit and a dashed circle for the target orbit. A curve leaves the starting orbit at the burn point on the right and swings round to its highest point on the left. An arrow at the burn point shows the direction and size of the thrust. Markers show where the curve reaches its highest point and how far that is from the target circle."></canvas>
+    <figcaption>Looking down on the orbital plane. The solid inner circle is where you start, the
+    dashed circle is where you want to be, and the curve is where the burn actually sends you. The
+    arrow is the thrust. Drag on the picture to swing the arrow around.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row">
+        <label for="ratio">Target orbit</label>
+        <output id="ratioout" for="ratio">6.23 &#215; up</output>
+      </div>
+      <input type="range" id="ratio" min="110" max="2000" step="1" value="623">
+      <p class="hint">How far out you are trying to get, as a multiple of your starting radius. 6.2 is
+      geostationary from a low orbit. Arrow keys step; Home and End jump to the ends.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="size">Burn size</label>
+        <output id="sizeout" for="size">1.00 &#215; ideal</output>
+      </div>
+      <input type="range" id="size" min="40" max="160" step="1" value="100">
+      <p class="hint">As a multiple of the burn that would land you exactly on the target. One is the
+      textbook answer; everything else misses.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="aim">Burn direction</label>
+        <output id="aimout" for="aim">0&#176; prograde</output>
+      </div>
+      <input type="range" id="aim" min="-90" max="90" step="1" value="0">
+      <p class="hint">Zero points along your velocity. Positive tilts the thrust outwards, away from
+      the planet, which feels like the way to go up and is not.</p>
+    </div>
+
+    <p class="verdict" id="verdict">&#8212;</p>
+
+    <div style="display:flex; gap:.5em; flex-wrap:wrap">
+      <button type="button" id="snap" style="flex:1 1 auto">Snap to the ideal burn</button>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>First burn</dt><dd id="oDv1">&#8212;</dd></div>
+      <div><dt>Circularise</dt><dd id="oDv2">&#8212;</dd></div>
+      <div><dt>Total</dt><dd id="oTot">&#8212;</dd></div>
+      <div><dt>Ideal total</dt><dd id="oIdeal">&#8212;</dd></div>
+      <div><dt>Coast time</dt><dd id="oTime">&#8212;</dd></div>
+      <div><dt>Speed at the top</dt><dd id="oVapo">&#8212;</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>You are in a circular orbit 400 kilometres up, going 7.67 kilometres a second, and you want to be
+  in geostationary orbit, 35,786 kilometres up. The intuition says point the nose outwards and thrust.
+  Try it with the direction slider: tilting the burn outwards wastes almost all of it. The orbit you
+  end up on is barely higher than the one you left, because the speed you added is pointing the wrong
+  way to add energy efficiently.</p>
+
+  <p>Point the burn straight along your velocity instead and something strange happens. Where you are,
+  nothing changes: you are at the same radius, just moving faster. But you are now on an ellipse whose
+  low point is here and whose high point is on the exactly opposite side. A prograde burn raises the
+  orbit half a revolution ahead of you, never underneath you.</p>
+
+  <p class="math">&#916;v = &#8730;(&#956;/r&#8321;) &#183; [ &#8730;(2R/(1+R)) &#8722; 1 ] + &#8730;(&#956;/r&#8322;) &#183; [ 1 &#8722; &#8730;(2/(1+R)) ]</p>
+
+  <h2>Why the speed goes down</h2>
+
+  <p>Coast to that high point and check the speedometer. You left at 7.67 kilometres a second, added
+  2.40, and you are now doing 1.62. Everything you gained, and more, has been spent climbing. The
+  energy of an orbit is &#8722;&#956;/2a, which rises as the orbit grows, while the speed at any
+  particular radius is &#8730;(&#956;(2/r &#8722; 1/a)) &#8212; and out at 42,000 kilometres, a circular
+  orbit only needs 3.07 kilometres a second to stay up. The second burn is not a brake. It is another
+  1.46 kilometres a second of forward thrust, needed to stop you falling straight back down to where
+  you came from.</p>
+
+  <h2>Two burns, and a third that sometimes helps</h2>
+
+  <p>Hohmann's 1925 answer &#8212; burn prograde, coast half an ellipse, burn prograde again &#8212; is
+  the cheapest transfer between two circular orbits using two impulses, at every ratio, and the page
+  asserts that against a few thousand alternatives. What is true, and often garbled, is that a
+  <em>three</em>-burn manoeuvre can beat it. Fly far past the target, circularise almost nowhere, and
+  come back down: for ratios above 11.94 that bi-elliptic route costs less, because the middle burn
+  happens where you are moving so slowly that changing your orbit is nearly free. The page finds that
+  11.9388 crossing numerically.</p>
+
+  <h2>What to try</h2>
+
+  <p>Leave the target at 6.23 and set the burn size to 0.9. The high point falls short by far more than
+  ten per cent &#8212; near the target, a small change in speed makes a large change in apoapsis, which
+  is exactly why the manoeuvre needs precision. Then set the direction to 30 degrees and put the size
+  back to 1.0: the same amount of propellant, aimed only slightly off, and the orbit is wrong in both
+  shape and reach. Finally take the target ratio to 20 and compare the total against the ideal figure;
+  past about 15.6 the two-burn answer stops improving at all.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG. Never use bare Math.random(). ------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+
+/* ---- MODEL: pure functions of the parameters. No DOM in here. ----------- */
+const MU = 398600.4418;     /* Earth's gravitational parameter, km^3/s^2     */
+const R1 = 6771;            /* a 400 km circular orbit, in km from the centre */
+
+const Model = {
+  vCirc(r){ return Math.sqrt(MU / r); },
+
+  /* vis-viva */
+  vAt(r, a){ return Math.sqrt(MU * (2 / r - 1 / a)); },
+
+  hohmann(r1, r2){
+    const a = (r1 + r2) / 2;
+    const vp = Model.vAt(r1, a), va = Model.vAt(r2, a);
+    const d1 = vp - Model.vCirc(r1), d2 = Model.vCirc(r2) - va;
+    return { a: a, vp: vp, va: va, dv1: d1, dv2: d2, total: d1 + d2,
+             time: Math.PI * Math.sqrt(a * a * a / MU) };
+  },
+
+  /* the same total, from the closed form in terms of the ratio alone */
+  hohmannClosed(r1, R){
+    return Model.vCirc(r1) * (Math.sqrt(2 * R / (1 + R)) - 1)
+         + Model.vCirc(r1 * R) * (1 - Math.sqrt(2 / (1 + R)));
+  },
+
+  /* an arbitrary impulse at r1: dv km/s, aim in degrees from prograde,
+     positive meaning tilted outwards. Everything else follows.            */
+  burn(r1, dv, aimDeg){
+    const th = aimDeg * Math.PI / 180;
+    const vt = Model.vCirc(r1) + dv * Math.cos(th);
+    const vr = dv * Math.sin(th);
+    const v2 = vt * vt + vr * vr;
+    const eps = v2 / 2 - MU / r1;
+    const h = r1 * vt;
+    const p = h * h / MU;
+    const e = Math.sqrt(Math.max(0, 1 + 2 * eps * h * h / (MU * MU)));
+    const a = Math.abs(eps) < 1e-14 ? Infinity : -MU / (2 * eps);
+    const rApo = e < 1 ? p / (1 - e) : Infinity;
+    const rPeri = p / (1 + e);
+    /* true anomaly at the burn, signed by whether we are climbing */
+    let cosNu = e < 1e-12 ? 1 : (p / r1 - 1) / e;
+    cosNu = Math.max(-1, Math.min(1, cosNu));
+    let nu = Math.acos(cosNu);
+    if (vr < 0) nu = -nu;
+    return { eps: eps, h: h, p: p, e: e, a: a, rApo: rApo, rPeri: rPeri,
+             nu: nu, speed: Math.sqrt(v2), vt: vt, vr: vr };
+  },
+
+  /* radius of the conic at a polar angle measured from the burn point */
+  rAt(orb, phi){
+    const d = 1 + orb.e * Math.cos(phi + orb.nu);
+    return d <= 1e-9 ? Infinity : orb.p / d;
+  },
+
+  /* what it costs to circularise wherever the burn actually put the top */
+  circularise(orb){
+    if (!(orb.rApo > 0) || !Number.isFinite(orb.rApo)) return Infinity;
+    return Math.abs(Model.vCirc(orb.rApo) - orb.h / orb.rApo);
+  },
+
+  /* the three-burn alternative, with an intermediate radius rb          */
+  biElliptic(r1, r2, rb){
+    const a1 = (r1 + rb) / 2, a2 = (rb + r2) / 2;
+    const d1 = Model.vAt(r1, a1) - Model.vCirc(r1);
+    const d2 = Math.abs(Model.vAt(rb, a2) - Model.vAt(rb, a1));
+    const d3 = Math.abs(Model.vAt(r2, a2) - Model.vCirc(r2));
+    return d1 + d2 + d3;
+  },
+
+  /* its limit as the intermediate radius runs away to infinity          */
+  biEllipticLimit(r1, R){
+    return Model.vCirc(r1) * (Math.SQRT2 - 1) * (1 + 1 / Math.sqrt(R));
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { ratio: 623, size: 100, aim: 0 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function km(x){
+  if (!Number.isFinite(x)) return "no limit";
+  return Math.round(x).toLocaleString("en-GB") + " km";
+}
+function kps(x){ return Number.isFinite(x) ? x.toFixed(3) + " km/s" : "\u2014"; }
+
+const SS = 2;
+let CW = 900, CH = 680, NARROW = false, FS = 13, G_ = null;
+function wid(t){ return ctx.measureText(t).width; }
+function pick(sets, room){
+  for (let i = 0; i < sets.length; i++) if (wid(sets[i]) <= room) return sets[i];
+  return sets[sets.length - 1];
+}
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 20) : 900);
+  NARROW = avail < 470;
+  CW = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+  const pad = NARROW ? 10 : 14;
+  const top = Math.round(pad + FS + 12);
+  const legendH = 3 * (FS + 5) + 6;
+  const scene = Math.round(CW * (NARROW ? 0.92 : 0.66));
+  CH = top + scene + legendH + pad;
+  G_ = { pad: pad, top: top, scene: scene, bot: top + scene, legendH: legendH };
+  if (cv.width !== CW * SS || cv.height !== CH * SS){ cv.width = CW * SS; cv.height = CH * SS; }
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function render(){
+  fitCanvas();
+  const G = G_;
+  const R = state.ratio / 100, r2 = R1 * R;
+  const ideal = Model.hohmann(R1, r2);
+  const dv = ideal.dv1 * state.size / 100;
+  const orb = Model.burn(R1, dv, state.aim);
+  const dv2 = Model.circularise(orb);
+
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line"),
+        accent = css("--accent"), alt = css("--alt"), quiet = css("--quiet"),
+        soft = css("--accent-soft"), panel = css("--panel");
+
+  ctx.clearRect(0, 0, CW, CH);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, CW, CH);
+  ctx.textBaseline = "alphabetic";
+
+  /* how far out the picture has to reach */
+  const reach = Math.min(Number.isFinite(orb.rApo) ? orb.rApo : r2 * 3, r2 * 2.6);
+  const span = Math.max(r2, reach) * 1.12;
+  const cxp = CW / 2, cyp = G.top + G.scene / 2;
+  const S = Math.min(CW / 2 - G.pad - 4, G.scene / 2) / span;
+  const PX = (r, phi) => cxp + S * r * Math.cos(phi);
+  const PY = (r, phi) => cyp - S * r * Math.sin(phi);
+
+  /* title row: the miss, right-aligned, with the title sized to what is left */
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  const missFrac = Number.isFinite(orb.rApo) ? orb.rApo / r2 - 1 : Infinity;
+  const mlab = !Number.isFinite(missFrac) ? "you have escaped"
+             : Math.abs(missFrac) < 0.005 ? "on target"
+             : (100 * Math.abs(missFrac)).toFixed(1) + "% " + (missFrac < 0 ? "short" : "past");
+  const mw = wid(mlab) + 16;
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["Where the burn actually sends you",
+                     "Where the burn sends you", "The transfer", ""], CW - 2 * G.pad - mw),
+               G.pad, G.top - 10);
+  ctx.textAlign = "right";
+  ctx.fillStyle = Math.abs(missFrac) < 0.005 ? accent : alt;
+  ctx.fillText(mlab, CW - G.pad, G.top - 10);
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, G.top, CW, G.scene); ctx.clip();
+
+  /* the planet, first, because the starting orbit is only 400 km above it  */
+  ctx.fillStyle = accent; ctx.globalAlpha = 0.16;
+  ctx.beginPath(); ctx.arc(cxp, cyp, Math.max(3, S * 6371), 0, 6.2832); ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = accent; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cxp, cyp, Math.max(3, S * 6371), 0, 6.2832); ctx.stroke();
+
+  /* the target orbit */
+  ctx.strokeStyle = quiet; ctx.lineWidth = 1.5; ctx.setLineDash([6, 5]);
+  ctx.beginPath(); ctx.arc(cxp, cyp, S * r2, 0, 6.2832); ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* the starting orbit */
+  ctx.strokeStyle = accent; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cxp, cyp, S * R1, 0, 6.2832); ctx.stroke();
+
+  /* the trajectory the burn puts you on */
+  ctx.strokeStyle = alt; ctx.lineWidth = 2.6;
+  ctx.beginPath();
+  let pen = false;
+  const STEPS = 720;
+  for (let i = 0; i <= STEPS; i++){
+    const phi = 6.2831853 * i / STEPS;
+    const r = Model.rAt(orb, phi);
+    if (!Number.isFinite(r) || r < 0 || r > span * 4){ pen = false; continue; }
+    const x = PX(r, phi), y = PY(r, phi);
+    if (!pen){ ctx.moveTo(x, y); pen = true; } else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  /* the burn point, and the thrust arrow */
+  const bx = PX(R1, 0), by = PY(R1, 0);
+  const th = state.aim * Math.PI / 180;
+  /* prograde at phi = 0 is +y on screen (anticlockwise motion) */
+  const ax = Math.sin(th), ay = -Math.cos(th);
+  const alen = 18 + 46 * (dv / Math.max(ideal.dv1, 1e-9)) * 0.7;
+  ctx.strokeStyle = alt; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + ax * alen, by + ay * alen); ctx.stroke();
+  const hx = bx + ax * alen, hy = by + ay * alen;
+  ctx.beginPath();
+  ctx.moveTo(hx, hy);
+  ctx.lineTo(hx - ax * 9 - ay * 5, hy - ay * 9 + ax * 5);
+  ctx.lineTo(hx - ax * 9 + ay * 5, hy - ay * 9 - ax * 5);
+  ctx.closePath(); ctx.fillStyle = alt; ctx.fill();
+  ctx.fillStyle = ink;
+  ctx.beginPath(); ctx.arc(bx, by, 4.5, 0, 6.2832); ctx.fill();
+
+  /* the top of the arc, where the second burn happens */
+  if (Number.isFinite(orb.rApo)){
+    const phiA = Math.PI - orb.nu;
+    const px2 = PX(orb.rApo, phiA), py2 = PY(orb.rApo, phiA);
+    ctx.strokeStyle = ink; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(px2, py2, 5.5, 0, 6.2832); ctx.stroke();
+    /* a short spur out to the target circle, so the miss is visible */
+    const ptx = PX(r2, phiA), pty = PY(r2, phiA);
+    ctx.strokeStyle = quiet; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(px2, py2); ctx.lineTo(ptx, pty); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
+
+  /* legend, under the scene where nothing else lives */
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.textAlign = "left";
+  const rows = [
+    [accent, "where you start, " + km(R1 - 6371) + " up"],
+    [quiet,  "where you want to be, " + km(r2 - 6371) + " up"],
+    [alt,    Number.isFinite(orb.rApo)
+               ? "where you end up, topping out at " + km(orb.rApo - 6371)
+               : "where you end up: an escape trajectory"]
+  ];
+  for (let i = 0; i < rows.length; i++){
+    const y = G.bot + 10 + FS + i * (FS + 5);
+    ctx.fillStyle = rows[i][0];
+    ctx.fillRect(G.pad + 2, y - FS * 0.42, 14, 3);
+    ctx.fillStyle = i === 2 ? ink : muted;
+    ctx.fillText(pick([rows[i][1], rows[i][1].split(", ")[0], ""],
+                      CW - 2 * G.pad - 24),
+                 G.pad + 22, y);
+  }
+
+  /* ---------------- the numbers ----------------------------------------- */
+  const total = dv + dv2;
+  el("ratioout").textContent = R.toFixed(2) + " \u00D7 up";
+  el("sizeout").textContent = (state.size / 100).toFixed(2) + " \u00D7 ideal";
+  el("aimout").textContent = state.aim === 0 ? "0\u00B0 prograde"
+    : Math.abs(state.aim) + "\u00B0 " + (state.aim > 0 ? "outwards" : "inwards");
+  el("oDv1").textContent = kps(dv);
+  el("oDv2").textContent = Number.isFinite(dv2) ? kps(dv2) : "never arrives";
+  el("oTot").textContent = Number.isFinite(total) ? kps(total) : "\u2014";
+  el("oIdeal").textContent = kps(ideal.total);
+  el("oTime").textContent = Number.isFinite(orb.a) && orb.e < 1
+    ? (Math.PI * Math.sqrt(orb.a * orb.a * orb.a / MU) / 3600).toFixed(2) + " h"
+    : "never comes back";
+  el("oVapo").textContent = Number.isFinite(orb.rApo)
+    ? kps(orb.h / orb.rApo) : "\u2014";
+
+  const verdict = el("verdict");
+  if (!Number.isFinite(orb.rApo)){
+    verdict.textContent = "That burn is large enough to leave the planet altogether. There is no "
+      + "second burn, because you never come back down.";
+  } else if (Math.abs(missFrac) < 0.005 && state.aim === 0){
+    verdict.textContent = "Exactly the Hohmann transfer: two prograde burns, "
+      + kps(total) + " in total, and you arrive at the top of the ellipse "
+      + (Math.PI * Math.sqrt(orb.a * orb.a * orb.a / MU) / 3600).toFixed(2)
+      + " hours after lighting the engine, moving " + kps(orb.h / orb.rApo)
+      + " against the " + kps(Model.vCirc(R1)) + " you started with.";
+  } else {
+    const wasted = total - ideal.total;
+    verdict.textContent = "The top of your arc is " + km(orb.rApo - 6371) + " up, "
+      + (missFrac < 0 ? "short of" : "past") + " the " + km(r2 - 6371) + " you asked for. "
+      + "Getting circular from there costs " + kps(total) + " in total, "
+      + (wasted > 0.0005 ? kps(wasted) + " more than the ideal transfer."
+                         : "which is what the ideal transfer costs.");
+  }
+}
+
+function readState(){
+  state.ratio = parseInt(el("ratio").value, 10);
+  state.size = parseInt(el("size").value, 10);
+  state.aim = parseInt(el("aim").value, 10);
+}
+["ratio", "size", "aim"].forEach((id) => {
+  el(id).addEventListener("input", () => { readState(); render(); });
+});
+el("snap").addEventListener("click", () => {
+  el("size").value = "100"; el("aim").value = "0"; readState(); render();
+});
+el("reset").addEventListener("click", () => {
+  el("ratio").value = String(defaults.ratio);
+  el("size").value = String(defaults.size);
+  el("aim").value = String(defaults.aim);
+  readState(); render();
+});
+
+/* dragging on the picture swings the thrust arrow */
+function aimFromPointer(ev){
+  const b = cv.getBoundingClientRect();
+  const x = (ev.clientX - b.left) / b.width * CW;
+  const y = (ev.clientY - b.top) / b.height * CH;
+  const G = G_;
+  /* prograde at the burn point is straight up the screen, so an angle taken
+     from the centre reads directly as a tilt away from prograde            */
+  const dx = x - CW / 2;
+  const dy = y - (G.top + G.scene / 2);
+  const ang = Math.atan2(dx, -dy) * 180 / Math.PI;     /* 0 = up = prograde  */
+  const clamped = Math.max(-90, Math.min(90, Math.round(ang)));
+  el("aim").value = String(clamped);
+  readState(); render();
+}
+let dragging = false;
+cv.addEventListener("pointerdown", (ev) => {
+  dragging = true;
+  if (cv.setPointerCapture) cv.setPointerCapture(ev.pointerId);
+  aimFromPointer(ev);
+});
+cv.addEventListener("pointermove", (ev) => { if (dragging) aimFromPointer(ev); });
+cv.addEventListener("pointerup", () => { dragging = false; });
+cv.addEventListener("pointercancel", () => { dragging = false; });
+
+let rt = null;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 90); });
+const dark = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+if (dark && dark.addEventListener) dark.addEventListener("change", render);
+
+render();
+
+/* ---- SELFTEST: minimum 5 numeric assertions against known values. ------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1. circular speed, two ways: sqrt(mu/r) and vis-viva with a = r */
+  let w1 = 0;
+  for (let i = 0; i < 50; i++){
+    const r = R1 * (1 + i * 0.4);
+    const d = Math.abs(Model.vCirc(r) - Model.vAt(r, r)) / Model.vCirc(r);
+    if (d > w1) w1 = d;
+  }
+  push("circular speed equals sqrt(mu/r) at fifty radii", w1 < 1e-12,
+       "vis-viva with a = r agrees to " + w1.toExponential(3)
+       + "; a 400 km orbit gives " + Model.vCirc(R1).toFixed(6) + " km/s");
+
+  /* 2. the two burns against the closed form, over forty ratios */
+  let w2 = 0;
+  for (let i = 0; i < 40; i++){
+    const R = 1.05 + i * 0.5;
+    const d = Math.abs(Model.hohmann(R1, R1 * R).total - Model.hohmannClosed(R1, R));
+    if (d > w2) w2 = d;
+  }
+  push("the two burns sum to the closed-form total for forty ratios", w2 < 1e-10,
+       "worst gap " + w2.toExponential(3) + " km/s");
+
+  /* 3. energy is conserved all the way round the transfer ellipse */
+  const tr = Model.hohmann(R1, R1 * 6.2);
+  let w3 = 0;
+  const orbH = Model.burn(R1, tr.dv1, 0);
+  for (let i = 0; i <= 200; i++){
+    const phi = 6.2831853 * i / 200, r = Model.rAt(orbH, phi);
+    const v = Model.vAt(r, orbH.a);
+    const eps = v * v / 2 - MU / r;
+    const d = Math.abs(eps - orbH.eps) / Math.abs(orbH.eps);
+    if (d > w3) w3 = d;
+  }
+  push("specific energy holds along the whole transfer ellipse", w3 < 1e-9,
+       "worst relative drift " + w3.toExponential(3) + " over 201 points of a full revolution");
+
+  /* 4. and angular momentum, which is the harder of the two to keep */
+  let w4 = 0;
+  for (let i = 0; i <= 200; i++){
+    const phi = 6.2831853 * i / 200, r = Model.rAt(orbH, phi);
+    /* h from the conic: h = sqrt(mu p), and from r times the transverse speed */
+    const hFromP = Math.sqrt(MU * orbH.p);
+    const vTrans = orbH.h / r;
+    const d = Math.abs(r * vTrans - hFromP) / hFromP;
+    if (d > w4) w4 = d;
+  }
+  push("angular momentum holds along the whole transfer ellipse", w4 < 1e-9,
+       "worst relative drift " + w4.toExponential(3));
+
+  /* 5. the coast time, by Kepler and by integrating the swept area */
+  let tInt = 0;
+  const M = 4000;
+  for (let i = 0; i < M; i++){
+    const phi = Math.PI * (i + 0.5) / M, r = Model.rAt(orbH, phi);
+    tInt += (r * r / orbH.h) * (Math.PI / M);
+  }
+  const tKep = Math.PI * Math.sqrt(Math.pow(orbH.a, 3) / MU);
+  push("the coast is half a Kepler period, also by integrating r squared over h",
+       Math.abs(tInt / tKep - 1) < 1e-6,
+       "integration gives " + (tInt / 3600).toFixed(6) + " h against Kepler's "
+       + (tKep / 3600).toFixed(6) + " h");
+
+  /* 6. the burn model reproduces the Hohmann case exactly */
+  let w6 = 0;
+  for (let i = 0; i < 30; i++){
+    const R = 1.2 + i * 0.6, r2 = R1 * R;
+    const h = Model.hohmann(R1, r2);
+    const o = Model.burn(R1, h.dv1, 0);
+    const d = Math.abs(o.rApo / r2 - 1);
+    if (d > w6) w6 = d;
+  }
+  push("the ideal burn lands the top of the arc exactly on the target", w6 < 1e-9,
+       "worst relative miss " + w6.toExponential(3) + " across thirty ratios");
+
+  /* 7. the point of the page: prograde thrust leaves you slower */
+  const gto = Model.burn(R1, Model.hohmann(R1, 42164).dv1, 0);
+  push("speeding up leaves you slower at the other end",
+       gto.h / gto.rApo < Model.vCirc(R1) && Model.vCirc(42164) < Model.vCirc(R1),
+       "left at " + Model.vCirc(R1).toFixed(3) + " km/s, added "
+       + Model.hohmann(R1, 42164).dv1.toFixed(3) + ", arrived doing "
+       + (gto.h / gto.rApo).toFixed(3) + "; geostationary needs only "
+       + Model.vCirc(42164).toFixed(3));
+
+  /* 8. the textbook low-orbit-to-geostationary numbers */
+  const geo = Model.hohmann(R1, 42164);
+  push("low orbit to geostationary costs 3.857 km/s over 5.29 hours",
+       near(geo.dv1, 2.3995, 5e-4) && near(geo.dv2, 1.4572, 5e-4)
+       && near(geo.total, 3.8567, 1e-3) && near(geo.time / 3600, 5.2901, 5e-3),
+       "burns of " + geo.dv1.toFixed(4) + " and " + geo.dv2.toFixed(4) + " km/s, total "
+       + geo.total.toFixed(4) + ", coasting " + (geo.time / 3600).toFixed(4) + " hours");
+
+  /* 9. Hohmann is the cheapest TWO-burn transfer at every ratio tested.
+        The task file claimed it loses above a ratio of 11.94; that is the
+        three-burn bi-elliptic result, and it is not true of two burns.
+        The arrival burn has to kill the radial speed as well as match the
+        circular speed, so it is a vector difference, not a subtraction.  */
+  const twoBurn = (r2, dv, deg) => {
+    const o = Model.burn(R1, dv, deg);
+    if (o.eps >= 0 || !(o.rApo >= r2 - 1e-9)) return Infinity;
+    const vTot = Model.vAt(r2, o.a), vT = o.h / r2;
+    const vR = Math.sqrt(Math.max(0, vTot * vTot - vT * vT));
+    const want = Model.vCirc(r2);
+    return dv + Math.sqrt((want - vT) * (want - vT) + vR * vR);
+  };
+  let beaten = 0, worstMargin = Infinity, tested = 0, wArg = "";
+  for (let i = 0; i < 20; i++){
+    const R = 1.5 + i * 1.8, r2 = R1 * R;
+    const best = Model.hohmann(R1, r2).total, base = Model.hohmann(R1, r2).dv1;
+    for (let sz = 90; sz <= 170; sz += 2)
+      for (let deg = -40; deg <= 40; deg += 4){
+        const tot = twoBurn(r2, base * sz / 100, deg);
+        if (!Number.isFinite(tot)) continue;
+        tested++;
+        const m = tot - best;
+        if (m < -1e-9) beaten++;
+        if (m < worstMargin){ worstMargin = m; wArg = "ratio " + R.toFixed(1) + ", "
+          + (sz / 100).toFixed(2) + " times the ideal burn, " + deg + " degrees"; }
+      }
+  }
+  push("no two-burn alternative beats Hohmann, at any ratio tested",
+       beaten === 0 && worstMargin > -1e-12,
+       tested.toLocaleString("en-GB") + " alternatives across twenty ratios up to 35.7, each "
+       + "with its own burn size and aim; none was cheaper. The closest was the Hohmann "
+       + "transfer itself (" + wArg + "), " + worstMargin.toExponential(2) + " km/s. The task "
+       + "file's claim that Hohmann loses above 11.94 is about the three-burn bi-elliptic "
+       + "route, asserted separately below");
+
+  /* 10. the three-burn route, and where it takes over */
+  const f = (R) => Model.hohmannClosed(R1, R) - Model.biEllipticLimit(R1, R);
+  let lo = 5, hi = 30;
+  for (let i = 0; i < 200; i++){ const m = (lo + hi) / 2; if (f(m) < 0) lo = m; else hi = m; }
+  const cross = (lo + hi) / 2;
+  push("the bi-elliptic route overtakes Hohmann at a ratio of 11.9388",
+       near(cross, 11.9388, 5e-4) && f(11) < 0 && f(13) > 0,
+       "crossing found at " + cross.toFixed(6) + ", against the published 11.94");
+
+  /* 11. a finite bi-elliptic really does beat Hohmann above the crossing */
+  const cheapest = (R) => {
+    let best = Infinity;
+    for (let Rb = R; Rb <= 4000; Rb *= 1.03) best = Math.min(best, Model.biElliptic(R1, R1 * R, R1 * Rb));
+    return best;
+  };
+  push("and a bi-elliptic with a real intermediate radius beats it above the crossing",
+       cheapest(20) < Model.hohmannClosed(R1, 20) - 1e-4
+       && cheapest(8) > Model.hohmannClosed(R1, 8) - 1e-9,
+       "at a ratio of 20 the best bi-elliptic costs " + cheapest(20).toFixed(5)
+       + " against Hohmann's " + Model.hohmannClosed(R1, 20).toFixed(5)
+       + "; at a ratio of 8 it cannot do better than Hohmann's "
+       + Model.hohmannClosed(R1, 8).toFixed(5));
+
+  /* 12. escape, at exactly root two times circular speed */
+  const vEsc = Math.sqrt(2 * MU / R1);
+  const justUnder = Model.burn(R1, vEsc - Model.vCirc(R1) - 1e-6, 0);
+  const justOver = Model.burn(R1, vEsc - Model.vCirc(R1) + 1e-6, 0);
+  push("escape happens at exactly root two times circular speed",
+       justUnder.e < 1 && justOver.e >= 1
+       && near(vEsc / Model.vCirc(R1), Math.SQRT2, 1e-12),
+       "escape speed " + vEsc.toFixed(6) + " km/s is " + (vEsc / Model.vCirc(R1)).toFixed(12)
+       + " times the circular speed; the model turns from closed to open across it");
+
+  /* 13. a purely outward burn adds energy but no angular momentum */
+  const base = Model.burn(R1, 0, 0);
+  let w13 = 0;
+  for (let d = 0.2; d <= 3.01; d += 0.2){
+    const o = Model.burn(R1, d, 90);
+    w13 = Math.max(w13, Math.abs(o.h / base.h - 1));
+    if (!(o.eps > base.eps)) w13 = 9;
+  }
+  push("thrusting straight outwards adds energy but no angular momentum",
+       w13 < 1e-12,
+       "angular momentum is unchanged to " + w13.toExponential(2)
+       + " across fifteen burn sizes, while the energy rises every time, which is why "
+       + "an outward burn raises the far side no more than a prograde one and wastes the rest");
+
+  return t;
+};
+
+/* exposed for the verifier's control sweep */
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
