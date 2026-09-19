@@ -235,16 +235,50 @@ const el = (id) => document.getElementById(id);
 const cv = el("view"), ctx = cv.getContext("2d");
 function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
-const PANEL_Y = 34, PANEL_H = 300, BAR_Y = 410, BAR_H = 170, PAD = 16;
+/* This canvas was a fixed 960 by 620 surface with 11 and 12px type. Squeezed
+   into a 390px viewport the twelve-bar chart underneath became an illegible
+   strip. Everything is derived from the container's width now, and below about
+   470px the two wave panels stack instead of sitting side by side, so each one
+   keeps the full width. */
+const SS = 2;
+let CW = 960, CH = 620, PAD = 16, FS = 13, NARROW = false;
+let PANEL_Y = 34, PANEL_H = 300, BAR_Y = 410, BAR_H = 170;
+const SHORT = ["8", "m2", "M2", "m3", "M3", "P4", "TT", "P5", "m6", "M6", "m7", "M7", "8ve"];
 
-function drawPanel(x0, wide, colour, label, fa, fb){
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 20) : 960);
+  NARROW = avail < 470;
+  CW = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+  PAD = NARROW ? 10 : 16;
+  PANEL_Y = FS + 22;
+  PANEL_H = Math.round(Math.max(110, Math.min(320, CW * (NARROW ? 0.40 : 0.32))));
+  const panelBlock = NARROW ? 2 * PANEL_H + FS + 26 : PANEL_H;
+  BAR_Y = Math.round(PANEL_Y + panelBlock + FS + 34);
+  BAR_H = Math.round(Math.max(140, Math.min(200, CW * 0.19)));
+  CH = BAR_Y + BAR_H + 8;
+  if (cv.width !== CW * SS || cv.height !== CH * SS){ cv.width = CW * SS; cv.height = CH * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function drawPanel(x0, y0, wide, tall, colour, label, fa, fb){
   const muted = css("--muted"), line = css("--line");
   ctx.strokeStyle = line; ctx.lineWidth = 1;
-  ctx.strokeRect(x0 + 0.5, PANEL_Y + 0.5, wide - 1, PANEL_H - 1);
-  ctx.fillStyle = colour; ctx.font = "700 14px ui-monospace, monospace"; ctx.textAlign = "left";
-  ctx.fillText(label, x0 + 10, PANEL_Y - 10);
+  ctx.strokeRect(x0 + 0.5, y0 + 0.5, wide - 1, tall - 1);
+  ctx.fillStyle = colour;
+  ctx.font = "700 " + FS + "px ui-monospace, monospace"; ctx.textAlign = "left";
+  /* the panel title is the one label with no room to spare, so it shortens
+     rather than running off the edge of its own panel */
+  let text = label;
+  if (ctx.measureText(text).width > wide - 16){
+    text = label.split("  —  ")[0];
+    if (ctx.measureText(text).width > wide - 16) text = text.split("  ")[0];
+  }
+  ctx.fillText(text, x0 + 10, y0 - 8);
 
-  const mid = PANEL_Y + PANEL_H / 2, amp = PANEL_H / 2 - 16;
+  const mid = y0 + tall / 2, amp = tall / 2 - Math.max(8, tall * 0.055);
   ctx.strokeStyle = line;
   ctx.beginPath(); ctx.moveTo(x0, mid); ctx.lineTo(x0 + wide, mid); ctx.stroke();
 
@@ -273,49 +307,75 @@ function drawPanel(x0, wide, colour, label, fa, fb){
   }
   ctx.stroke(); ctx.globalAlpha = 1;
 
-  ctx.fillStyle = muted; ctx.font = "12px ui-monospace, monospace"; ctx.textAlign = "right";
-  ctx.fillText(beat < 0.005 ? "no beating" : beat.toFixed(2) + " beats/s", x0 + wide - 10, PANEL_Y + PANEL_H - 10);
+  /* the wave fills the panel, so this label needs something to sit on */
+  ctx.font = FS + "px ui-monospace, monospace"; ctx.textAlign = "right";
+  const bl = beat < 0.005 ? "no beating" : beat.toFixed(2) + " beats/s";
+  const blw = ctx.measureText(bl).width + 10;
+  ctx.fillStyle = css("--panel"); ctx.globalAlpha = 0.88;
+  ctx.fillRect(x0 + wide - 10 - blw + 5, y0 + tall - 8 - FS - 2, blw, FS + 6);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = muted;
+  ctx.fillText(bl, x0 + wide - 10, y0 + tall - 8);
 }
 
 function render(){
+  fitCanvas();
   const muted = css("--muted"), line = css("--line"), panel = css("--panel"),
         just = css("--just"), eq = css("--eq"), ink = css("--ink");
   const n = state.interval, root = state.root;
 
-  ctx.clearRect(0, 0, cv.width, cv.height);
-  ctx.fillStyle = panel; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.clearRect(0, 0, CW, CH);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, CW, CH);
 
   const c = Model.clashing(n, root);
-  const wide = (cv.width - 3 * PAD) / 2;
-  drawPanel(PAD, wide, just,
-    "JUST  " + Model.JUST[n][0] + ":" + Model.JUST[n][1] + "  —  " + c.p + "× vs " + c.q + "×",
-    c.justLow, c.justHigh);
-  drawPanel(2 * PAD + wide, wide, eq,
-    "EQUAL  2^(" + n + "/12)  —  same two harmonics",
-    c.eqLow, c.eqHigh);
+  const justLabel = "JUST  " + Model.JUST[n][0] + ":" + Model.JUST[n][1]
+                  + "  —  " + c.p + "× vs " + c.q + "×";
+  const eqLabel = "EQUAL  2^(" + n + "/12)  —  same two harmonics";
+  if (NARROW){
+    const wide = CW - 2 * PAD;
+    drawPanel(PAD, PANEL_Y, wide, PANEL_H, just, justLabel, c.justLow, c.justHigh);
+    drawPanel(PAD, PANEL_Y + PANEL_H + FS + 26, wide, PANEL_H, eq, eqLabel, c.eqLow, c.eqHigh);
+  } else {
+    const wide = (CW - 3 * PAD) / 2;
+    drawPanel(PAD, PANEL_Y, wide, PANEL_H, just, justLabel, c.justLow, c.justHigh);
+    drawPanel(2 * PAD + wide, PANEL_Y, wide, PANEL_H, eq, eqLabel, c.eqLow, c.eqHigh);
+  }
 
   /* cents error of all twelve intervals */
-  const x0 = PAD, x1 = cv.width - PAD;
-  const mid = BAR_Y + BAR_H / 2, scale = (BAR_H / 2 - 24) / 18;
+  const x0 = PAD, x1 = CW - PAD;
+  const mid = BAR_Y + BAR_H / 2, scale = (BAR_H / 2 - 2 * FS - 6) / 18;
   ctx.strokeStyle = line; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(x0, mid); ctx.lineTo(x1, mid); ctx.stroke();
-  ctx.fillStyle = muted; ctx.font = "12px ui-monospace, monospace"; ctx.textAlign = "left";
-  ctx.fillText("cents sharp or flat of the just interval", x0, BAR_Y - 10);
+  ctx.fillStyle = muted; ctx.font = FS + "px ui-monospace, monospace"; ctx.textAlign = "left";
+  ctx.fillText(NARROW ? "cents sharp or flat of just" : "cents sharp or flat of the just interval",
+               x0, BAR_Y - 8);
 
   const bw = (x1 - x0) / 12;
+  /* Twelve slots across a phone is about thirty pixels each. "tritone" needs
+     fifty, so the names shorten when they must, and the cents figure is kept
+     only on the bar the reader has selected rather than smeared across all
+     twelve at four effective pixels. */
+  ctx.font = FS + "px ui-monospace, monospace";
+  const longest = Math.max.apply(null, Model.NAMES.slice(1).map((s2) => ctx.measureText(s2).width));
+  const useShort = longest > bw - 4;
+  const roomForAll = ctx.measureText("+15.6").width <= bw - 4;
   for (let k = 1; k <= 12; k++){
     const e = Model.error(k), h = e * scale;
-    const bx = x0 + (k - 1) * bw;
-    ctx.fillStyle = k === n ? eq : ink;
-    ctx.globalAlpha = k === n ? 0.95 : 0.22;
-    ctx.fillRect(bx + 5, h >= 0 ? mid - h : mid, bw - 10, Math.abs(h));
+    const bx = x0 + (k - 1) * bw, on = k === n;
+    ctx.fillStyle = on ? eq : ink;
+    ctx.globalAlpha = on ? 0.95 : 0.22;
+    ctx.fillRect(bx + Math.max(2, bw * 0.12), h >= 0 ? mid - h : mid,
+                 bw - 2 * Math.max(2, bw * 0.12), Math.abs(h));
     ctx.globalAlpha = 1;
-    ctx.fillStyle = k === n ? eq : muted;
+    ctx.fillStyle = on ? eq : muted;
     ctx.textAlign = "center";
-    ctx.fillText(Model.NAMES[k], bx + bw / 2, mid + (h >= 0 ? 16 : -8));
-    ctx.font = "11px ui-monospace, monospace";
-    ctx.fillText((e >= 0 ? "+" : "") + e.toFixed(1), bx + bw / 2, h >= 0 ? mid - h - 6 : mid - h + 16);
-    ctx.font = "12px ui-monospace, monospace";
+    ctx.fillText(useShort ? SHORT[k] : Model.NAMES[k], bx + bw / 2, mid + (h >= 0 ? FS + 4 : -6));
+    if (roomForAll || on){
+      ctx.font = "700 " + FS + "px ui-monospace, monospace";
+      ctx.fillText((e >= 0 ? "+" : "") + e.toFixed(1), bx + bw / 2,
+                   h >= 0 ? mid - h - 5 : mid - h + FS + 3);
+      ctx.font = FS + "px ui-monospace, monospace";
+    }
   }
 
   const beat = Model.beatRate(n, root);
@@ -372,6 +432,12 @@ el("play").addEventListener("click", function(){
     el("audiohint").textContent = "Audio is unavailable here, but the chart shows the same thing.";
   }
 });
+let rid = null;
+addEventListener("resize", () => { clearTimeout(rid); rid = setTimeout(render, 90); });
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
 render();
 
 /* ---- SELFTEST ----------------------------------------------------------- */

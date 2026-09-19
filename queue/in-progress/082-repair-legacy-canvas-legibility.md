@@ -67,7 +67,25 @@ batch/003.
       the lower pane on a backing, because above it it collided with the pane
       title whenever r sat mid-range.
       (`floating-point-precision` was repaired in batch/005 under task 081.)
-- [ ] batch/002 pages
+- [x] `dijkstra-vs-astar` — batch/009. Container-tracking `fitCanvas()` with the
+      cell size derived from the width so the 25-wide maze fills it, cell
+      outlines dropped below 9px a cell, and the four-bar comparison chart
+      rebuilt: it measures its own labels and falls back from one line, to a
+      name over a number, to horizontal rows when a phone leaves sixty pixels
+      per bar. The old fixed 900x762 surface put the bar labels at under five
+      effective pixels at 390.
+- [x] `equal-temperament` — batch/009. Container-tracking `fitCanvas()`; below
+      470px the two wave panels stack instead of sitting side by side so each
+      keeps the full width, the twelve-bar cents chart switches to two-letter
+      interval names when the full ones do not fit, and the cents figure is
+      kept only on the selected bar rather than smeared across all twelve. The
+      beat-rate label gained a backing, since the wave fills the panel behind it.
+- [x] `pid-controller` — batch/009. Container-tracking `fitCanvas()` with the
+      gutter, both pane heights and all type derived from the width; below 470px
+      the time ticks thin from every 2s to every 5s and the two long labels
+      shorten. The effort strip had vanished entirely at 390.
+- [ ] batch/002 pages — `newton-raphson-basins`, `supply-demand-tax-incidence`
+      remain
 - [ ] batch/003 pages
 
 **Use the container-tracking pattern, not the two-fixed-sizes one.** Clamp the
