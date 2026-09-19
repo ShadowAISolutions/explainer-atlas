@@ -1,0 +1,17 @@
+{
+  "slug": "pid-controller",
+  "title": "Three Knobs, Three Different Ways to Be Wrong",
+  "domain": "engineering",
+  "difficulty": 4,
+  "summary": "Tune a PID controller by hand against a target step response and find out what each of the three terms fixes, and what each one breaks.",
+  "prerequisites": ["damped-harmonic-oscillator"],
+  "tags": ["control-theory", "pid", "step-response", "stability", "routh-hurwitz", "overshoot"],
+  "interaction_pattern": "tune-to-match",
+  "sources": [
+    { "title": "PID controller — Wikipedia", "url": "https://en.wikipedia.org/wiki/PID_controller" },
+    { "title": "Routh–Hurwitz stability criterion — Wikipedia", "url": "https://en.wikipedia.org/wiki/Routh%E2%80%93Hurwitz_stability_criterion" },
+    { "title": "Step response — Wikipedia", "url": "https://en.wikipedia.org/wiki/Step_response" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 11
+}

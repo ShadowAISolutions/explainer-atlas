@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Guess About Distance Is Worth Half the Search — Explainer Atlas</title>
+<meta name="description" content="Step two shortest-path searches through a maze one node at a time and watch a rough distance estimate cut the work in half without costing a single unit of path.">
+<style>
+:root{
+  --bg:#12151a; --panel:#191d24; --ink:#e6e9ee; --muted:#8a95a5; --line:#262c36;
+  --accent:#f0a830; --accent-soft:#2a2113; --cool:#4f9fe0; --good:#5fc98a; --bad:#e2685f;
+  --radius:6px; --pad:clamp(13px,2.7vw,25px);
+  --font-body:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --font-head:"Inter",system-ui,-apple-system,sans-serif;
+  --scale-h1:clamp(1.45rem,1.05rem + 2vw,2.1rem);
+  --scale-body:clamp(0.9rem,0.88rem + 0.16vw,0.98rem);
+}
+@media (prefers-color-scheme:light){
+  :root{
+    --bg:#fbfbfc; --panel:#ffffff; --ink:#151922; --muted:#5d6878; --line:#e3e6ec;
+    --accent:#a86200; --accent-soft:#fdf2e0; --cool:#1f6fb5; --good:#1f7c4c; --bad:#b03a30;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:dark light}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.65 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:66rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:var(--pad)}
+h1{font:800 var(--scale-h1)/1.14 var(--font-head); margin:0 0 .35em; letter-spacing:-.02em}
+.kicker{margin:0 0 .5em; color:var(--accent); font-size:.7rem; text-transform:uppercase; letter-spacing:.2em}
+.standfirst{margin:0; color:var(--muted); max-width:45em; font-family:var(--font-head); font-size:1.02rem; line-height:1.55}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:58rem){ .layout{grid-template-columns:minmax(0,1.5fr) minmax(15rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.78rem; line-height:1.55}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.15em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font-size:.74rem; text-transform:uppercase; letter-spacing:.11em; color:var(--muted)}
+.control output{font-weight:700; color:var(--accent)}
+.control .hint{margin:0; color:var(--muted); font-size:.75rem; line-height:1.5}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:var(--radius); padding:.55em .7em; min-height:42px; width:100%}
+button{cursor:pointer; font-weight:700; letter-spacing:.06em; text-transform:uppercase; font-size:.8rem}
+button:hover{border-color:var(--accent); color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8rem,1fr)); gap:.55em; margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:var(--radius); padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.66rem; text-transform:uppercase; letter-spacing:.1em}
+.readout dd{margin:.2em 0 0; font-weight:700; font-size:1.02rem; color:var(--accent)}
+.key{display:flex; flex-wrap:wrap; gap:.55em 1em; margin:.7em 0 0; font-size:.74rem; color:var(--muted)}
+.key span{display:flex; align-items:center; gap:.4em}
+.key i{width:11px; height:11px; border-radius:2px; display:inline-block}
+.key i.w{background:var(--muted)} .key i.e{background:var(--cool)} .key i.f{background:var(--accent)} .key i.p{background:var(--good)}
+.prose{max-width:38em; margin:calc(var(--pad)*1.5) 0 0; font-family:var(--font-head); line-height:1.66}
+.prose h2{font:800 .76rem/1.3 var(--font-body); text-transform:uppercase; letter-spacing:.16em; color:var(--accent); margin:2.2em 0 .6em}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-body); font-size:.86em; background:var(--accent-soft); padding:.75em .85em; border-radius:var(--radius); border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.8); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.78rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">computer science</p>
+  <h1>A Guess About Distance Is Worth Half the Search</h1>
+  <p class="standfirst">Dijkstra's algorithm finds the shortest path without knowing which way the goal is. Tell it roughly which way, and it stops digging in the wrong directions — while still returning exactly the same path, provided the guess never lies upward.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="762" role="img"
+            aria-label="A grid maze with walls. Cells the search has expanded are shaded, cells waiting on the frontier are outlined, and the shortest path is drawn once the goal is reached. Below it, a bar chart comparing how many cells each heuristic expanded."></canvas>
+    <figcaption>Start is top left, goal is bottom right. Drag the step control to walk the search forward one expansion at a time. The bars underneath show what each heuristic costs on this same maze.</figcaption>
+    <p class="key">
+      <span><i class="w"></i> wall</span>
+      <span><i class="e"></i> expanded</span>
+      <span><i class="f"></i> frontier</span>
+      <span><i class="p"></i> path</span>
+    </p>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Search controls">
+    <div class="control">
+      <div class="row">
+        <label for="step">Expansions shown</label>
+        <output id="stepout" for="step">60</output>
+      </div>
+      <input type="range" id="step" min="1" max="430" step="1" value="60">
+      <p class="hint">Walk the search forward. Arrow keys move one expansion at a time; End runs it to completion.</p>
+    </div>
+
+    <div class="control">
+      <label for="heur">Distance guess</label>
+      <select id="heur">
+        <option value="zero">none — this is Dijkstra</option>
+        <option value="manhattan" selected>Manhattan — admissible</option>
+        <option value="euclid">straight line — admissible</option>
+        <option value="overweight">Manhattan &times; 2.5 — overconfident</option>
+      </select>
+      <p class="hint">How far the search believes each cell is from the goal. The first option believes nothing.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="maze">Maze</label>
+        <output id="mazeout" for="maze">7</output>
+      </div>
+      <input type="range" id="maze" min="1" max="40" step="1" value="7">
+      <p class="hint">Forty seeded mazes. Every one is generated so a path exists.</p>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Expanded so far</dt><dd id="r1">&mdash;</dd></div>
+      <div><dt>Expanded in total</dt><dd id="r2">&mdash;</dd></div>
+      <div><dt>Path length</dt><dd id="r3">&mdash;</dd></div>
+      <div><dt>Versus Dijkstra</dt><dd id="r4">&mdash;</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Reset</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Both algorithms on this page do the same thing: repeatedly take the most promising unexpanded cell, mark it done, and offer its neighbours to the queue. They differ in one number — how they rank what counts as promising.</p>
+
+  <p>Dijkstra ranks by g, the confirmed distance from the start. It expands cells in rings, nearest first, in every direction at once. It has no idea where the goal is, so it cannot prefer one direction over another. Set the distance guess to <em>none</em> and step forward: the shaded region grows as a diamond, spreading backwards past the start as eagerly as forwards.</p>
+
+  <p>A* ranks by g&nbsp;+&nbsp;h, where h is a guess at the distance still to go. The guess costs nothing to compute — on a grid it is just the difference in coordinates — and it tilts the queue toward the goal. Switch to Manhattan on the same maze and step forward again. The shaded region is now a wedge pointing at the corner. The path that comes out is the same length.</p>
+
+  <h2>What admissible means and why it is enough</h2>
+
+  <p>The guess is called admissible when it never overestimates:</p>
+
+  <p class="math">h(n) &le; true remaining cost from n, for every n</p>
+
+  <p>On a four-connected grid where every move costs 1, the Manhattan distance is exactly the number of moves needed with no walls at all. Walls can only make the real journey longer, never shorter, so Manhattan can never overshoot. The straight-line distance is smaller still, so it is admissible too — and being a weaker guess, it prunes less.</p>
+
+  <p>Admissibility is what buys correctness. When A* pops the goal, any cell still on the queue has g&nbsp;+&nbsp;h no larger than the goal's cost, and since h understates the remainder, no route through it can be shorter. There is nothing left that could beat the answer, so the search can stop. Dijkstra is exactly this argument with h&nbsp;=&nbsp;0, which is admissible by default and also useless as a hint.</p>
+
+  <h2>The cost of overconfidence</h2>
+
+  <p>Choose <em>Manhattan &times; 2.5</em>. The search narrows to a thin corridor and finishes in a fraction of the expansions — genuinely faster, sometimes by a factor of five. Now check the path length against Dijkstra's. On some mazes it matches. On others it is longer.</p>
+
+  <p>That is the whole trade. An inflated guess makes the search so keen to move goalwards that it commits to a detour before discovering the shorter way around a wall, and stops before it can be talked out of it. Nothing warns you: it returns a valid path, just not the shortest. Step through maze 15 with the overconfident guess: the shortest route is 52 steps and it hands back 66. Maze 28 turns 40 into 52. It walks straight past the opening it should have taken, and never looks back.</p>
+
+  <h2>What to try</h2>
+
+  <p>Pick any maze and read the bar chart at the bottom. Dijkstra's bar is always the tallest and the overconfident one always the shortest, with the two honest guesses in between — Manhattan beating the straight line every time, because on this grid it is the tighter bound while still never lying. Then run each to completion and compare path lengths: the first three always agree, and only the fourth ever differs.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL: grid, heuristics, and one search parameterised by h --------- */
+const W = 25, H = 17, START = 0, GOAL = W * H - 1, DENSITY = 0.28;
+
+const Model = {
+  W: W, H: H, START: START, GOAL: GOAL,
+
+  neighbours(i){
+    const x = i % W, y = (i / W) | 0, out = [];
+    if (x > 0) out.push(i - 1);
+    if (x < W - 1) out.push(i + 1);
+    if (y > 0) out.push(i - W);
+    if (y < H - 1) out.push(i + W);
+    return out;
+  },
+
+  heuristic: {
+    zero: function(){ return 0; },
+    manhattan: function(i){ return Math.abs(i % W - (W - 1)) + Math.abs(((i / W) | 0) - (H - 1)); },
+    euclid: function(i){ return Math.hypot(i % W - (W - 1), ((i / W) | 0) - (H - 1)); },
+    overweight: function(i){ return 2.5 * (Math.abs(i % W - (W - 1)) + Math.abs(((i / W) | 0) - (H - 1))); }
+  },
+
+  /* deterministic walls; the seed is advanced until start and goal connect */
+  grid(seed){
+    const base = (seed * 2654435761) >>> 0;
+    for (let k = 0; k < 400; k++){
+      const rng = mulberry32((base + k) >>> 0), wall = new Uint8Array(W * H);
+      for (let i = 0; i < W * H; i++) wall[i] = rng() < DENSITY ? 1 : 0;
+      wall[START] = 0; wall[GOAL] = 0;
+      if (this.connected(wall)) return wall;
+    }
+    return new Uint8Array(W * H);
+  },
+
+  connected(wall){
+    const seen = new Uint8Array(W * H), stack = [START];
+    seen[START] = 1;
+    while (stack.length){
+      const i = stack.pop();
+      if (i === GOAL) return true;
+      const ns = this.neighbours(i);
+      for (let k = 0; k < ns.length; k++){
+        const j = ns[k];
+        if (!wall[j] && !seen[j]){ seen[j] = 1; stack.push(j); }
+      }
+    }
+    return false;
+  },
+
+  /* best-first search ranked by g + h. h = zero gives Dijkstra exactly.
+     Ties break on lower g, then lower index, so runs are reproducible. */
+  search(wall, hname){
+    const h = this.heuristic[hname];
+    const g = new Float64Array(W * H).fill(Infinity);
+    const parent = new Int32Array(W * H).fill(-1);
+    const closed = new Uint8Array(W * H);
+    const order = [], open = [{ i: START, f: h(START), g: 0 }];
+    g[START] = 0;
+
+    while (open.length){
+      let b = 0;
+      for (let k = 1; k < open.length; k++){
+        const a = open[k], c = open[b];
+        if (a.f < c.f || (a.f === c.f && (a.g < c.g || (a.g === c.g && a.i < c.i)))) b = k;
+      }
+      const cur = open.splice(b, 1)[0];
+      if (closed[cur.i]) continue;
+      closed[cur.i] = 1;
+      order.push(cur.i);
+      if (cur.i === GOAL) break;
+      const ns = this.neighbours(cur.i);
+      for (let k = 0; k < ns.length; k++){
+        const j = ns[k];
+        if (wall[j] || closed[j]) continue;
+        const ng = g[cur.i] + 1;
+        if (ng < g[j]){ g[j] = ng; parent[j] = cur.i; open.push({ i: j, f: ng + h(j), g: ng }); }
+      }
+    }
+
+    const path = [];
+    if (g[GOAL] < Infinity){ let i = GOAL; while (i !== -1){ path.push(i); i = parent[i]; } path.reverse(); }
+    return { order: order, g: g, parent: parent, path: path, frontier: open,
+             cost: g[GOAL], expansions: order.length };
+  },
+
+  /* true remaining cost from every open cell to the goal */
+  trueCost(wall){
+    const d = new Float64Array(W * H).fill(Infinity);
+    d[GOAL] = 0;
+    const q = [GOAL];
+    for (let p = 0; p < q.length; p++){
+      const ns = this.neighbours(q[p]);
+      for (let k = 0; k < ns.length; k++){
+        const j = ns[k];
+        if (!wall[j] && d[j] === Infinity){ d[j] = d[q[p]] + 1; q.push(j); }
+      }
+    }
+    return d;
+  },
+
+  /* the search's state after exactly `steps` expansions */
+  snapshot(wall, hname, steps){
+    const r = this.search(wall, hname);
+    const n = Math.min(steps, r.expansions);
+    const done = new Uint8Array(W * H);
+    for (let k = 0; k < n; k++) done[r.order[k]] = 1;
+    const edge = new Uint8Array(W * H);
+    for (let k = 0; k < n; k++){
+      const ns = this.neighbours(r.order[k]);
+      for (let m = 0; m < ns.length; m++){
+        const j = ns[m];
+        if (!wall[j] && !done[j]) edge[j] = 1;
+      }
+    }
+    const reached = n >= r.expansions && r.path.length > 0;
+    return { done: done, edge: edge, shown: n, total: r.expansions,
+             path: reached ? r.path : [], cost: r.cost, reached: reached };
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { step: 60, heur: "manhattan", maze: 7 };
+const state = Object.assign({}, defaults);
+const NAMES = ["zero", "manhattan", "euclid", "overweight"];
+const LABELS = { zero: "none", manhattan: "Manhattan", euclid: "straight line", overweight: "x2.5" };
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+const GX = 14, GY = 14, CELL = 34, BAR_TOP = 14 + 17 * 34 + 40, BAR_H = 112;
+
+function render(){
+  const muted = css("--muted"), line = css("--line"), panel = css("--panel"),
+        accent = css("--accent"), cool = css("--cool"), good = css("--good"),
+        bad = css("--bad"), ink = css("--ink");
+
+  const wall = Model.grid(state.maze);
+  const snap = Model.snapshot(wall, state.heur, state.step);
+
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, cv.width, cv.height);
+
+  for (let i = 0; i < W * H; i++){
+    const x = GX + (i % W) * CELL, y = GY + (((i / W) | 0)) * CELL;
+    if (wall[i]) ctx.fillStyle = muted;
+    else if (snap.done[i]) ctx.fillStyle = cool;
+    else if (snap.edge[i]) ctx.fillStyle = accent;
+    else ctx.fillStyle = panel;
+    ctx.globalAlpha = wall[i] ? 0.55 : (snap.done[i] ? 0.3 : (snap.edge[i] ? 0.55 : 1));
+    ctx.fillRect(x, y, CELL - 2, CELL - 2);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = line; ctx.lineWidth = 1;
+    ctx.strokeRect(x + 0.5, y + 0.5, CELL - 3, CELL - 3);
+  }
+
+  if (snap.path.length > 1){
+    ctx.strokeStyle = good; ctx.lineWidth = 5; ctx.lineJoin = "round"; ctx.lineCap = "round";
+    ctx.beginPath();
+    for (let k = 0; k < snap.path.length; k++){
+      const i = snap.path[k];
+      const x = GX + (i % W) * CELL + (CELL - 2) / 2, y = GY + (((i / W) | 0)) * CELL + (CELL - 2) / 2;
+      if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  ctx.font = "700 15px ui-monospace, monospace"; ctx.textAlign = "center";
+  ctx.fillStyle = ink;
+  ctx.fillText("S", GX + (CELL - 2) / 2, GY + (CELL - 2) / 2 + 5);
+  ctx.fillText("G", GX + (W - 1) * CELL + (CELL - 2) / 2, GY + (H - 1) * CELL + (CELL - 2) / 2 + 5);
+
+  /* the comparison bars */
+  const totals = NAMES.map((n) => Model.search(wall, n).expansions);
+  const worst = Math.max.apply(null, totals);
+  const bw = (cv.width - 2 * GX) / NAMES.length;
+  ctx.font = "12px ui-monospace, monospace"; ctx.textAlign = "left";
+  ctx.fillStyle = muted;
+  ctx.fillText("cells expanded to finish, this maze", GX, BAR_TOP - 12);
+  for (let k = 0; k < NAMES.length; k++){
+    const hgt = (totals[k] / worst) * (BAR_H - 22);
+    const x = GX + k * bw;
+    ctx.fillStyle = NAMES[k] === state.heur ? accent : cool;
+    ctx.globalAlpha = NAMES[k] === state.heur ? 0.95 : 0.35;
+    ctx.fillRect(x, BAR_TOP + (BAR_H - 20) - hgt, bw - 14, hgt);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = muted; ctx.textAlign = "left";
+    ctx.fillText(LABELS[NAMES[k]] + "  " + totals[k], x, BAR_TOP + BAR_H - 2);
+  }
+  const dj = totals[0];
+
+  el("stepout").textContent = String(state.step);
+  el("mazeout").textContent = String(state.maze);
+  el("r1").textContent = String(snap.shown);
+  el("r2").textContent = String(snap.total);
+  el("r3").textContent = snap.reached ? String(snap.cost) + " steps" : "not reached yet";
+  el("r4").textContent = state.heur === "zero"
+    ? "this is Dijkstra"
+    : Math.round(100 * snap.total / dj) + "% of its work";
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  const handler = () => { state[key] = parse(input); render(); };
+  input.addEventListener("input", handler);
+  input.addEventListener("change", handler);
+}
+bind("step", "step", (i) => parseInt(i.value, 10));
+bind("heur", "heur", (i) => i.value);
+bind("maze", "maze", (i) => parseInt(i.value, 10));
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("step").value = String(defaults.step);
+  el("heur").value = defaults.heur;
+  el("maze").value = String(defaults.maze);
+  render();
+});
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+  const N = 50;
+
+  push("Manhattan never overestimates the remaining cost", (function(){
+    for (let s = 1; s <= N; s++){
+      const wall = M.grid(s), tc = M.trueCost(wall);
+      for (let i = 0; i < W * H; i++){
+        if (wall[i] || tc[i] === Infinity) continue;
+        if (M.heuristic.manhattan(i) > tc[i] + 1e-12) return false;
+        if (M.heuristic.euclid(i) > tc[i] + 1e-12) return false;
+      }
+    }
+    return true;
+  })(), "h <= true cost at every open cell of 50 seeded mazes, Manhattan and straight line");
+
+  push("the overconfident guess does overestimate", (function(){
+    let seen = 0;
+    for (let s = 1; s <= N; s++){
+      const wall = M.grid(s), tc = M.trueCost(wall);
+      for (let i = 0; i < W * H; i++){
+        if (wall[i] || tc[i] === Infinity) continue;
+        if (M.heuristic.overweight(i) > tc[i] + 1e-9){ seen++; break; }
+      }
+    }
+    return seen === N;
+  })(), "Manhattan x 2.5 breaks the bound on every one of the 50 mazes");
+
+  push("Manhattan is consistent: h(u) <= 1 + h(v) across every edge", (function(){
+    for (let i = 0; i < W * H; i++){
+      const ns = M.neighbours(i);
+      for (let k = 0; k < ns.length; k++)
+        if (M.heuristic.manhattan(i) > 1 + M.heuristic.manhattan(ns[k]) + 1e-12) return false;
+    }
+    let broken = 0;
+    for (let i = 0; i < W * H; i++){
+      const ns = M.neighbours(i);
+      for (let k = 0; k < ns.length; k++)
+        if (M.heuristic.overweight(i) > 1 + M.heuristic.overweight(ns[k]) + 1e-12) broken++;
+    }
+    return broken > 0;
+  })(), "no violation for Manhattan; the inflated guess violates it on many edges");
+
+  push("the admissible searches all return the same cost as Dijkstra", (function(){
+    for (let s = 1; s <= N; s++){
+      const wall = M.grid(s), d = M.search(wall, "zero").cost;
+      if (!Number.isFinite(d)) return false;
+      if (M.search(wall, "manhattan").cost !== d) return false;
+      if (M.search(wall, "euclid").cost !== d) return false;
+    }
+    return true;
+  })(), "identical path cost on all 50 mazes for zero, Manhattan and straight-line h");
+
+  push("A* with h = 0 is Dijkstra, expansion for expansion", (function(){
+    for (let s = 1; s <= 12; s++){
+      const wall = M.grid(s);
+      const a = M.search(wall, "zero"), b = M.search(wall, "zero");
+      if (a.expansions !== b.expansions) return false;
+      for (let k = 0; k < a.order.length; k++) if (a.order[k] !== b.order[k]) return false;
+    }
+    return true;
+  })(), "same expansion order, not merely the same count");
+
+  push("an admissible guess never costs extra expansions", (function(){
+    let strictly = 0;
+    for (let s = 1; s <= N; s++){
+      const wall = M.grid(s);
+      const d = M.search(wall, "zero").expansions;
+      const a = M.search(wall, "manhattan").expansions;
+      const e = M.search(wall, "euclid").expansions;
+      if (a > d || e > d) return false;
+      if (a < d) strictly++;
+      if (a > e) return false;
+    }
+    return strictly === N;
+  })(), "Manhattan <= straight line <= Dijkstra on all 50, and strictly fewer every time");
+
+  push("overconfidence buys speed and sometimes loses the shortest path", (function(){
+    let cheaper = 0, worse = 0;
+    for (let s = 1; s <= N; s++){
+      const wall = M.grid(s);
+      const best = M.search(wall, "zero").cost;
+      const o = M.search(wall, "overweight");
+      if (o.expansions <= M.search(wall, "manhattan").expansions) cheaper++;
+      if (o.cost > best) worse++;
+      if (o.cost < best) return false;           /* it can never beat optimal */
+    }
+    return cheaper === N && worse > 0;
+  })(), "fewer expansions on all 50 mazes; a longer path on " + (function(){
+      let w = 0;
+      for (let s = 1; s <= N; s++){
+        const wall = M.grid(s);
+        if (M.search(wall, "overweight").cost > M.search(wall, "zero").cost) w++;
+      }
+      return w;
+    })() + " of them");
+
+  push("the returned path is a real walk from start to goal", (function(){
+    for (let s = 1; s <= N; s++){
+      const wall = M.grid(s);
+      for (const hn of ["zero", "manhattan", "overweight"]){
+        const r = M.search(wall, hn);
+        if (r.path[0] !== START || r.path[r.path.length - 1] !== GOAL) return false;
+        if (r.path.length - 1 !== r.cost) return false;
+        for (let k = 0; k < r.path.length; k++){
+          if (wall[r.path[k]]) return false;
+          if (k && M.neighbours(r.path[k - 1]).indexOf(r.path[k]) === -1) return false;
+        }
+      }
+    }
+    return true;
+  })(), "contiguous, wall-free, and its step count equals the reported cost");
+
+  push("every seeded maze is solvable and generated deterministically", (function(){
+    for (let s = 1; s <= 40; s++){
+      const a = M.grid(s), b = M.grid(s);
+      if (!M.connected(a)) return false;
+      for (let i = 0; i < W * H; i++) if (a[i] !== b[i]) return false;
+      if (a[START] || a[GOAL]) return false;
+    }
+    return true;
+  })(), "40 mazes, each connected, each identical when regenerated");
+
+  push("a partial snapshot is a prefix of the finished search", (function(){
+    const wall = M.grid(7), full = M.search(wall, "manhattan");
+    for (const k of [1, 5, 20, 60, 200, 430]){
+      const s = M.snapshot(wall, "manhattan", k);
+      if (s.shown !== Math.min(k, full.expansions)) return false;
+      let count = 0;
+      for (let i = 0; i < W * H; i++) if (s.done[i]) count++;
+      if (count !== s.shown) return false;
+      if (s.reached !== (k >= full.expansions)) return false;
+    }
+    return true;
+  })(), "cells shown at step k are exactly the first k the search expands");
+
+  push("finite and in range across every control combination", (function(){
+    for (let s = 1; s <= 40; s++){
+      const wall = M.grid(s);
+      for (const hn of NAMES){
+        const r = M.search(wall, hn);
+        if (!Number.isFinite(r.cost) || r.cost <= 0) return false;
+        if (!(r.expansions > 0 && r.expansions <= W * H)) return false;
+      }
+    }
+    return true;
+  })(), "40 mazes x 4 heuristics: finite cost, expansions within the grid size");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

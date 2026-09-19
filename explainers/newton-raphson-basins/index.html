@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where You Start Decides Where You Land — Explainer Atlas</title>
+<meta name="description" content="Newton's method doubles its correct digits every step near a root. Pan across the complex plane and watch the map of which root each starting point reaches turn into a fractal.">
+<style>
+:root{
+  --bg:#ffffff; --panel:#0c0d10; --ink:#0d0f13; --muted:#646b78; --line:#e2e5ea;
+  --a1:#e8443c; --a2:#2e9be0; --a3:#f2b134; --a4:#8b5cf6; --stall:#9aa3b2;
+  --radius:0px; --pad:clamp(14px,2.8vw,26px);
+  --font-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.7rem,1.05rem + 2.8vw,2.7rem);
+  --scale-body:clamp(0.94rem,0.91rem + 0.18vw,1.01rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#0a0b0d; --panel:#000000; --ink:#eceef2; --muted:#8b93a1; --line:#1e2127; }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{max-width:40em}
+h1{font-size:var(--scale-h1); line-height:1.06; margin:.1em 0 .35em; letter-spacing:-.035em; font-weight:900}
+.kicker{margin:0; color:var(--a1); font:700 .68rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.22em}
+.standfirst{margin:0; color:var(--muted); max-width:38em}
+figure.stage{margin:var(--pad) 0 0; padding:0; background:none; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y; background:var(--panel)}
+figcaption{margin:.65em 0 0; color:var(--muted); font-size:.81rem; line-height:1.5; max-width:44em}
+.controls{margin-top:var(--pad); border-top:2px solid var(--ink); border-bottom:1px solid var(--line);
+  padding:var(--pad) 0; display:grid; gap:1em var(--pad);
+  grid-template-columns:repeat(auto-fit,minmax(12rem,1fr)); align-items:start}
+.control{display:grid; gap:.28em; min-width:0}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.5em}
+.control label{font:700 .7rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.11em}
+.control output{font:700 .88rem/1 var(--font-mono); color:var(--a1)}
+.control .hint{margin:0; color:var(--muted); font-size:.75rem; line-height:1.45}
+input[type=range]{width:100%; accent-color:var(--a1); min-height:24px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--ink); border-radius:0; padding:.5em .65em; min-height:40px; width:100%}
+button{cursor:pointer; font:700 .76rem/1 var(--font-mono); text-transform:uppercase; letter-spacing:.08em}
+button:hover{background:var(--ink); color:var(--bg)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--a1); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:var(--pad); margin:var(--pad) 0 0; padding:0}
+.readout div{padding:0}
+.readout dt{margin:0; color:var(--muted); font:400 .68rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.11em}
+.readout dd{margin:.15em 0 0; font:900 1.5rem/1.1 var(--font-body); letter-spacing:-.03em}
+.prose{max-width:36em; margin:calc(var(--pad)*1.8) 0 0}
+.prose h2{font:900 1.05rem/1.25 var(--font-body); letter-spacing:-.02em; margin:2.1em 0 .5em}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.87em; background:var(--bg); padding:.7em 0 .7em .9em; border-left:3px solid var(--a1); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*2); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.8rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">mathematics</p>
+  <h1>Where You Start Decides Where You Land</h1>
+  <p class="standfirst">Newton's method is the fastest root-finder most people ever meet: near the answer it doubles its correct digits every step. Away from the answer it does something else entirely.</p>
+</header>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="900" height="600" role="img"
+          aria-label="A map of the complex plane coloured by which root of the polynomial Newton's method reaches from each starting point, with darker shading for points that take more iterations, and a traced path of iterates from the centre of the view."></canvas>
+  <figcaption>Each pixel is a starting point, coloured by the root it eventually reaches and darkened by how long it takes. The white path is the actual sequence of iterates from the crosshair at the centre. Pan the crosshair and the path jumps.</figcaption>
+</figure>
+
+<section class="controls" data-role="controls" aria-label="View controls">
+  <div class="control">
+    <label for="poly">Polynomial</label>
+    <select id="poly">
+      <option value="p3" selected>z&sup3; &minus; 1 &mdash; three roots</option>
+      <option value="p4">z&#8308; &minus; 1 &mdash; four roots</option>
+      <option value="p5">z&#8309; &minus; 1 &mdash; five roots</option>
+      <option value="cyc">z&sup3; &minus; 2z + 2 &mdash; has a trap</option>
+    </select>
+    <p class="hint">The last one contains a cycle that Newton falls into and never escapes.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="cx">Centre, real part</label><output id="cxout" for="cx">0.000</output></div>
+    <input type="range" id="cx" min="-2" max="2" step="0.005" value="0">
+    <p class="hint">Also the starting point whose path is traced.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="cy">Centre, imaginary</label><output id="cyout" for="cy">0.000</output></div>
+    <input type="range" id="cy" min="-2" max="2" step="0.005" value="0">
+    <p class="hint">Move both together to walk along a basin boundary.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="zoom">Zoom</label><output id="zoomout" for="zoom">1&times;</output></div>
+    <input type="range" id="zoom" min="0" max="14" step="0.25" value="0">
+    <p class="hint">Magnify up to 128 times. The boundary never becomes smooth.</p>
+  </div>
+
+  <div class="control">
+    <button type="button" id="reset">Reset view</button>
+  </div>
+</section>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>From the crosshair</dt><dd id="r1">&mdash;</dd></div>
+  <div><dt>Iterations needed</dt><dd id="r2">&mdash;</dd></div>
+  <div><dt>Final residual</dt><dd id="r3">&mdash;</dd></div>
+  <div><dt>Nudge it by one part in a million</dt><dd id="r4">&mdash;</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>To solve f(x)&nbsp;=&nbsp;0, guess, then replace your guess with the place where the tangent line at that guess crosses zero:</p>
+
+  <p class="math">x&#8342;&#8330;&#8321; = x&#8342; &minus; f(x&#8342;) / f&prime;(x&#8342;)</p>
+
+  <p>On the real line with a sensible guess this is astonishingly good. Solving x&sup2;&nbsp;=&nbsp;2 from x&nbsp;=&nbsp;1 gives 1.5, then 1.41667, then 1.4142157, then 1.41421356237469, then the correctly rounded double. Five steps, from one significant figure to sixteen.</p>
+
+  <h2>Why it doubles the digits</h2>
+
+  <p>Expand f about the root r. Writing the error as e&#8342;&nbsp;=&nbsp;x&#8342;&nbsp;&minus;&nbsp;r and keeping two terms of the Taylor series, the iteration rearranges to</p>
+
+  <p class="math">e&#8342;&#8330;&#8321; &asymp; [ f&Prime;(r) / 2f&prime;(r) ] &middot; e&#8342;&sup2;</p>
+
+  <p>The new error is proportional to the square of the old one. An error of 10&#8315;&#8308; becomes about 10&#8315;&#8312;, then 10&#8315;&#185;&#8310;. That is quadratic convergence, and it is why the number of correct digits roughly doubles per step. For x&sup2;&nbsp;&minus;&nbsp;2 the constant out front is 1/(2&radic;2)&nbsp;&asymp;&nbsp;0.354, which the errors above obey to three figures once they are small enough for the expansion to hold.</p>
+
+  <p>The whole argument assumes you are already near r and that f&prime;(r) is not zero. Neither assumption is free.</p>
+
+  <h2>What the picture is</h2>
+
+  <p>Run the same iteration in the complex plane on z&sup3;&nbsp;&minus;&nbsp;1, which has three roots on the unit circle. Colour every starting point by which root it ends at. You might expect three tidy wedges. Instead you get the image above: three regions whose boundary is nowhere smooth, with copies of all three colours crowding every point of it.</p>
+
+  <p>The reason is that the boundary cannot belong to any one basin, and it cannot separate only two of them either. Any boundary point has all three basins arbitrarily close to it, at every scale. Zoom in as far as the control allows and the structure repeats rather than resolving. Arthur Cayley posed this problem in 1879, solved the quadratic case in a page, and never managed the cubic; the answer had to wait for Julia and Fatou forty years later.</p>
+
+  <h2>Two ways it fails</h2>
+
+  <p>Put the crosshair at the origin with z&sup3;&nbsp;&minus;&nbsp;1 selected. There f&prime;(0)&nbsp;=&nbsp;0, the tangent is horizontal, and the next iterate is infinitely far away. The method has no answer, and the readout says so rather than producing a number.</p>
+
+  <p>Now choose z&sup3;&nbsp;&minus;&nbsp;2z&nbsp;+&nbsp;2 and set the crosshair to the origin again. Newton sends 0 to 1, and 1 straight back to 0. It is a perfect two-step cycle, and every starting point in the black region around it is caught in the same trap forever. The polynomial has three perfectly ordinary roots; the method simply never goes to look for them.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set the zoom to about 10 and walk the real part slowly across a boundary. The iteration count flickers between low and high and the destination root changes several times inside a single step of the slider. Then watch the last readout: it retries from a point a millionth away, and near the boundary that copy lands somewhere else entirely. That is the practical warning — a root-finder that is this fast can also be this sensitive to where you set it off.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL: Newton's method, on the line and on the plane --------------- */
+const Model = {
+  MAX_ITER: 40, TOL: 1e-12, FLAT: 1e-13,
+
+  /* --- the real case, kept separate because the quadratic-rate argument
+         is easiest to check there --- */
+  realNewton(x0, f, df, maxIter, tol){
+    let x = x0;
+    const xs = [x];
+    for (let k = 0; k < maxIter; k++){
+      const d = df(x);
+      if (Math.abs(d) < this.FLAT) return { status: "flat", iterations: k, xs: xs, x: x };
+      x = x - f(x) / d;
+      xs.push(x);
+      if (Math.abs(f(x)) < tol) return { status: "ok", iterations: k + 1, xs: xs, x: x };
+    }
+    return { status: "max", iterations: maxIter, xs: xs, x: x };
+  },
+
+  /* --- complex arithmetic --- */
+  mul(a, b){ return [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]]; },
+  sub(a, b){ return [a[0] - b[0], a[1] - b[1]]; },
+  div(a, b){
+    const d = b[0] * b[0] + b[1] * b[1];
+    return [(a[0] * b[0] + a[1] * b[1]) / d, (a[1] * b[0] - a[0] * b[1]) / d];
+  },
+  abs(a){ return Math.hypot(a[0], a[1]); },
+  pow(z, n){ let r = [1, 0]; for (let i = 0; i < n; i++) r = this.mul(r, z); return r; },
+
+  /* --- the polynomials on offer --- */
+  POLY: {
+    p3: { degree: 3, label: "z^3 - 1" },
+    p4: { degree: 4, label: "z^4 - 1" },
+    p5: { degree: 5, label: "z^5 - 1" },
+    cyc: { degree: 3, label: "z^3 - 2z + 2" }
+  },
+
+  f(name, z){
+    if (name === "cyc"){
+      const z3 = this.pow(z, 3);
+      return [z3[0] - 2 * z[0] + 2, z3[1] - 2 * z[1]];
+    }
+    const n = this.POLY[name].degree, zn = this.pow(z, n);
+    return [zn[0] - 1, zn[1]];
+  },
+
+  df(name, z){
+    if (name === "cyc"){
+      const z2 = this.pow(z, 2);
+      return [3 * z2[0] - 2, 3 * z2[1]];
+    }
+    const n = this.POLY[name].degree, zm = this.pow(z, n - 1);
+    return [n * zm[0], n * zm[1]];
+  },
+
+  /* the roots, in a fixed order, so basin colours never shuffle */
+  roots(name){
+    if (name === "cyc"){
+      /* z^3 - 2z + 2: one real root, two conjugates, from the cubic formula */
+      const rr = this.realNewton(-2, (x) => x * x * x - 2 * x + 2,
+                                 (x) => 3 * x * x - 2, 200, 1e-15).x;
+      /* divide out (z - rr): z^2 + rr z + (rr^2 - 2) */
+      const b = rr, c = rr * rr - 2, disc = b * b - 4 * c;
+      const re = -b / 2, im = Math.sqrt(-disc) / 2;
+      return [[rr, 0], [re, im], [re, -im]];
+    }
+    const n = this.POLY[name].degree, out = [];
+    for (let k = 0; k < n; k++)
+      out.push([Math.cos(2 * Math.PI * k / n), Math.sin(2 * Math.PI * k / n)]);
+    return out;
+  },
+
+  /* iterate from z0; returns which root it reached, or why it did not */
+  trace(name, z0, maxIter){
+    const iter = maxIter || this.MAX_ITER;
+    let z = z0.slice();
+    const path = [z.slice()];
+    for (let k = 0; k < iter; k++){
+      const d = this.df(name, z);
+      if (this.abs(d) < this.FLAT) return { status: "flat", iterations: k, path: path, z: z, root: -1 };
+      const nz = this.sub(z, this.div(this.f(name, z), d));
+      if (!Number.isFinite(nz[0]) || !Number.isFinite(nz[1]))
+        return { status: "flat", iterations: k, path: path, z: z, root: -1 };
+      z = nz;
+      path.push(z.slice());
+      const res = this.abs(this.f(name, z));
+      if (res < this.TOL){
+        const rs = this.roots(name);
+        let best = -1, bestD = Infinity;
+        for (let i = 0; i < rs.length; i++){
+          const dd = this.abs(this.sub(z, rs[i]));
+          if (dd < bestD){ bestD = dd; best = i; }
+        }
+        return { status: "ok", iterations: k + 1, path: path, z: z, root: best,
+                 residual: res, distance: bestD };
+      }
+    }
+    return { status: "trapped", iterations: iter, path: path, z: z, root: -1 };
+  },
+
+  /* the successive ratios e(n+1) / e(n)^2, which tend to f''(r) / 2f'(r) */
+  quadraticRatios(x0, f, df, root){
+    const run = this.realNewton(x0, f, df, 12, 0);
+    const out = [];
+    for (let i = 0; i + 1 < run.xs.length; i++){
+      const e = Math.abs(run.xs[i] - root), e2 = Math.abs(run.xs[i + 1] - root);
+      if (e > 1e-7 && e < 0.2 && e2 > 0) out.push(e2 / (e * e));
+    }
+    return out;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { poly: "p3", cx: 0, cy: 0, zoom: 0 };
+const state = Object.assign({}, defaults);
+const SPAN0 = 3.2, GW = 300, GH = 200;
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+function hexToRgb(h){
+  h = h.replace("#", "");
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  const v = parseInt(h, 16);
+  return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
+}
+
+const buffer = document.createElement("canvas");
+buffer.width = GW; buffer.height = GH;
+const bctx = buffer.getContext("2d");
+
+function render(){
+  const scale = Math.pow(2, state.zoom / 2);
+  const spanX = SPAN0 / scale, spanY = spanX * (GH / GW);
+  const palette = [css("--a1"), css("--a2"), css("--a3"), css("--a4"), css("--a1")].map(hexToRgb);
+  const stall = hexToRgb(css("--stall"));
+
+  const img = bctx.createImageData(GW, GH);
+  const data = img.data;
+  for (let py = 0; py < GH; py++){
+    const im = state.cy + spanY * (0.5 - py / (GH - 1));
+    for (let px = 0; px < GW; px++){
+      const re = state.cx + spanX * (px / (GW - 1) - 0.5);
+      const r = Model.trace(state.poly, [re, im], 32);
+      const o = 4 * (py * GW + px);
+      let col;
+      if (r.status === "ok"){
+        const shade = Math.max(0.15, 1 - r.iterations / 26);
+        col = palette[r.root % palette.length];
+        data[o] = col[0] * shade; data[o + 1] = col[1] * shade; data[o + 2] = col[2] * shade;
+      } else if (r.status === "flat"){
+        data[o] = stall[0]; data[o + 1] = stall[1]; data[o + 2] = stall[2];
+      } else {
+        data[o] = 8; data[o + 1] = 8; data[o + 2] = 12;
+      }
+      data[o + 3] = 255;
+    }
+  }
+  bctx.putImageData(img, 0, 0);
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.drawImage(buffer, 0, 0, cv.width, cv.height);
+
+  /* the traced orbit from the centre */
+  const here = Model.trace(state.poly, [state.cx, state.cy], Model.MAX_ITER);
+  const tx = (re) => ((re - state.cx) / spanX + 0.5) * cv.width;
+  const ty = (im) => (0.5 - (im - state.cy) / spanY) * cv.height;
+
+  ctx.strokeStyle = "rgba(255,255,255,0.92)"; ctx.lineWidth = 1.6; ctx.lineJoin = "round";
+  ctx.beginPath();
+  for (let i = 0; i < here.path.length; i++){
+    const p = here.path[i], x = tx(p[0]), y = ty(p[1]);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,0.95)";
+  for (let i = 0; i < here.path.length; i++){
+    const p = here.path[i];
+    ctx.beginPath(); ctx.arc(tx(p[0]), ty(p[1]), i === 0 ? 4.5 : 2.4, 0, Math.PI * 2); ctx.fill();
+  }
+
+  /* crosshair */
+  ctx.strokeStyle = "rgba(255,255,255,0.8)"; ctx.lineWidth = 1;
+  const cxp = cv.width / 2, cyp = cv.height / 2;
+  ctx.beginPath();
+  ctx.moveTo(cxp - 11, cyp); ctx.lineTo(cxp + 11, cyp);
+  ctx.moveTo(cxp, cyp - 11); ctx.lineTo(cxp, cyp + 11);
+  ctx.stroke();
+
+  /* scale bar */
+  ctx.fillStyle = "rgba(255,255,255,0.72)";
+  ctx.font = "12px ui-monospace, monospace"; ctx.textAlign = "left";
+  ctx.fillText("view width " + spanX.toPrecision(3) + "   " + Model.POLY[state.poly].label,
+               12, cv.height - 12);
+
+  /* the nudged copy */
+  const eps = 1e-6;
+  const nudged = Model.trace(state.poly, [state.cx + eps, state.cy + eps], Model.MAX_ITER);
+
+  const names = ["first root", "second root", "third root", "fourth root", "fifth root"];
+  el("cxout").textContent = state.cx.toFixed(3);
+  el("cyout").textContent = state.cy.toFixed(3);
+  el("zoomout").textContent = scale < 10 ? scale.toFixed(1) + "×" : Math.round(scale) + "×";
+  el("r1").textContent = here.status === "ok" ? names[here.root]
+      : (here.status === "flat" ? "flat tangent" : "trapped in a cycle");
+  el("r2").textContent = here.status === "ok" ? String(here.iterations)
+      : (here.status === "flat" ? "stops at " + here.iterations : "over " + Model.MAX_ITER);
+  el("r3").textContent = here.status === "ok" ? here.residual.toExponential(1) : "no root reached";
+  el("r4").textContent = nudged.status !== here.status ? "different outcome"
+      : (here.status !== "ok" ? "also no root"
+        : (nudged.root === here.root ? "same root, " + nudged.iterations + " steps"
+                                     : "lands on " + names[nudged.root]));
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  const handler = () => { state[key] = parse(input); render(); };
+  input.addEventListener("input", handler);
+  input.addEventListener("change", handler);
+}
+bind("poly", "poly", (i) => i.value);
+bind("cx", "cx", (i) => parseFloat(i.value));
+bind("cy", "cy", (i) => parseFloat(i.value));
+bind("zoom", "zoom", (i) => parseFloat(i.value));
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("poly").value = defaults.poly;
+  el("cx").value = String(defaults.cx);
+  el("cy").value = String(defaults.cy);
+  el("zoom").value = String(defaults.zoom);
+  render();
+});
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+  const sq = (x) => x * x - 2, dsq = (x) => 2 * x;
+
+  push("the square root of two lands in five steps", (function(){
+    const run = M.realNewton(1, sq, dsq, 20, 1e-15);
+    if (run.status !== "ok") return false;
+    if (!(run.iterations <= 6)) return false;
+    return Math.abs(run.x - Math.SQRT2) <= 1e-15;
+  })(), "from x = 1, |x - sqrt(2)| is 0 after " +
+        M.realNewton(1, sq, dsq, 20, 1e-15).iterations + " iterations");
+
+  push("the error squares each step, with the predicted constant", (function(){
+    const rs = M.quadraticRatios(1, sq, dsq, Math.SQRT2);
+    if (rs.length < 2) return false;
+    const want = 1 / (2 * Math.SQRT2);          /* f''(r) / 2f'(r) */
+    for (const r of rs) if (!(Math.abs(r - want) / want < 0.2)) return false;
+    return true;
+  })(), "every asymptotic ratio e(n+1)/e(n)^2 within 20% of 1/(2 sqrt 2) = 0.3536");
+
+  push("quadratic beats linear by a mile", (function(){
+    /* bisection on the same problem needs about 50 halvings for 1e-15 */
+    let lo = 1, hi = 2, steps = 0;
+    while (hi - lo > 1e-15 && steps < 200){ const m = (lo + hi) / 2; if (sq(m) > 0) hi = m; else lo = m; steps++; }
+    return steps > 45 && M.realNewton(1, sq, dsq, 20, 1e-15).iterations < 8;
+  })(), "bisection takes " + (function(){
+      let lo = 1, hi = 2, s = 0;
+      while (hi - lo > 1e-15 && s < 200){ const m = (lo + hi) / 2; if (sq(m) > 0) hi = m; else lo = m; s++; }
+      return s;
+    })() + " steps for the accuracy Newton reaches in 5");
+
+  push("a flat tangent is detected, never divided by", (function(){
+    const r = M.realNewton(0, sq, dsq, 20, 1e-15);
+    if (r.status !== "flat" || !Number.isFinite(r.x)) return false;
+    const c = M.trace("p3", [0, 0], 40);
+    if (c.status !== "flat") return false;
+    for (const p of c.path) if (!Number.isFinite(p[0]) || !Number.isFinite(p[1])) return false;
+    return c.root === -1;
+  })(), "f'(0) = 0 for both x^2-2 and z^3-1; the run stops and stays finite");
+
+  push("every converged point of z^3 - 1 lands on a cube root of unity", (function(){
+    const rs = M.roots("p3");
+    for (let i = 0; i < 3; i++){
+      if (!near(M.abs(rs[i]), 1, 1e-15)) return false;
+      if (!near(M.abs(M.f("p3", rs[i])), 0, 1e-14)) return false;
+    }
+    for (let i = 0; i < 60; i++)
+      for (let j = 0; j < 60; j++){
+        const z = [-2 + 4 * i / 59, -2 + 4 * j / 59];
+        const r = M.trace("p3", z, 60);
+        if (r.status !== "ok") return false;
+        if (!(r.distance < 1e-10)) return false;
+      }
+    return true;
+  })(), "3600 starting points, all converged, every one within 1e-10 of a root");
+
+  push("the roots really are roots, for all four polynomials", (function(){
+    for (const name of ["p3", "p4", "p5", "cyc"]){
+      const rs = M.roots(name);
+      if (rs.length !== M.POLY[name].degree) return false;
+      for (const r of rs) if (!(M.abs(M.f(name, r)) < 1e-12)) return false;
+      /* a root is an exact fixed point of the iteration */
+      for (const r of rs){
+        const step = M.trace(name, r, 1);
+        if (!(step.status === "ok" && step.iterations <= 1)) return false;
+      }
+    }
+    return true;
+  })(), "f(root) = 0 to 1e-12 and Newton does not move away from any of them");
+
+  push("z^3 - 2z + 2 traps the origin in an exact two-cycle", (function(){
+    const r = M.trace("cyc", [0, 0], 30);
+    if (r.status !== "trapped") return false;
+    for (let k = 0; k + 2 < r.path.length; k++){
+      if (!near(r.path[k][0], r.path[k + 2][0], 1e-12)) return false;
+      if (!near(r.path[k][1], r.path[k + 2][1], 1e-12)) return false;
+    }
+    return near(r.path[1][0], 1, 1e-12) && near(r.path[2][0], 0, 1e-12);
+  })(), "the orbit is 0, 1, 0, 1, ... forever, though the polynomial has three real-analytic roots");
+
+  push("the basins of z^3 - 1 are symmetric under a third of a turn", (function(){
+    const w = [Math.cos(2 * Math.PI / 3), Math.sin(2 * Math.PI / 3)];
+    const rng = mulberry32(SEED);
+    for (let k = 0; k < 250; k++){
+      const z = [4 * rng() - 2, 4 * rng() - 2];
+      const a = M.trace("p3", z, 60), b = M.trace("p3", M.mul(w, z), 60);
+      if (a.status !== "ok" || b.status !== "ok") return false;
+      if (a.iterations !== b.iterations) return false;
+      if (b.root !== (a.root + 1) % 3) return false;
+    }
+    return true;
+  })(), "rotating a start by 120 degrees rotates its destination root and keeps the step count");
+
+  push("all three basins meet at every boundary point", (function(){
+    const rootOf = (z) => { const r = M.trace("p3", z, 80); return r.status === "ok" ? r.root : -1; };
+    /* bisect between two starts in different basins until they are 1e-13 apart */
+    let a = [0.5, 0.5], b = [0.5, -0.5];
+    if (rootOf(a) === rootOf(b)) return false;
+    for (let k = 0; k < 45; k++){
+      const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      if (rootOf(m) === rootOf(a)) a = m; else b = m;
+    }
+    if (!(M.abs(M.sub(a, b)) < 1e-12)) return false;
+    if (rootOf(a) === rootOf(b)) return false;
+    /* and around that boundary point, every basin is present at every scale */
+    const mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    for (const radius of [1e-3, 1e-5, 1e-7, 1e-9]){
+      const seen = [false, false, false];
+      for (let k = 0; k < 180; k++){
+        const th = 2 * Math.PI * k / 180;
+        const r = rootOf([mid[0] + radius * Math.cos(th), mid[1] + radius * Math.sin(th)]);
+        if (r >= 0) seen[r] = true;
+      }
+      if (!(seen[0] && seen[1] && seen[2])) return false;
+    }
+    return true;
+  })(), "two starts 1e-13 apart end at different roots, and a circle of radius 1e-9 round the boundary point meets all three basins");
+
+  push("iteration counts are finite everywhere", (function(){
+    for (const name of ["p3", "p4", "p5", "cyc"])
+      for (let i = 0; i < 24; i++)
+        for (let j = 0; j < 24; j++){
+          const r = M.trace(name, [-2 + 4 * i / 23, -2 + 4 * j / 23], 40);
+          if (!Number.isFinite(r.iterations) || r.iterations > 40) return false;
+          if (!Number.isFinite(r.z[0]) || !Number.isFinite(r.z[1])) return false;
+        }
+    return true;
+  })(), "4 polynomials x 576 starting points, bounded iteration counts and finite iterates");
+
+  push("runs are reproducible", (function(){
+    const a = M.trace("p5", [0.31, -0.77], 40), b = M.trace("p5", [0.31, -0.77], 40);
+    if (a.iterations !== b.iterations || a.root !== b.root) return false;
+    for (let i = 0; i < a.path.length; i++)
+      if (a.path[i][0] !== b.path[i][0] || a.path[i][1] !== b.path[i][1]) return false;
+    return true;
+  })(), "identical orbits from two runs at the same start");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "slug": "equal-temperament",
+  "title": "Every Interval Slightly Wrong, On Purpose",
+  "domain": "music-theory",
+  "difficulty": 2,
+  "summary": "Put a just interval beside its equal-tempered twin, watch the beats appear, and see where the twelve-tone compromise spends its error.",
+  "prerequisites": [],
+  "tags": ["tuning", "equal-temperament", "just-intonation", "cents", "beats", "pythagorean-comma"],
+  "interaction_pattern": "compare-side-by-side",
+  "sources": [
+    { "title": "Equal temperament — Wikipedia", "url": "https://en.wikipedia.org/wiki/Equal_temperament" },
+    { "title": "Cent (music) — Wikipedia", "url": "https://en.wikipedia.org/wiki/Cent_(music)" },
+    { "title": "Pythagorean comma — Wikipedia", "url": "https://en.wikipedia.org/wiki/Pythagorean_comma" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 11
+}

@@ -1,0 +1,17 @@
+{
+  "slug": "newton-raphson-basins",
+  "title": "Where You Start Decides Where You Land",
+  "domain": "mathematics",
+  "difficulty": 4,
+  "summary": "Newton's method doubles its correct digits every step near a root. Pan the complex plane and watch the map of where each start ends up turn fractal.",
+  "prerequisites": ["numerical-integration-error"],
+  "tags": ["newton-raphson", "root-finding", "quadratic-convergence", "fractals", "complex-analysis", "basins-of-attraction"],
+  "interaction_pattern": "spatial-explore",
+  "sources": [
+    { "title": "Newton fractal — Wikipedia", "url": "https://en.wikipedia.org/wiki/Newton_fractal" },
+    { "title": "Newton's method — Wikipedia", "url": "https://en.wikipedia.org/wiki/Newton%27s_method" },
+    { "title": "Cayley, A. (1879), The Newton–Fourier imaginary problem", "url": "https://www.jstor.org/stable/2369308" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 11
+}

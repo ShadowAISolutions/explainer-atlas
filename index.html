@@ -36,7 +36,7 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
     <p class="lede">One concept per page. Each page teaches a single idea through a working
     simulation you can take apart — every model on this site is checked numerically against
     closed forms, conservation laws, or published reference values before it ships.</p>
-    <p class="count">8 explainers · 7 domains · 76 assertions</p>
+    <p class="count">13 explainers · 10 domains · 132 assertions</p>
   </header>
   <main>
       <section aria-labelledby="d-biology">
@@ -55,11 +55,42 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
         <h2 id="d-computer-science">computer science</h2>
         <ul class="grid">
         <li class="card">
+          <a href="explainers/dijkstra-vs-astar/index.html">
+            <h3>A Guess About Distance Is Worth Half the Search</h3>
+            <p>Step two shortest-path searches through a maze one expansion at a time and watch a rough distance estimate halve the work without costing a step of path.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 3 of 5">●●●○○</span> <span>step-through</span> <span>11 checks</span></p>
+        </li>
+        <li class="card">
           <a href="explainers/floating-point-precision/index.html">
             <h3>The Gaps Between Numbers Are Not All the Same Size</h3>
             <p>Slide the magnitude up and watch the gap between neighbouring doubles double at every power of two, until whole integers start going missing.</p>
           </a>
           <p class="meta"><span class="diff" aria-label="difficulty 3 of 5">●●●○○</span> <span>perturb-and-observe</span> <span>10 checks</span></p>
+        </li>
+        </ul>
+      </section>
+      <section aria-labelledby="d-economics">
+        <h2 id="d-economics">economics</h2>
+        <ul class="grid">
+        <li class="card">
+          <a href="explainers/supply-demand-tax-incidence/index.html">
+            <h3>The Law Says Who Pays, the Market Decides Who Bears It</h3>
+            <p>Drag two elasticities and watch a tax burden slide between buyers and sellers, while the side the law taxes makes no difference at all.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 2 of 5">●●○○○</span> <span>drag-parameter</span> <span>12 checks</span></p>
+        </li>
+        </ul>
+      </section>
+      <section aria-labelledby="d-engineering">
+        <h2 id="d-engineering">engineering</h2>
+        <ul class="grid">
+        <li class="card">
+          <a href="explainers/pid-controller/index.html">
+            <h3>Three Knobs, Three Different Ways to Be Wrong</h3>
+            <p>Tune a PID controller by hand against a target step response and find out what each of the three terms fixes, and what each one breaks.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 4 of 5">●●●●○</span> <span>tune-to-match</span> <span>11 checks</span></p>
         </li>
         </ul>
       </section>
@@ -103,6 +134,25 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
             <p>Race the trapezoid rule against Simpson&#39;s rule and see why one error falls four times faster per halving, for the same function evaluations.</p>
           </a>
           <p class="meta"><span class="diff" aria-label="difficulty 3 of 5">●●●○○</span> <span>race-two-methods</span> <span>8 checks</span></p>
+        </li>
+        <li class="card">
+          <a href="explainers/newton-raphson-basins/index.html">
+            <h3>Where You Start Decides Where You Land</h3>
+            <p>Newton&#39;s method doubles its correct digits every step near a root. Pan the complex plane and watch the map of where each start ends up turn fractal.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 4 of 5">●●●●○</span> <span>spatial-explore</span> <span>11 checks</span></p>
+        </li>
+        </ul>
+      </section>
+      <section aria-labelledby="d-music-theory">
+        <h2 id="d-music-theory">music theory</h2>
+        <ul class="grid">
+        <li class="card">
+          <a href="explainers/equal-temperament/index.html">
+            <h3>Every Interval Slightly Wrong, On Purpose</h3>
+            <p>Put a just interval beside its equal-tempered twin, watch the beats appear, and see where the twelve-tone compromise spends its error.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 2 of 5">●●○○○</span> <span>compare-side-by-side</span> <span>11 checks</span></p>
         </li>
         </ul>
       </section>

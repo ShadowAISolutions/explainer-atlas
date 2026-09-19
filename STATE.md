@@ -27,6 +27,26 @@ page is written — it is where a failing audit trend gets escalated.)*
 
 ## Batches
 
+### batch/002 — 2026-09-19
+- merged: dijkstra-vs-astar, equal-temperament, pid-controller, newton-raphson-basins, supply-demand-tax-incidence
+- blocked: none
+- patterns: step-through, compare-side-by-side, tune-to-match, spatial-explore, drag-parameter
+- learned: Every assertion that failed this batch was my assertion being wrong,
+  never the model — a tolerance tighter than double precision allows (1e-15 on
+  a cube root of unity built by repeated multiplication), a settling-time check
+  whose gains put the slowest pole at -0.146 so 160s left 1e-3 of error, and a
+  "boundary is sensitive" test that found nothing because the Newton basin
+  boundary has measure zero and random points never land near it. Fix the
+  assertion and say so in the commit; never loosen it to go green. The
+  replacement in each case was stronger than the original: bisect 45 times onto
+  the boundary, then show all three basins on circles of radius down to 1e-9.
+  Two more notes. (1) Frame variety does more for distinctiveness than colour
+  does — controls right, left, above, below, inside the stage's card, and a
+  full-bleed canvas read as five different pages before a single hue changed.
+  (2) Anything optional and environment-dependent (the equal-temperament page's
+  audio) must be lazy, click-only, try/catch-guarded and have a visible text
+  fallback, or the verifier's button sweep turns it into a console error.
+
 ### batch/001 — 2026-09-19
 - merged: central-limit-theorem, monty-hall, floating-point-precision, fourier-series-square-wave, population-logistic-chaos
 - blocked: none
