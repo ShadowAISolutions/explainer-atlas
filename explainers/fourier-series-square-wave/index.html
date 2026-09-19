@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building a Corner Out of Curves — Explainer Atlas</title>
+<meta name="description" content="Stack sine waves one at a time into a square wave and watch the overshoot at the jump refuse to shrink, no matter how many you add.">
+<style>
+:root{
+  --bg:#f6f8f8; --panel:#ffffff; --ink:#111a1c; --muted:#4f6468; --line:#d9e3e3;
+  --accent:#0d7a80; --accent-soft:#dff0f0; --warn:#c8542f; --warn-soft:#fbe7df;
+  --radius:14px; --pad:clamp(14px,3vw,28px);
+  --font-body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.7rem,1.15rem + 2.4vw,2.6rem);
+  --scale-body:clamp(1rem,0.95rem + 0.25vw,1.12rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0b1315; --panel:#111c1f; --ink:#e4eced; --muted:#8fa5a9; --line:#1f3034;
+    --accent:#45c7ce; --accent-soft:#0d2a2c; --warn:#f0855c; --warn-soft:#2c1710;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.68 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:58rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:calc(var(--pad)*.8)}
+h1{font-size:var(--scale-h1); line-height:1.1; margin:0 0 .35em; letter-spacing:-.018em}
+.kicker{margin:0 0 .5em; color:var(--warn); font:700 .72rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.14em}
+.standfirst{margin:0; color:var(--muted); max-width:44em; font-size:1.06em}
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.7em; color:var(--muted); font-size:.85rem; line-height:1.5}
+.controls{margin-top:var(--pad); background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:var(--pad);
+  display:grid; gap:1.1em var(--pad); grid-template-columns:repeat(auto-fit,minmax(13.5rem,1fr)); align-items:start}
+.control{display:grid; gap:.35em; min-width:0}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font:700 .95rem/1.3 var(--font-body)}
+.control output{font:700 .88rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.3em .55em; border-radius:6px}
+.control .hint{margin:0; color:var(--muted); font-size:.8rem; line-height:1.45}
+.checkrow{display:flex; align-items:center; gap:.55em}
+.checkrow input{width:20px; height:20px; accent-color:var(--warn)}
+.checkrow label{font:700 .95rem/1.3 var(--font-body)}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:9px; padding:.5em .7em; min-height:42px; width:100%}
+button{cursor:pointer; font-weight:700}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--warn); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:.6em; margin:var(--pad) 0 0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:9px; padding:.6em .75em}
+.readout dt{margin:0; color:var(--muted); font-size:.71rem; text-transform:uppercase; letter-spacing:.09em}
+.readout dd{margin:.22em 0 0; font:700 1.08rem/1.2 var(--font-mono)}
+.prose{max-width:37em; margin:calc(var(--pad)*1.5) auto 0}
+.prose h2{font-size:1.02rem; margin:2em 0 .5em; letter-spacing:.02em; text-transform:uppercase; color:var(--warn); font-family:var(--font-mono)}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.92em; background:var(--accent-soft); padding:.8em .9em; border-radius:9px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.8); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">mathematics</p>
+  <h1>Building a Corner Out of Curves</h1>
+  <p class="standfirst">Sine waves are smooth and endless. A square wave is flat, then instantly somewhere else. Add enough of the first and you get the second — almost. The gap that remains is the interesting part.</p>
+</header>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="960" height="600" role="img"
+          aria-label="A square wave drawn as a dashed target, with the sum of the selected number of sine harmonics drawn over it, and a bar chart of the harmonic amplitudes below."></canvas>
+  <figcaption>Dashed line: the wave being built. Solid line: the sum of the harmonics so far. Bars below: the amplitude of each harmonic in the sum. Push the harmonic count up and watch the spike beside the jump.</figcaption>
+</figure>
+
+<section class="controls" data-role="controls" aria-label="Simulation controls">
+  <div class="control">
+    <div class="row">
+      <label for="terms">Harmonics in the sum</label>
+      <output id="termsout" for="terms">8</output>
+    </div>
+    <input type="range" id="terms" min="1" max="64" step="1" value="8">
+    <p class="hint">How many non-zero sine terms are added. Arrow keys step one at a time; Home and End jump to the ends.</p>
+  </div>
+
+  <div class="control">
+    <label for="wave">Target wave</label>
+    <select id="wave">
+      <option value="square" selected>Square — jumps</option>
+      <option value="sawtooth">Sawtooth — jumps</option>
+      <option value="triangle">Triangle — no jump</option>
+    </select>
+    <p class="hint">The first two have a discontinuity. The third does not, which turns out to change everything.</p>
+  </div>
+
+  <div class="control">
+    <div class="checkrow">
+      <input type="checkbox" id="showparts">
+      <label for="showparts">Show each harmonic</label>
+    </div>
+    <p class="hint">Draws the individual sine waves faintly underneath so you can see which one contributes what.</p>
+    <button type="button" id="reset">Reset to defaults</button>
+  </div>
+</section>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Highest point of the sum</dt><dd id="r1">—</dd></div>
+  <div><dt>Overshoot, % of the jump</dt><dd id="r2">—</dd></div>
+  <div><dt>Energy captured (Parseval)</dt><dd id="r3">—</dd></div>
+  <div><dt>Root-mean-square error</dt><dd id="r4">—</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>Start with one harmonic. A single sine wave is a poor square wave, but it has the right period and it is going the right way at the right times. Add a third harmonic at a third of the amplitude and the top begins to flatten. Add a fifth, a seventh, a ninth. By eight terms the flat sections are convincing and the edges are steep. By forty the picture looks, at a glance, like a square wave.</p>
+
+  <p>Look closely at the edge. There is a spike there — a little ear that pokes above the flat top just before the jump. Push the harmonic count from eight to sixty-four. The ear gets narrower. It slides closer to the jump. It does not get shorter.</p>
+
+  <h2>Why these particular amplitudes</h2>
+
+  <p>The square wave that swings between &minus;1 and +1 is odd about the origin, so only sines appear, and it is symmetric in a way that kills every even harmonic. What survives is</p>
+
+  <p class="math">f(x) = (4/&pi;)&thinsp;[ sin x + (1/3) sin 3x + (1/5) sin 5x + &hellip; ]</p>
+
+  <p>Each coefficient is the average of the wave against that sine over one period, doubled. For the square wave that integral is easy, and it gives 4/(n&pi;) for odd n and exactly zero for even n. The sawtooth keeps every harmonic but alternates their sign, falling off like 1/n. The triangle keeps only odd harmonics and falls off like 1/n&sup2; — much faster, which is why it locks onto its target so quickly.</p>
+
+  <p>That rate of falloff is not arbitrary. It reads off the smoothness of the wave you are building. A wave with a jump needs coefficients that die like 1/n; a wave that is continuous but has a corner gets 1/n&sup2;; a wave smooth all the way down would have coefficients falling faster than any power. Roughness is expensive, and the bill is paid in high harmonics.</p>
+
+  <h2>The overshoot that never leaves</h2>
+
+  <p>Set the target to square and put the harmonic count at 64. The peak of the sum sits at about 1.1790, roughly nine percent above the target value of 1. Now try 50, 20, 10. The peak barely moves. It is converging — but to 1.1790, not to 1.</p>
+
+  <p>That number is not a numerical accident. The peak of the sum of the first N terms sits exactly at x = &pi;/(2N), and evaluating the sum there turns it into a midpoint rule for an integral. As N grows the rule becomes exact and the peak tends to</p>
+
+  <p class="math">(2/&pi;) &int;<sub>0</sub><sup>&pi;</sup> (sin t)/t dt = 1.1789797&hellip;</p>
+
+  <p>This is the Gibbs phenomenon. The series does converge to the square wave at every single point away from the jump — pick any such point and the sum will get there — but the <em>worst</em> error over the whole period does not shrink. The overshoot only retreats sideways, into an ever-thinner sliver next to the discontinuity. Its height is fixed and its width goes to zero, which is exactly how something can converge pointwise and still look permanently wrong.</p>
+
+  <h2>What to try</h2>
+
+  <p>Switch to the triangle wave and sweep the harmonic count. There is no ear at all, and the highest point of the sum stays below 1 and climbs toward it. No jump, no Gibbs. Then switch to the sawtooth: the ear returns, at the same nine percent, because the size of the overshoot depends only on the size of the jump.</p>
+
+  <p>Turn on <em>Show each harmonic</em> at four or five terms. The individual sines all cross zero together at the jump, which is why the sum is pinned to exactly zero there no matter how many you add — the series converges to the midpoint of a jump, not to either side of it. Finally, watch the energy readout: at eight harmonics the square wave already has over 97 percent of its energy, which is why it looks nearly right long before it is.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+const TAU = Math.PI * 2;
+
+/* ---- MODEL: pure. Fourier sine series of three odd periodic waves. ------ */
+const Model = {
+  /* Gibbs constant: (2/pi) * Si(pi) */
+  GIBBS: 1.1789797444721675,
+
+  /* b_n for each wave, amplitude normalised so the target swings in [-1,1] */
+  coefficient(wave, n){
+    if (wave === "square")   return n % 2 === 1 ? 4 / (n * Math.PI) : 0;
+    if (wave === "sawtooth") return (n % 2 === 1 ? 2 : -2) / (n * Math.PI);
+    if (wave === "triangle") {
+      if (n % 2 === 0) return 0;
+      const k = (n - 1) / 2;
+      return (8 / (Math.PI * Math.PI)) * (k % 2 === 0 ? 1 : -1) / (n * n);
+    }
+    return 0;
+  },
+
+  /* the harmonic numbers actually used, in order, for a given term count */
+  harmonics(wave, count){
+    const out = [];
+    for (let n = 1; out.length < count; n++) if (this.coefficient(wave, n) !== 0) out.push(n);
+    return out;
+  },
+
+  /* mean square of the target wave itself, over one period */
+  meanSquare(wave){
+    if (wave === "square") return 1;
+    return 1 / 3;   /* sawtooth x/pi and the unit triangle both give 1/3 */
+  },
+
+  /* the target wave, exactly */
+  target(wave, x){
+    const u = ((x % TAU) + TAU) % TAU;             /* u in [0, 2pi) */
+    if (wave === "square")   return u < Math.PI ? 1 : -1;
+    if (wave === "sawtooth") return (u < Math.PI ? u : u - TAU) / Math.PI;
+    if (u <= Math.PI / 2)     return 2 * u / Math.PI;
+    if (u <= 3 * Math.PI / 2) return 2 * (Math.PI - u) / Math.PI;
+    return 2 * (u - TAU) / Math.PI;
+  },
+
+  /* partial sum of the first `count` non-zero harmonics */
+  partial(wave, count, x){
+    let s = 0;
+    const ns = this.harmonics(wave, count);
+    for (let i = 0; i < ns.length; i++) s += this.coefficient(wave, ns[i]) * Math.sin(ns[i] * x);
+    return s;
+  },
+
+  /* fraction of the signal's mean square captured by `count` harmonics */
+  energyCaptured(wave, count){
+    let s = 0;
+    const ns = this.harmonics(wave, count);
+    for (let i = 0; i < ns.length; i++){ const b = this.coefficient(wave, ns[i]); s += b * b; }
+    return (s / 2) / this.meanSquare(wave);
+  },
+
+  /* highest value the partial sum reaches anywhere in the period */
+  peak(wave, count){
+    const ns = this.harmonics(wave, count);
+    const bs = ns.map((n) => this.coefficient(wave, n));
+    const f = (x) => { let s = 0; for (let i = 0; i < ns.length; i++) s += bs[i] * Math.sin(ns[i] * x); return s; };
+    const M = 12 * count + 40;
+    let bx = 0, bv = -Infinity;
+    for (let i = 0; i <= M; i++){ const x = Math.PI * i / M, v = f(x); if (v > bv){ bv = v; bx = x; } }
+    let lo = Math.max(0, bx - Math.PI / M), hi = Math.min(Math.PI, bx + Math.PI / M);
+    for (let r = 0; r < 60; r++){
+      const a = lo + (hi - lo) / 3, c = hi - (hi - lo) / 3;
+      if (f(a) < f(c)) lo = a; else hi = c;
+    }
+    const x = (lo + hi) / 2;
+    return { x: x, value: f(x) };
+  },
+
+  /* root-mean-square error of the partial sum against the target */
+  rmsError(wave, count){
+    const ns = this.harmonics(wave, count);
+    const bs = ns.map((n) => this.coefficient(wave, n));
+    const M = 2048; let s = 0;
+    for (let i = 0; i < M; i++){
+      const x = TAU * (i + 0.5) / M;
+      let v = 0;
+      for (let j = 0; j < ns.length; j++) v += bs[j] * Math.sin(ns[j] * x);
+      const d = v - this.target(wave, x);
+      s += d * d;
+    }
+    return Math.sqrt(s / M);
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { terms: 8, wave: "square", parts: false };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+const PAD = 56, WAVE_H = 380, BAR_TOP = 452, BAR_H = 120;
+
+function render(){
+  const W = cv.width, H = cv.height;
+  const ink = css("--ink"), muted = css("--muted"), accent = css("--accent"),
+        warn = css("--warn"), line = css("--line"), panel = css("--panel");
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, W, H);
+
+  const x0 = PAD, x1 = W - PAD;
+  const midY = 40 + WAVE_H / 2, amp = WAVE_H / 2 - 22;
+  const toX = (t) => x0 + (t / TAU) * (x1 - x0);          /* t in [0, 2pi] */
+  const toY = (v) => midY - v * amp / 1.25;
+
+  /* axes */
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, midY); ctx.lineTo(x1, midY); ctx.stroke();
+  ctx.fillStyle = muted; ctx.font = "13px ui-monospace, monospace"; ctx.textAlign = "center";
+  [[0, "0"], [Math.PI / 2, "π/2"], [Math.PI, "π"], [3 * Math.PI / 2, "3π/2"], [TAU, "2π"]]
+    .forEach(([t, lab]) => {
+      ctx.strokeStyle = line;
+      ctx.beginPath(); ctx.moveTo(toX(t), midY - 5); ctx.lineTo(toX(t), midY + 5); ctx.stroke();
+      ctx.fillText(lab, toX(t), midY + 22);
+    });
+  ctx.textAlign = "right";
+  [[1, "+1"], [-1, "−1"]].forEach(([v, lab]) => {
+    ctx.strokeStyle = line; ctx.setLineDash([2, 5]);
+    ctx.beginPath(); ctx.moveTo(x0, toY(v)); ctx.lineTo(x1, toY(v)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillText(lab, x0 - 9, toY(v) + 4);
+  });
+
+  const ns = Model.harmonics(state.wave, state.terms);
+
+  /* individual harmonics, faint */
+  if (state.parts){
+    ctx.lineWidth = 1.2;
+    for (let i = 0; i < ns.length; i++){
+      const n = ns[i], b = Model.coefficient(state.wave, n);
+      ctx.strokeStyle = warn;
+      ctx.globalAlpha = Math.max(0.10, 0.5 - i * 0.05);
+      ctx.beginPath();
+      for (let p = 0; p <= 600; p++){
+        const t = TAU * p / 600, y = toY(b * Math.sin(n * t));
+        if (p === 0) ctx.moveTo(toX(t), y); else ctx.lineTo(toX(t), y);
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /* target */
+  ctx.strokeStyle = muted; ctx.lineWidth = 1.8; ctx.setLineDash([7, 6]);
+  ctx.beginPath();
+  let penUp = true;
+  for (let p = 0; p <= 1600; p++){
+    const t = TAU * p / 1600;
+    const jump = state.wave !== "triangle" &&
+                 (Math.abs(t - Math.PI) < 1e-9 || p === 0 || p === 1600);
+    const y = toY(Model.target(state.wave, t + 1e-9));
+    if (penUp || jump && p !== 0 && p !== 1600){ ctx.moveTo(toX(t), y); penUp = false; }
+    else ctx.lineTo(toX(t), y);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  /* partial sum */
+  ctx.strokeStyle = accent; ctx.lineWidth = 2.6; ctx.lineJoin = "round";
+  ctx.beginPath();
+  for (let p = 0; p <= 1600; p++){
+    const t = TAU * p / 1600, y = toY(Model.partial(state.wave, state.terms, t));
+    if (p === 0) ctx.moveTo(toX(t), y); else ctx.lineTo(toX(t), y);
+  }
+  ctx.stroke();
+
+  /* mark the peak */
+  const pk = Model.peak(state.wave, state.terms);
+  ctx.fillStyle = warn;
+  ctx.beginPath(); ctx.arc(toX(pk.x), toY(pk.value), 4.5, 0, TAU); ctx.fill();
+
+  /* coefficient bars */
+  const maxB = Math.max.apply(null, ns.map((n) => Math.abs(Model.coefficient(state.wave, n)))) || 1;
+  const slots = ns[ns.length - 1];                       /* highest harmonic number */
+  const bw = (x1 - x0) / slots;
+  ctx.strokeStyle = line;
+  ctx.beginPath(); ctx.moveTo(x0, BAR_TOP + BAR_H / 2); ctx.lineTo(x1, BAR_TOP + BAR_H / 2); ctx.stroke();
+  for (let i = 0; i < ns.length; i++){
+    const n = ns[i], b = Model.coefficient(state.wave, n);
+    const h = (b / maxB) * (BAR_H / 2 - 4);
+    const bx = x0 + (n - 1) * bw;
+    ctx.fillStyle = b >= 0 ? accent : warn;
+    ctx.fillRect(bx + Math.min(1.5, bw * 0.15), BAR_TOP + BAR_H / 2 - Math.max(h, 0),
+                 Math.max(bw - Math.min(3, bw * 0.3), 1), Math.abs(h));
+  }
+  ctx.fillStyle = muted; ctx.textAlign = "left"; ctx.font = "13px ui-monospace, monospace";
+  ctx.fillText("harmonic amplitude bₙ  —  " + ns.length + " terms, highest is n = " + slots,
+               x0, BAR_TOP - 14);
+
+  /* readouts */
+  const energy = Model.energyCaptured(state.wave, state.terms);
+  const jump = state.wave === "triangle" ? 0 : 2;   /* the target's jump height */
+  const over = pk.value - 1;
+  el("termsout").textContent = String(state.terms);
+  el("r1").textContent = pk.value.toFixed(4);
+  el("r2").textContent = jump > 0 && over > 1e-6 ? (100 * over / jump).toFixed(2) + "%" : "none";
+  el("r3").textContent = (energy * 100).toFixed(3) + "%";
+  el("r4").textContent = Model.rmsError(state.wave, state.terms).toFixed(4);
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parse(input); render(); });
+  input.addEventListener("change", () => { state[key] = parse(input); render(); });
+}
+bind("terms", "terms", (i) => parseInt(i.value, 10));
+bind("wave", "wave", (i) => i.value);
+bind("showparts", "parts", (i) => i.checked);
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("terms").value = String(defaults.terms);
+  el("wave").value = defaults.wave;
+  el("showparts").checked = defaults.parts;
+  render();
+});
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+
+  push("square coefficients are exactly 4/(nπ) for odd n", (function(){
+    for (let n = 1; n <= 63; n += 2)
+      if (!near(M.coefficient("square", n), 4 / (n * Math.PI), 1e-15)) return false;
+    return true;
+  })(), "checked every odd n up to 63 against the closed form");
+
+  push("square even coefficients are exactly zero", (function(){
+    for (let n = 2; n <= 64; n += 2) if (M.coefficient("square", n) !== 0) return false;
+    return true;
+  })(), "b_n === 0 for every even n up to 64");
+
+  push("sawtooth and triangle match their closed forms", (function(){
+    for (let n = 1; n <= 40; n++){
+      const want = (2 * Math.pow(-1, n + 1)) / (n * Math.PI);
+      if (!near(M.coefficient("sawtooth", n), want, 1e-15)) return false;
+    }
+    for (let k = 0; k <= 20; k++){
+      const n = 2 * k + 1;
+      const want = (8 / (Math.PI * Math.PI)) * Math.pow(-1, k) / (n * n);
+      if (!near(M.coefficient("triangle", n), want, 1e-15)) return false;
+      if (M.coefficient("triangle", n + 1) !== 0) return false;
+    }
+    return true;
+  })(), "sawtooth 2(-1)^(n+1)/(nπ); triangle (8/π²)(-1)^k/n²");
+
+  push("Gibbs peak converges to 1.1789797 within 0.1%", (function(){
+    const g = M.GIBBS;
+    for (const N of [50, 64, 128]){
+      const p = M.peak("square", N).value;
+      if (!(Math.abs(p - g) / g < 0.001)) return false;
+    }
+    return true;
+  })(), "peak at N=50, 64, 128 all within 0.1% of (2/π)Si(π)");
+
+  push("the peak sits exactly at x = π/(2N)", (function(){
+    for (const N of [6, 17, 50]){
+      const p = M.peak("square", N);
+      const here = M.partial("square", N, Math.PI / (2 * N));
+      if (!near(p.value, here, 1e-9)) return false;
+      const eps = 1e-4;
+      if (M.partial("square", N, Math.PI / (2 * N) + eps) > here) return false;
+      if (M.partial("square", N, Math.PI / (2 * N) - eps) > here) return false;
+    }
+    return true;
+  })(), "closed-form argmax verified against the searched peak and its neighbours");
+
+  push("the overshoot never shrinks away", (function(){
+    for (let N = 1; N <= 64; N++) if (!(M.peak("square", N).value > 1.1789)) return false;
+    for (let N = 3; N <= 63; N++)
+      if (!(M.peak("square", N + 1).value <= M.peak("square", N).value + 1e-12)) return false;
+    return true;
+  })(), "peak stays above 1.1789 for every N in 1..64 and falls monotonically");
+
+  push("Parseval: captured energy tends to the whole signal", (function(){
+    for (const w of ["square", "sawtooth", "triangle"]){
+      const e = M.energyCaptured(w, 400);
+      if (!(e > 0.99 && e <= 1 + 1e-12)) return false;
+      if (!(M.energyCaptured(w, 12) < M.energyCaptured(w, 13))) return false;
+    }
+    return near(M.energyCaptured("triangle", 400), 1, 1e-8);
+  })(), "Σb²/2 reaches >99% of the mean square by 400 terms for all three waves");
+
+  push("pointwise convergence away from the jump", (function(){
+    if (!near(M.partial("square", 2000, Math.PI / 2), 1, 1e-3)) return false;
+    if (!near(M.partial("triangle", 200, Math.PI / 2), 1, 1e-2)) return false;
+    if (!near(M.partial("sawtooth", 2000, Math.PI / 2), 0.5, 1e-3)) return false;
+    return true;
+  })(), "square→1 and sawtooth→0.5 at x=π/2; triangle→1 at its apex");
+
+  push("every partial sum is exactly zero at a jump", (function(){
+    for (let N = 1; N <= 64; N++){
+      if (M.partial("square", N, 0) !== 0) return false;
+      if (Math.abs(M.partial("square", N, Math.PI)) > 1e-12) return false;
+      if (Math.abs(M.partial("sawtooth", N, Math.PI)) > 1e-12) return false;
+    }
+    return true;
+  })(), "the series lands on the midpoint of the jump, not on either side");
+
+  push("a wave with no jump never overshoots", (function(){
+    for (let N = 1; N <= 64; N++){
+      const p = M.peak("triangle", N).value;
+      if (!(p < 1 && Number.isFinite(p))) return false;
+    }
+    return M.peak("triangle", 64).value > M.peak("triangle", 8).value;
+  })(), "triangle peak stays below 1 for every N and climbs toward it");
+
+  push("finite across the whole control range", (function(){
+    for (const w of ["square", "sawtooth", "triangle"]){
+      for (let N = 1; N <= 64; N++){
+        if (!Number.isFinite(M.energyCaptured(w, N))) return false;
+        if (!Number.isFinite(M.peak(w, N).value)) return false;
+      }
+      for (const N of [1, 2, 3, 5, 8, 13, 21, 34, 55, 64])
+        if (!Number.isFinite(M.rmsError(w, N))) return false;
+    }
+    return true;
+  })(), "no NaN or Infinity over 3 waves × 64 harmonic counts");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
