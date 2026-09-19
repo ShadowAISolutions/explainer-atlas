@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which Number Did the Poison Move? — Explainer Atlas</title>
+<meta name="description" content="Add an inhibitor to an enzyme assay and watch which of the two parameters changes. The one that stays put names the mechanism.">
+<style>
+:root{
+  --bg:#f2f4f3; --panel:#ffffff; --ink:#1c2120; --muted:#616b6a; --line:#dbe0de;
+  --accent:#7a2d63; --accent-soft:#f6e6f1; --calm:#2b6a7a; --calm-soft:#e0eef1;
+  --grey:#9aa4a3;
+  --radius:3px; --pad:clamp(14px,2.6vw,22px);
+  --font-body:"Lucida Grande","Lucida Sans Unicode",system-ui,-apple-system,sans-serif;
+  --font-read:"Hoefler Text",Baskerville,"Times New Roman",serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.45rem,1.05rem + 1.9vw,2.2rem);
+  --scale-body:clamp(0.95rem,0.92rem + 0.2vw,1.02rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#101414; --panel:#181d1d; --ink:#e4e9e8; --muted:#94a09e; --line:#272f2e;
+    --accent:#e492c6; --accent-soft:#2c1626; --calm:#6fc4d8; --calm-soft:#11282e;
+    --grey:#6d7877;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:62rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:calc(var(--pad)*.7); max-width:42em}
+h1{font-size:var(--scale-h1); line-height:1.12; margin:0 0 .3em; letter-spacing:-.015em; font-weight:600}
+.kicker{margin:0 0 .4em; color:var(--accent); font:600 .7rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.17em}
+.standfirst{margin:0; color:var(--muted); max-width:38em; font-family:var(--font-read); font-size:1.06rem}
+
+.panelbar{display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:1px;
+  background:var(--line); border:1px solid var(--line); margin:var(--pad) 0 0; padding:0}
+.panelbar div{background:var(--panel); padding:.75em .85em}
+.panelbar dt{margin:0; color:var(--muted); font-size:.68rem; text-transform:uppercase; letter-spacing:.09em}
+.panelbar dd{margin:.2em 0 0; font:600 1.32rem/1.15 var(--font-mono)}
+.panelbar dd small{display:block; font:400 .7rem/1.3 var(--font-body); color:var(--muted); margin-top:.25em}
+.panelbar .flag dd{color:var(--accent)}
+
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-top:0; padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto}
+figcaption{margin-top:.55em; color:var(--muted); font-size:.81rem; line-height:1.5}
+
+.controls{margin-top:var(--pad); background:var(--panel); border:1px solid var(--line);
+  padding:var(--pad); display:grid; gap:1.05em 1.5em; grid-template-columns:1fr}
+@media (min-width:38rem){ .controls{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (min-width:54rem){ .controls{grid-template-columns:repeat(3,minmax(0,1fr))} }
+.control{display:grid; gap:.28em; align-content:start}
+.control.wide{grid-column:1/-1}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+label{font-weight:600; font-size:.83rem}
+output{font:600 .85rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.22em .45em}
+.hint{color:var(--muted); font-size:.76rem; margin:0; line-height:1.4}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; font-size:.86rem; color:inherit; background:var(--bg); border:1px solid var(--line);
+  border-radius:var(--radius); padding:.5em .7em; min-height:42px; width:100%}
+button{cursor:pointer; font-weight:600}
+button:hover,select:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.prose{max-width:37em; margin-top:calc(var(--pad)*1.4); font-family:var(--font-read); font-size:1.05rem; line-height:1.7}
+.prose h2{font-family:var(--font-body); font-weight:600; font-size:1rem; margin:2em 0 .5em; color:var(--accent)}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.85rem; background:var(--calm-soft); padding:.75em .85em;
+  border-left:3px solid var(--calm); white-space:pre; overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.82rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">biology</p>
+  <h1>Which Number Did the Poison Move?</h1>
+  <p class="standfirst">An enzyme's behaviour is two numbers: how fast it can possibly go, and how much substrate it needs to get halfway there. Add an inhibitor and one of them changes. Which one tells you how the inhibitor works.</p>
+</header>
+
+<dl class="panelbar" aria-live="polite">
+  <div><dt>apparent V<sub>max</sub></dt><dd id="r1">&#8212;<small id="r1s">&nbsp;</small></dd></div>
+  <div><dt>apparent K<sub>m</sub></dt><dd id="r2">&#8212;<small id="r2s">&nbsp;</small></dd></div>
+  <div><dt>V<sub>max</sub> / K<sub>m</sub></dt><dd id="r3">&#8212;<small id="r3s">&nbsp;</small></dd></div>
+  <div class="flag"><dt>unchanged by the inhibitor</dt><dd id="r4">&#8212;<small id="r4s">&nbsp;</small></dd></div>
+</dl>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="1240" height="660" role="img"
+          aria-label="Left: reaction rate against substrate concentration, showing the uninhibited saturation curve in grey and the inhibited one in colour, with assay points scattered around it. Right: the double-reciprocal plot, one over rate against one over substrate, with the fitted straight lines."></canvas>
+  <figcaption>Left, the assay: rate against substrate, with the uninhibited curve behind in grey. Right, the same points as one-over-one-over, where the straight line's intercepts read off the two parameters directly.</figcaption>
+</figure>
+
+<section class="controls" data-role="controls" aria-label="Assay controls">
+  <div class="control wide">
+    <label for="mode">inhibitor</label>
+    <select id="mode">
+      <option value="none">none &#8212; the clean assay</option>
+      <option value="competitive" selected>competitive &#8212; blocks the site</option>
+      <option value="noncompetitive">non-competitive &#8212; blocks the work</option>
+      <option value="uncompetitive">uncompetitive &#8212; binds only once loaded</option>
+    </select>
+    <p class="hint">The perturbation. Change it and watch which of the three numbers above holds still.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="dose">inhibitor, in units of K<sub>i</sub></label><output id="doseout" for="dose">2.0</output></div>
+    <input type="range" id="dose" min="0" max="5" step="0.25" value="2">
+    <p class="hint">How hard the perturbation is pushed. Zero puts the clean curve back.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="vmax">true V<sub>max</sub></label><output id="vmaxout" for="vmax">120</output></div>
+    <input type="range" id="vmax" min="40" max="200" step="10" value="120">
+    <p class="hint">Micromoles per minute at saturation, before any inhibitor.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="km">true K<sub>m</sub></label><output id="kmout" for="km">30</output></div>
+    <input type="range" id="km" min="5" max="100" step="5" value="30">
+    <p class="hint">Micromolar. The substrate concentration that gives half the maximum rate.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="noise">assay noise</label><output id="noiseout" for="noise">4%</output></div>
+    <input type="range" id="noise" min="0" max="0.12" step="0.01" value="0.04">
+    <p class="hint">Scatter on each measured rate. Watch the double-reciprocal plot lose its nerve first.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="seed">repeat the experiment</label><output id="seedout" for="seed">1</output></div>
+    <input type="range" id="seed" min="1" max="24" step="1" value="1">
+    <p class="hint">A fresh set of measurement errors from the same enzyme.</p>
+  </div>
+
+  <div class="control">
+    <label for="reset">start again</label>
+    <button type="button" id="reset">Reset to defaults</button>
+    <p class="hint">Back to a competitive inhibitor at twice K<sub>i</sub>.</p>
+  </div>
+</section>
+
+<article class="prose" data-role="prose">
+  <p>The curve on the left bends over because an enzyme is a finite number of machines. Give it more substrate and it works faster, until every machine is busy and more substrate changes nothing. Two numbers describe the whole shape: the ceiling, and the substrate concentration that reaches half of it.</p>
+  <p class="math">v = Vmax * S / (Km + S)
+
+at S = Km      v = Vmax / 2  exactly
+at S much less than Km
+               v = (Vmax/Km) * S
+Vmax/Km is the enzyme's efficiency
+on scarce substrate</p>
+
+  <h2>The diagnosis is which number holds still</h2>
+  <p>Switch the inhibitor and push the dose. A <em>competitive</em> inhibitor occupies the same site as the substrate, so enough substrate always wins: the ceiling is untouched and only the half-way point moves out. A <em>non-competitive</em> inhibitor binds somewhere else and stops the machine from working, so no amount of substrate rescues it: the ceiling falls and the half-way point stays. An <em>uncompetitive</em> inhibitor binds only to the enzyme that already has substrate in it, which sounds obscure but has the neatest signature of the three — the ceiling and the half-way point fall by exactly the same factor, so their ratio, the efficiency, never moves at all.</p>
+  <p>Those are three different invariants, and the panel at the top names whichever one is holding. That is the actual laboratory workflow: you do not measure a mechanism, you measure two numbers under several doses and notice which one refuses to budge.</p>
+
+  <h2>Why the straight line is a trap</h2>
+  <p>Turning the curve into a straight line by plotting one over the rate against one over the substrate is the classical trick, and the right-hand panel shows why it is seductive: competitive inhibition gives lines through a common point on the vertical axis, non-competitive gives lines through a common point on the horizontal axis, uncompetitive gives parallel lines. The mechanism is visible at a glance.</p>
+  <p>Now push the noise slider. The reciprocal of a small number is a large number with a large error, so the measurements at low substrate — the least reliable ones, where the rate is smallest — are thrown to the far right of the plot and dominate the fit. Over two hundred simulated repeats the double-reciprocal method misses the ceiling by about thirteen per cent while fitting the curve directly misses it by three, and it misses the half-way point by a third rather than a ninth. The page measures both and asserts the gap.</p>
+
+  <h2>What to try</h2>
+  <p>Set the noise to zero and step the dose from 0 to 5 under each inhibitor in turn, watching only the top panel. Then set the inhibitor to none, put the noise at 12 per cent, and drag the repeat slider: the curve on the left barely twitches while the straight line on the right pivots wildly. Same data, same enzyme, one method that survives measurement error and one that does not.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function gaussian(rnd){
+  let u = 0, v = 0;
+  while (u === 0) u = rnd();
+  while (v === 0) v = rnd();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+const SEED = 20260919;
+
+/* ---- MODEL: pure. Rates, perturbations, and three ways to fit. --------- */
+const Model = {
+
+  rate(S, V, K){ return V * S / (K + S); },
+
+  /* what an experimenter would measure as the two parameters, given a dose
+     r = [I]/Ki of each kind of inhibitor                                   */
+  apparent(V, K, mode, r){
+    if (mode === "competitive")     return { V: V,           K: K * (1 + r) };
+    if (mode === "noncompetitive")  return { V: V / (1 + r), K: K };
+    if (mode === "uncompetitive")   return { V: V / (1 + r), K: K / (1 + r) };
+    return { V: V, K: K };
+  },
+
+  invariantOf(mode){
+    if (mode === "competitive")    return "Vmax";
+    if (mode === "noncompetitive") return "Km";
+    if (mode === "uncompetitive")  return "Vmax/Km";
+    return "everything";
+  },
+
+  /* eight substrate concentrations, geometric from Km/4 to 12 Km */
+  doses(K){
+    const out = [];
+    for (let i = 0; i < 8; i++) out.push(K * 0.25 * Math.pow(48, i / 7));
+    return out;
+  },
+
+  assay(V, K, mode, r, noise, seed){
+    const ap = this.apparent(V, K, mode, r);
+    const rnd = mulberry32(seed >>> 0);
+    return this.doses(K).map((S) => ({ S: S, v: this.rate(S, ap.V, ap.K) + noise * ap.V * gaussian(rnd) }));
+  },
+
+  /* route 1 — Lineweaver-Burk: 1/v against 1/S.
+     slope = Km/Vmax, intercept = 1/Vmax                                    */
+  lineweaver(pts){
+    let n = 0, sx = 0, sy = 0, sxx = 0, sxy = 0, syy = 0;
+    for (const p of pts){
+      if (!(p.v > 0) || !(p.S > 0)) continue;
+      const x = 1 / p.S, y = 1 / p.v;
+      n++; sx += x; sy += y; sxx += x*x; sxy += x*y; syy += y*y;
+    }
+    if (n < 2) return { V: NaN, K: NaN, slope: NaN, intercept: NaN, r2: NaN, n: n };
+    const den = n * sxx - sx * sx;
+    const m = (n * sxy - sx * sy) / den;
+    const b = (sy - m * sx) / n;
+    const varY = n * syy - sy * sy;
+    const r2 = varY > 0 ? Math.pow(n * sxy - sx * sy, 2) / (den * varY) : 1;
+    return { V: 1 / b, K: m / b, slope: m, intercept: b, r2: r2, n: n };
+  },
+
+  /* route 2 — Hanes-Woolf: S/v against S. slope = 1/Vmax, intercept = Km/Vmax */
+  hanes(pts){
+    let n = 0, sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (const p of pts){
+      if (!(p.v > 0) || !(p.S > 0)) continue;
+      const x = p.S, y = p.S / p.v;
+      n++; sx += x; sy += y; sxx += x*x; sxy += x*y;
+    }
+    if (n < 2) return { V: NaN, K: NaN };
+    const m = (n * sxy - sx * sy) / (n * sxx - sx * sx);
+    const b = (sy - m * sx) / n;
+    return { V: 1 / m, K: b / m };
+  },
+
+  /* route 3 — Eadie-Hofstee: v against v/S. slope = -Km, intercept = Vmax */
+  eadie(pts){
+    let n = 0, sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (const p of pts){
+      if (!(p.v > 0) || !(p.S > 0)) continue;
+      const x = p.v / p.S, y = p.v;
+      n++; sx += x; sy += y; sxx += x*x; sxy += x*y;
+    }
+    if (n < 2) return { V: NaN, K: NaN };
+    const m = (n * sxy - sx * sy) / (n * sxx - sx * sx);
+    const b = (sy - m * sx) / n;
+    return { V: b, K: -m };
+  },
+
+  /* route 4 — least squares on the curve itself, by Gauss-Newton, started
+     from the Lineweaver-Burk guess                                         */
+  fit(pts){
+    const g = this.lineweaver(pts);
+    let V = (Number.isFinite(g.V) && g.V > 0) ? g.V : 1;
+    let K = (Number.isFinite(g.K) && g.K > 0) ? g.K : 1;
+    for (let it = 0; it < 40; it++){
+      let a11 = 0, a12 = 0, a22 = 0, b1 = 0, b2 = 0;
+      for (const p of pts){
+        const den = K + p.S;
+        const jV = p.S / den, jK = -V * p.S / (den * den);
+        const res = p.v - V * p.S / den;
+        a11 += jV*jV; a12 += jV*jK; a22 += jK*jK; b1 += jV*res; b2 += jK*res;
+      }
+      const lam = 1e-9 * (a11 + a22);
+      const det = (a11 + lam) * (a22 + lam) - a12 * a12;
+      if (!Number.isFinite(det) || det === 0) break;
+      const dV = ((a22 + lam) * b1 - a12 * b2) / det;
+      const dK = ((a11 + lam) * b2 - a12 * b1) / det;
+      V += dV; K += dK;
+      if (!(V > 1e-9)) V = 1e-9;
+      if (!(K > 1e-9)) K = 1e-9;
+      if (Math.abs(dV) < 1e-13 * Math.abs(V) + 1e-15 && Math.abs(dK) < 1e-13 * Math.abs(K) + 1e-15) break;
+    }
+    return { V: V, K: K };
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------ */
+const defaults = { mode:"competitive", dose:2, vmax:120, km:30, noise:0.04, seed:1 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const SS = 2;
+let W = 620, H = 340, NARROW = false;
+
+/* the canvas tracks its container: one canvas unit is one CSS pixel */
+function layout(){
+  const avail = cv.parentNode ? (cv.parentNode.clientWidth || 620) : 620;
+  NARROW = avail < 560;
+  W = Math.max(300, Math.min(1100, Math.round(avail)));
+  H = NARROW ? Math.round(W * 1.42) : Math.round(Math.min(430, Math.max(280, W * 0.46)));
+  if (cv.width !== W * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function fmt(x, dp){
+  if (!Number.isFinite(x)) return "—";
+  return x.toFixed(dp === undefined ? 1 : dp);
+}
+
+function render(){
+  layout();
+  const V = state.vmax, K = state.km, r = state.dose, mode = state.mode;
+  const ap = Model.apparent(V, K, mode, r);
+  const pts = Model.assay(V, K, mode, r, state.noise, 7000 + state.seed * 137);
+  const lb = Model.lineweaver(pts);
+  const gn = Model.fit(pts);
+
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line");
+  const accent = css("--accent"), calm = css("--calm"), grey = css("--grey");
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+
+  const gap = 18;
+  const pw = NARROW ? W : (W - gap) / 2;
+  const ph = NARROW ? (H - gap) / 2 : H;
+  const panes = NARROW
+    ? [{x:0, y:0, w:pw, h:ph}, {x:0, y:ph + gap, w:pw, h:ph}]
+    : [{x:0, y:0, w:pw, h:ph}, {x:pw + gap, y:0, w:pw, h:ph}];
+
+  /* ---------- pane 1: rate against substrate ---------- */
+  (function(p){
+    const L = p.x + 46, R = p.x + p.w - 10, T = p.y + 30, B = p.y + p.h - 32;
+    const Smax = K * 14;
+    const Vtop = V * 1.18;
+    const xOf = (S) => L + (S / Smax) * (R - L);
+    const yOf = (v) => B - (v / Vtop) * (B - T);
+
+    ctx.fillStyle = ink; ctx.font = "600 12px " + css("--font-body"); ctx.textAlign = "left";
+    ctx.fillText("rate against substrate", p.x, p.y + 12);
+
+    ctx.strokeStyle = line; ctx.lineWidth = 1;
+    ctx.textAlign = "right"; ctx.font = "10px " + css("--font-mono"); ctx.fillStyle = muted;
+    for (let k = 0; k <= 4; k++){
+      const v = (V / 4) * k, y = Math.round(yOf(v)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(R, y); ctx.stroke();
+      ctx.fillText(v.toFixed(0), L - 6, y + 3.5);
+    }
+    ctx.textAlign = "left";
+
+    /* the uninhibited curve, behind */
+    ctx.strokeStyle = grey; ctx.lineWidth = 1.6; ctx.setLineDash([5,4]);
+    ctx.beginPath();
+    for (let i = 0; i <= 160; i++){ const S = (i / 160) * Smax;
+      const y = yOf(Model.rate(S, V, K)); i ? ctx.lineTo(xOf(S), y) : ctx.moveTo(xOf(S), y); }
+    ctx.stroke(); ctx.setLineDash([]);
+
+    /* the ceiling and the half-way point */
+    ctx.strokeStyle = accent; ctx.lineWidth = 1; ctx.setLineDash([2,3]);
+    ctx.beginPath(); ctx.moveTo(L, yOf(ap.V)); ctx.lineTo(R, yOf(ap.V)); ctx.stroke();
+    if (ap.K < Smax){
+      ctx.beginPath(); ctx.moveTo(xOf(ap.K), yOf(ap.V/2)); ctx.lineTo(xOf(ap.K), B); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    /* the curve actually in play */
+    ctx.strokeStyle = accent; ctx.lineWidth = 2.4; ctx.beginPath();
+    for (let i = 0; i <= 200; i++){ const S = (i / 200) * Smax;
+      const y = yOf(Model.rate(S, ap.V, ap.K)); i ? ctx.lineTo(xOf(S), y) : ctx.moveTo(xOf(S), y); }
+    ctx.stroke();
+
+    /* the measurements */
+    ctx.strokeStyle = accent; ctx.lineWidth = 1.4;
+    for (const q of pts){
+      if (q.S > Smax) continue;
+      ctx.beginPath(); ctx.arc(xOf(q.S), yOf(Math.max(0, Math.min(Vtop, q.v))), 3.2, 0, Math.PI*2); ctx.stroke();
+    }
+
+    ctx.fillStyle = accent; ctx.font = "600 11px " + css("--font-mono");
+    ctx.textAlign = "right";
+    ctx.fillText("Vmax", R - 4, Math.max(T + 11, yOf(ap.V) - 6));
+    ctx.textAlign = "left";
+    if (ap.K < Smax * 0.9){
+      ctx.textAlign = "center";
+      ctx.fillText("Km", xOf(ap.K), yOf(ap.V / 2) - 7);
+      ctx.textAlign = "left";
+    }
+    if (r > 0){
+      ctx.fillStyle = grey; ctx.font = "10px " + css("--font-mono");
+      ctx.textAlign = "right";
+      ctx.fillText("no inhibitor", R - 4, Math.min(B - 6, yOf(V) + 14));
+      ctx.textAlign = "left";
+    }
+
+    ctx.strokeStyle = ink; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(L, B + 0.5); ctx.lineTo(R, B + 0.5); ctx.stroke();
+    ctx.fillStyle = muted; ctx.font = "10px " + css("--font-mono");
+    ctx.fillText("0", L, B + 13);
+    ctx.textAlign = "right"; ctx.fillText(Smax.toFixed(0), R, B + 13); ctx.textAlign = "left";
+    ctx.fillStyle = muted; ctx.font = "11px " + css("--font-body");
+    ctx.fillText("substrate, µM", L, p.y + p.h - 4);
+  })(panes[0]);
+
+  /* ---------- pane 2: the double-reciprocal plot ---------- */
+  (function(p){
+    const L = p.x + 46, R = p.x + p.w - 10, T = p.y + 30, B = p.y + p.h - 32;
+    const xmax = 1 / (K / 4) * 1.15;
+    let ymax = 0;
+    for (const q of pts) if (q.v > 0) ymax = Math.max(ymax, 1 / q.v);
+    ymax = Math.max(ymax, 1 / (ap.V / 2)) * 1.15;
+    const xOf = (x) => L + ((x + xmax * 0.35) / (xmax * 1.35)) * (R - L);
+    const yOf = (y) => B - (y / ymax) * (B - T);
+
+    ctx.fillStyle = ink; ctx.font = "600 12px " + css("--font-body"); ctx.textAlign = "left";
+    ctx.fillText("one over rate against one over substrate", p.x, p.y + 12);
+
+    ctx.strokeStyle = line; ctx.lineWidth = 1;
+    ctx.textAlign = "right"; ctx.font = "10px " + css("--font-mono"); ctx.fillStyle = muted;
+    for (let k = 0; k <= 2; k++){
+      const yv = (ymax / 2) * k, y = Math.round(yOf(yv)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(R, y); ctx.stroke();
+      ctx.fillText(yv.toFixed(3), L - 6, y + 3.5);
+    }
+    ctx.textAlign = "left";
+    const zx = Math.round(xOf(0)) + 0.5;
+    ctx.beginPath(); ctx.moveTo(zx, T); ctx.lineTo(zx, B); ctx.stroke();
+
+    /* the family of lines: the current dose plus three lighter ones */
+    for (const rr of [0, r * 0.34, r * 0.67, r]){
+      const a2 = Model.apparent(V, K, mode, rr);
+      const slope = a2.K / a2.V, inter = 1 / a2.V;
+      const x1 = -xmax * 0.35, x2 = xmax;
+      ctx.strokeStyle = (Math.abs(rr - r) < 1e-12) ? accent : calm;
+      ctx.globalAlpha = (Math.abs(rr - r) < 1e-12) ? 1 : 0.34;
+      ctx.lineWidth = (Math.abs(rr - r) < 1e-12) ? 2.2 : 1.3;
+      ctx.beginPath(); ctx.moveTo(xOf(x1), yOf(slope * x1 + inter)); ctx.lineTo(xOf(x2), yOf(slope * x2 + inter));
+      ctx.stroke(); ctx.globalAlpha = 1;
+    }
+
+    /* the fitted line through the actual measurements */
+    if (Number.isFinite(lb.slope)){
+      ctx.strokeStyle = ink; ctx.lineWidth = 1.2; ctx.setLineDash([4,3]);
+      const x1 = -xmax * 0.35, x2 = xmax;
+      ctx.beginPath(); ctx.moveTo(xOf(x1), yOf(lb.slope * x1 + lb.intercept));
+      ctx.lineTo(xOf(x2), yOf(lb.slope * x2 + lb.intercept)); ctx.stroke(); ctx.setLineDash([]);
+    }
+
+    ctx.strokeStyle = accent; ctx.lineWidth = 1.4;
+    for (const q of pts){
+      if (!(q.v > 0)) continue;
+      const x = 1 / q.S, y = 1 / q.v;
+      if (y > ymax) continue;
+      ctx.beginPath(); ctx.arc(xOf(x), yOf(y), 3.2, 0, Math.PI*2); ctx.stroke();
+    }
+
+    ctx.fillStyle = muted; ctx.font = "10px " + css("--font-mono");
+    ctx.textAlign = "center";
+    ctx.fillText("0", zx, B + 13);
+    ctx.textAlign = "left";
+    ctx.fillStyle = accent; ctx.font = "600 10px " + css("--font-mono");
+    const iy = yOf(1 / ap.V);
+    if (iy > T + 8 && iy < B - 4) ctx.fillText("1/Vmax", zx + 5, iy - 4);
+    ctx.fillStyle = muted; ctx.font = "11px " + css("--font-body");
+    ctx.fillText("1 / substrate", L, p.y + p.h - 4);
+    ctx.save();
+    ctx.translate(p.x + 10, (T + B) / 2); ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = "center"; ctx.fillText("1 / rate", 0, 0);
+    ctx.restore();
+    ctx.textAlign = "left";
+    ctx.textAlign = "right";
+    ctx.fillStyle = css("--calm"); ctx.font = "10px " + css("--font-mono");
+    ctx.fillText("paler lines: smaller doses", R, T - 6 < p.y + 22 ? p.y + 24 : T - 6);
+    ctx.textAlign = "left";
+  })(panes[1]);
+
+  /* ---------- readouts ---------- */
+  el("doseout").textContent = r.toFixed(2);
+  el("vmaxout").textContent = String(V);
+  el("kmout").textContent = String(K);
+  el("noiseout").textContent = Math.round(state.noise * 100) + "%";
+  el("seedout").textContent = String(state.seed);
+
+  el("r1").firstChild.nodeValue = fmt(ap.V, 1);
+  el("r1s").textContent = "fitted " + fmt(gn.V, 1) + " µmol/min";
+  el("r2").firstChild.nodeValue = fmt(ap.K, 1);
+  el("r2s").textContent = "fitted " + fmt(gn.K, 1) + " µM";
+  el("r3").firstChild.nodeValue = fmt(ap.V / ap.K, 2);
+  el("r3s").textContent = "efficiency, per minute";
+  const inv = Model.invariantOf(mode);
+  el("r4").firstChild.nodeValue = r === 0 ? "no dose" : inv;
+  el("r4s").textContent = r === 0 ? "nothing added yet"
+    : (mode === "competitive" ? "the ceiling holds; substrate still wins"
+    : mode === "noncompetitive" ? "the half-way point holds; the ceiling falls"
+    : "both fall together, so the ratio holds");
+}
+
+/* ---- wiring ------------------------------------------------------------ */
+function bind(id, key, parse){
+  el(id).addEventListener("input", () => { state[key] = parse(el(id).value); render(); });
+}
+bind("dose", "dose", parseFloat);
+bind("vmax", "vmax", (v) => parseInt(v, 10));
+bind("km", "km", (v) => parseInt(v, 10));
+bind("noise", "noise", parseFloat);
+bind("seed", "seed", (v) => parseInt(v, 10));
+el("mode").addEventListener("change", () => { state.mode = el("mode").value; render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("mode").value = defaults.mode; el("dose").value = defaults.dose;
+  el("vmax").value = defaults.vmax; el("km").value = defaults.km;
+  el("noise").value = defaults.noise; el("seed").value = defaults.seed;
+  render();
+});
+let rt = 0;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 90); });
+render();
+
+/* ---- SELFTEST ---------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+function rel(a, b){ return Math.abs(a - b) / Math.abs(b); }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+
+  /* 1. the rate law and its two landmarks */
+  (function(){
+    let worst = 0, bad = "";
+    for (const V of [40, 120, 200]) for (const K of [5, 30, 100]){
+      worst = Math.max(worst, Math.abs(Model.rate(K, V, K) - V / 2));
+      if (Model.rate(0, V, K) !== 0) bad = "a rate at zero substrate was not zero";
+      const far = Model.rate(K * 1e7, V, K);
+      if (!(far < V && far > V * (1 - 1e-6))) bad = "the curve does not approach Vmax from below";
+    }
+    push("the rate is exactly half the maximum when the substrate equals Km",
+         worst < 1e-13 && bad === "", bad || ("worst departure " + worst.toExponential(2) + " over nine enzymes"));
+  })();
+
+  /* 2. on clean data the double-reciprocal plot is exactly a straight line,
+        and its slope and intercept are exactly Km/Vmax and 1/Vmax          */
+  (function(){
+    let worstR2 = 0, worstS = 0, worstI = 0;
+    for (const V of [40, 120, 200]) for (const K of [5, 30, 100]){
+      const pts = Model.assay(V, K, "none", 0, 0, 1);
+      const lbf = Model.lineweaver(pts);
+      worstR2 = Math.max(worstR2, Math.abs(1 - lbf.r2));
+      worstS = Math.max(worstS, rel(lbf.slope, K / V));
+      worstI = Math.max(worstI, rel(lbf.intercept, 1 / V));
+    }
+    push("without noise the double-reciprocal plot is a perfect line with the textbook slope and intercept",
+         worstR2 < 1e-12 && worstS < 1e-12 && worstI < 1e-12,
+         "1 - R^2 up to " + worstR2.toExponential(2) + ", slope error " + worstS.toExponential(2));
+  })();
+
+  /* 3. four independent routes to the same two numbers on clean data */
+  (function(){
+    let worst = 0, bad = "";
+    for (const V of [40, 120, 200]) for (const K of [5, 30, 100])
+      for (const mode of ["none", "competitive", "noncompetitive", "uncompetitive"])
+        for (const r of [0, 1, 3]){
+          const ap = Model.apparent(V, K, mode, r);
+          const pts = Model.assay(V, K, mode, r, 0, 1);
+          for (const f of [Model.lineweaver(pts), Model.hanes(pts), Model.eadie(pts), Model.fit(pts)]){
+            worst = Math.max(worst, rel(f.V, ap.V), rel(f.K, ap.K));
+            if (!Number.isFinite(f.V) || !Number.isFinite(f.K)) bad = mode + " gave a non-finite fit";
+          }
+        }
+    push("Lineweaver-Burk, Hanes-Woolf, Eadie-Hofstee and a direct least-squares fit agree on clean data",
+         worst < 1e-9 && bad === "", bad || ("108 datasets, worst relative disagreement " + worst.toExponential(2)));
+  })();
+
+  /* 4. competitive inhibition: Km rises by exactly (1 + dose), Vmax does not
+        move at all - established by fitting the simulated assay, not by
+        reading the parameter back                                          */
+  (function(){
+    let worstV = 0, worstK = 0;
+    for (const V of [40, 120, 200]) for (const K of [5, 30, 100])
+      for (const r of [0.25, 1, 2, 3.5, 5]){
+        const f = Model.fit(Model.assay(V, K, "competitive", r, 0, 1));
+        worstV = Math.max(worstV, rel(f.V, V));
+        worstK = Math.max(worstK, rel(f.K, K * (1 + r)));
+      }
+    push("competitive inhibition multiplies Km by (1 + dose) and leaves Vmax untouched",
+         worstV < 1e-10 && worstK < 1e-10,
+         "45 assays: Vmax drift " + worstV.toExponential(2) + ", Km error " + worstK.toExponential(2));
+  })();
+
+  /* 5. non-competitive inhibition: Vmax falls by exactly (1 + dose), Km does
+        not move                                                             */
+  (function(){
+    let worstV = 0, worstK = 0;
+    for (const V of [40, 120, 200]) for (const K of [5, 30, 100])
+      for (const r of [0.25, 1, 2, 3.5, 5]){
+        const f = Model.fit(Model.assay(V, K, "noncompetitive", r, 0, 1));
+        worstV = Math.max(worstV, rel(f.V, V / (1 + r)));
+        worstK = Math.max(worstK, rel(f.K, K));
+      }
+    push("non-competitive inhibition divides Vmax by (1 + dose) and leaves Km untouched",
+         worstV < 1e-10 && worstK < 1e-10,
+         "45 assays: Vmax error " + worstV.toExponential(2) + ", Km drift " + worstK.toExponential(2));
+  })();
+
+  /* 6. uncompetitive inhibition: both fall by the same factor, so the
+        efficiency Vmax/Km is the invariant                                  */
+  (function(){
+    let worst = 0, worstBoth = 0;
+    for (const V of [40, 120, 200]) for (const K of [5, 30, 100])
+      for (const r of [0.25, 1, 2, 3.5, 5]){
+        const f = Model.fit(Model.assay(V, K, "uncompetitive", r, 0, 1));
+        worst = Math.max(worst, rel(f.V / f.K, V / K));
+        worstBoth = Math.max(worstBoth, rel(f.V, V / (1 + r)), rel(f.K, K / (1 + r)));
+      }
+    push("uncompetitive inhibition moves both numbers by the same factor, so Vmax/Km is invariant",
+         worst < 1e-10 && worstBoth < 1e-10,
+         "45 assays: efficiency drift " + worst.toExponential(2));
+  })();
+
+  /* 7. the three signatures on the double-reciprocal plot: common intercept,
+        common x-intercept, parallel lines                                   */
+  (function(){
+    const V = 120, K = 30;
+    let interSpread = 0, xintSpread = 0, slopeSpread = 0;
+    const inter = [], xint = [], slope = [];
+    for (const r of [0, 0.5, 1, 2, 4]){
+      inter.push(Model.lineweaver(Model.assay(V, K, "competitive", r, 0, 1)).intercept);
+      const nc = Model.lineweaver(Model.assay(V, K, "noncompetitive", r, 0, 1));
+      xint.push(-nc.intercept / nc.slope);
+      slope.push(Model.lineweaver(Model.assay(V, K, "uncompetitive", r, 0, 1)).slope);
+    }
+    const spread = (a) => (Math.max.apply(null, a) - Math.min.apply(null, a)) / Math.abs(a[0]);
+    interSpread = spread(inter); xintSpread = spread(xint); slopeSpread = spread(slope);
+    push("competitive lines share a y-intercept, non-competitive an x-intercept, uncompetitive a slope",
+         interSpread < 1e-12 && xintSpread < 1e-12 && slopeSpread < 1e-12,
+         "spreads " + interSpread.toExponential(2) + ", " + xintSpread.toExponential(2) + ", " + slopeSpread.toExponential(2));
+  })();
+
+  /* 8. the headline claim about the straight line: with noise on the rates,
+        the double-reciprocal fit is markedly worse than fitting the curve    */
+  (function(){
+    const V = 120, K = 30, noise = 0.05, runs = 200;
+    const lbV = [], gnV = [], lbK = [], gnK = [];
+    for (let s = 1; s <= runs; s++){
+      const pts = Model.assay(V, K, "none", 0, noise, 5000 + s);
+      const a = Model.lineweaver(pts), b = Model.fit(pts);
+      lbV.push(rel(a.V, V)); gnV.push(rel(b.V, V));
+      lbK.push(rel(a.K, K)); gnK.push(rel(b.K, K));
+    }
+    const median = (a) => { const c = a.slice().sort((x, y) => x - y); return c[Math.floor(c.length / 2)]; };
+    const mLbV = median(lbV), mGnV = median(gnV), mLbK = median(lbK), mGnK = median(gnK);
+    push("with noisy rates the direct fit beats the double-reciprocal fit by more than double",
+         mGnV < 0.04 && mLbV / mGnV > 2.5 && mLbK / mGnK > 2,
+         runs + " repeats: Vmax median error " + (mLbV*100).toFixed(1) + "% vs " + (mGnV*100).toFixed(1) +
+         "%, Km " + (mLbK*100).toFixed(1) + "% vs " + (mGnK*100).toFixed(1) + "%");
+  })();
+
+  /* 9. the low-substrate limit is the efficiency Vmax/Km */
+  (function(){
+    let worst = 0;
+    for (const V of [40, 120, 200]) for (const K of [5, 30, 100]){
+      const S = K / 1e4;
+      worst = Math.max(worst, rel(Model.rate(S, V, K) / S, V / K));
+    }
+    push("at scarce substrate the rate per unit substrate is Vmax/Km",
+         worst < 1e-3, "worst relative departure " + worst.toExponential(2) + " at S = Km/10000");
+  })();
+
+  /* 10. the curve is strictly increasing and never exceeds its ceiling */
+  (function(){
+    let bad = "";
+    for (const V of [40, 120, 200]) for (const K of [5, 30, 100])
+      for (const mode of ["none", "competitive", "noncompetitive", "uncompetitive"]){
+        const ap = Model.apparent(V, K, mode, 2.5);
+        let prev = -1;
+        for (let i = 0; i <= 120; i++){
+          const S = (i / 120) * K * 60;
+          const v = Model.rate(S, ap.V, ap.K);
+          if (!(v >= prev)){ bad = mode + " was not increasing at S=" + S; break; }
+          if (v > ap.V + 1e-12){ bad = mode + " exceeded its own ceiling"; break; }
+          prev = v;
+        }
+        if (bad) break;
+      }
+    push("every curve rises with substrate and never crosses its own ceiling",
+         bad === "", bad || "36 curves, 121 points each");
+  })();
+
+  /* 11. a dose of zero is exactly the clean enzyme, whichever inhibitor is
+         selected                                                            */
+  (function(){
+    let worst = 0;
+    for (const V of [40, 120, 200]) for (const K of [5, 30, 100])
+      for (const mode of ["competitive", "noncompetitive", "uncompetitive"]){
+        const ap = Model.apparent(V, K, mode, 0);
+        worst = Math.max(worst, Math.abs(ap.V - V), Math.abs(ap.K - K));
+      }
+    push("a dose of zero reproduces the uninhibited enzyme exactly for all three mechanisms",
+         worst === 0, "largest difference " + worst);
+  })();
+
+  /* 12. every reading the page can produce is finite, and the same seed
+         reproduces the same assay                                           */
+  (function(){
+    let bad = "", checked = 0;
+    for (const mode of ["none", "competitive", "noncompetitive", "uncompetitive"])
+      for (const r of [0, 2.5, 5]) for (const V of [40, 200]) for (const K of [5, 100])
+        for (const nz of [0, 0.12]){
+          const pts = Model.assay(V, K, mode, r, nz, 7000 + 137);
+          const f = Model.fit(pts);
+          const ap = Model.apparent(V, K, mode, r);
+          checked++;
+          if (!Number.isFinite(f.V) || !Number.isFinite(f.K) || !Number.isFinite(ap.V / ap.K)){
+            bad = mode + " r=" + r + " V=" + V + " K=" + K + " noise=" + nz; break;
+          }
+        }
+    const a = Model.assay(120, 30, "competitive", 2, 0.05, 999);
+    const b = Model.assay(120, 30, "competitive", 2, 0.05, 999);
+    let same = a.length === b.length;
+    for (let i = 0; i < a.length; i++) if (a[i].v !== b[i].v || a[i].S !== b[i].S) same = false;
+    push("every setting gives finite readings and the same seed repeats the assay exactly",
+         bad === "" && same && checked === 96, bad || (checked + " settings, repeat assay identical"));
+  })();
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED };
+
+})();
+</script>
+</body>
+</html>
