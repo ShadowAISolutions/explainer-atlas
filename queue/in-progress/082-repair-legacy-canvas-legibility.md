@@ -57,9 +57,16 @@ batch/003.
       470px the padding and the bar gutters shrink and the legend shortens;
       when a door is narrower than 36px its contents become a colour block,
       which is what makes the twelve-door case legible on a phone.
-- [ ] batch/001 remainder — `fourier-series-square-wave`,
-      `population-logistic-chaos`
-      (`floating-point-precision` was repaired in batch/005 under task 081).
+- [x] `fourier-series-square-wave` — batch/008. Container-tracking `fitCanvas()`
+      with the wave pane taller than wide below 470px, pads and type scaled to
+      the width, and a shortened bar-pane title. The old fixed 960x600 surface
+      squeezed into a 390px viewport left a wave about 90px tall.
+- [x] `population-logistic-chaos` — batch/008. Container-tracking `fitCanvas()`;
+      below 470px the orbit pane drops to three horizontal rules and the
+      bifurcation axis to four r ticks, and the `r =` marker label moved inside
+      the lower pane on a backing, because above it it collided with the pane
+      title whenever r sat mid-range.
+      (`floating-point-precision` was repaired in batch/005 under task 081.)
 - [ ] batch/002 pages
 - [ ] batch/003 pages
 
