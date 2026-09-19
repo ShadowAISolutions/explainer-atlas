@@ -1,0 +1,19 @@
+{
+  "slug": "reaction-rate-order",
+  "title": "The Balanced Equation Will Not Tell You This",
+  "domain": "chemistry",
+  "difficulty": 3,
+  "summary": "Four unlabelled vials of decaying reactant. Tune an order and a rate constant until your law lies on the measurements, and learn to read the order off the shape of the curve.",
+  "prerequisites": [],
+  "tags": [
+    "reaction-order",
+    "rate-law",
+    "half-life",
+    "curve-fitting",
+    "kinetics"
+  ],
+  "interaction_pattern": "tune-to-match",
+  "sources": [],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}
