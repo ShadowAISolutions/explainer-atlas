@@ -33,6 +33,53 @@ files in `AUDIT/` before starting any batch.
 
 ## Batches
 
+### batch/009 — 2026-09-19
+- merged: projectile-drag, plate-tectonics-seafloor-age, electrochemical-cell-potential,
+  compound-interest-doubling, plus three more pages of the legacy canvas repair
+  (dijkstra-vs-astar, equal-temperament, pid-controller)
+- blocked: none
+- patterns: compare-side-by-side, spatial-explore, drag-parameter, time-scrubber
+  (the repair carries no pattern)
+- learned: Four notes.
+
+  (1) **A task file's stated tolerance is a claim, not an instruction, and two of
+  them were wrong this batch.** Task 007 asked that the rule of 72 be "within
+  0.5% of exact for r between 4% and 12%". It is not: the error is 1.85 per cent
+  at 4 and 1.90 at 12, and the half-per-cent band is only 6.79 to 8.92 per cent.
+  Task 063 asked for an equality to 1e-9 that is below the floor of differencing
+  an extensive free energy. In both cases the page asserts the bound that is
+  actually true, states the real figure in the detail line so nobody has to
+  rediscover it, and the commit message says which claim was refused and why.
+  Never loosen a passing assertion; do correct a task file's arithmetic.
+
+  (2) **Screenshot review after every green verify has now caught a real defect
+  on every page for three batches running** — three on projectile-drag, four on
+  the seafloor page, four on the chemistry page, two on the economics page, and
+  it is what found the collisions on all three repaired pages. Every one was a
+  label overprinting another label, and almost every one came from a fixed
+  vertical gap between two panes. The fix that generalises: never place a pane's
+  title a constant distance below the previous pane's nominal bottom. Name the
+  rows that hang beneath a pane (tick labels, annotations, captions), compute
+  where the lowest of them ends, and start the next pane from that.
+
+  (3) **Two captions that share a row must be chosen by measurement, not by a
+  breakpoint.** Both the chemistry and economics pages had a left axis caption
+  and a right units caption running into each other, and forcing the short form
+  below 470px was not enough — even the short pair collided at 390. Keep a
+  ladder of two or three phrasings for each and pick the longest pair whose
+  measured widths plus a gutter fit the span. Same technique fixed the maze
+  page's bar labels, where the fallback goes further: one line, then name over
+  number, then horizontal rows.
+
+  (4) **`niceStep` can hand back a step larger than the span it is dividing**, so
+  an axis draws with no labels on it at all. Two guards, both now in three
+  pages: a 2.5 rung in the ladder, and a loop that halves the step while fewer
+  than two divisions fit. Related: ask it for more divisions than you want,
+  because it rounds up hard — asking for four on a 24-per-cent span returned a
+  single 10-per-cent rung either side of zero and left the zero line unlabelled.
+  Build a symmetric ladder outward from zero rather than up from the bottom.
+
+
 ### batch/008 — 2026-09-19
 - merged: hamming-code, regression-to-the-mean, sound-change-chain-shift, tragedy-of-the-commons, plus the last two batch/001 pages of the legacy canvas repair (fourier-series-square-wave, population-logistic-chaos)
 - blocked: none

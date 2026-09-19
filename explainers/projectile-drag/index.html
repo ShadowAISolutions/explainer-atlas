@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The 45-Degree Rule Is a Vacuum Rule — Explainer Atlas</title>
+<meta name="description" content="Fire the same shot into a vacuum and into air, side by side, and watch the parabola lose its symmetry and its best angle drop below 45 degrees.">
+<style>
+:root{
+  --bg:#f6f4ee; --panel:#fffefb; --ink:#1b1d21; --muted:#5d6472; --line:#ddd8cc;
+  --accent:#b4442a; --accent-soft:#f6e6e0; --cool:#27405e; --cool-soft:#e4ebf3;
+  --radius:4px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Iowan Old Style",Palatino,"Palatino Linotype",Georgia,serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --scale-h1:clamp(1.6rem,1.1rem + 2.2vw,2.45rem);
+  --scale-body:clamp(1rem,0.96rem + 0.2vw,1.08rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#14161a; --panel:#1b1e24; --ink:#e9e6df; --muted:#9aa2b1; --line:#2c313a;
+    --accent:#e0724f; --accent-soft:#2c1d17; --cool:#82aada; --cool-soft:#16212d;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+     font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:60rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:2px solid var(--ink); padding-bottom:calc(var(--pad)*0.7)}
+h1{font-size:var(--scale-h1); line-height:1.1; margin:0 0 .32em; letter-spacing:-.015em; font-weight:600}
+.kicker{margin:0 0 .4em; color:var(--accent); font:600 .72rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.14em}
+.standfirst{margin:0; color:var(--muted); max-width:44em; font-size:1.02em}
+.layout{display:grid; gap:var(--pad); margin-top:var(--pad)}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+          padding:calc(var(--pad)*0.85); display:grid; gap:1em;
+          grid-template-columns:repeat(auto-fit,minmax(13rem,1fr)); align-items:start}
+.control{display:grid; gap:.3em; align-content:start}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font-weight:600; font-size:.94rem}
+.control output{font:600 .86rem/1 var(--font-mono); color:var(--accent);
+                background:var(--accent-soft); padding:.26em .48em; border-radius:3px}
+.control .hint{color:var(--muted); font-size:.79rem; margin:0; line-height:1.4}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; font-size:.92rem; color:inherit; background:var(--bg);
+              border:1px solid var(--line); border-radius:3px; padding:.5em .6em; min-height:40px; width:100%}
+button{cursor:pointer; font-weight:600; font-family:var(--font-mono); font-size:.82rem;
+       text-transform:uppercase; letter-spacing:.07em}
+button:hover{border-color:var(--accent); color:var(--accent)}
+.check{display:flex; align-items:center; gap:.55em; min-height:40px}
+.check input{accent-color:var(--accent); width:18px; height:18px; flex:none}
+.check label{font-weight:600; font-size:.94rem}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line);
+             border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.55em; color:var(--muted); font-size:.84rem; line-height:1.5}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.2rem,1fr)); gap:1px;
+         margin:0; padding:0; background:var(--line); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden}
+.readout div{background:var(--panel); padding:.6em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.68rem; text-transform:uppercase; letter-spacing:.1em}
+.readout dd{margin:.22em 0 0; font:600 1.02rem/1.2 var(--font-mono)}
+.readout dd.cool{color:var(--cool)}
+.readout dd.hot{color:var(--accent)}
+.prose{max-width:38em; margin-top:calc(var(--pad)*1.3)}
+.prose h2{font-size:1.1rem; margin:1.9em 0 .4em; letter-spacing:.02em; text-transform:uppercase;
+          font-family:var(--font-mono); font-weight:600; color:var(--accent)}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.88rem; background:var(--cool-soft);
+             padding:.75em .85em; border-radius:3px; border-left:3px solid var(--cool); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line);
+            color:var(--muted); font-size:.84rem}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Physics</p>
+  <h1>The 45-Degree Rule Is a Vacuum Rule</h1>
+  <p class="standfirst">Fire the same shot twice, once into a vacuum and once into air. The parabola
+  keeps its symmetry and its textbook best angle of 45 degrees. The real shot does neither.</p>
+</header>
+
+<div class="layout">
+
+  <section class="controls" data-role="controls" aria-label="Launch and air controls">
+    <div class="control">
+      <div class="row"><label for="v0">Launch speed</label><output id="v0out" for="v0">40 m/s</output></div>
+      <input type="range" id="v0" min="10" max="90" step="1" value="40">
+      <p class="hint">How hard it leaves the barrel. Arrow keys step by 1.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="th">Launch angle</label><output id="thout" for="th">45.0&#176;</output></div>
+      <input type="range" id="th" min="3" max="87" step="0.5" value="45">
+      <p class="hint">Measured up from the ground.</p>
+    </div>
+
+    <div class="control">
+      <label for="proj">Projectile</label>
+      <select id="proj">
+        <option value="9999">no air at all (vacuum)</option>
+        <option value="145">shot put &#183; terminal 145 m/s</option>
+        <option value="75">cricket ball &#183; terminal 75 m/s</option>
+        <option value="40" selected>baseball &#183; terminal 40 m/s</option>
+        <option value="20">tennis ball &#183; terminal 20 m/s</option>
+        <option value="9">table-tennis ball &#183; terminal 9 m/s</option>
+      </select>
+      <p class="hint">Chooses the terminal speed, and with it how much air resistance bites.</p>
+    </div>
+
+    <div class="control">
+      <div class="check">
+        <input type="checkbox" id="sweep" checked>
+        <label for="sweep">Show the angle sweep</label>
+      </div>
+      <p class="hint">The lower panel: range against launch angle, for both shots at once.</p>
+      <button type="button" id="best">Jump to the best angle</button>
+    </div>
+  </section>
+
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="960" height="620" role="img"
+      aria-label="Two trajectories launched from the same point: a symmetric vacuum parabola in blue and a shorter, steeper-falling trajectory in air in red. Below them, a chart of range against launch angle for both cases, marking where each one peaks."></canvas>
+    <figcaption>Blue is the vacuum shot, red is the shot through air, both launched identically.
+    Watch the red curve come down steeper than it went up, and land short.</figcaption>
+  </figure>
+
+  <dl class="readout" aria-live="polite">
+    <div><dt>Range in vacuum</dt><dd id="rv" class="cool">&#8212;</dd></div>
+    <div><dt>Range in air</dt><dd id="ra" class="hot">&#8212;</dd></div>
+    <div><dt>Range lost</dt><dd id="rl">&#8212;</dd></div>
+    <div><dt>Best angle in air</dt><dd id="bo" class="hot">&#8212;</dd></div>
+    <div><dt>Impact angle</dt><dd id="ia">&#8212;</dd></div>
+    <div><dt>Impact speed</dt><dd id="is">&#8212;</dd></div>
+  </dl>
+
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Every introductory mechanics course arrives at the same tidy result: to throw something as
+  far as possible, launch it at 45 degrees. The derivation takes two lines, the answer is a round
+  number, and it is wrong for every object anyone has ever actually thrown. It is the answer for a
+  projectile moving through nothing at all.</p>
+
+  <p>Put the two shots side by side and the difference is not subtle. At 40 metres per second and
+  45 degrees, a baseball in still air travels a little over half as far as the same baseball fired
+  into a vacuum. It also lands differently. The blue parabola rises and falls as mirror images, and
+  it strikes the ground at exactly the angle it left. The red trajectory leans: it climbs a long
+  shallow arc, turns over, and comes down noticeably steeper than it went up. Nothing about the
+  shape is symmetric, because nothing about the forces is.</p>
+
+  <h2>Why the symmetry breaks</h2>
+
+  <p>In a vacuum the only force is gravity, which is the same on the way up as on the way down, so
+  the second half of the flight is the first half played backwards. Air resistance is not like
+  that. It always opposes the motion, so it points down-and-backwards while the projectile is
+  rising and up-and-backwards while it is falling. It is also quadratic in speed: double the speed
+  and the force quadruples.</p>
+
+  <p class="math">dv/dt = -g &#375; - &#946;|v|v,&#9;&#946; = g / v<sub>t</sub><sup>2</sup></p>
+
+  <p>The constant &#946; is set here by the terminal speed v<sub>t</sub>, the speed at which drag
+  exactly balances gravity, because that is the number people have an intuition for. A table-tennis
+  ball reaches terminal speed in a couple of metres of fall; a shot put effectively never does.
+  That single number is what the projectile menu chooses.</p>
+
+  <p>The projectile is fastest at launch, so drag is fiercest at launch, and it spends the first
+  part of the flight being aggressively slowed. By the top of the arc it has lost much of its
+  speed, so the descent is gentler, slower and shorter than the ascent. That is the asymmetry you
+  can see.</p>
+
+  <h2>Where the best angle goes</h2>
+
+  <p>Now the interesting part. Switch on the angle sweep and look at the lower panel, which redraws
+  the range for every launch angle from 3 to 87 degrees. The blue curve is the familiar
+  v<sup>2</sup>sin(2&#952;)/g, a clean symmetric hump peaking at exactly 45 degrees. The red curve
+  peaks to the left of it, and the gap widens as you make the projectile lighter or the launch
+  faster.</p>
+
+  <p>The reason is that time spent in the air is expensive once air is charging for it. A high
+  launch buys you a long flight, and in a vacuum a long flight is pure profit because the
+  horizontal velocity never changes. Under drag, every extra second aloft is another second of
+  horizontal speed being eaten. So the optimum shifts toward flatter shots, which get to the target
+  before the air has finished taking its cut. Press the button to jump straight to the best angle
+  and watch it fall to the low thirties for a tennis ball, and into the twenties for a table-tennis
+  ball launched hard.</p>
+
+  <p>This is why real throwing sports do not coach 45 degrees. Javelin, shot put and long-range
+  artillery all sit below it, and how far below depends on exactly how much air the object has to
+  push out of its way.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set the projectile to <em>no air at all</em> and confirm the two curves lie on top of each
+  other and the sweep peaks at 45 &#8212; that is the sanity check that the simulation reduces
+  correctly. Then step down the menu one projectile at a time at a fixed 45 degrees and watch the
+  range collapse. Finally, hold the table-tennis ball and drag the launch speed from 10 to 90: the
+  vacuum range grows as the square of speed, while the real range flattens out almost completely,
+  because a table-tennis ball simply cannot be made to go much further by throwing it harder.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &#183; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG (unused here: the model is fully deterministic) -- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+const G = 9.80665;
+
+const Model = {
+  G: G,
+
+  /* Air resistance enters only through beta, the quadratic drag coefficient
+     per unit mass. At terminal speed vt the drag exactly cancels gravity, so
+     beta*vt^2 = g. Terminal speed is the input because it is the number a
+     reader has an intuition for; beta is derived from it, never the reverse. */
+  betaOf(vt){ return (Number.isFinite(vt) && vt > 0) ? G / (vt * vt) : 0; },
+
+  /* ---- ROUTE A: march the equations of motion forward in time with RK4. -- */
+  deriv(s, beta){
+    const sp = Math.hypot(s[2], s[3]);
+    return [s[2], s[3], -beta * sp * s[2], -G - beta * sp * s[3]];
+  },
+  step(s, dt, beta){
+    const D = Model.deriv;
+    const k1 = D(s, beta);
+    const b = [s[0]+dt/2*k1[0], s[1]+dt/2*k1[1], s[2]+dt/2*k1[2], s[3]+dt/2*k1[3]];
+    const k2 = D(b, beta);
+    const c = [s[0]+dt/2*k2[0], s[1]+dt/2*k2[1], s[2]+dt/2*k2[2], s[3]+dt/2*k2[3]];
+    const k3 = D(c, beta);
+    const d = [s[0]+dt*k3[0], s[1]+dt*k3[1], s[2]+dt*k3[2], s[3]+dt*k3[3]];
+    const k4 = D(d, beta);
+    return [0,1,2,3].map(i => s[i] + dt/6*(k1[i] + 2*k2[i] + 2*k3[i] + k4[i]));
+  },
+  /* Bisect a single RK4 step down until the chosen component hits zero, so the
+     apex and the landing are found to machine precision rather than to the
+     step size. In a vacuum an RK4 step is exact, because the motion is a
+     polynomial of degree two and RK4 is exact through degree four. */
+  cross(s0, dt, beta, comp){
+    let lo = 0, hi = dt;
+    for (let i = 0; i < 70; i++){
+      const m = (lo + hi) / 2;
+      if (Model.step(s0, m, beta)[comp] > 0) lo = m; else hi = m;
+    }
+    const m = (lo + hi) / 2;
+    return { t: m, s: Model.step(s0, m, beta) };
+  },
+  fly(v0, thetaDeg, vt, dt, wantPath){
+    const beta = Model.betaOf(vt), th = thetaDeg * Math.PI / 180;
+    let s = [0, 0, v0 * Math.cos(th), v0 * Math.sin(th)], t = 0;
+    let apex = 0, tapex = 0, eHi = -Infinity, eLo = Infinity;
+    const energy = (q) => 0.5 * (q[2]*q[2] + q[3]*q[3]) + G * q[1];
+    const path = wantPath ? [[0, 0]] : null;
+    for (let n = 0; n < 500000; n++){
+      const prev = s, q = Model.step(s, dt, beta);
+      t += dt;
+      const e = energy(q); if (e > eHi) eHi = e; if (e < eLo) eLo = e;
+      if (prev[3] > 0 && q[3] <= 0){
+        const a = Model.cross(prev, dt, beta, 3);
+        apex = a.s[1]; tapex = t - dt + a.t;
+      }
+      if (q[1] < 0 && n > 0){
+        const h = Model.cross(prev, dt, beta, 1);
+        if (path) path.push([h.s[0], h.s[1]]);
+        return { range: h.s[0], tflight: t - dt + h.t, apex: apex, tapex: tapex,
+                 vimp: Math.hypot(h.s[2], h.s[3]),
+                 aimp: -Math.atan2(h.s[3], h.s[2]) * 180 / Math.PI,
+                 edrift: eHi - eLo, path: path, steps: n + 1 };
+      }
+      s = q; if (path) path.push([s[0], s[1]]);
+    }
+    return null;
+  },
+
+  /* ---- ROUTE B: the hodograph. Time never appears. ----------------------
+     Writing the equations in terms of the flight-path angle phi turns them
+     into a Bernoulli equation in 1/v^2 that integrates in closed form:
+
+        sec^2(phi)/v^2 = sec^2(phi0)/v0^2 - (beta/g)(S(phi) - S(phi0))
+        S(phi) = sec(phi)tan(phi) + ln|sec(phi)+tan(phi)|   ( = 2*int sec^3 )
+
+     phi falls monotonically from the launch angle, because v dphi/dt is
+     -g cos(phi) and cos(phi) never changes sign in flight, so phi can replace
+     time as the independent variable. Position and elapsed time are then plain
+     quadratures in phi, and nothing in this route touches the integrator. */
+  S(phi){ const se = 1 / Math.cos(phi), ta = Math.tan(phi); return se * ta + Math.log(Math.abs(se + ta)); },
+  vAt(phi, v0, phi0, beta){
+    const c0 = 1 / Math.cos(phi0), c = 1 / Math.cos(phi);
+    const u = (c0 * c0 / (v0 * v0) - (beta / G) * (Model.S(phi) - Model.S(phi0))) / (c * c);
+    return u > 0 ? Math.sqrt(1 / u) : NaN;
+  },
+  GN: [-0.9061798459386640, -0.5384693101056831, 0, 0.5384693101056831, 0.9061798459386640],
+  GW: [ 0.2369268850561891,  0.4786286704993665, 0.5688888888888889, 0.4786286704993665, 0.2369268850561891],
+  gauss(a, b, f){
+    const h = (b - a) / 2, m = (a + b) / 2; let s = 0;
+    for (let i = 0; i < 5; i++) s += Model.GW[i] * f(m + h * Model.GN[i]);
+    return s * h;
+  },
+  /* Bisect a panel until the five-point rule agrees with itself on the halves.
+     The integrands stiffen sharply as phi approaches -90 degrees, where the
+     fall has gone vertical, so a uniform grid fine enough for that region is
+     wasteful everywhere else. */
+  adapt(a, b, f, whole, tol, depth){
+    const m = (a + b) / 2, L = Model.gauss(a, m, f), R = Model.gauss(m, b, f);
+    if (depth > 22 || Math.abs(L + R - whole) <= tol * Math.max(1e-300, Math.abs(L + R))) return L + R;
+    return Model.adapt(a, m, f, L, tol, depth + 1) + Model.adapt(m, b, f, R, tol, depth + 1);
+  },
+  integ(a, b, f, tol){ return Model.adapt(a, b, f, Model.gauss(a, b, f), tol, 0); },
+  hodograph(v0, thetaDeg, vt, panels, tol){
+    const beta = Model.betaOf(vt), phi0 = thetaDeg * Math.PI / 180;
+    const phiEnd = -89.9 * Math.PI / 180, h = (phi0 - phiEnd) / panels;
+    const v = (p) => Model.vAt(p, v0, phi0, beta);
+    const fx = (p) => { const w = v(p); return w * w / G; };
+    const fy = (p) => { const w = v(p); return w * w * Math.tan(p) / G; };
+    const ft = (p) => { const w = v(p); return w / (G * Math.cos(p)); };
+    let x = 0, y = 0, t = 0, apex = 0, tapex = 0;
+    for (let i = 0; i < panels; i++){
+      const lo = phi0 - (i + 1) * h, hi = phi0 - i * h;
+      const dy = Model.integ(lo, hi, fy, tol);
+      if (hi > 0 && lo <= 0){ apex = y + Model.integ(0, hi, fy, tol); tapex = t + Model.integ(0, hi, ft, tol); }
+      if (y + dy < 0){
+        let a = lo, b = hi;
+        for (let k = 0; k < 70; k++){
+          const m = (a + b) / 2;
+          if (y + Model.integ(m, hi, fy, tol) > 0) b = m; else a = m;
+        }
+        const m = (a + b) / 2;
+        return { range: x + Model.integ(m, hi, fx, tol), tflight: t + Model.integ(m, hi, ft, tol),
+                 apex: apex, tapex: tapex, vimp: v(m), aimp: -m * 180 / Math.PI };
+      }
+      x += Model.integ(lo, hi, fx, tol); y += dy; t += Model.integ(lo, hi, ft, tol);
+    }
+    return null;
+  },
+
+  /* Range against launch angle, and the angle that maximises it. The search is
+     a golden section on the hodograph range, so the optimum owes nothing to
+     the integrator either. */
+  rangeAt(v0, thetaDeg, vt){ const r = Model.hodograph(v0, thetaDeg, vt, 60, 1e-12); return r ? r.range : 0; },
+  bestAngle(v0, vt){
+    const g = (Math.sqrt(5) - 1) / 2;
+    let lo = 1, hi = 89, c = hi - g * (hi - lo), d = lo + g * (hi - lo);
+    let fc = Model.rangeAt(v0, c, vt), fd = Model.rangeAt(v0, d, vt);
+    for (let i = 0; i < 60; i++){
+      if (fc > fd){ hi = d; d = c; fd = fc; c = hi - g * (hi - lo); fc = Model.rangeAt(v0, c, vt); }
+      else { lo = c; c = d; fc = fd; d = lo + g * (hi - lo); fd = Model.rangeAt(v0, d, vt); }
+    }
+    return (lo + hi) / 2;
+  }
+};
+
+/* ---- STATE ------------------------------------------------------------- */
+const defaults = { v0: 40, th: 45, vt: 40, sweep: true };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---- canvas sizing -----------------------------------------------------
+   The canvas tracks its container rather than sitting at a fixed size: every
+   pane height, gutter and type size below is derived from the width, and the
+   backing store is twice the CSS size so one drawing unit is one CSS pixel
+   and a 13px label is 13px wherever the page is read. */
+const SS = 2;
+let W = 960, H = 620, NARROW = false, FS = 13;
+let G_ = {};
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 20) : 960);
+  NARROW = avail < 470;
+  W = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+  const padL = NARROW ? 38 : 56, padR = NARROW ? 14 : 22;
+  const top = NARROW ? 26 : 30;
+  const trajH = Math.round(Math.max(190, Math.min(360, W * (NARROW ? 0.80 : 0.36))));
+  /* the trajectory pane carries a tick row AND an axis caption under it, so the
+     gap has to clear both before the sweep pane's own title starts */
+  const gap = NARROW ? 82 : 74;
+  const sweepH = state.sweep ? Math.round(Math.max(150, Math.min(260, W * (NARROW ? 0.62 : 0.26)))) : 0;
+  G_ = {
+    padL: padL, padR: padR,
+    tTop: top, tH: trajH, tBot: top + trajH,
+    tAxisY: top + trajH + (NARROW ? 17 : 18),
+    sTop: state.sweep ? top + trajH + gap : 0,
+    sH: sweepH,
+    sBot: state.sweep ? top + trajH + gap + sweepH : 0,
+    x0: padL, x1: W - padR
+  };
+  H = (state.sweep ? G_.sBot + (NARROW ? 40 : 42) : G_.tAxisY + (NARROW ? 12 : 14));
+  if (cv.width !== W * SS || cv.height !== H * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+/* ---- derived quantities for the current controls ----------------------- */
+function shots(){
+  const tEst = 2 * state.v0 * Math.sin(state.th * Math.PI / 180) / Model.G + 1.2;
+  const dt = Math.max(1e-4, tEst / 1100);
+  return {
+    air: Model.fly(state.v0, state.th, state.vt, dt, true),
+    vac: Model.fly(state.v0, state.th, Infinity, dt, true)
+  };
+}
+const ANGLES = (function(){ const a = []; for (let d = 3; d <= 87; d += 1.75) a.push(d); return a; })();
+function sweepCurves(){
+  return {
+    air: ANGLES.map(d => Model.rangeAt(state.v0, d, state.vt)),
+    vac: ANGLES.map(d => Model.rangeAt(state.v0, d, Infinity))
+  };
+}
+
+/* ---- drawing helpers --------------------------------------------------- */
+function line(pts, colour, width, dash){
+  if (pts.length < 2) return;
+  ctx.save(); ctx.strokeStyle = colour; ctx.lineWidth = width;
+  ctx.lineJoin = "round"; ctx.lineCap = "round";
+  ctx.setLineDash(dash || []);
+  ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.stroke(); ctx.restore();
+}
+function dot(x, y, colour, r){
+  ctx.save(); ctx.fillStyle = colour; ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+}
+/* A label on a curve needs its own backing, or the curve strikes through it. */
+function tag(text, x, y, colour, align, panel){
+  ctx.save(); ctx.font = "600 " + FS + "px " + css("--font-mono");
+  const w = ctx.measureText(text).width;
+  const lx = align === "right" ? x - w : (align === "center" ? x - w / 2 : x);
+  if (panel){
+    ctx.fillStyle = css("--panel"); ctx.globalAlpha = 0.86;
+    ctx.fillRect(lx - 3, y - FS + 1, w + 6, FS + 4);
+    ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = colour; ctx.textAlign = "left"; ctx.fillText(text, lx, y);
+  ctx.restore();
+}
+
+/* ---- RENDER ------------------------------------------------------------ */
+function render(){
+  fitCanvas();
+  const ink = css("--ink"), muted = css("--muted"), lineC = css("--line"),
+        hot = css("--accent"), cool = css("--cool"), panel = css("--panel");
+  const s = shots(), air = s.air, vac = s.vac;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "alphabetic";
+
+  /* ---------- pane 1: the two trajectories ---------- */
+  const xmax = Math.max(vac.range, air.range) * 1.05;
+  const ymax = Math.max(vac.apex, air.apex) * 1.18;
+  const px = (x) => G_.x0 + (x / xmax) * (G_.x1 - G_.x0);
+  const py = (y) => G_.tBot - (y / ymax) * G_.tH;
+  /* the axes carry different scales, so the arcs are stretched upward; the
+     factor is printed rather than left for the reader to be fooled by */
+  const exagg = ((G_.tH / ymax) / ((G_.x1 - G_.x0) / xmax));
+
+  ctx.font = "600 " + FS + "px " + css("--font-mono");
+  ctx.fillStyle = muted; ctx.textAlign = "left";
+  ctx.fillText(NARROW ? "SAME LAUNCH, TWO SKIES" : "THE SAME LAUNCH INTO A VACUUM AND INTO AIR", G_.x0, G_.tTop - 10);
+  ctx.textAlign = "right";
+  ctx.fillText("height ×" + exagg.toFixed(1), G_.x1, G_.tTop - 10);
+
+  /* ground and distance ticks */
+  ctx.strokeStyle = lineC; ctx.lineWidth = 1;
+  const stepX = niceStep(xmax, NARROW ? 4 : 7);
+  ctx.font = FS + "px " + css("--font-mono"); ctx.textAlign = "center";
+  for (let x = 0; x <= xmax; x += stepX){
+    ctx.beginPath(); ctx.moveTo(px(x), G_.tTop); ctx.lineTo(px(x), G_.tBot); ctx.stroke();
+    ctx.fillStyle = muted; ctx.fillText(String(Math.round(x)), px(x), G_.tAxisY);
+  }
+  const stepY = niceStep(ymax, 3);
+  ctx.textAlign = "right";
+  for (let y = stepY; y <= ymax; y += stepY){
+    ctx.strokeStyle = lineC; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(G_.x0, py(y)); ctx.lineTo(G_.x1, py(y)); ctx.stroke();
+    ctx.fillStyle = muted; ctx.fillText(String(Math.round(y)), G_.x0 - 5, py(y) + 4);
+  }
+  ctx.strokeStyle = ink; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(G_.x0, G_.tBot); ctx.lineTo(G_.x1, G_.tBot); ctx.stroke();
+  ctx.fillStyle = muted; ctx.textAlign = "left";
+  ctx.fillText("metres downrange", G_.x0, G_.tAxisY + FS + 3);
+  ctx.textAlign = "right";
+  ctx.fillText("metres up", G_.x1, G_.tAxisY + FS + 3);
+
+  const toPts = (p) => p.map(q => [px(q[0]), py(q[1])]);
+  line(toPts(vac.path), cool, 2, [6, 4]);
+  line(toPts(air.path), hot, 2.6);
+
+  /* apex and impact markers */
+  dot(px(vacApexX(vac)), py(vac.apex), cool, 3.2);
+  dot(px(airApexX(air)), py(air.apex), hot, 3.2);
+  dot(px(vac.range), G_.tBot, cool, 4);
+  dot(px(air.range), G_.tBot, hot, 4);
+
+  /* labelled at the apexes, not at the impacts: the two arcs land close
+     together at shallow angles, but their high points never coincide */
+  tag("vacuum", px(vacApexX(vac)), py(vac.apex) - 9, cool, "center", true);
+  tag("air", px(airApexX(air)), py(air.apex) - 9, hot, "center", true);
+
+  /* ---------- pane 2: range against launch angle ---------- */
+  if (state.sweep){
+    const c = sweepCurves();
+    const rmax = Math.max.apply(null, c.vac) * 1.10;
+    const ax = (d) => G_.x0 + ((d - 3) / 84) * (G_.x1 - G_.x0);
+    const ay = (r) => G_.sBot - (r / rmax) * G_.sH;
+
+    ctx.font = "600 " + FS + "px " + css("--font-mono");
+    ctx.fillStyle = muted; ctx.textAlign = "left";
+    ctx.fillText(NARROW ? "RANGE vs ANGLE" : "RANGE AGAINST LAUNCH ANGLE", G_.x0, G_.sTop - 10);
+
+    ctx.strokeStyle = lineC; ctx.lineWidth = 1;
+    ctx.font = FS + "px " + css("--font-mono"); ctx.textAlign = "center";
+    const ticks = NARROW ? [15, 45, 75] : [15, 30, 45, 60, 75];
+    for (const d of ticks){
+      ctx.beginPath(); ctx.moveTo(ax(d), G_.sTop); ctx.lineTo(ax(d), G_.sBot); ctx.stroke();
+      ctx.fillStyle = muted; ctx.fillText(d + "°", ax(d), G_.sBot + FS + 4);
+    }
+    const stepR = niceStep(rmax, 3);
+    ctx.textAlign = "right";
+    for (let r = stepR; r <= rmax; r += stepR){
+      ctx.strokeStyle = lineC; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(G_.x0, ay(r)); ctx.lineTo(G_.x1, ay(r)); ctx.stroke();
+      ctx.fillStyle = muted; ctx.fillText(String(Math.round(r)), G_.x0 - 5, ay(r) + 4);
+    }
+    ctx.strokeStyle = ink; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(G_.x0, G_.sBot); ctx.lineTo(G_.x1, G_.sBot); ctx.stroke();
+
+    line(ANGLES.map((d, i) => [ax(d), ay(c.vac[i])]), cool, 2, [6, 4]);
+    line(ANGLES.map((d, i) => [ax(d), ay(c.air[i])]), hot, 2.6);
+
+    /* the two peaks, each on its own label row so they never overprint */
+    const bestA = Model.bestAngle(state.v0, state.vt);
+    const bestR = Model.rangeAt(state.v0, bestA, state.vt);
+    const vacR = Model.rangeAt(state.v0, 45, Infinity);
+    peak(ax(45), ay(vacR), "45.0°", cool, 0);
+    peak(ax(bestA), ay(bestR), bestA.toFixed(1) + "°", hot, 1);
+
+    /* where the reader currently is */
+    ctx.save(); ctx.strokeStyle = muted; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(ax(state.th), G_.sTop); ctx.lineTo(ax(state.th), G_.sBot); ctx.stroke();
+    ctx.restore();
+
+    ctx.fillStyle = muted; ctx.textAlign = "left"; ctx.font = FS + "px " + css("--font-mono");
+    ctx.fillText("launch angle", G_.x0, G_.sBot + 2 * FS + 7);
+    ctx.textAlign = "right";
+    ctx.fillText("metres of range", G_.x1, G_.sBot + 2 * FS + 7);
+  }
+
+  function peak(x, y, text, colour, row){
+    ctx.save(); ctx.strokeStyle = colour; ctx.lineWidth = 1.4; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, G_.sBot); ctx.stroke(); ctx.restore();
+    dot(x, y, colour, 3.4);
+    tag(text, x, G_.sTop + FS + 2 + row * (FS + 4), colour, "center", true);
+  }
+
+  /* ---------- readouts ---------- */
+  el("v0out").textContent = state.v0 + " m/s";
+  el("thout").textContent = state.th.toFixed(1) + "°";
+  el("rv").textContent = fmt(vac.range) + " m";
+  el("ra").textContent = fmt(air.range) + " m";
+  const lost = vac.range > 0 ? 100 * (1 - air.range / vac.range) : 0;
+  el("rl").textContent = lost < 0.05 ? "none" : lost.toFixed(1) + "%";
+  el("bo").textContent = Model.bestAngle(state.v0, state.vt).toFixed(1) + "°";
+  el("ia").textContent = air.aimp.toFixed(1) + "°";
+  el("is").textContent = fmt(air.vimp) + " m/s";
+}
+
+function fmt(v){ return v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2); }
+function niceStep(span, want){
+  const raw = span / want, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / mag;
+  let step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+  /* A rounded-up step can exceed the span it is meant to divide, which draws an
+     axis with no labels on it at all. The height axis of a 45-degree shot hit
+     exactly that: an apex of 48 m asked for two divisions and was handed 50. */
+  while (span / step < 2 && step > 0) step /= 2;
+  return step;
+}
+function vacApexX(v){ return v.range / 2; }
+function airApexX(a){
+  /* the air path is not symmetric, so the apex abscissa is read off the path
+     rather than assumed to be half the range */
+  let best = 0, by = -Infinity;
+  for (const p of a.path) if (p[1] > by){ by = p[1]; best = p[0]; }
+  return best;
+}
+
+/* ---- BINDINGS ---------------------------------------------------------- */
+el("v0").addEventListener("input", function(){ state.v0 = parseInt(this.value, 10); render(); });
+el("th").addEventListener("input", function(){ state.th = parseFloat(this.value); render(); });
+el("proj").addEventListener("change", function(){
+  const v = parseFloat(this.value);
+  state.vt = v >= 9999 ? Infinity : v;
+  render();
+});
+el("sweep").addEventListener("change", function(){ state.sweep = this.checked; render(); });
+el("best").addEventListener("click", function(){
+  const b = Model.bestAngle(state.v0, state.vt);
+  const snapped = Math.min(87, Math.max(3, Math.round(b * 2) / 2));
+  state.th = snapped; el("th").value = String(snapped); render();
+});
+
+let resizeTimer = 0;
+window.addEventListener("resize", function(){
+  clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 120);
+});
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
+render();
+
+/* ---- SELFTEST ---------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const g = Model.G;
+  const H = (v, d, vt) => Model.hodograph(v, d, vt, 60, 1e-12);
+  const A = (v, d, vt, dt) => Model.fly(v, d, vt, dt || 0.002, false);
+  const cf = (v, d) => v * v * Math.sin(2 * d * Math.PI / 180) / g;
+  const bestCache = {};
+  const best = (v, vt) => {
+    const k = v + "/" + vt;
+    if (!(k in bestCache)) bestCache[k] = Model.bestAngle(v, vt);
+    return bestCache[k];
+  };
+
+  /* 1. the integrator reproduces the vacuum closed form */
+  let e1 = 0, n1 = 0;
+  for (const v of [12, 25, 37, 60, 88]) for (const d of [5, 20, 45, 70, 85]){
+    e1 = Math.max(e1, Math.abs(A(v, d, Infinity).range - cf(v, d))); n1++;
+  }
+  push("with no air the integrated range is v²sin(2θ)/g",
+       e1 < 1e-9,
+       "worst miss over " + n1 + " launches is " + e1.toExponential(2) + " m");
+
+  /* 2. and so does the hodograph, before it is trusted with the drag cases */
+  let e2 = 0;
+  for (const v of [12, 25, 37, 60, 88]) for (const d of [5, 20, 45, 70, 85])
+    e2 = Math.max(e2, Math.abs(H(v, d, Infinity).range - cf(v, d)));
+  push("the hodograph reproduces the same closed form",
+       e2 < 1e-11,
+       "worst miss " + e2.toExponential(2) + " m, so the second route is sound in the case that has an answer");
+
+  /* 3-4. THE CROSS-CHECK. Route A marches time; route B never mentions it. */
+  let r3 = 0, t4 = 0, a4 = 0, v4 = 0, n3 = 0, worst = "";
+  for (const v of [15, 45, 85]) for (const d of [10, 30, 55, 80]) for (const vt of [9, 40, 145]){
+    const a = A(v, d, vt), b = H(v, d, vt); n3++;
+    const r = Math.abs(a.range - b.range) / b.range;
+    if (r > r3){ r3 = r; worst = v + " m/s at " + d + "°, terminal " + vt; }
+    t4 = Math.max(t4, Math.abs(a.tflight - b.tflight) / b.tflight);
+    a4 = Math.max(a4, Math.abs(a.apex - b.apex) / b.apex);
+    v4 = Math.max(v4, Math.abs(a.vimp - b.vimp) / b.vimp);
+  }
+  push("two independent routes agree on the range under drag",
+       r3 < 5e-9,
+       "stepping time with RK4 and integrating the exact hodograph solution over the "
+       + "flight-path angle differ by at most " + r3.toExponential(2) + " relative across "
+       + n3 + " launches; worst at " + worst);
+  push("they agree on flight time, apex and impact speed too",
+       t4 < 5e-9 && a4 < 1e-8 && v4 < 5e-9,
+       "flight time " + t4.toExponential(2) + ", apex " + a4.toExponential(2)
+       + ", impact speed " + v4.toExponential(2) + " relative");
+
+  /* 5. vacuum flight is symmetric in time */
+  let e5 = 0;
+  for (const v of [12, 25, 60, 88]) for (const d of [5, 20, 45, 70, 85]){
+    const a = A(v, d, Infinity); e5 = Math.max(e5, Math.abs(a.tapex - a.tflight / 2));
+  }
+  push("with no air the climb and the fall take the same time",
+       e5 < 1e-9, "apex is off the midpoint of the flight by at most " + e5.toExponential(2) + " s");
+
+  /* 6. and conserves energy */
+  let e6 = 0;
+  for (const v of [12, 25, 60, 88]) for (const d of [5, 45, 85])
+    e6 = Math.max(e6, A(v, d, Infinity).edrift / (0.5 * v * v));
+  push("with no air the integration conserves energy",
+       e6 < 1e-8, "½v² + gy drifts by " + e6.toExponential(2) + " of the launch kinetic energy");
+
+  /* 7. the integrator is fourth order, which is why route A can be believed */
+  const ref7 = H(40, 45, 20).range;
+  const err = [0.02, 0.01, 0.005, 0.0025].map(dt => Math.abs(A(40, 45, 20, dt).range - ref7));
+  const ratios = [err[0] / err[1], err[1] / err[2], err[2] / err[3]];
+  push("halving the time step divides the error by about sixteen",
+       ratios.every(r => r > 12 && r < 20),
+       "observed " + ratios.map(r => r.toFixed(1)).join(", ") + " against the 16 a fourth-order method owes");
+
+  /* 8. the vacuum optimum is exactly 45, by symmetry and by search */
+  let e8 = 0;
+  for (const v of [15, 40, 80]) for (const d of [1, 5, 10, 20, 35])
+    e8 = Math.max(e8, Math.abs(H(v, 45 - d, Infinity).range - H(v, 45 + d, Infinity).range));
+  const s8 = [15, 40, 80].map(v => Math.abs(best(v, Infinity) - 45));
+  push("with no air the best angle is exactly 45 degrees",
+       e8 < 1e-11 && Math.max.apply(null, s8) < 1e-5,
+       "the range is symmetric about 45° to " + e8.toExponential(2)
+       + " m, and a search lands within " + Math.max.apply(null, s8).toExponential(2) + "° of it");
+
+  /* 9. under drag it is strictly below 45 */
+  let hi9 = -1, n9 = 0, at9 = "";
+  for (const v of [10, 20, 40, 70, 90]) for (const vt of [9, 20, 40, 75, 145]){
+    const b = best(v, vt); n9++;
+    if (b > hi9){ hi9 = b; at9 = v + " m/s, terminal " + vt; }
+  }
+  push("with air the best angle is always below 45 degrees",
+       hi9 < 45 && hi9 > 0,
+       "the closest any of " + n9 + " cases gets is " + hi9.toFixed(3) + "° (" + at9
+       + "), the least draggy corner of the grid");
+
+  /* 10. and falls as the drag rises */
+  let mono10 = true, row10 = "";
+  for (const v of [20, 50, 80]){
+    const seq = [145, 75, 40, 20, 9].map(vt => best(v, vt));
+    for (let i = 1; i < seq.length; i++) if (!(seq[i] < seq[i - 1])) mono10 = false;
+    if (v === 50) row10 = seq.map(x => x.toFixed(1)).join("° → ") + "°";
+  }
+  push("the best angle keeps falling as the air bites harder",
+       mono10, "at 50 m/s, terminal speed 145 down to 9 gives " + row10);
+
+  /* 11. drag never helps */
+  let mono11 = true, worstGain = -Infinity;
+  for (const v of [20, 50, 80]) for (const d of [15, 45, 75]){
+    const seq = [9, 20, 40, 75, 145].map(vt => H(v, d, vt).range);
+    const vac = cf(v, d);
+    for (let i = 1; i < seq.length; i++) if (!(seq[i] > seq[i - 1])) mono11 = false;
+    worstGain = Math.max(worstGain, seq[seq.length - 1] - vac);
+  }
+  push("every shot through air falls short of the same shot through nothing",
+       mono11 && worstGain < 0,
+       "range rises monotonically with terminal speed, and the least draggy case still "
+       + "loses " + Math.abs(worstGain).toFixed(2) + " m");
+
+  /* 12. terminal speed is the definition of the drag constant */
+  let e12 = 0, e12b = 0;
+  for (const vt of [9, 20, 40, 75, 145]){
+    e12 = Math.max(e12, Math.abs(Model.betaOf(vt) * vt * vt - g));
+    /* The relaxation time is vₜ/(2g), so 40*vₜ/g is eighty of them, long enough
+       that the starting speed cannot still be showing. Height is deliberately left
+       out of this: a fall tall enough for the shot put to settle would be over a
+       hundred kilometres, which says nothing extra about the model. */
+    const beta12 = Model.betaOf(vt), dt12 = vt / g / 200;
+    for (const start of [-3 * vt, 0]){
+      let q = [0, 0, 0, start];
+      for (let i = 0; i < 8000; i++) q = Model.step(q, dt12, beta12);
+      e12b = Math.max(e12b, Math.abs(Math.hypot(q[2], q[3]) - vt));
+    }
+  }
+  push("falling long enough relaxes to exactly the stated terminal speed",
+       e12 < 1e-13 && e12b < 1e-9,
+       "βvₜ² - g is " + e12.toExponential(2)
+       + ", and each projectile, released from rest and thrown down at three times"
+       + " terminal speed alike, settles within " + e12b.toExponential(2)
+       + " m/s of it after eighty relaxation times");
+
+  /* 13. impact matches launch in a vacuum and never does in air */
+  let e13 = 0, ok13 = true;
+  for (const v of [18, 45, 80]) for (const d of [15, 45, 75]){
+    const a = A(v, d, Infinity);
+    e13 = Math.max(e13, Math.abs(a.vimp - v), Math.abs(a.aimp - d));
+    const b = A(v, d, 20);
+    if (!(b.vimp < v - 0.5 && b.aimp > d + 0.5)) ok13 = false;
+  }
+  push("a vacuum shot lands at its launch speed and angle, an air shot never does",
+       e13 < 1e-8 && ok13,
+       "vacuum impact matches launch to " + e13.toExponential(2)
+       + ", while every air shot lands slower and steeper than it left");
+
+  /* 14. nothing in the reachable control space produces a non-number */
+  let ok14 = true;
+  for (const v of [10, 30, 50, 70, 90]) for (let d = 3; d <= 87; d += 6)
+    for (const vt of [9, 20, 40, 75, 145, Infinity]){
+      const r = H(v, d, vt);
+      if (!r || ![r.range, r.tflight, r.apex, r.vimp, r.aimp].every(Number.isFinite)) ok14 = false;
+    }
+  push("every reachable setting produces finite numbers",
+       ok14, "all six terminal speeds swept against speed 10-90 m/s and angle 3-87°");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

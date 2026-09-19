@@ -296,9 +296,34 @@ const el = (id) => document.getElementById(id);
 const cv = el("view"), ctx = cv.getContext("2d");
 function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
-const L = 52, R = 18, TOP = 22, PLOT_H = 330, U_TOP = 396, U_H = 120;
+/* This canvas was a fixed 900 by 540 surface with a 52px gutter and 12px type.
+   At 390px the axis numbers landed at five effective pixels and the effort
+   strip at the bottom vanished. Every dimension is derived from the width the
+   container hands over now. */
+const SS = 2;
+let CW = 900, CH = 540, FS = 13, NARROW = false;
+let L = 52, R = 18, TOP = 22, PLOT_H = 330, U_TOP = 396, U_H = 120;
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 20) : 900);
+  NARROW = avail < 470;
+  CW = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+  L = NARROW ? 34 : 52; R = NARROW ? 12 : 18;
+  TOP = FS + 12;
+  PLOT_H = Math.round(Math.max(150, Math.min(340, CW * (NARROW ? 0.62 : 0.37))));
+  /* the tick row and the effort strip's own title both sit between the panes */
+  U_TOP = Math.round(TOP + PLOT_H + 2 * FS + 26);
+  U_H = Math.round(Math.max(72, Math.min(130, CW * (NARROW ? 0.30 : 0.14))));
+  CH = U_TOP + U_H + FS + 8;
+  if (cv.width !== CW * SS || cv.height !== CH * SS){ cv.width = CW * SS; cv.height = CH * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
 
 function render(){
+  fitCanvas();
   const muted = css("--muted"), line = css("--line"), panel = css("--panel"),
         tgt = css("--target"), bad = css("--bad"), ink = css("--ink"),
         colour = state.Ki > 0 ? css("--i") : (state.Kd > 0 ? css("--d") : css("--p"));
@@ -306,11 +331,11 @@ function render(){
   const run = Model.simulate(state.plant, state.Kp, state.Ki, state.Kd, T_SHOW);
   const stable = !run.diverged && Math.abs(run.y[run.y.length - 1]) < 50;
 
-  ctx.clearRect(0, 0, cv.width, cv.height);
-  ctx.fillStyle = panel; ctx.fillRect(0, 0, cv.width, cv.height);
-  ctx.font = "12px ui-monospace, monospace";
+  ctx.clearRect(0, 0, CW, CH);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, CW, CH);
+  ctx.font = FS + "px ui-monospace, monospace";
 
-  const x1 = cv.width - R;
+  const x1 = CW - R;
   const tx = (t) => L + (t / T_SHOW) * (x1 - L);
   const ty = (v) => TOP + PLOT_H - (v / 1.6) * PLOT_H;
 
@@ -320,12 +345,12 @@ function render(){
     ctx.fillText(v.toFixed(1), L - 8, ty(v) + 4);
   }
   ctx.textAlign = "center";
-  for (let t = 0; t <= T_SHOW; t += 2){
+  for (let t = 0; t <= T_SHOW; t += (NARROW ? 5 : 2)){
     ctx.beginPath(); ctx.moveTo(tx(t), ty(0)); ctx.lineTo(tx(t), ty(0) + 5); ctx.stroke();
-    ctx.fillText(t + "s", tx(t), ty(0) + 20);
+    ctx.fillText(t + "s", tx(t), ty(0) + FS + 8);
   }
   ctx.textAlign = "left";
-  ctx.fillText("output (setpoint = 1)", L, TOP - 7);
+  ctx.fillText(NARROW ? "output (target = 1)" : "output (setpoint = 1)", L, TOP - 6);
 
   /* setpoint */
   ctx.strokeStyle = ink; ctx.globalAlpha = 0.25; ctx.setLineDash([2, 4]);
@@ -354,9 +379,11 @@ function render(){
   ctx.stroke();
 
   if (!stable){
-    ctx.fillStyle = bad; ctx.font = "700 15px ui-monospace, monospace"; ctx.textAlign = "center";
-    ctx.fillText("UNSTABLE — the output runs away", (L + x1) / 2, TOP + 40);
-    ctx.font = "12px ui-monospace, monospace";
+    ctx.fillStyle = bad;
+    ctx.font = "700 " + (FS + 2) + "px ui-monospace, monospace"; ctx.textAlign = "center";
+    ctx.fillText(NARROW ? "UNSTABLE — it runs away" : "UNSTABLE — the output runs away",
+                 (L + x1) / 2, TOP + 3 * FS);
+    ctx.font = FS + "px ui-monospace, monospace";
   }
 
   /* effort strip */
@@ -364,7 +391,8 @@ function render(){
   for (let i = 0; i < run.u.length; i++){ const a = Math.abs(run.u[i]); if (a < 1e5 && a > umax) umax = a; }
   const uy = (v) => U_TOP + U_H / 2 - (Math.max(-umax, Math.min(umax, v)) / umax) * (U_H / 2 - 6);
   ctx.strokeStyle = line; ctx.textAlign = "left"; ctx.fillStyle = muted;
-  ctx.fillText("controller effort  (peak " + (umax < 1e5 ? umax.toFixed(1) : "off scale") + ")", L, U_TOP - 7);
+  ctx.fillText((NARROW ? "effort  (peak " : "controller effort  (peak ")
+               + (umax < 1e5 ? umax.toFixed(1) : "off scale") + ")", L, U_TOP - 6);
   ctx.beginPath(); ctx.moveTo(L, uy(0)); ctx.lineTo(x1, uy(0)); ctx.stroke();
   ctx.strokeStyle = stable ? colour : bad; ctx.lineWidth = 1.6; ctx.globalAlpha = 0.8;
   ctx.beginPath();
@@ -407,6 +435,12 @@ el("reset").addEventListener("click", () => {
   el("kd").value = String(defaults.Kd);
   render();
 });
+let rid = null;
+addEventListener("resize", () => { clearTimeout(rid); rid = setTimeout(render, 90); });
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
 render();
 
 /* ---- SELFTEST ----------------------------------------------------------- */

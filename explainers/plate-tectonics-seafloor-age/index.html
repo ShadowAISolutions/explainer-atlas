@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Ocean Floor Is a Tape Recorder — Explainer Atlas</title>
+<meta name="description" content="Click anywhere on a synthetic ocean floor to read its age, and recover the spreading rate from the width of the magnetic stripes the way it was first done.">
+<style>
+:root{
+  --bg:#eef3f6; --panel:#ffffff; --ink:#0e2430; --muted:#5a7382; --line:#d3e0e7;
+  --accent:#c2562d; --accent-soft:#fae7de; --deep:#134a70; --deep-soft:#e0ecf4;
+  --radius:3px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Avenir Next","Segoe UI",Inter,system-ui,-apple-system,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --scale-h1:clamp(1.5rem,1.05rem + 2.1vw,2.25rem);
+  --scale-body:clamp(0.97rem,0.93rem + 0.2vw,1.04rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0a1016; --panel:#10191f; --ink:#dde8ee; --muted:#88a0ae; --line:#1d2b34;
+    --accent:#e28a5f; --accent-soft:#2a1a12; --deep:#6ea9cf; --deep-soft:#10222e;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+     font:var(--scale-body)/1.62 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:66rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.13; margin:0 0 .35em; letter-spacing:-.02em; font-weight:700}
+.kicker{margin:0 0 .45em; color:var(--deep); font:700 .7rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.16em}
+.standfirst{margin:0; color:var(--muted); max-width:45em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:58rem){ .layout{grid-template-columns:minmax(0,1.5fr) minmax(15rem,0.85fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:none; cursor:crosshair; border-radius:2px}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.83rem; line-height:1.5}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control label{font-weight:600; font-size:.93rem}
+.control output{font:700 .84rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.26em .48em; border-radius:2px}
+.control .hint{color:var(--muted); font-size:.79rem; margin:0; line-height:1.45}
+input[type=range]{width:100%; accent-color:var(--deep); min-height:26px}
+select,button{font:inherit; font-size:.92rem; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:2px; padding:.5em .6em; min-height:40px; width:100%}
+button{cursor:pointer; font:700 .78rem/1 var(--font-mono); text-transform:uppercase; letter-spacing:.09em; padding:.85em .6em}
+button:hover{border-color:var(--accent); color:var(--accent)}
+.check{display:flex; align-items:center; gap:.55em; min-height:38px}
+.check input{accent-color:var(--deep); width:18px; height:18px; flex:none}
+.check label{font-weight:600; font-size:.93rem}
+:where(a,button,input,select,canvas,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.6rem,1fr)); gap:.55em; margin:0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--deep); border-radius:2px; padding:.5em .65em}
+.readout div.warm{border-left-color:var(--accent)}
+.readout dt{margin:0; color:var(--muted); font-size:.67rem; text-transform:uppercase; letter-spacing:.11em}
+.readout dd{margin:.2em 0 0; font:700 1rem/1.2 var(--font-mono)}
+.prose{max-width:38em; margin-top:calc(var(--pad)*1.4)}
+.prose h2{font-size:1.02rem; margin:2em 0 .45em; letter-spacing:.09em; text-transform:uppercase; font-family:var(--font-mono); font-weight:700; color:var(--deep)}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.86rem; background:var(--deep-soft); padding:.75em .85em; border-radius:2px; border-left:3px solid var(--deep); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.83rem}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Earth science</p>
+  <h1>The Ocean Floor Is a Tape Recorder</h1>
+  <p class="standfirst">Crust is made at a ridge and carried away from it, so how far a patch of
+  seafloor sits from the ridge is a clock. Click anywhere on this one and read the time.</p>
+</header>
+
+<div class="layout">
+
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="960" height="640" tabindex="0" role="img"
+      aria-label="A map of a synthetic ocean basin with a spreading ridge running down the middle, offset by transform faults, coloured by the age of the crust. A movable crosshair reads off age and depth, and a profile below plots age against distance from the ridge with the magnetic polarity stripes beneath it."></canvas>
+    <figcaption>Drag the crosshair, or focus the map and use the arrow keys. The lower panel is the
+    profile through the crosshair&#39;s row: age against distance, with the magnetic stripes below it.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Spreading and display controls">
+    <div class="control">
+      <div class="row"><label for="rnow">Half-rate, recent</label><output id="rnowout" for="rnow">30 mm/yr</output></div>
+      <input type="range" id="rnow" min="10" max="100" step="1" value="30">
+      <p class="hint">How fast one flank moves away from the ridge today. In these units 1 mm/yr is 1 km per million years.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="rold">Half-rate, older</label><output id="roldout" for="rold">70 mm/yr</output></div>
+      <input type="range" id="rold" min="10" max="100" step="1" value="70">
+      <p class="hint">The rate that applied before the changeover.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="tc">Rate changed</label><output id="tcout" for="tc">3.00 Ma</output></div>
+      <input type="range" id="tc" min="0" max="8" step="0.25" value="3">
+      <p class="hint">How long ago the spreading rate changed. Set it to zero for a ridge that never changed pace.</p>
+    </div>
+
+    <div class="control">
+      <label for="layer">Map shows</label>
+      <select id="layer">
+        <option value="age" selected>age of the crust</option>
+        <option value="mag">magnetic polarity</option>
+        <option value="depth">water depth</option>
+      </select>
+      <p class="hint">The same seafloor read three ways.</p>
+    </div>
+
+    <div class="control">
+      <div class="check"><input type="checkbox" id="faults" checked><label for="faults">Transform faults</label></div>
+      <p class="hint">Break the ridge into offset segments, which offsets the ages with it.</p>
+      <button type="button" id="reset">Reset everything</button>
+    </div>
+  </section>
+
+  <dl class="readout" aria-live="polite">
+    <div class="warm"><dt>Distance from ridge</dt><dd id="rd">&#8212;</dd></div>
+    <div class="warm"><dt>Age here</dt><dd id="ra">&#8212;</dd></div>
+    <div><dt>Water depth</dt><dd id="rw">&#8212;</dd></div>
+    <div><dt>Polarity</dt><dd id="rp">&#8212;</dd></div>
+    <div><dt>Rate from the stripes</dt><dd id="rs">&#8212;</dd></div>
+    <div><dt>Brunhes stripe</dt><dd id="rb">&#8212;</dd></div>
+  </dl>
+
+</div>
+
+<article class="prose" data-role="prose">
+  <p>The seafloor is young in the middle of an ocean and old at its edges, and the pattern is
+  almost embarrassingly orderly. New crust is made along a ridge, the two flanks carry it away in
+  opposite directions, and nothing much happens to it afterwards. So the distance from the ridge to
+  a patch of seafloor, divided by the speed at which the flank moves, is that patch&#39;s age.</p>
+
+  <p class="math">age = distance from the ridge &#247; half-spreading rate</p>
+
+  <p>The half-rate is the speed of one flank. The two plates separate at twice that, which is why
+  the literature is full of both numbers and why it pays to check which one is meant. Convenient
+  accident of units: one millimetre per year is exactly one kilometre per million years, so a
+  30 mm/yr half-rate puts 3-million-year-old crust 90 kilometres out.</p>
+
+  <h2>Where the clock came from</h2>
+
+  <p>Nobody could read this clock until the magnetic stripes were explained. The Earth&#39;s magnetic
+  field reverses, at intervals of tens of thousands to millions of years, and basalt freezing at a
+  ridge locks in whichever direction the field had at the time. The result is a barcode, laid down
+  at the ridge and carried outward symmetrically, so the same sequence of stripes appears on both
+  flanks as mirror images. Switch the map to magnetic polarity and the barcode is the whole
+  picture.</p>
+
+  <p>That gives the rate without knowing anything about the crust itself. The boundary between the
+  Brunhes and Matuyama chrons is dated at about 773,000 years ago. Find that boundary on the map,
+  measure how far out it sits, divide, and you have the half-rate. Do it for every boundary at once
+  and the fit is the reading shown as <em>rate from the stripes</em>. It agrees with the rate you
+  set, because that is the arithmetic the map was built from &#8212; but it is the arithmetic that
+  turned seafloor spreading from a proposal into a measurement.</p>
+
+  <h2>When the pace changes</h2>
+
+  <p>Ridges do not spread at a fixed rate forever. Set the two half-rate sliders apart and watch
+  the profile: the age-against-distance line has a kink, and the stripes change width at the same
+  place. Wide stripes mean fast spreading, because more crust was made between one reversal and the
+  next. Reading a rate off a stretch of seafloor that straddles the changeover gives an average
+  that belongs to neither era &#8212; the fit has to be done on each limb separately, which is why
+  real studies pick a chron interval and stay inside it.</p>
+
+  <h2>Two other things the map knows</h2>
+
+  <p>Turn on the transform faults. The ridge breaks into segments offset sideways from one another,
+  and because each segment feeds only its own strip of ocean, the ages jump across the fault
+  instead of varying smoothly. The offset in age is exactly the offset in distance divided by the
+  rate. This is why fracture zones show up so sharply on real age maps.</p>
+
+  <p>Then switch to water depth. Fresh crust at a ridge is hot and buoyant, sits high, and sinks as
+  it cools and contracts. Working out how far it sinks means integrating the contraction through a
+  cooling column of rock, which sounds like it should produce something complicated. It produces
+  the square root of age.</p>
+
+  <p class="math">depth &#8776; 2500 m + 355 m &#215; &#8730;(age in Ma)</p>
+
+  <p>Old seafloor is deep because it is old, not because it started low. The relationship is good
+  out to roughly 80 million years, after which real seafloor stops sinking as fast as a plain
+  cooling half-space says it should.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set the changeover to zero so the ridge has one steady rate, put the crosshair a long way out,
+  and check that age really is distance over rate. Then set the recent half-rate to 20 and the
+  older one to 90 and look at the magnetic map: the narrow stripes near the ridge and the wide ones
+  beyond the kink are what a slowdown looks like. Finally, drag the crosshair straight across the
+  ridge and watch the age readout fall to zero and climb again by the same amounts &#8212; the two
+  flanks are mirror images, which is the observation the whole theory rests on.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &#183; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* Built from code points rather than written into the file: an escape in a
+   source file is decoded by whatever wrote the file, and then no later search
+   finds it. */
+const CH = (n) => String.fromCharCode(n);
+const DEG = CH(0x00B0), TIMES = CH(0x00D7), SQRT = CH(0x221A), ARROW = CH(0x2192);
+
+/* ---- MODEL ------------------------------------------------------------- */
+/* Distances are kilometres, ages millions of years, half-rates km/Myr, which
+   is the same number as mm/yr. The thermal part works in SI and converts. */
+const SEC_PER_MYR = 3.1556952e13;
+const ROCK = { kappa: 1e-6, alpha: 3.0e-5, Tm: 1300, rhoM: 3300, rhoW: 1000, ridgeDepth: 2500 };
+
+/* Chron boundaries in Ma, youngest first. Polarity is normal at the present
+   day and flips at each boundary; the first entry is the Brunhes-Matuyama
+   reversal, the one that dates most of the seafloor anybody has measured. */
+const CHRONS = [0.773, 0.990, 1.070, 1.775, 1.934, 2.595, 3.032, 3.116, 3.207, 3.330,
+                3.596, 4.187, 4.300, 4.493, 4.631, 4.799, 4.896, 4.997, 5.235];
+const SPAN = 10;                       /* Ma of history the map covers */
+const BANDS = 5;
+const OFFSETS = [0, 1, -0.6, 1.7, -0.3];   /* transform offsets, in units of one offset step */
+
+const Model = {
+  SPAN: SPAN, BANDS: BANDS, CHRONS: CHRONS, ROCK: ROCK,
+
+  /* how far a parcel born `age` Ma ago has been carried */
+  distanceOf(age, rNow, rOld, tc){
+    if (!(age > 0)) return 0;
+    if (!(tc > 0)) return rNow * age;
+    return age <= tc ? rNow * age : rNow * tc + rOld * (age - tc);
+  },
+  /* ---- ROUTE B: the closed-form inverse -------------------------------- */
+  ageOf(dist, rNow, rOld, tc){
+    const d = Math.abs(dist);
+    if (!(d > 0)) return 0;
+    if (!(tc > 0)) return d / rNow;
+    const knee = rNow * tc;
+    return d <= knee ? d / rNow : tc + (d - knee) / rOld;
+  },
+  /* ---- ROUTE A: march time forward and let the crust pile up -----------
+     Begin `span` Ma ago with an empty ocean. On each step every parcel already
+     made is pushed outward at whatever rate applied then, and one new parcel is
+     laid at the ridge. Nothing in here knows the closed form: the age-distance
+     curve is whatever the accretion happens to produce, and it converges on the
+     closed form from one side at first order in the step. */
+  accrete(span, steps, rNow, rOld, tc){
+    const dt = span / steps, xs = new Float64Array(steps), ages = new Float64Array(steps);
+    let n = 0;
+    for (let i = 0; i < steps; i++){
+      const before = span - i * dt;
+      const rate = (tc > 0 && before > tc) ? rOld : rNow;
+      for (let j = 0; j < n; j++) xs[j] += rate * dt;
+      xs[n] = 0; ages[n] = 0; n++;
+      for (let j = 0; j < n; j++) ages[j] += dt;
+    }
+    return { xs: xs, ages: ages, n: n };
+  },
+  ageFromAccretion(dist, sim){
+    const d = Math.abs(dist), xs = sim.xs, a = sim.ages, last = sim.n - 1;
+    if (d >= xs[0]) return a[0];
+    if (d <= xs[last]) return a[last];
+    let lo = 0, hi = last;                 /* xs descends: oldest is furthest out */
+    while (hi - lo > 1){ const m = (lo + hi) >> 1; if (xs[m] > d) lo = m; else hi = m; }
+    const f = (xs[lo] - d) / (xs[lo] - xs[hi]);
+    return a[lo] + f * (a[hi] - a[lo]);
+  },
+
+  /* ---- the error function, to the last place --------------------------- */
+  erf(x){
+    const ax = Math.abs(x);
+    if (ax < 2){
+      let sum = x, term = x, n = 0;
+      while (Math.abs(term) > 1e-18 * Math.abs(sum) && n < 400){
+        n++; term *= -x * x / n; sum += term / (2 * n + 1);
+      }
+      return 2 / Math.sqrt(Math.PI) * sum;
+    }
+    let cf = 0;
+    for (let i = 80; i >= 1; i--) cf = (i / 2) / (ax + cf);
+    const ec = Math.exp(-ax * ax) / (Math.sqrt(Math.PI) * (ax + cf));
+    return x > 0 ? 1 - ec : ec - 1;
+  },
+
+  /* ---- thermal subsidence ----------------------------------------------
+     A half-space cooling from the side: T(z,t) = Tm erf(z / 2 sqrt(kappa t)).
+     The column contracts as it cools and isostasy converts the contraction
+     into water depth. The numeric route integrates that contraction over depth
+     and never assumes anything about how it depends on age; the square root
+     falls out of the quadrature. */
+  GN: [-0.9061798459386640, -0.5384693101056831, 0, 0.5384693101056831, 0.9061798459386640],
+  GW: [ 0.2369268850561891,  0.4786286704993665, 0.5688888888888889, 0.4786286704993665, 0.2369268850561891],
+  subsidenceNumeric(ageMa, panels){
+    if (!(ageMa > 0)) return 0;
+    const L = 2 * Math.sqrt(ROCK.kappa * ageMa * SEC_PER_MYR), Z = 6 * L, h = Z / panels;
+    const f = (z) => ROCK.Tm * (1 - Model.erf(z / L));
+    let I = 0;
+    for (let i = 0; i < panels; i++){
+      const m = (i + 0.5) * h, hh = h / 2;
+      let s = 0;
+      for (let k = 0; k < 5; k++) s += Model.GW[k] * f(m + hh * Model.GN[k]);
+      I += s * hh;
+    }
+    return ROCK.rhoM * ROCK.alpha * I / (ROCK.rhoM - ROCK.rhoW);
+  },
+  subsidenceClosed(ageMa){
+    if (!(ageMa > 0)) return 0;
+    return 2 * ROCK.rhoM * ROCK.alpha * ROCK.Tm
+         * Math.sqrt(ROCK.kappa * ageMa * SEC_PER_MYR / Math.PI) / (ROCK.rhoM - ROCK.rhoW);
+  },
+  depth(ageMa){ return ROCK.ridgeDepth + Model.subsidenceClosed(ageMa); },
+
+  polarity(ageMa){
+    let p = 1;
+    for (let i = 0; i < CHRONS.length; i++){ if (ageMa < CHRONS[i]) return p; p = -p; }
+    return p;
+  },
+
+  /* ---- geometry: a ridge broken into offset segments ------------------- */
+  offsetStep(rNow, rOld, tc){ return 0.11 * Model.maxDistance(rNow, rOld, tc); },
+  maxDistance(rNow, rOld, tc){ return Model.distanceOf(SPAN, rNow, rOld, tc); },
+  ridgeX(band, faults, rNow, rOld, tc){
+    return faults ? OFFSETS[band % BANDS] * Model.offsetStep(rNow, rOld, tc) : 0;
+  },
+  ageAt(x, band, faults, rNow, rOld, tc){
+    return Model.ageOf(x - Model.ridgeX(band, faults, rNow, rOld, tc), rNow, rOld, tc);
+  },
+
+  /* ---- reading the rate back out of the stripes -------------------------
+     The Vine-Matthews measurement: take the chron boundaries whose ages are
+     known, find how far out each one sits, and regress distance on age. No
+     part of this looks at the age field; it uses only where the polarity
+     flips and the published date of each flip. */
+  fit(xs, ys){
+    const n = xs.length; let sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (let i = 0; i < n; i++){ sx += xs[i]; sy += ys[i]; sxx += xs[i] * xs[i]; sxy += xs[i] * ys[i]; }
+    const d = n * sxx - sx * sx;
+    return { slope: (n * sxy - sx * sy) / d, intercept: (sy * sxx - sx * sxy) / d, n: n };
+  },
+  stripeBoundaries(x0, x1, band, faults, rNow, rOld, tc, samples){
+    /* walk the profile and record every x at which the polarity flips */
+    const out = [], h = (x1 - x0) / samples;
+    let prev = Model.polarity(Model.ageAt(x0, band, faults, rNow, rOld, tc));
+    for (let i = 1; i <= samples; i++){
+      const x = x0 + i * h;
+      const p = Model.polarity(Model.ageAt(x, band, faults, rNow, rOld, tc));
+      if (p !== prev){
+        let a = x - h, b = x;
+        for (let k = 0; k < 60; k++){
+          const m = (a + b) / 2;
+          if (Model.polarity(Model.ageAt(m, band, faults, rNow, rOld, tc)) === prev) a = m; else b = m;
+        }
+        out.push((a + b) / 2);
+        prev = p;
+      }
+    }
+    return out;
+  },
+  rateFromStripes(rNow, rOld, tc){
+    /* only the chrons inside the recent limb, because a fit that straddles the
+       changeover belongs to neither era */
+    const limit = tc > 0 ? tc : SPAN;
+    const ages = CHRONS.filter(c => c < limit);
+    if (ages.length < 2) return NaN;
+    const dists = ages.map(c => Model.distanceOf(c, rNow, rOld, tc));
+    return Model.fit(ages, dists).slope;
+  }
+};
+
+/* ---- STATE ------------------------------------------------------------- */
+const defaults = { rnow: 30, rold: 70, tc: 3, layer: "age", faults: true, cfrac: 0.45, band: 2 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---- canvas sizing: track the container, one drawing unit per CSS pixel -- */
+const SS = 2;
+let W = 960, H = 640, NARROW = false, FS = 13;
+let G_ = {};
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 20) : 960);
+  NARROW = avail < 470;
+  W = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+  const padL = NARROW ? 40 : 58, padR = NARROW ? 12 : 18;
+  const mapTop = NARROW ? 24 : 28;
+  const mapH = Math.round(Math.max(150, Math.min(300, W * (NARROW ? 0.72 : 0.30))));
+  /* the map carries a tick row AND a caption row beneath it, so the profile
+     title cannot start until both have cleared */
+  const profTop = mapTop + mapH + (NARROW ? 80 : 74);
+  const profH = Math.round(Math.max(110, Math.min(190, W * (NARROW ? 0.50 : 0.20))));
+  const stripeH = NARROW ? 20 : 22;
+  G_ = { x0: padL, x1: W - padR,
+         mapTop: mapTop, mapH: mapH, mapBot: mapTop + mapH,
+         profTop: profTop, profH: profH, profBot: profTop + profH,
+         stripeTop: profTop + profH + (NARROW ? 20 : 22), stripeH: stripeH,
+         bandH: mapH / Model.BANDS };
+  H = G_.stripeTop + stripeH + (NARROW ? 36 : 38);
+  if (cv.width !== W * SS || cv.height !== H * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+/* ---- colour ramps ------------------------------------------------------ */
+const AGE_RAMP = [[208,72,42],[231,140,52],[228,200,98],[92,163,150],[24,74,116],[12,38,64]];
+function ramp(stops, f){
+  const t = Math.max(0, Math.min(1, f)) * (stops.length - 1);
+  const i = Math.min(stops.length - 2, Math.floor(t)), g = t - i;
+  const a = stops[i], b = stops[i + 1];
+  return "rgb(" + Math.round(a[0] + g * (b[0] - a[0])) + ","
+                + Math.round(a[1] + g * (b[1] - a[1])) + ","
+                + Math.round(a[2] + g * (b[2] - a[2])) + ")";
+}
+const DEPTH_RAMP = [[186,224,232],[104,170,197],[48,110,150],[20,58,96],[9,28,50]];
+function cellColour(age, maxAge){
+  if (state.layer === "age") return ramp(AGE_RAMP, age / maxAge);
+  if (state.layer === "depth"){
+    const d = Model.depth(age);
+    return ramp(DEPTH_RAMP, (d - Model.ROCK.ridgeDepth) / 3600);
+  }
+  return Model.polarity(age) > 0 ? "rgb(32,52,68)" : "rgb(206,218,226)";
+}
+
+/* ---- drawing helpers --------------------------------------------------- */
+function tag(text, x, y, colour, align, backing){
+  ctx.save(); ctx.font = "700 " + FS + "px " + css("--font-mono");
+  const w = ctx.measureText(text).width;
+  const lx = align === "right" ? x - w : (align === "center" ? x - w / 2 : x);
+  if (backing){
+    ctx.fillStyle = css("--panel"); ctx.globalAlpha = 0.88;
+    ctx.fillRect(lx - 3, y - FS + 1, w + 6, FS + 4); ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = colour; ctx.textAlign = "left"; ctx.fillText(text, lx, y);
+  ctx.restore();
+}
+function niceStep(span, want){
+  const raw = span / want, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / mag;
+  let step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+  while (span / step < 2 && step > 0) step /= 2;   /* never draw an axis with no labels */
+  return step;
+}
+
+/* ---- RENDER ------------------------------------------------------------ */
+function render(){
+  fitCanvas();
+  const ink = css("--ink"), muted = css("--muted"), lineC = css("--line"),
+        hot = css("--accent"), deep = css("--deep"), panel = css("--panel");
+  const R = state.rnow, O = state.rold, T = state.tc, F = state.faults;
+  const maxD = Model.maxDistance(R, O, T);
+  const px = (xkm) => G_.x0 + ((xkm + maxD) / (2 * maxD)) * (G_.x1 - G_.x0);
+  const cx = state.cfrac * maxD;
+  const band = state.band;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "alphabetic";
+
+  /* ---------- the map ---------- */
+  ctx.font = "700 " + FS + "px " + css("--font-mono");
+  ctx.fillStyle = muted; ctx.textAlign = "left";
+  const titles = { age: "AGE OF THE CRUST", mag: "MAGNETIC POLARITY", depth: "WATER DEPTH" };
+  ctx.fillText(titles[state.layer], G_.x0, G_.mapTop - 9);
+  ctx.textAlign = "right";
+  ctx.fillText(Math.round(2 * maxD) + " km across", G_.x1, G_.mapTop - 9);
+
+  const COLW = 3;
+  for (let b = 0; b < Model.BANDS; b++){
+    const yTop = G_.mapTop + b * G_.bandH;
+    for (let sx = G_.x0; sx < G_.x1; sx += COLW){
+      const w = Math.min(COLW, G_.x1 - sx);
+      const xkm = ((sx + w / 2 - G_.x0) / (G_.x1 - G_.x0)) * 2 * maxD - maxD;
+      ctx.fillStyle = cellColour(Model.ageAt(xkm, b, F, R, O, T), Model.SPAN);
+      ctx.fillRect(sx, yTop, w + 0.6, G_.bandH + 0.6);
+    }
+  }
+  /* the ridge segments, and the faults that offset them */
+  ctx.save();
+  for (let b = 0; b < Model.BANDS; b++){
+    const yTop = G_.mapTop + b * G_.bandH, rx = px(Model.ridgeX(b, F, R, O, T));
+    ctx.strokeStyle = "rgb(255,240,220)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(rx, yTop + 1); ctx.lineTo(rx, yTop + G_.bandH - 1); ctx.stroke();
+    if (b > 0 && F){
+      const prev = px(Model.ridgeX(b - 1, F, R, O, T));
+      ctx.strokeStyle = "rgba(255,240,220,0.55)"; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(Math.min(prev, rx), yTop); ctx.lineTo(Math.max(prev, rx), yTop); ctx.stroke();
+    }
+  }
+  ctx.restore();
+
+  /* the crosshair */
+  const chY = G_.mapTop + (band + 0.5) * G_.bandH, chX = px(cx);
+  ctx.save();
+  ctx.strokeStyle = "rgb(255,255,255)"; ctx.lineWidth = 2.6;
+  ctx.beginPath(); ctx.arc(chX, chY, 8, 0, 2 * Math.PI); ctx.stroke();
+  ctx.strokeStyle = "rgb(20,20,20)"; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.arc(chX, chY, 8, 0, 2 * Math.PI); ctx.stroke();
+  ctx.strokeStyle = "rgb(255,255,255)"; ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(chX - 14, chY); ctx.lineTo(chX - 9, chY);
+  ctx.moveTo(chX + 9, chY); ctx.lineTo(chX + 14, chY);
+  ctx.stroke();
+  ctx.restore();
+
+  /* distance scale under the map */
+  const stepD = niceStep(maxD, NARROW ? 2 : 4);
+  ctx.font = FS + "px " + css("--font-mono"); ctx.textAlign = "center";
+  for (let d = -Math.floor(maxD / stepD) * stepD; d <= maxD; d += stepD){
+    ctx.strokeStyle = lineC; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(px(d), G_.mapBot); ctx.lineTo(px(d), G_.mapBot + 4); ctx.stroke();
+    ctx.fillStyle = muted; ctx.fillText(String(Math.round(Math.abs(d))), px(d), G_.mapBot + FS + 6);
+  }
+  ctx.textAlign = "left"; ctx.fillStyle = muted;
+  ctx.fillText("km from the ridge", G_.x0, G_.mapBot + 2 * FS + 9);
+  ctx.textAlign = "right";
+  ctx.fillText(state.layer === "mag" ? "dark = normal polarity"
+             : state.layer === "depth" ? "pale = shallow, dark = deep"
+             : "red = young, blue = old", G_.x1, G_.mapBot + 2 * FS + 9);
+
+  /* ---------- the profile through the crosshair's row ---------- */
+  ctx.font = "700 " + FS + "px " + css("--font-mono");
+  ctx.fillStyle = muted; ctx.textAlign = "left";
+  ctx.fillText(NARROW ? "AGE ALONG THIS ROW, Ma" : "AGE ALONG THE CROSSHAIR ROW, Ma",
+               G_.x0, G_.profTop - 9);
+  const ay = (a) => G_.profBot - (a / Model.SPAN) * G_.profH;
+  const stepA = niceStep(Model.SPAN, 3);
+  ctx.font = FS + "px " + css("--font-mono"); ctx.textAlign = "right";
+  for (let a = stepA; a <= Model.SPAN; a += stepA){
+    ctx.strokeStyle = lineC; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(G_.x0, ay(a)); ctx.lineTo(G_.x1, ay(a)); ctx.stroke();
+    ctx.fillStyle = muted; ctx.fillText(String(a), G_.x0 - 5, ay(a) + 4);
+  }
+  for (let d = -Math.floor(maxD / stepD) * stepD; d <= maxD; d += stepD){
+    ctx.strokeStyle = lineC; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(px(d), G_.profTop); ctx.lineTo(px(d), G_.profBot); ctx.stroke();
+  }
+  ctx.strokeStyle = ink; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(G_.x0, G_.profBot); ctx.lineTo(G_.x1, G_.profBot); ctx.stroke();
+
+  ctx.save();
+  ctx.strokeStyle = deep; ctx.lineWidth = 2.2; ctx.lineJoin = "round";
+  ctx.beginPath();
+  for (let sx = G_.x0; sx <= G_.x1; sx += 2){
+    const xkm = ((sx - G_.x0) / (G_.x1 - G_.x0)) * 2 * maxD - maxD;
+    const a = Math.min(Model.SPAN, Model.ageAt(xkm, band, F, R, O, T));
+    if (sx === G_.x0) ctx.moveTo(sx, ay(a)); else ctx.lineTo(sx, ay(a));
+  }
+  ctx.stroke(); ctx.restore();
+
+  /* the kink, where the spreading rate changed */
+  if (T > 0 && T < Model.SPAN){
+    const rx = Model.ridgeX(band, F, R, O, T), knee = R * T;
+    let labelled = false;
+    for (const sgn of [1, -1]){
+      const kx = px(rx + sgn * knee);
+      if (kx < G_.x0 || kx > G_.x1) continue;
+      ctx.save(); ctx.strokeStyle = hot; ctx.lineWidth = 1.3; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(kx, ay(T)); ctx.lineTo(kx, G_.profBot); ctx.stroke(); ctx.restore();
+      ctx.fillStyle = hot; ctx.beginPath(); ctx.arc(kx, ay(T), 3.4, 0, 2 * Math.PI); ctx.fill();
+      /* the label goes just under its own kink, in the empty wedge between the
+         two arms of the curve, rather than across the curve at the top right */
+      if (!labelled){
+        const txt = (NARROW ? "" : "rate changed ") + T.toFixed(2) + " Ma";
+        ctx.font = "700 " + FS + "px " + css("--font-mono");
+        const half = ctx.measureText(txt).width / 2;
+        const lx = Math.max(G_.x0 + half + 3, Math.min(G_.x1 - half - 3, kx));
+        tag(txt, lx, Math.min(G_.profBot - 5, ay(T) + FS + 9), hot, "center", true);
+        labelled = true;
+      }
+    }
+  }
+
+  /* where the reader is standing */
+  const hereAge = Model.ageAt(cx, band, F, R, O, T);
+  ctx.save(); ctx.strokeStyle = muted; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(chX, G_.profTop); ctx.lineTo(chX, G_.profBot); ctx.stroke(); ctx.restore();
+  ctx.fillStyle = ink; ctx.beginPath();
+  ctx.arc(chX, ay(Math.min(Model.SPAN, hereAge)), 4, 0, 2 * Math.PI); ctx.fill();
+
+  /* ---------- the stripes, on the profile's own scale ---------- */
+  let prevX = G_.x0;
+  let prevP = Model.polarity(Model.ageAt(-maxD, band, F, R, O, T));
+  for (let sx = G_.x0; sx <= G_.x1; sx += 1){
+    const xkm = ((sx - G_.x0) / (G_.x1 - G_.x0)) * 2 * maxD - maxD;
+    const p = Model.polarity(Model.ageAt(xkm, band, F, R, O, T));
+    if (p !== prevP || sx === G_.x1){
+      ctx.fillStyle = prevP > 0 ? "rgb(32,52,68)" : "rgb(206,218,226)";
+      ctx.fillRect(prevX, G_.stripeTop, sx - prevX, G_.stripeH);
+      prevX = sx; prevP = p;
+    }
+  }
+  ctx.strokeStyle = lineC; ctx.lineWidth = 1;
+  ctx.strokeRect(G_.x0, G_.stripeTop, G_.x1 - G_.x0, G_.stripeH);
+  ctx.fillStyle = muted; ctx.textAlign = "left"; ctx.font = FS + "px " + css("--font-mono");
+  /* fall back to the short wording rather than let the long one run off the edge */
+  const longCap = "magnetic polarity along the same row " + ARROW + " wide stripes mean fast spreading";
+  const cap = ctx.measureText(longCap).width <= (G_.x1 - G_.x0) ? longCap : "polarity along this row";
+  ctx.fillText(cap, G_.x0, G_.stripeTop + G_.stripeH + FS + 5);
+
+  /* ---------- readouts ---------- */
+  el("rnowout").textContent = R + " mm/yr";
+  el("roldout").textContent = O + " mm/yr";
+  el("tcout").textContent = T > 0 ? T.toFixed(2) + " Ma" : "never";
+  el("rd").textContent = Math.abs(cx).toFixed(0) + " km";
+  el("ra").textContent = hereAge.toFixed(3) + " Ma";
+  el("rw").textContent = Math.round(Model.depth(hereAge)) + " m";
+  el("rp").textContent = Model.polarity(hereAge) > 0 ? "normal" : "reversed";
+  const rs = Model.rateFromStripes(R, O, T);
+  el("rs").textContent = Number.isFinite(rs) ? rs.toFixed(1) + " mm/yr" : "too few stripes";
+  el("rb").textContent = Model.distanceOf(Model.CHRONS[0], R, O, T).toFixed(1) + " km";
+}
+
+/* ---- BINDINGS ---------------------------------------------------------- */
+el("rnow").addEventListener("input", function(){ state.rnow = parseInt(this.value, 10); render(); });
+el("rold").addEventListener("input", function(){ state.rold = parseInt(this.value, 10); render(); });
+el("tc").addEventListener("input", function(){ state.tc = parseFloat(this.value); render(); });
+el("layer").addEventListener("change", function(){ state.layer = this.value; render(); });
+el("faults").addEventListener("change", function(){ state.faults = this.checked; render(); });
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults);
+  el("rnow").value = defaults.rnow; el("rold").value = defaults.rold;
+  el("tc").value = defaults.tc; el("layer").value = defaults.layer;
+  el("faults").checked = defaults.faults;
+  render();
+});
+
+/* the crosshair: pointer on the map, or arrow keys once the map has focus */
+function place(ev){
+  const box = cv.getBoundingClientRect();
+  const x = (ev.clientX - box.left) * (W / box.width);
+  const y = (ev.clientY - box.top) * (H / box.height);
+  const f = (x - G_.x0) / (G_.x1 - G_.x0);
+  state.cfrac = Math.max(-1, Math.min(1, f * 2 - 1));
+  if (y >= G_.mapTop && y <= G_.mapBot)
+    state.band = Math.max(0, Math.min(Model.BANDS - 1, Math.floor((y - G_.mapTop) / G_.bandH)));
+  render();
+}
+let dragging = false;
+cv.addEventListener("pointerdown", function(ev){
+  dragging = true; if (cv.setPointerCapture) cv.setPointerCapture(ev.pointerId);
+  place(ev); ev.preventDefault();
+});
+cv.addEventListener("pointermove", function(ev){ if (dragging) place(ev); });
+cv.addEventListener("pointerup", function(){ dragging = false; });
+cv.addEventListener("pointercancel", function(){ dragging = false; });
+cv.addEventListener("keydown", function(ev){
+  const k = ev.key;
+  if (k === "ArrowLeft" || k === "ArrowRight"){
+    state.cfrac = Math.max(-1, Math.min(1, state.cfrac + (k === "ArrowRight" ? 0.02 : -0.02)));
+  } else if (k === "ArrowUp" || k === "ArrowDown"){
+    state.band = Math.max(0, Math.min(Model.BANDS - 1, state.band + (k === "ArrowDown" ? 1 : -1)));
+  } else return;
+  ev.preventDefault(); render();
+});
+
+let resizeTimer = 0;
+window.addEventListener("resize", function(){ clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 120); });
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
+render();
+
+/* ---- SELFTEST ---------------------------------------------------------- */
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const HIST = [[40,40,0],[60,20,3],[20,80,2],[35,35,5],[80,15,1.5],[15,90,6],[25,70,4.25]];
+
+  /* 1. THE CROSS-CHECK: a forward accretion run against the closed-form
+        inverse, with the step-size error extrapolated away. */
+  let e1 = 0, n1 = 0, worst1 = "";
+  for (const h of HIST){
+    const s1 = Model.accrete(Model.SPAN, 800, h[0], h[1], h[2]);
+    const s2 = Model.accrete(Model.SPAN, 1600, h[0], h[1], h[2]);
+    for (let d = 4; d <= Model.maxDistance(h[0], h[1], h[2]); d += 37){
+      const closed = Model.ageOf(d, h[0], h[1], h[2]);
+      if (closed > Model.SPAN) continue;
+      const rich = 2 * Model.ageFromAccretion(d, s2) - Model.ageFromAccretion(d, s1);
+      n1++;
+      if (Math.abs(rich - closed) > e1){ e1 = Math.abs(rich - closed); worst1 = h[0] + "/" + h[1] + " at " + h[2] + " Ma"; }
+    }
+  }
+  push("growing the ocean step by step reproduces the closed-form age",
+       e1 < 1e-8,
+       "marching " + n1 + " sample points through an accretion run and extrapolating the step "
+       + "size away leaves at most " + e1.toExponential(2) + " Ma of disagreement with "
+       + "distance-over-rate; worst at " + worst1);
+
+  /* 2. and the raw run converges on it at first order in the step.
+        Measured on the WORST point of a sweep, not point by point: a single
+        sample's error also carries an interpolation term that depends on where
+        it happens to fall between two parcels, so individual ratios wander
+        between 1.36 and 2 while the envelope halves cleanly. */
+  const STEPS2 = [500, 1000, 2000], worstOf = [];
+  for (const n of STEPS2){
+    let e = 0;
+    for (const h of HIST){
+      const sim = Model.accrete(Model.SPAN, n, h[0], h[1], h[2]);
+      for (let d = 10; d <= 500; d += 7){
+        const closed = Model.ageOf(d, h[0], h[1], h[2]);
+        if (closed > Model.SPAN) continue;
+        e = Math.max(e, Math.abs(Model.ageFromAccretion(d, sim) - closed));
+      }
+    }
+    worstOf.push(e);
+  }
+  const r2 = [worstOf[0] / worstOf[1], worstOf[1] / worstOf[2]];
+  const dtOf = STEPS2.map(n => Model.SPAN / n);
+  const onStep = STEPS2.every((n, i) => Math.abs(worstOf[i] - dtOf[i]) < 1e-9);
+  push("halving the accretion step halves the worst error, as a first-order scheme owes",
+       r2.every(r => r > 1.95 && r < 2.05) && onStep,
+       "worst miss over seven rate histories falls " + worstOf.map(e => e.toExponential(2)).join(" then ")
+       + " Ma, ratios " + r2.map(r => r.toFixed(4)).join(" and ")
+       + ", each one exactly the step length the run was given");
+
+  /* 3. with one steady rate the clock is exactly distance over rate */
+  let e3 = 0;
+  for (const r of [10, 25, 48, 73, 100]) for (let d = 0; d <= 900; d += 17)
+    e3 = Math.max(e3, Math.abs(Model.ageOf(d, r, r, 0) - d / r));
+  push("at a steady rate the age is exactly distance over half-rate",
+       e3 < 1e-9, "worst departure across five rates and 54 distances is " + e3.toExponential(2) + " Ma");
+
+  /* 4. the two flanks mirror each other */
+  let e4 = 0;
+  for (const h of HIST) for (let b = 0; b < Model.BANDS; b++) for (let d = 1; d <= 600; d += 23){
+    const rx = Model.ridgeX(b, true, h[0], h[1], h[2]);
+    e4 = Math.max(e4, Math.abs(Model.ageAt(rx + d, b, true, h[0], h[1], h[2])
+                             - Model.ageAt(rx - d, b, true, h[0], h[1], h[2])));
+  }
+  push("the two flanks carry mirror-image ages",
+       e4 < 1e-9, "matched pairs either side of every ridge segment differ by at most "
+       + e4.toExponential(2) + " Ma");
+
+  /* 5. nothing anywhere on the grid is negative, and age grows outward */
+  let neg = 0, mono = true, cells = 0;
+  for (const h of HIST) for (let b = 0; b < Model.BANDS; b++){
+    const maxD = Model.maxDistance(h[0], h[1], h[2]);
+    let last = -1;
+    for (let i = 0; i <= 120; i++){
+      const x = -maxD + (2 * maxD) * i / 120;
+      const a = Model.ageAt(x, b, true, h[0], h[1], h[2]); cells++;
+      if (a < 0 || !Number.isFinite(a)) neg++;
+      const rx = Model.ridgeX(b, true, h[0], h[1], h[2]);
+      if (x > rx){ if (a < last - 1e-12) mono = false; last = a; } else last = -1;
+    }
+  }
+  push("no negative ages anywhere, and age only grows away from the ridge",
+       neg === 0 && mono, cells + " grid points across seven rate histories and every ridge segment");
+
+  /* 6. the historical measurement: rate read back off the stripe positions */
+  let e6 = 0, n6 = 0;
+  for (const h of HIST){
+    const got = Model.rateFromStripes(h[0], h[1], h[2]);
+    if (!Number.isFinite(got)) continue;
+    n6++; e6 = Math.max(e6, Math.abs(got - h[0]) / h[0]);
+  }
+  push("regressing the chron boundaries on their dates returns the half-rate",
+       n6 >= 5 && e6 < 1e-12,
+       "using only where the polarity flips and the published date of each flip, "
+       + n6 + " histories recover the recent half-rate to " + e6.toExponential(2) + " relative");
+
+  /* 7. and the flips really are where the map puts them */
+  let e7 = 0;
+  for (const h of HIST){
+    const maxD = Model.maxDistance(h[0], h[1], h[2]);
+    const bs = Model.stripeBoundaries(0.001, maxD, 0, false, h[0], h[1], h[2], 4000);
+    for (let i = 0; i < Math.min(bs.length, Model.CHRONS.length); i++)
+      e7 = Math.max(e7, Math.abs(bs[i] - Model.distanceOf(Model.CHRONS[i], h[0], h[1], h[2])));
+  }
+  push("every stripe edge found by scanning the map sits where the timescale says",
+       e7 < 1e-6, "worst edge is " + e7.toExponential(2) + " km from its predicted position");
+
+  /* 8. fitting across the changeover is the mistake the page warns about */
+  let ok8 = true, sample8 = "";
+  for (const h of HIST){
+    if (!(h[2] > 0) || h[0] === h[1]) continue;
+    const dy = [], ay = [], dO = [], aO = [];
+    for (let a = 0.05; a <= Model.SPAN - 0.05; a += 0.05){
+      const d = Model.distanceOf(a, h[0], h[1], h[2]);
+      if (a < h[2]){ dy.push(d); ay.push(a); } else { dO.push(d); aO.push(a); }
+    }
+    const young = 1 / Model.fit(dy, ay).slope, old = 1 / Model.fit(dO, aO).slope;
+    const mixed = 1 / Model.fit(dy.concat(dO), ay.concat(aO)).slope;
+    if (Math.abs(young - h[0]) > 0.01 * h[0] || Math.abs(old - h[1]) > 0.01 * h[1]) ok8 = false;
+    if (!(mixed > Math.min(h[0], h[1]) && mixed < Math.max(h[0], h[1]))) ok8 = false;
+    if (!sample8) sample8 = h[0] + " and " + h[1] + " read back as " + young.toFixed(2) + " and "
+                          + old.toFixed(2) + ", while one fit over both gives " + mixed.toFixed(2);
+  }
+  push("each limb read separately gives its own rate; one fit over both gives neither",
+       ok8, sample8);
+
+  /* 9. the error function the cooling model rests on */
+  const ERF = [[0.1, 0.1124629160182849], [0.5, 0.5204998778130465], [1, 0.8427007929497149],
+               [2, 0.9953222650189527], [3, 0.9999779095030014]];
+  let e9 = 0;
+  for (const p of ERF) e9 = Math.max(e9, Math.abs(Model.erf(p[0]) - p[1]));
+  push("the error function matches its published values",
+       e9 < 1e-14, "worst of five reference points is out by " + e9.toExponential(2));
+
+  /* 10. integrating the cooling column reproduces the closed-form subsidence */
+  let e10 = 0;
+  for (const a of [0.05, 0.5, 2, 8, 30, 80])
+    e10 = Math.max(e10, Math.abs(Model.subsidenceNumeric(a, 90) - Model.subsidenceClosed(a))
+                      / Model.subsidenceClosed(a));
+  push("integrating the contraction through the column gives the same subsidence",
+       e10 < 1e-12,
+       "quadrature over depth and the analytic form agree to " + e10.toExponential(2)
+       + " relative over six ages from 50 000 years to 80 million");
+
+  /* 11. and that integral, asked nothing about age, comes out as its square root */
+  const la = [], ld = [];
+  for (let i = 0; i < 22; i++){ const a = 0.5 * Math.pow(1.25, i); la.push(Math.log(a)); ld.push(Math.log(Model.subsidenceNumeric(a, 90))); }
+  const slope11 = Model.fit(la, ld).slope;
+  push("the numerically integrated depth goes as the square root of age",
+       Math.abs(slope11 - 0.5) < 1e-6,
+       "a log-log fit over 22 ages gives an exponent of " + slope11.toFixed(12)
+       + ", never having been told to expect one half");
+
+  /* 12. transform faults offset the age by exactly the offset over the rate */
+  let e12 = 0;
+  for (const h of HIST){
+    const stepKm = Model.offsetStep(h[0], h[1], h[2]);
+    for (let b = 0; b < Model.BANDS; b++) for (const d of [30, 120, 400]){
+      const rx = Model.ridgeX(b, true, h[0], h[1], h[2]);
+      const withF = Model.ageAt(rx + d, b, true, h[0], h[1], h[2]);
+      const plain = Model.ageOf(d, h[0], h[1], h[2]);
+      e12 = Math.max(e12, Math.abs(withF - plain));
+      if (stepKm < 0) e12 = Infinity;
+    }
+  }
+  push("offsetting a ridge segment carries its whole age pattern with it",
+       e12 < 1e-12,
+       "measured from its own segment, crust across a transform fault is the same age as crust "
+       + "the same distance out anywhere else, to " + e12.toExponential(2) + " Ma");
+
+  /* 13. nothing in reach produces a non-number */
+  let ok13 = true;
+  for (const r of [10, 40, 70, 100]) for (const o of [10, 55, 100]) for (const tc of [0, 0.25, 3, 8])
+    for (let b = 0; b < Model.BANDS; b++){
+      const maxD = Model.maxDistance(r, o, tc);
+      for (let i = -6; i <= 6; i++){
+        const x = maxD * i / 6;
+        const a = Model.ageAt(x, b, true, r, o, tc);
+        if (![a, Model.depth(a), Model.polarity(a)].every(Number.isFinite)) ok13 = false;
+      }
+    }
+  push("every reachable setting produces finite numbers",
+       ok13, "both rate sliders swept against every changeover time, both flanks, all five segments");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

@@ -304,9 +304,34 @@ const el = (id) => document.getElementById(id);
 const cv = el("view"), ctx = cv.getContext("2d");
 function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
-const GX = 14, GY = 14, CELL = 34, BAR_TOP = 14 + 17 * 34 + 40, BAR_H = 112;
+/* The canvas used to be a fixed 900 by 762 surface with a 34px cell and 12px
+   bar labels. Scaled into a 390px viewport that put the labels at under five
+   effective pixels. Everything below is now derived from the width the
+   container actually hands over, and the bars turn on their side when there is
+   no room to write a name under each one. */
+const SS = 2;
+let CW = 900, CH = 762, GX = 14, GY = 14, CELL = 34, FS = 13, NARROW = false;
+let BAR_TOP = 0, BAR_H = 0;
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 20) : 900);
+  NARROW = avail < 470;
+  CW = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+  GX = NARROW ? 6 : 14;
+  CELL = (CW - 2 * GX) / W;
+  GY = NARROW ? 8 : 14;
+  BAR_TOP = Math.round(GY + H * CELL + (NARROW ? 30 : 40));
+  BAR_H = NARROW ? 4 * (FS + 12) + 12 : Math.round(Math.max(96, Math.min(140, CW * 0.13)));
+  CH = BAR_TOP + BAR_H + (NARROW ? 6 : 10);
+  if (cv.width !== CW * SS || cv.height !== CH * SS){ cv.width = CW * SS; cv.height = CH * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
 
 function render(){
+  fitCanvas();
   const muted = css("--muted"), line = css("--line"), panel = css("--panel"),
         accent = css("--accent"), cool = css("--cool"), good = css("--good"),
         bad = css("--bad"), ink = css("--ink");
@@ -314,9 +339,10 @@ function render(){
   const wall = Model.grid(state.maze);
   const snap = Model.snapshot(wall, state.heur, state.step);
 
-  ctx.clearRect(0, 0, cv.width, cv.height);
-  ctx.fillStyle = panel; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.clearRect(0, 0, CW, CH);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, CW, CH);
 
+  const pad = Math.max(1, Math.min(2, CELL * 0.07));
   for (let i = 0; i < W * H; i++){
     const x = GX + (i % W) * CELL, y = GY + (((i / W) | 0)) * CELL;
     if (wall[i]) ctx.fillStyle = muted;
@@ -324,10 +350,14 @@ function render(){
     else if (snap.edge[i]) ctx.fillStyle = accent;
     else ctx.fillStyle = panel;
     ctx.globalAlpha = wall[i] ? 0.55 : (snap.done[i] ? 0.3 : (snap.edge[i] ? 0.55 : 1));
-    ctx.fillRect(x, y, CELL - 2, CELL - 2);
+    ctx.fillRect(x, y, CELL - pad, CELL - pad);
     ctx.globalAlpha = 1;
-    ctx.strokeStyle = line; ctx.lineWidth = 1;
-    ctx.strokeRect(x + 0.5, y + 0.5, CELL - 3, CELL - 3);
+    /* below about nine pixels a cell the outline is most of the cell, so the
+       maze reads as a grey wash rather than as walls and corridors */
+    if (CELL > 9){
+      ctx.strokeStyle = line; ctx.lineWidth = 1;
+      ctx.strokeRect(x + 0.5, y + 0.5, CELL - pad - 1, CELL - pad - 1);
+    }
   }
 
   if (snap.path.length > 1){
@@ -335,33 +365,73 @@ function render(){
     ctx.beginPath();
     for (let k = 0; k < snap.path.length; k++){
       const i = snap.path[k];
-      const x = GX + (i % W) * CELL + (CELL - 2) / 2, y = GY + (((i / W) | 0)) * CELL + (CELL - 2) / 2;
+      const x = GX + (i % W) * CELL + (CELL - pad) / 2, y = GY + (((i / W) | 0)) * CELL + (CELL - pad) / 2;
       if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.stroke();
   }
 
-  ctx.font = "700 15px ui-monospace, monospace"; ctx.textAlign = "center";
+  const mark = Math.max(9, Math.min(16, CELL * 0.6));
+  ctx.font = "700 " + mark.toFixed(0) + "px ui-monospace, monospace"; ctx.textAlign = "center";
   ctx.fillStyle = ink;
-  ctx.fillText("S", GX + (CELL - 2) / 2, GY + (CELL - 2) / 2 + 5);
-  ctx.fillText("G", GX + (W - 1) * CELL + (CELL - 2) / 2, GY + (H - 1) * CELL + (CELL - 2) / 2 + 5);
+  ctx.fillText("S", GX + (CELL - pad) / 2, GY + (CELL - pad) / 2 + mark * 0.35);
+  ctx.fillText("G", GX + (W - 1) * CELL + (CELL - pad) / 2,
+               GY + (H - 1) * CELL + (CELL - pad) / 2 + mark * 0.35);
 
   /* the comparison bars */
   const totals = NAMES.map((n) => Model.search(wall, n).expansions);
   const worst = Math.max.apply(null, totals);
-  const bw = (cv.width - 2 * GX) / NAMES.length;
-  ctx.font = "12px ui-monospace, monospace"; ctx.textAlign = "left";
+  ctx.font = FS + "px ui-monospace, monospace"; ctx.textAlign = "left";
   ctx.fillStyle = muted;
-  ctx.fillText("cells expanded to finish, this maze", GX, BAR_TOP - 12);
-  for (let k = 0; k < NAMES.length; k++){
-    const hgt = (totals[k] / worst) * (BAR_H - 22);
-    const x = GX + k * bw;
-    ctx.fillStyle = NAMES[k] === state.heur ? accent : cool;
-    ctx.globalAlpha = NAMES[k] === state.heur ? 0.95 : 0.35;
-    ctx.fillRect(x, BAR_TOP + (BAR_H - 20) - hgt, bw - 14, hgt);
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = muted; ctx.textAlign = "left";
-    ctx.fillText(LABELS[NAMES[k]] + "  " + totals[k], x, BAR_TOP + BAR_H - 2);
+  ctx.fillText(NARROW ? "cells expanded to finish" : "cells expanded to finish, this maze",
+               GX, BAR_TOP - FS + 2);
+
+  if (NARROW){
+    /* Four names under four bars needs about ninety pixels each, and a phone
+       gives sixty. Turned on their side each bar gets the full width and its
+       name and number sit on the same line, in full-size type. */
+    const rowH = FS + 12;
+    const labW = Math.max.apply(null, NAMES.map((n) => ctx.measureText(LABELS[n]).width)) + 8;
+    const numW = ctx.measureText(String(worst)).width + 8;
+    const track = (CW - GX) - GX - labW - numW;
+    for (let k = 0; k < NAMES.length; k++){
+      const y = BAR_TOP + 6 + k * rowH, on = NAMES[k] === state.heur;
+      ctx.fillStyle = muted; ctx.textAlign = "left";
+      ctx.fillText(LABELS[NAMES[k]], GX, y + FS);
+      ctx.fillStyle = on ? accent : cool;
+      ctx.globalAlpha = on ? 0.95 : 0.35;
+      ctx.fillRect(GX + labW, y + 3, Math.max(2, (totals[k] / worst) * track), FS + 2);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = on ? accent : muted; ctx.textAlign = "right";
+      ctx.fillText(String(totals[k]), CW - GX, y + FS);
+    }
+  } else {
+    const bw = (CW - 2 * GX) / NAMES.length;
+    const gutter = Math.min(18, bw * 0.22);
+    /* "straight line  258" is wider than a quarter of a 560px canvas, so the
+       label under one bar ran into the next one's. Measure first: one line if
+       it fits, name over number if not, and the same number of text rows for
+       every bar so the baselines stay level. */
+    const widest = Math.max.apply(null,
+      NAMES.map((n, k) => ctx.measureText(LABELS[n] + "  " + totals[k]).width));
+    const twoLine = widest > bw - 6;
+    const rows = twoLine ? 2 : 1;
+    const foot = rows * FS + 8;
+    for (let k = 0; k < NAMES.length; k++){
+      const hgt = (totals[k] / worst) * (BAR_H - foot - 4);
+      const x = GX + k * bw, on = NAMES[k] === state.heur;
+      ctx.fillStyle = on ? accent : cool;
+      ctx.globalAlpha = on ? 0.95 : 0.35;
+      ctx.fillRect(x, BAR_TOP + (BAR_H - foot) - hgt, bw - gutter, hgt);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = on ? accent : muted; ctx.textAlign = "left";
+      if (twoLine){
+        ctx.fillText(LABELS[NAMES[k]], x, BAR_TOP + BAR_H - FS - 2);
+        ctx.fillText(String(totals[k]), x, BAR_TOP + BAR_H - 2);
+      } else {
+        ctx.fillText(LABELS[NAMES[k]] + "  " + totals[k], x, BAR_TOP + BAR_H - 2);
+      }
+    }
   }
   const dj = totals[0];
 
@@ -391,6 +461,12 @@ el("reset").addEventListener("click", () => {
   el("maze").value = String(defaults.maze);
   render();
 });
+let rid = null;
+addEventListener("resize", () => { clearTimeout(rid); rid = setTimeout(render, 90); });
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
 render();
 
 /* ---- SELFTEST ----------------------------------------------------------- */

@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Flat Battery Is Not Empty — Explainer Atlas</title>
+<meta name="description" content="Drag the concentrations in a two-beaker cell and watch its voltage move, then follow the free-energy curve down to the bottom where the voltage is exactly zero.">
+<style>
+:root{
+  --bg:#f7f4ee; --panel:#fffdf8; --ink:#1c1915; --muted:#6b6257; --line:#e3dccd;
+  --accent:#a8502a; --accent-soft:#f6e6dc; --cool:#2b6b61; --cool-soft:#e0efec;
+  --radius:2px; --pad:clamp(14px,3vw,26px);
+  --font-body:Inter,"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --scale-h1:clamp(1.55rem,1.05rem + 2.2vw,2.4rem);
+  --scale-body:clamp(0.97rem,0.93rem + 0.2vw,1.05rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#131210; --panel:#1b1916; --ink:#ece5d9; --muted:#9c9384; --line:#2f2b24;
+    --accent:#d98a5c; --accent-soft:#2a1a12; --cool:#5fb4a5; --cool-soft:#12241f;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+     font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.1; margin:0 0 .3em; letter-spacing:-.028em; font-weight:800}
+.kicker{margin:0 0 .45em; color:var(--cool); font:700 .7rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.17em}
+.standfirst{margin:0; color:var(--muted); max-width:44em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:57rem){ .layout{grid-template-columns:minmax(14rem,0.8fr) minmax(0,1.6fr); align-items:start} }
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.1em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font-weight:600; font-size:.92rem}
+.control output{font:700 .82rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.26em .46em; border-radius:2px}
+.control .hint{color:var(--muted); font-size:.78rem; margin:0; line-height:1.45}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; font-size:.9rem; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:2px; padding:.5em .6em; min-height:40px; width:100%}
+button{cursor:pointer; font:700 .76rem/1 var(--font-mono); text-transform:uppercase; letter-spacing:.1em; padding:.9em .6em}
+button:hover{border-color:var(--accent); color:var(--accent)}
+.check{display:flex; align-items:center; gap:.55em; min-height:38px}
+.check input{accent-color:var(--cool); width:18px; height:18px; flex:none}
+.check label{font-weight:600; font-size:.92rem}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.55em; color:var(--muted); font-size:.83rem; line-height:1.5}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8rem,1fr)); gap:.5em; margin:0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-top:3px solid var(--cool); border-radius:2px; padding:.5em .65em}
+.readout div.warm{border-top-color:var(--accent)}
+.readout dt{margin:0; color:var(--muted); font-size:.67rem; text-transform:uppercase; letter-spacing:.11em}
+.readout dd{margin:.2em 0 0; font:700 1rem/1.2 var(--font-mono)}
+.prose{max-width:38em; margin-top:calc(var(--pad)*1.4)}
+.prose h2{font-size:1rem; margin:2em 0 .45em; letter-spacing:.1em; text-transform:uppercase; font-family:var(--font-mono); font-weight:700; color:var(--cool)}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.86rem; background:var(--cool-soft); padding:.75em .85em; border-radius:2px; border-left:3px solid var(--cool); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.83rem}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Chemistry</p>
+  <h1>A Flat Battery Is Not Empty</h1>
+  <p class="standfirst">A cell&#39;s voltage is the steepness of a hill made of free energy. Drag the
+  concentrations and watch the hill tilt; run the cell down and it stops at the bottom, not at zero.</p>
+</header>
+
+<div class="layout">
+
+  <section class="controls" data-role="controls" aria-label="Cell composition controls">
+    <div class="control">
+      <label for="cell">Cell</label>
+      <select id="cell">
+        <option value="daniell" selected>Zn | Zn2+ &#8214; Cu2+ | Cu &#183; the Daniell cell</option>
+        <option value="iron">Fe | Fe2+ &#8214; Cu2+ | Cu</option>
+        <option value="nickel">Ni | Ni2+ &#8214; Cu2+ | Cu</option>
+        <option value="silver">Cu | Cu+ &#8214; Ag+ | Ag &#183; one electron</option>
+        <option value="conc">Cu | Cu2+ &#8214; Cu2+ | Cu &#183; concentration cell</option>
+      </select>
+      <p class="hint">The last one has the same metal on both sides, so its standard potential is exactly zero.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="cb">Cathode ion</label><output id="cbout" for="cb">0.1 M</output></div>
+      <input type="range" id="cb" min="-6" max="0" step="0.1" value="-1">
+      <p class="hint">The ion being plated out on the right-hand electrode. This is the one that runs out.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="ca">Anode ion</label><output id="caout" for="ca">0.01 M</output></div>
+      <input type="range" id="ca" min="-6" max="0" step="0.1" value="-2">
+      <p class="hint">The ion being dissolved off the left-hand electrode. This one builds up.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="temp">Temperature</label><output id="tempout" for="temp">25 &#176;C</output></div>
+      <input type="range" id="temp" min="0" max="100" step="1" value="25">
+      <p class="hint">Warmer solutions give the concentration term more weight.</p>
+    </div>
+
+    <div class="control">
+      <div class="check"><input type="checkbox" id="showg" checked><label for="showg">Free-energy curve</label></div>
+      <p class="hint">Lay the system&#39;s free energy over the voltage, on its own axis.</p>
+      <button type="button" id="reset">Reset the cell</button>
+    </div>
+  </section>
+
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="960" height="620" role="img"
+      aria-label="Two beakers joined by a salt bridge with a voltmeter reading the cell potential, above a chart of cell voltage and system free energy against how far the reaction has run."></canvas>
+    <figcaption>Above: the cell as it stands. Below: what happens as it discharges from here &#8212;
+    the voltage falling and the free energy sliding to its minimum, which are the same event.</figcaption>
+  </figure>
+
+  <dl class="readout" aria-live="polite">
+    <div class="warm"><dt>Cell voltage</dt><dd id="oE">&#8212;</dd></div>
+    <div class="warm"><dt>Standard potential</dt><dd id="oE0">&#8212;</dd></div>
+    <div><dt>Reaction quotient</dt><dd id="oQ">&#8212;</dd></div>
+    <div><dt>Equilibrium constant</dt><dd id="oK">&#8212;</dd></div>
+    <div><dt>Free energy change</dt><dd id="oG">&#8212;</dd></div>
+    <div><dt>Cathode ion left at equilibrium</dt><dd id="oX">&#8212;</dd></div>
+  </dl>
+
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Two beakers, two metals, a wire and a salt bridge. The metal on the left dissolves, its ions
+  going into solution; the ions on the right plate out onto the metal there. The electrons that
+  transaction requires travel through the wire, and the voltmeter measures how badly they want to
+  make the trip.</p>
+
+  <p>That eagerness has two parts. One is fixed by which metals you chose &#8212; the standard
+  potential, the voltage the cell would show if both solutions were at one mole per litre. The
+  other depends on how much of each ion is actually present, and it is the part people forget.</p>
+
+  <p class="math">E = E&#176; &#8722; (RT / nF) ln Q,&#9;Q = [ion made] / [ion used up]</p>
+
+  <p>Drag the cathode ion down and the voltage climbs: the cell is hungrier when the thing it wants
+  is scarce, which is backwards from most intuitions until you remember that Q is a ratio and the
+  scarce ion is on the bottom. At 25 &#176;C, every factor of ten in that ratio is worth 59.2
+  millivolts to a cell that moves one electron, and half of that, 29.6 millivolts, to one that
+  moves two. Switch to the one-electron cell and watch the same slider do twice as much.</p>
+
+  <h2>Voltage is a slope</h2>
+
+  <p>Turn on the free-energy curve. The green line is the total Gibbs free energy of everything in
+  both beakers, plotted against how far the reaction has run from where it stands now. It falls,
+  because that is what spontaneous means, and it reaches a minimum.</p>
+
+  <p>The voltage is not some separate fact about the cell. It is the steepness of that curve.</p>
+
+  <p class="math">E = &#8722;(1 / nF) &#215; dG/d&#958;</p>
+
+  <p>Steep curve, high voltage. Flat curve, no voltage. This is worth pausing on, because it
+  explains the thing that makes no sense otherwise: a dead cell still contains both metals and both
+  solutions, in quantity. Nothing has been used up in the sense of being gone. What has gone is the
+  slope. The system has slid to the bottom of its own free-energy valley, and at the bottom there
+  is no downhill direction left to push electrons around a circuit.</p>
+
+  <h2>Where the bottom is</h2>
+
+  <p>At the minimum, Q has climbed until it equals the equilibrium constant K, and K is fixed by
+  the standard potential alone.</p>
+
+  <p class="math">K = exp( nF E&#176; / RT )</p>
+
+  <p>Because E&#176; sits inside an exponential, ordinary cell voltages give preposterous
+  equilibrium constants. The Daniell cell&#39;s standard potential is about 1.10 volts, which puts K
+  near 10<sup>37</sup>. Read the last box: starting from 0.1 M copper, the equilibrium sits near
+  5 &#215; 10<sup>&#8722;39</sup> M, which is one copper ion per few hundred cubic kilometres of
+  solution. A zinc-copper cell never gets anywhere near that. It stops because the copper
+  physically runs out first, and even the mildest cell offered here, the one-electron silver one,
+  still consumes better than 99.99 per cent of its silver before the voltage would reach zero.
+
+  <p>The concentration cell is the honest demonstration. Same metal on both sides, so E&#176; is
+  exactly zero, K is exactly one, and equilibrium is simply the point where the two solutions have
+  the same concentration. Choose it and the minimum of the free-energy curve is somewhere you can
+  actually see, with the voltage crossing zero directly above it. That cell is driven by nothing
+  but the concentration difference, and it dies when the difference does.</p>
+
+  <h2>What to try</h2>
+
+  <p>Start with the Daniell cell and slide the cathode ion from 1 M down to a micromolar: the
+  voltage moves by less than 200 millivolts across six orders of magnitude, which is why batteries
+  hold a nearly flat voltage almost until the moment they quit. Then switch to the concentration
+  cell, set the two concentrations equal, and watch the voltmeter read zero with both beakers
+  visibly full. Finally, make the cathode ion the more concentrated of the two and then the less,
+  and see the voltage change sign as the cell runs the other way.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &#183; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* Special characters are built from code points, never written into the file
+   as escapes: an escape gets decoded by whatever writes the file and then no
+   later search finds it. */
+const CH = (n) => String.fromCharCode(n);
+const DEG = CH(0x00B0), XI = CH(0x03BE), MINUS = CH(0x2212), ARROW = CH(0x2192);
+const SUP2 = CH(0x00B2), BULLET = CH(0x00B7);
+
+const R = 8.31446261815324, F = 96485.33212331002, VOL = 1.0;
+const CELLS = {
+  daniell:{anode:"Zn",cath:"Cu",aIon:"Zn2+",bIon:"Cu2+",eA:-0.7618,eB:0.3419,n:2},
+  iron:   {anode:"Fe",cath:"Cu",aIon:"Fe2+",bIon:"Cu2+",eA:-0.447, eB:0.3419,n:2},
+  nickel: {anode:"Ni",cath:"Cu",aIon:"Ni2+",bIon:"Cu2+",eA:-0.257, eB:0.3419,n:2},
+  silver: {anode:"Cu",cath:"Ag",aIon:"Cu+", bIon:"Ag+", eA: 0.521, eB:0.7996,n:1},
+  conc:   {anode:"Cu",cath:"Cu",aIon:"Cu2+",bIon:"Cu2+",eA: 0.3419,eB:0.3419,n:2}
+};
+const Model = {
+  R:R, F:F, VOL:VOL, CELLS:CELLS,
+  e0(c){ return c.eB - c.eA; },
+  slope(c,T){ return R*T/(c.n*F); },                 /* volts per natural log unit */
+  K(c,T){ return Math.exp(c.n*F*Model.e0(c)/(R*T)); },
+  cA(xi,ca0,cb0){ return ca0 + cb0*xi; },
+  cB(xi,cb0){ return cb0*(1-xi); },
+  Q(xi,ca0,cb0){ return Model.cA(xi,ca0,cb0)/Model.cB(xi,cb0); },
+  /* ---- ROUTE A: the Nernst equation ---- */
+  emf(xi,c,T,ca0,cb0){ return Model.e0(c) - Model.slope(c,T)*Math.log(Model.Q(xi,ca0,cb0)); },
+  /* ---- ROUTE B: the Gibbs free energy of the whole system, in joules.
+     Standard chemical potentials: the cathode ion and both solids are the zero
+     of the scale, which forces mu0 of the anode ion to be -nF E0. Nothing here
+     mentions a cell potential. Both ions carry the same charge in every cell
+     offered, so the dissolved particle count does not change and the ideal
+     solution term needs no solvent to balance it. */
+  gibbs(xi,c,T,ca0,cb0){
+    const a=Model.cA(xi,ca0,cb0), b=Model.cB(xi,cb0), mu0=-c.n*F*Model.e0(c);
+    return VOL*( a*(mu0 + R*T*Math.log(a)) + b*(R*T*Math.log(b)) );
+  },
+  /* volts, from the slope of that free energy: E = -(1/nF) dG/dn_reaction */
+  emfFromGibbs(xi,c,T,ca0,cb0){
+    /* A plain central difference is not good enough here: near a nearly empty
+       half-cell the logarithm curves so hard that a fixed step misses by tens
+       of microvolts. The step is scaled to whichever concentration is smaller,
+       and Richardson extrapolation over h and h/2 turns the second-order rule
+       into a fourth-order one. */
+    const a=Model.cA(xi,ca0,cb0), b=Model.cB(xi,cb0);
+    const h=0.05*Math.min(a,b)/cb0;
+    const D=(s)=>(Model.gibbs(xi+s,c,T,ca0,cb0)-Model.gibbs(xi-s,c,T,ca0,cb0))/(2*s);
+    const d=(4*D(h/2)-D(h))/3;
+    return -d/(c.n*F*VOL*cb0);
+  },
+  /* Both ions carry the same charge, so one is made for each one used and the
+     total dissolved concentration is conserved. That is what makes the
+     equilibrium computable without ever forming 1 - something-tiny: with
+     cA + cB fixed at S and cA/cB fixed at K, cB is simply S/(1+K). Writing it
+     as an extent instead rounds to exactly 1 for any real cell, because K is
+     of order 1e37 and the extent differs from 1 in the hundredth decimal. */
+  eqConc(c,T,ca0,cb0){
+    const K=Model.K(c,T), S=ca0+cb0;
+    if(!Number.isFinite(K)) return { cA:S, cB:0 };
+    return { cA: K*S/(1+K), cB: S/(1+K) };
+  },
+  emfAtConc(cA,cB,c,T){ return Model.e0(c) - Model.slope(c,T)*Math.log(cA/cB); },
+  xiEq(c,T,ca0,cb0){ return 1 - Model.eqConc(c,T,ca0,cb0).cB/cb0; },
+  /* reaction entropy and enthalpy, from how the voltage moves with temperature */
+  dEdT(xi,c,T,ca0,cb0,h){
+    return (Model.emf(xi,c,T+h,ca0,cb0)-Model.emf(xi,c,T-h,ca0,cb0))/(2*h);
+  },
+  enthalpy(xi,c,T,ca0,cb0){
+    const E=Model.emf(xi,c,T,ca0,cb0), dS=c.n*F*Model.dEdT(xi,c,T,ca0,cb0,0.5);
+    return -c.n*F*E + T*dS;                        /* dH = dG + T dS */
+  },
+  /* equilibrium by minimising G with a derivative-free search */
+  xiMinG(c,T,ca0,cb0,lo,hi){
+    const g=(Math.sqrt(5)-1)/2;
+    let x1=hi-g*(hi-lo), x2=lo+g*(hi-lo);
+    let f1=Model.gibbs(x1,c,T,ca0,cb0), f2=Model.gibbs(x2,c,T,ca0,cb0);
+    for(let i=0;i<200;i++){
+      if(f1<f2){hi=x2;x2=x1;f2=f1;x1=hi-g*(hi-lo);f1=Model.gibbs(x1,c,T,ca0,cb0);}
+      else{lo=x1;x1=x2;f1=f2;x2=lo+g*(hi-lo);f2=Model.gibbs(x2,c,T,ca0,cb0);}
+    }
+    return (lo+hi)/2;
+  },
+  /* equilibrium by bisecting the voltage to zero */
+  xiZeroE(c,T,ca0,cb0,lo,hi){
+    if(Model.emf(lo,c,T,ca0,cb0)*Model.emf(hi,c,T,ca0,cb0)>0) return NaN;
+    for(let i=0;i<200;i++){
+      const m=(lo+hi)/2;
+      if(Model.emf(lo,c,T,ca0,cb0)*Model.emf(m,c,T,ca0,cb0)<=0) hi=m; else lo=m;
+    }
+    return (lo+hi)/2;
+  },
+  /* electrical work delivered between two extents, by quadrature of nF E dxi.
+     The integrand carries a logarithm that goes vertical wherever a half-cell
+     starts nearly empty, so a uniform grid converges at barely first order;
+     panels are bisected until the five-point rule agrees with itself instead. */
+  GN:[-0.9061798459386640,-0.5384693101056831,0,0.5384693101056831,0.9061798459386640],
+  GW:[0.2369268850561891,0.4786286704993665,0.5688888888888889,0.4786286704993665,0.2369268850561891],
+  gauss(lo,hi,f){ const m=(lo+hi)/2,h=(hi-lo)/2; let s=0;
+    for(let i=0;i<5;i++) s+=Model.GW[i]*f(m+h*Model.GN[i]); return s*h; },
+  adapt(lo,hi,f,whole,tol,depth){
+    const m=(lo+hi)/2, L=Model.gauss(lo,m,f), Rr=Model.gauss(m,hi,f);
+    if(depth>26 || Math.abs(L+Rr-whole)<=tol*Math.max(1e-300,Math.abs(L+Rr))) return L+Rr;
+    return Model.adapt(lo,m,f,L,tol,depth+1)+Model.adapt(m,hi,f,Rr,tol,depth+1);
+  },
+  work(c,T,ca0,cb0,x0,x1){
+    const f=(x)=>Model.emf(x,c,T,ca0,cb0);
+    return Model.adapt(x0,x1,f,Model.gauss(x0,x1,f),1e-13,0)*c.n*F*VOL*cb0;
+  }
+};
+
+/* ---- how each ion and metal is drawn ----------------------------------- */
+const IONCOL = { "Cu2+":[38,108,188], "Zn2+":[188,194,200], "Fe2+":[118,166,118],
+                 "Ni2+":[62,158,110], "Cu+":[146,168,190], "Ag+":[198,204,210] };
+const METALCOL = { Zn:[168,172,176], Cu:[184,110,62], Fe:[132,132,136], Ni:[176,178,170], Ag:[208,210,214] };
+
+/* ---- STATE ------------------------------------------------------------- */
+const defaults = { cell: "daniell", cb: -1, ca: -2, tempC: 25, showg: true };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const cellOf = () => Model.CELLS[state.cell];
+const tempK = () => state.tempC + 273.15;
+const cb0 = () => Math.pow(10, state.cb);
+const ca0 = () => Math.pow(10, state.ca);
+
+/* ---- canvas sizing: track the container, one drawing unit per CSS pixel -- */
+const SS = 2;
+let W = 960, H = 620, NARROW = false, FS = 13;
+let G_ = {};
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 20) : 960);
+  NARROW = avail < 470;
+  W = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+  const padL = NARROW ? 40 : 58, padR = NARROW ? 40 : 58;
+  const cellTop = NARROW ? 24 : 28;
+  const cellH = Math.round(Math.max(170, Math.min(280, W * (NARROW ? 0.72 : 0.29))));
+  /* The cell picture carries THREE caption rows beneath its beakers, and the
+     lowest of them sits below the pane's nominal bottom. A fixed gap under
+     cellBot put the chart title on the same baseline as "anode, dissolving".
+     So the gap is measured from the caption itself: beaker bottom, three rows
+     of text, then clear air, then the title's own height. */
+  const capBot = cellTop + cellH * 0.938 + 3 * FS + 10;
+  const chartTop = Math.round(Math.max(cellTop + cellH + 20, capBot + 22 + FS));
+  const chartH = Math.round(Math.max(130, Math.min(215, W * (NARROW ? 0.56 : 0.22))));
+  G_ = { x0: padL, x1: W - padR,
+         cellTop: cellTop, cellH: cellH, cellBot: cellTop + cellH,
+         chartTop: chartTop, chartH: chartH, chartBot: chartTop + chartH };
+  H = G_.chartBot + (NARROW ? 46 : 48);
+  if (cv.width !== W * SS || cv.height !== H * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+/* ---- helpers ----------------------------------------------------------- */
+function rgba(c, a){ return "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + a + ")"; }
+function tag(text, x, y, colour, align, backing){
+  ctx.save(); ctx.font = "700 " + FS + "px " + css("--font-mono");
+  const w = ctx.measureText(text).width;
+  const lx = align === "right" ? x - w : (align === "center" ? x - w / 2 : x);
+  if (backing){
+    ctx.fillStyle = css("--panel"); ctx.globalAlpha = 0.88;
+    ctx.fillRect(lx - 3, y - FS + 1, w + 6, FS + 4); ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = colour; ctx.textAlign = "left"; ctx.fillText(text, lx, y);
+  ctx.restore();
+}
+function niceStep(span, want){
+  const raw = span / want, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / mag;
+  let step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+  while (span / step < 2 && step > 0) step /= 2;   /* never draw an axis with no labels */
+  return step;
+}
+function conc(v){
+  if (v >= 0.995) return v.toFixed(2) + " M";
+  if (v >= 1e-3) return (v * 1000).toFixed(v >= 1e-2 ? 0 : 1) + " mM";
+  if (v >= 1e-6) return (v * 1e6).toFixed(v >= 1e-5 ? 0 : 1) + " " + CH(0x00B5) + "M";
+  return v.toExponential(1) + " M";
+}
+function sci(v){
+  if (!Number.isFinite(v)) return "overflows";
+  if (v === 0) return "0";
+  const e = Math.floor(Math.log10(Math.abs(v)));
+  if (e >= -3 && e <= 4) return v.toPrecision(4).replace(/\.?0+$/, "");
+  return (v / Math.pow(10, e)).toFixed(2) + " e" + e;
+}
+
+/* ---- RENDER ------------------------------------------------------------ */
+function render(){
+  fitCanvas();
+  const ink = css("--ink"), muted = css("--muted"), lineC = css("--line"),
+        hot = css("--accent"), cool = css("--cool"), panel = css("--panel");
+  const c = cellOf(), T = tempK(), A0 = ca0(), B0 = cb0();
+  const E = Model.emf(0, c, T, A0, B0), E0 = Model.e0(c), K = Model.K(c, T);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "alphabetic";
+
+  /* ================= the cell ================= */
+  const midY = G_.cellTop + G_.cellH * 0.60;
+  const bw = Math.min((G_.x1 - G_.x0) * 0.30, 190);
+  const bh = G_.cellH * 0.52;
+  const bTop = midY - bh * 0.35, bBot = bTop + bh;
+  const lx = G_.x0 + (G_.x1 - G_.x0) * 0.22 - bw / 2;
+  const rx = G_.x0 + (G_.x1 - G_.x0) * 0.78 - bw / 2;
+
+  /* wire, meter and salt bridge first, so the beakers sit on top of them */
+  const meterW = Math.min(132, (G_.x1 - G_.x0) * 0.26), meterH = NARROW ? 34 : 38;
+  const meterX = (G_.x0 + G_.x1) / 2 - meterW / 2, meterY = G_.cellTop + 2;
+  ctx.strokeStyle = muted; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(lx + bw * 0.5, bTop - 6); ctx.lineTo(lx + bw * 0.5, meterY + meterH / 2);
+  ctx.lineTo(meterX, meterY + meterH / 2);
+  ctx.moveTo(rx + bw * 0.5, bTop - 6); ctx.lineTo(rx + bw * 0.5, meterY + meterH / 2);
+  ctx.lineTo(meterX + meterW, meterY + meterH / 2);
+  ctx.stroke();
+
+  ctx.fillStyle = panel; ctx.strokeStyle = ink; ctx.lineWidth = 1.6;
+  ctx.fillRect(meterX, meterY, meterW, meterH); ctx.strokeRect(meterX, meterY, meterW, meterH);
+  ctx.font = "700 " + (NARROW ? 15 : 17) + "px " + css("--font-mono");
+  ctx.fillStyle = Math.abs(E) < 1e-4 ? muted : (E > 0 ? hot : cool);
+  ctx.textAlign = "center";
+  ctx.fillText((E >= 0 ? "" : MINUS) + Math.abs(E).toFixed(3) + " V", meterX + meterW / 2, meterY + meterH / 2 + 6);
+
+  /* which way the electrons go, if they go */
+  if (Math.abs(E) > 1e-4){
+    const dir = E > 0 ? 1 : -1;
+    const ax = meterX + meterW / 2 + dir * (meterW / 2 + 26);
+    ctx.strokeStyle = hot; ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(ax - dir * 11, meterY + meterH + 13); ctx.lineTo(ax + dir * 11, meterY + meterH + 13);
+    ctx.lineTo(ax + dir * 5, meterY + meterH + 9);
+    ctx.moveTo(ax + dir * 11, meterY + meterH + 13); ctx.lineTo(ax + dir * 5, meterY + meterH + 17);
+    ctx.stroke();
+    ctx.font = FS + "px " + css("--font-mono"); ctx.fillStyle = hot; ctx.textAlign = "center";
+    ctx.fillText(CH(0x0065) + CH(0x2212), ax - dir * 22, meterY + meterH + 17);
+  }
+
+  /* salt bridge */
+  const sbY = bTop + bh * 0.16;
+  ctx.strokeStyle = lineC; ctx.lineWidth = 9; ctx.lineCap = "butt";
+  ctx.beginPath();
+  ctx.moveTo(lx + bw * 0.80, sbY + 16);
+  ctx.lineTo(lx + bw * 0.80, sbY - 12);
+  ctx.lineTo(rx + bw * 0.20, sbY - 12);
+  ctx.lineTo(rx + bw * 0.20, sbY + 16);
+  ctx.stroke();
+  ctx.lineWidth = 1; ctx.strokeStyle = muted;
+
+  /* the two beakers */
+  function beaker(x, ionName, metalName, molar, label, side){
+    const col = IONCOL[ionName] || [160,160,160];
+    /* opacity tracks the logarithm, because that is the range the sliders span */
+    const a = 0.10 + 0.72 * Math.max(0, Math.min(1, (Math.log10(molar) + 6) / 6));
+    ctx.fillStyle = rgba(col, a);
+    ctx.fillRect(x, bTop + bh * 0.22, bw, bh * 0.78);
+    ctx.strokeStyle = ink; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(x, bTop); ctx.lineTo(x, bBot); ctx.lineTo(x + bw, bBot); ctx.lineTo(x + bw, bTop);
+    ctx.stroke();
+    /* the electrode */
+    const mc = METALCOL[metalName] || [150,150,150];
+    const ex = x + bw * (side === "L" ? 0.5 : 0.5) - 7;
+    ctx.fillStyle = rgba(mc, 1);
+    ctx.fillRect(ex, bTop - 6, 14, bh * 0.86);
+    ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 1;
+    ctx.strokeRect(ex, bTop - 6, 14, bh * 0.86);
+    /* labels */
+    ctx.font = "700 " + FS + "px " + css("--font-mono"); ctx.textAlign = "center";
+    ctx.fillStyle = ink;
+    ctx.fillText(metalName, x + bw / 2, bBot + FS + 6);
+    ctx.font = FS + "px " + css("--font-mono"); ctx.fillStyle = muted;
+    ctx.fillText(ionName + " " + conc(molar), x + bw / 2, bBot + 2 * FS + 8);
+    ctx.fillText(label, x + bw / 2, bBot + 3 * FS + 10);
+  }
+  beaker(lx, c.aIon, c.anode, A0, "anode, dissolving", "L");
+  beaker(rx, c.bIon, c.cath, B0, "cathode, plating", "R");
+
+  /* ================= the chart ================= */
+  const loXi = Math.max(-1, -0.999 * A0 / B0), hiXi = 0.9995;
+  const N = 220;
+  const xs = [], es = [], gs = [];
+  for (let i = 0; i <= N; i++){
+    const xi = loXi + (hiXi - loXi) * i / N;
+    xs.push(xi); es.push(Model.emf(xi, c, T, A0, B0));
+    gs.push(Model.gibbs(xi, c, T, A0, B0) / 1000);
+  }
+  let eLo = Math.min.apply(null, es), eHi = Math.max.apply(null, es);
+  if (eLo > 0) eLo = 0; if (eHi < 0) eHi = 0;
+  const ePad = (eHi - eLo) * 0.12 || 0.1;
+  eLo -= ePad; eHi += ePad;
+  const gLo = Math.min.apply(null, gs), gHi = Math.max.apply(null, gs);
+  const gPad = (gHi - gLo) * 0.12 || 1;
+
+  const cx = (xi) => G_.x0 + ((xi - loXi) / (hiXi - loXi)) * (G_.x1 - G_.x0);
+  const ey = (v) => G_.chartBot - ((v - eLo) / (eHi - eLo)) * G_.chartH;
+  const gy = (v) => G_.chartBot - ((v - (gLo - gPad)) / ((gHi + gPad) - (gLo - gPad))) * G_.chartH;
+
+  ctx.font = "700 " + FS + "px " + css("--font-mono"); ctx.fillStyle = muted; ctx.textAlign = "left";
+  ctx.fillText(NARROW ? "AS IT DISCHARGES" : "WHAT HAPPENS AS THE CELL DISCHARGES FROM HERE",
+               G_.x0, G_.chartTop - 10);
+
+  /* volts on the left */
+  const stepE = niceStep(eHi - eLo, 3);
+  ctx.font = FS + "px " + css("--font-mono"); ctx.textAlign = "right";
+  for (let v = Math.ceil(eLo / stepE) * stepE; v <= eHi; v += stepE){
+    ctx.strokeStyle = lineC; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(G_.x0, ey(v)); ctx.lineTo(G_.x1, ey(v)); ctx.stroke();
+    ctx.fillStyle = hot; ctx.fillText(v.toFixed(2), G_.x0 - 5, ey(v) + 4);
+  }
+  /* the zero-volt line, drawn heavier because it is the whole point */
+  if (eLo < 0 && eHi > 0){
+    ctx.strokeStyle = ink; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(G_.x0, ey(0)); ctx.lineTo(G_.x1, ey(0)); ctx.stroke();
+  }
+  ctx.strokeStyle = ink; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(G_.x0, G_.chartBot); ctx.lineTo(G_.x1, G_.chartBot); ctx.stroke();
+
+  /* free energy on the right */
+  if (state.showg){
+    const stepG = niceStep((gHi + gPad) - (gLo - gPad), 3);
+    ctx.textAlign = "left";
+    for (let v = Math.ceil((gLo - gPad) / stepG) * stepG; v <= gHi + gPad; v += stepG){
+      ctx.fillStyle = cool; ctx.fillText(sci(v), G_.x1 + 5, gy(v) + 4);
+    }
+    ctx.save(); ctx.strokeStyle = cool; ctx.lineWidth = 2; ctx.setLineDash([7, 4]); ctx.lineJoin = "round";
+    ctx.beginPath();
+    for (let i = 0; i <= N; i++){ const X = cx(xs[i]), Y = gy(gs[i]); if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y); }
+    ctx.stroke(); ctx.restore();
+  }
+
+  ctx.save(); ctx.strokeStyle = hot; ctx.lineWidth = 2.4; ctx.lineJoin = "round";
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++){ const X = cx(xs[i]), Y = ey(es[i]); if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y); }
+  ctx.stroke(); ctx.restore();
+
+  /* where the cell stands right now */
+  ctx.save(); ctx.strokeStyle = muted; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(cx(0), G_.chartTop); ctx.lineTo(cx(0), G_.chartBot); ctx.stroke(); ctx.restore();
+  ctx.fillStyle = hot; ctx.beginPath(); ctx.arc(cx(0), ey(E), 4.2, 0, 2 * Math.PI); ctx.fill();
+  tag("now", cx(0), G_.chartTop + FS + 1, muted, "center", true);
+
+  /* the equilibrium, if it is anywhere near the chart */
+  const xiE = Model.xiEq(c, T, A0, B0);
+  if (xiE > loXi && xiE < hiXi){
+    ctx.save(); ctx.strokeStyle = cool; ctx.lineWidth = 1.4; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(cx(xiE), G_.chartTop); ctx.lineTo(cx(xiE), G_.chartBot); ctx.stroke(); ctx.restore();
+    tag("flat here", cx(xiE), G_.chartTop + 2 * FS + 5, cool, "center", true);
+  } else {
+    tag(NARROW ? "flat: off the chart" : "zero lies far off the right of this chart",
+        G_.x1 - 4, G_.chartTop + FS + 1, cool, "right", true);
+  }
+
+  /* The two captions share one row, so the left one has to be measured rather
+     than chosen: a wide pane takes the full sentence, a medium one the short
+     form, and anything narrower than both put together drops the units caption
+     to keep the axis caption readable. */
+  ctx.fillStyle = muted; ctx.font = FS + "px " + css("--font-mono");
+  const span = G_.x1 - G_.x0;
+  const wid = (t) => ctx.measureText(t).width;
+  const unitSet = state.showg ? ["volts left, kJ right", "V left, kJ right", "V / kJ"]
+                              : ["volts", "V", "V"];
+  const capSet = ["fraction of the cathode ion converted from here",
+                  "fraction converted from here", "fraction converted"];
+  /* Pick the longest pair that still leaves a gap between them. Forcing the
+     short caption on narrow screens was not enough on its own: at 390px even
+     "fraction converted" and "volts left, kJ right" ran into each other. */
+  let xCap = capSet[2], units = unitSet[2], found = false;
+  for (let i = 0; i < 3 && !found; i++)
+    for (let j = 0; j < 3 && !found; j++)
+      if (wid(capSet[i]) + wid(unitSet[j]) + 18 <= span){
+        xCap = capSet[i]; units = unitSet[j]; found = true;
+      }
+  ctx.textAlign = "left";
+  ctx.fillText(xCap, G_.x0, G_.chartBot + FS + 8);
+  ctx.textAlign = "right";
+  ctx.fillText(units, G_.x1, G_.chartBot + FS + 8);
+  /* The zero tick and the left-hand end tick collide whenever the anode ion is
+     thin enough to put zero close to the left edge, so it yields to it. */
+  ctx.textAlign = "center";
+  ctx.fillText(loXi.toFixed(2), G_.x0, G_.chartBot + 2 * FS + 10);
+  ctx.fillText(hiXi.toFixed(2), G_.x1, G_.chartBot + 2 * FS + 10);
+  const z = cx(0);
+  if (z - G_.x0 > 4.2 * FS && G_.x1 - z > 4.2 * FS)
+    ctx.fillText("0", z, G_.chartBot + 2 * FS + 10);
+
+  /* ---------- readouts ---------- */
+  el("cbout").textContent = conc(B0);
+  el("caout").textContent = conc(A0);
+  el("tempout").textContent = state.tempC + " " + DEG + "C";
+  el("oE").textContent = E.toFixed(4) + " V";
+  el("oE0").textContent = E0.toFixed(4) + " V";
+  el("oQ").textContent = sci(Model.Q(0, A0, B0));
+  el("oK").textContent = sci(K);
+  el("oG").textContent = (-c.n * Model.F * E / 1000).toFixed(1) + " kJ/mol";
+  const left = Model.eqConc(c, T, A0, B0).cB;
+  el("oX").textContent = left > 1e-300 ? conc(left) : "none, effectively";
+}
+
+/* ---- BINDINGS ---------------------------------------------------------- */
+el("cell").addEventListener("change", function(){ state.cell = this.value; render(); });
+el("cb").addEventListener("input", function(){ state.cb = parseFloat(this.value); render(); });
+el("ca").addEventListener("input", function(){ state.ca = parseFloat(this.value); render(); });
+el("temp").addEventListener("input", function(){ state.tempC = parseInt(this.value, 10); render(); });
+el("showg").addEventListener("change", function(){ state.showg = this.checked; render(); });
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults);
+  el("cell").value = defaults.cell; el("cb").value = defaults.cb;
+  el("ca").value = defaults.ca; el("temp").value = defaults.tempC;
+  el("showg").checked = defaults.showg;
+  render();
+});
+
+let resizeTimer = 0;
+window.addEventListener("resize", function(){ clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 120); });
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
+render();
+
+/* ---- SELFTEST ---------------------------------------------------------- */
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const T25 = 298.15, R = Model.R, F = Model.F;
+  const KEYS = Object.keys(Model.CELLS);
+  const CONC = [1e-6, 1e-4, 1e-2, 0.3, 1];
+  const TEMPS = [273.15, 298.15, 333.15, 373.15];
+
+  /* 1. the standard potential is what the cell reads at unit activity */
+  let e1 = 0;
+  for (const k of KEYS) for (const T of TEMPS)
+    e1 = Math.max(e1, Math.abs(Model.emf(0, Model.CELLS[k], T, 1, 1) - Model.e0(Model.CELLS[k])));
+  push("at one molar on both sides the cell reads exactly its standard potential",
+       e1 < 1e-14,
+       "all five cells at four temperatures are out by at most " + e1.toExponential(2)
+       + " V, because the logarithm of one is the only term that can vanish");
+
+  /* 2. THE CROSS-CHECK: the voltage is the slope of an independently written
+        free energy, computed by finite differences that never see the Nernst
+        equation. */
+  let e2 = 0, n2 = 0, worst2 = "";
+  for (const k of KEYS) for (const T of TEMPS) for (const A of CONC) for (const B of CONC)
+    for (const xi of [-0.6, -0.1, 0, 0.2, 0.5, 0.9, 0.99]){
+      if (!(Model.cA(xi, A, B) > 0) || !(Model.cB(xi, B) > 0)) continue;
+      const a = Model.emf(xi, Model.CELLS[k], T, A, B);
+      const b = Model.emfFromGibbs(xi, Model.CELLS[k], T, A, B);
+      n2++;
+      if (Math.abs(a - b) > e2){ e2 = Math.abs(a - b); worst2 = k + " at " + Math.round(T) + " K, " + A + "/" + B + " M"; }
+    }
+  push("the voltage really is the slope of the free-energy curve",
+       e2 < 5e-6,
+       "differencing the system free energy and dividing by " + MINUS + "nF reproduces the Nernst "
+       + "voltage to " + e2.toExponential(2) + " V over " + n2 + " states; worst at " + worst2
+       + ". Half a microvolt is the floor here: the beaker holds of order 1e5 J of free energy and "
+       + "one difference step changes it by 1e-6 J, so eleven digits go to cancellation before the "
+       + "subtraction happens");
+
+  /* 3. the same free energy, split into heat and work by its temperature
+        coefficient. The voltage is exactly linear in T, so differencing it is
+        free of the cancellation that limits assertion 2, and the reaction
+        enthalpy that falls out must not depend on temperature or on how much
+        of anything is dissolved. */
+  let e3 = 0, n3 = 0;
+  for (const k of KEYS) for (const T of TEMPS) for (const A of CONC) for (const B of CONC)
+    for (const xi of [0, 0.3, 0.8]){
+      const c = Model.CELLS[k];
+      if (!(Model.cA(xi, A, B) > 0) || !(Model.cB(xi, B) > 0)) continue;
+      const want = -c.n * F * Model.e0(c);
+      if (want === 0) continue;
+      n3++;
+      e3 = Math.max(e3, Math.abs(Model.enthalpy(xi, c, T, A, B) - want) / Math.abs(want));
+    }
+  push("splitting the free energy by the cell's temperature coefficient leaves a constant heat",
+       n3 >= 200 && e3 < 1e-9,
+       "taking " + MINUS + "nFE as the free energy and nF dE/dT as the entropy, the enthalpy comes "
+       + "out at " + MINUS + "nFE" + DEG + " to " + e3.toExponential(2) + " relative across " + n3
+       + " states - the same for every temperature and every dilution, which is what an enthalpy "
+       + "of reaction owes");
+
+  /* 4. one tenfold change, one electron, 59.16 millivolts at 25 C */
+  const oneE = { eA: 0, eB: 0, n: 1 }, twoE = { eA: 0, eB: 0, n: 2 };
+  const mv1 = Model.slope(oneE, T25) * Math.LN10 * 1000;
+  const mv2 = Model.slope(twoE, T25) * Math.LN10 * 1000;
+  const measured = (Model.emf(0, Model.CELLS.silver, T25, 0.01, 1)
+                  - Model.emf(0, Model.CELLS.silver, T25, 0.1, 1)) * 1000;
+  push("a tenfold concentration change is worth 59.16 mV to a one-electron cell",
+       Math.abs(mv1 - 59.16) < 0.01 && Math.abs(mv2 - 29.58) < 0.01 && Math.abs(measured - 59.16) < 0.01,
+       "the Nernst slope is " + mv1.toFixed(4) + " mV per decade for one electron and "
+       + mv2.toFixed(4) + " for two, and moving the one-electron cell's anode ion by one decade "
+       + "actually shifts it " + measured.toFixed(4) + " mV");
+
+  /* 5. the standard potential and the equilibrium constant are the same fact */
+  let e5 = 0, n5 = 0;
+  for (const k of KEYS) for (const T of TEMPS){
+    const c = Model.CELLS[k], K = Model.K(c, T);
+    if (!Number.isFinite(K) || K <= 0) continue;
+    n5++; e5 = Math.max(e5, Math.abs(Model.slope(c, T) * Math.log(K) - Model.e0(c)));
+  }
+  push("E" + DEG + " and (RT/nF) ln K are the same number",
+       n5 >= 16 && e5 < 1e-9,
+       n5 + " cell-and-temperature pairs agree to " + e5.toExponential(2) + " V");
+
+  /* 6. the voltage is exactly zero where the quotient reaches K */
+  let e6 = 0, n6 = 0;
+  for (const k of KEYS) for (const T of TEMPS) for (const A of CONC) for (const B of CONC){
+    const c = Model.CELLS[k], eq = Model.eqConc(c, T, A, B);
+    if (!(eq.cB > 0) || !(eq.cA > 0)) continue;
+    n6++; e6 = Math.max(e6, Math.abs(Model.emfAtConc(eq.cA, eq.cB, c, T)));
+  }
+  push("the cell reads exactly zero when the quotient reaches the equilibrium constant",
+       n6 >= 400 && e6 < 1e-10,
+       n6 + " equilibria across five cells, four temperatures and every concentration pair read "
+       + e6.toExponential(2) + " V or less");
+
+  /* 7. and the bottom of the free-energy valley is that same place, found
+        without ever computing a voltage */
+  let e7 = 0, n7 = 0, floor7 = 0;
+  for (const A of [1e-5, 1e-3, 0.05, 0.2, 0.4]) for (const B of [1e-4, 0.1, 0.45, 0.9, 1])
+    for (const T of [273.15, 298.15, 373.15]){
+      const c = Model.CELLS.conc, want = Model.xiEq(c, T, A, B);
+      const lo = Math.max(-1, -0.999 * A / B), hi = 0.9995;
+      if (!(want > lo && want < hi)) continue;
+      n7++; e7 = Math.max(e7, Math.abs(Model.xiMinG(c, T, A, B, lo, hi) - want));
+      floor7 = Math.sqrt(Number.EPSILON) * (hi - lo);
+    }
+  push("hunting for the bottom of the free-energy curve lands on the same point",
+       n7 >= 20 && e7 < 4 * floor7,
+       "a search that never differentiates finds the minimum " + e7.toExponential(2)
+       + " from where the voltage vanishes, against the " + floor7.toExponential(2)
+       + " that the square root of machine precision allows for a valley this round");
+
+  /* 8. the energy the cell delivers is the free energy it gives up */
+  let e8 = 0, n8 = 0;
+  for (const A of [1e-6, 1e-5, 1e-3, 0.05, 0.2]) for (const B of [1e-4, 0.1, 0.5, 0.9, 1])
+    for (const T of [273.15, 298.15, 373.15]){
+      const c = Model.CELLS.conc, xi = Model.xiEq(c, T, A, B);
+      if (!(xi > 1e-9) || !(xi < 0.9995)) continue;
+      const w = Model.work(c, T, A, B, 0, xi);
+      const drop = Model.gibbs(0, c, T, A, B) - Model.gibbs(xi, c, T, A, B);
+      n8++; e8 = Math.max(e8, Math.abs(w - drop) / Math.abs(drop));
+    }
+  push("the electrical work delivered equals the free energy given up",
+       n8 >= 15 && e8 < 1e-6,
+       "integrating nFE over the discharge and reading the drop in the free-energy curve agree to "
+       + e8.toExponential(2) + " relative across " + n8 + " concentration cells");
+
+  /* 9. a spontaneous cell only ever runs downhill */
+  let mono9 = true, n9 = 0;
+  for (const k of KEYS) for (const A of CONC) for (const B of CONC){
+    const c = Model.CELLS[k];
+    let last = Infinity;
+    for (let i = 0; i <= 40; i++){
+      const xi = (0.9995) * i / 40;
+      if (!(Model.cB(xi, B) > 0)) break;
+      const v = Model.emf(xi, c, T25, A, B);
+      if (v > last + 1e-12) mono9 = false;
+      last = v; n9++;
+    }
+  }
+  push("discharging can only ever lower the voltage",
+       mono9, n9 + " samples along every discharge path, and none of them goes back up");
+
+  /* 10. a concentration cell is the pure case: no standard potential at all */
+  const cc = Model.CELLS.conc;
+  let e10 = 0, sign10 = true;
+  for (const A of CONC) for (const B of CONC){
+    e10 = Math.max(e10, Math.abs(Model.e0(cc)));
+    const v = Model.emf(0, cc, T25, A, B);
+    if (A < B && !(v > 0)) sign10 = false;
+    if (A > B && !(v < 0)) sign10 = false;
+    if (A === B && Math.abs(v) > 1e-15) sign10 = false;
+  }
+  push("the concentration cell has no standard potential and runs on the difference alone",
+       e10 === 0 && sign10 && Math.abs(Model.K(cc, T25) - 1) < 1e-14,
+       "its E" + DEG + " is exactly " + e10 + " V and its K exactly "
+       + Model.K(cc, T25) + ", and its voltage takes the sign of whichever solution is thinner");
+
+  /* 11. real cells never reach equilibrium, which is the page's point.
+        Measured as the FRACTION of the starting cathode ion still dissolved, not
+        as an absolute concentration: the one-electron silver cell has a merely
+        large K of 5e4 rather than an absurd 1e37, so it equilibrates at a couple
+        of micromolar and would fail any fixed molar threshold while still having
+        spent 99.998 per cent of its silver. The fraction is the honest statement. */
+  let ok11 = true, worst11 = 0, sample11 = "";
+  for (const k of KEYS){
+    const c = Model.CELLS[k];
+    if (Model.e0(c) <= 0) continue;
+    const left = Model.eqConc(c, T25, 0.01, 0.1).cB, frac = left / 0.1;
+    if (!(left > 0) || !(frac < 1e-4)) ok11 = false;
+    if (frac > worst11) worst11 = frac;
+    if (k === "daniell"){
+      const litres = 1 / (left * 6.02214076e23);
+      sample11 = "starting from 0.1 M copper the Daniell cell equilibrates at "
+               + left.toExponential(2) + " M, one ion per " + litres.toExponential(1)
+               + " litres";
+    }
+  }
+  push("every cell with a real standard potential runs out before it equilibrates",
+       ok11, sample11 + "; the least extreme cell on the page still leaves only "
+       + (worst11 * 100).toPrecision(3) + " per cent of its cathode ion dissolved");
+
+  /* 12. nothing in reach produces a non-number */
+  let ok12 = true;
+  for (const k of KEYS) for (let a = -6; a <= 0; a += 0.5) for (let b = -6; b <= 0; b += 0.5)
+    for (const Tc of [0, 25, 60, 100]){
+      const c = Model.CELLS[k], A = Math.pow(10, a), B = Math.pow(10, b), T = Tc + 273.15;
+      const v = Model.emf(0, c, T, A, B);
+      if (!Number.isFinite(v) || !Number.isFinite(Model.Q(0, A, B))) ok12 = false;
+    }
+  push("every reachable setting produces finite numbers",
+       ok12, "both concentration sliders swept over their full range on all five cells at four temperatures");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

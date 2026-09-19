@@ -1,0 +1,786 @@
+<!doctype html>
+<!--
+  Interactive Explainer Atlas — page skeleton.
+  Start EVERY new explainer from this file. Never copy a previous page.
+  Replace every {{PLACEHOLDER}}. Delete the demo model and write your own.
+  Contract: FOUNDATION.md. Rules: CLAUDE.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Rule of 72 Is Only Honest at One Rate &#8212; Explainer Atlas</title>
+<meta name="description" content="Scrub through the decades and watch a balance double, then watch the rule of 72 drift away from the truth as the rate climbs.">
+<style>
+/* ---- tokens: restate these per page to vary the collection's feel ------- */
+:root{
+  --bg:#faf6ee; --panel:#fffdf7; --ink:#1b1712; --muted:#6b5f4e; --line:#e6ddc9;
+  --accent:#8a5a1b; --accent-soft:#f6ecdb; --warn:#8c2f2f;
+  --radius:4px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.6rem,1.05rem + 2.4vw,2.55rem);
+  --scale-body:clamp(0.99rem,0.95rem + 0.22vw,1.09rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#141210; --panel:#1c1917; --ink:#ede7dc; --muted:#a4988a; --line:#342e26;
+    --accent:#d9a45c; --accent-soft:#2a2118; --warn:#e08b7a;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.15; margin:0 0 .4em; letter-spacing:-.01em}
+.kicker{margin:0 0 .35em; color:var(--accent); font:600 .78rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.09em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas, figure.stage svg{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.86rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.83rem}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+.check{display:flex; align-items:center; gap:.6em}
+.check input{width:18px; height:18px; accent-color:var(--accent); margin:0; flex:none}
+.check label{font-weight:600}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .7em; min-height:40px}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-top:2px solid var(--accent); border-radius:4px; padding:.55em .7em}
+.readout div.alt{border-top-color:var(--warn)}
+.readout dt{margin:0; color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.06em}
+.readout dd{margin:.18em 0 0; font:600 1.05rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font:700 .82rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.11em; color:var(--accent); margin:2em 0 .5em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); background:var(--accent-soft); padding:.7em .85em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">economics</p>
+  <h1>The Rule of 72 Is Only Honest at One Rate</h1>
+  <p class="standfirst">Money that earns interest on its interest doubles on a fixed clock, and that clock
+  depends on nothing but the rate. The famous shortcut for reading it off is exactly right at one
+  rate and drifts either side of it.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="620" role="img"
+            aria-label="Above, a balance growing over the years with horizontal lines marking each doubling and a movable year marker. Below, the error of the rule of 72 plotted against the interest rate, crossing zero near eight per cent."></canvas>
+    <figcaption>Above: the balance, with a rule drawn at every doubling of the opening deposit. Below:
+    how far the rule of 72 sits from the true doubling time, across every rate the slider reaches.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row">
+        <label for="rate">Interest rate</label>
+        <output id="rateout" for="rate">7.0 %</output>
+      </div>
+      <input type="range" id="rate" min="1" max="30" step="0.1" value="7">
+      <p class="hint">Per year, charged on everything in the account including past interest.
+      Arrow keys step; Home and End jump.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="year">Year</label>
+        <output id="yearout" for="year">20.0</output>
+      </div>
+      <input type="range" id="year" min="0" max="60" step="0.25" value="20">
+      <p class="hint">Scrub the marker along the curve and read the balance beneath it.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="per">Compounded</label>
+        <output id="perout" for="per">yearly</output>
+      </div>
+      <input type="range" id="per" min="0" max="6" step="1" value="0">
+      <p class="hint">How often the interest is added in: yearly, half-yearly, quarterly, monthly,
+      weekly, daily, or without pause.</p>
+    </div>
+
+    <div class="control">
+      <div class="check">
+        <input type="checkbox" id="rules" checked>
+        <label for="rules">Show the shortcuts</label>
+      </div>
+      <p class="hint">Lay the rule of 72 and the rule of 70 over the true doubling time.</p>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Balance now</dt><dd id="oBal">&#8212;</dd></div>
+      <div><dt>Doublings so far</dt><dd id="oDbl">&#8212;</dd></div>
+      <div><dt>True doubling time</dt><dd id="oT2">&#8212;</dd></div>
+      <div class="alt"><dt>Rule of 72 says</dt><dd id="o72">&#8212;</dd></div>
+      <div class="alt"><dt>Shortcut error</dt><dd id="oErr">&#8212;</dd></div>
+      <div><dt>Effective annual rate</dt><dd id="oEff">&#8212;</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Start over</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>One pound, left alone at seven per cent. After a year it is 1.07. After two it is not 1.14 but
+  1.1449, because the seven pence earned its own interest. That second-order penny is the whole
+  subject. It is also why the balance has no natural scale: at every point on the curve the account
+  is growing by the same fraction of itself, so the time it takes to double is the same wherever
+  you start measuring from.</p>
+
+  <p>Scrub the year marker and watch the horizontal rules go by. They sit at two, four, eight and
+  sixteen times the opening deposit, and the marker crosses them at evenly spaced years. That even
+  spacing is the definition of exponential growth, and it is what makes a single number &#8212; the
+  doubling time &#8212; enough to describe the whole account.</p>
+
+  <h2>The clock behind the curve</h2>
+
+  <p class="math">balance = (1 + r)<sup>t</sup>,  doubling time = ln 2 / ln(1 + r)</p>
+
+  <p>Set the balance to two and solve for the year. Nothing survives but the rate. A hundred pounds
+  and a hundred thousand pounds double on exactly the same schedule, which is the fact that makes
+  compound growth so hard to feel: the early years look like nothing happening and the late years
+  look like a different process entirely, when it is the same constant clock throughout.</p>
+
+  <h2>Where seventy-two comes from</h2>
+
+  <p>For small rates, ln(1 + r) is nearly r, so the doubling time is nearly ln 2 divided by r, which
+  is 0.693 over r &#8212; the rule of 70. Seventy-two is not the better approximation. It is the more
+  divisible number, and it happens to be the one that corrects for the fact that ln(1 + r) is a
+  little smaller than r, which makes the true doubling time a little longer than 0.693 / r.</p>
+
+  <p>The two errors cancel exactly once. Drag the rate and watch the lower chart: the rule of 72
+  crosses zero error at <strong>7.85 per cent</strong> and is wrong either side of it. It stays within
+  half a per cent only between about 6.8 and 8.9 per cent, and within two per cent across the
+  familiar 4 to 12 band. Push the rate past 19.2 per cent and the shortcut is out by more than five
+  per cent; by thirty per cent it claims 2.40 years against a true 2.64, an error of nine per cent
+  and always in the optimistic direction.</p>
+
+  <h2>Adding the interest more often</h2>
+
+  <p>Change how often the interest is credited and the curve lifts, because interest added in June
+  spends the second half of the year earning interest of its own. The lift shrinks as the periods
+  get shorter &#8212; halving the period halves what is left to gain &#8212; and it converges on a
+  ceiling rather than running away. That ceiling is continuous compounding, where the balance is
+  e<sup>rt</sup> and the doubling time collapses to a clean ln 2 over r, with no correction term at
+  all. The rule of 70 is exactly right there, and the rule of 72 is wrong everywhere.</p>
+
+  <h2>What to try</h2>
+
+  <p>Park the rate at 7.85 per cent and watch the error read zero. Walk it down to two per cent and
+  the shortcut becomes over-cautious by several per cent; walk it up to thirty and it flatters the
+  account badly. Then set the rate to ten and step the compounding from yearly to continuous: the
+  effective annual rate climbs from 10.00 to 10.52 per cent and stops, and the doubling time falls
+  from 7.27 years to 6.93 and stops with it. The gap between those two numbers is the entire value
+  of compounding more often, and it is smaller than most people expect.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG. Never use bare Math.random(). ------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+
+/* ---- MODEL: pure functions of the parameters. No DOM in here. ----------- */
+/* Two ways of getting the doubling time live in here and they never meet.
+   Route A is the closed form, built on the platform's own logarithm. Route B
+   solves (1 + r)^t = 2 by Newton's method on a logarithm and an exponential
+   written from scratch below, so it never touches Math.log or Math.exp. The
+   selftest holds the two against each other. */
+
+/* ln(1 + x) for x in [-1/3, 1/2], by the arctanh series. Outside that band the
+   series crawls: at x near -1 it needs thousands of terms, so ln1p folds the
+   argument into the band with powers of two first and never needs twenty. */
+function core(x){
+  const z = x / (2 + x), z2 = z * z;
+  let term = z, sum = z;
+  for (let k = 1; k < 200; k++){
+    term *= z2;
+    const add = term / (2 * k + 1);
+    sum += add;
+    if (Math.abs(add) < 1e-19 * Math.abs(sum)) break;
+  }
+  return 2 * sum;
+}
+/* ln 2 from the same series, as ln(4/3) + ln(3/2), so the folding constant is
+   not borrowed from the library the route is supposed to be independent of. */
+const LN2 = core(1 / 3) + core(1 / 2);
+
+function ln1p(x){
+  if (x <= -1) return NaN;
+  let u = 1 + x, k = 0;
+  while (u > 4 / 3){ u /= 2; k++; }
+  while (u < 2 / 3){ u *= 2; k--; }
+  return k * LN2 + core(u - 1);
+}
+
+/* exp by Taylor series after subtracting whole multiples of ln 2, which keeps
+   the series argument inside half a ln 2 and the powers of two exact. */
+function expS(x){
+  if (x === 0) return 1;
+  const k = Math.round(x / LN2), f = x - k * LN2;
+  let term = 1, sum = 1;
+  for (let n = 1; n < 40; n++){
+    term *= f / n;
+    sum += term;
+    if (Math.abs(term) < 1e-19 * Math.abs(sum)) break;
+  }
+  let p = 1, base = 2, e = Math.abs(k);
+  while (e > 0){ if (e & 1) p *= base; base *= base; e >>= 1; }
+  return k >= 0 ? sum * p : sum / p;
+}
+
+const PER = [1, 2, 4, 12, 52, 365, Infinity];
+const PERNAME = ["yearly", "half-yearly", "quarterly", "monthly", "weekly", "daily", "without pause"];
+const PERSHORT = ["yearly", "2 / yr", "4 / yr", "12 / yr", "52 / yr", "365 / yr", "continuous"];
+
+const Model = {
+  PER: PER, PERNAME: PERNAME, PERSHORT: PERSHORT,
+  ln1p: ln1p, expS: expS, LN2: LN2,
+
+  /* the balance on one unit of deposit, by the hand-written routines */
+  balance(r, m, t){
+    return m === Infinity ? expS(r * t) : expS(m * t * ln1p(r / m));
+  },
+  /* what a year of this schedule is actually worth, whatever the label says */
+  effective(r, m){
+    return m === Infinity ? expS(r) - 1 : expS(m * ln1p(r / m)) - 1;
+  },
+  /* ROUTE A: solve (1 + r/m)^(mt) = 2 in closed form, with the library's log */
+  tDouble(r, m){
+    return m === Infinity ? Math.LN2 / r : Math.LN2 / (m * Math.log(1 + r / m));
+  },
+  /* ROUTE B: the same root by Newton, on the series above. The starting guess
+     is 1/r, which carries no logarithm in it, so nothing about the answer is
+     smuggled in through the initial value. */
+  tDoubleNewton(r, m){
+    const L = m === Infinity ? r : m * ln1p(r / m);
+    let t = 1 / r;
+    for (let i = 0; i < 60; i++){
+      const E = expS(t * L), step = (E - 2) / (E * L);
+      t -= step;
+      if (Math.abs(step) < 1e-16 * Math.abs(t)) break;
+    }
+    return t;
+  },
+  /* the shortcuts: a fixed numerator over the rate in per cent */
+  shortcut(k, r){ return (k / 100) / r; },
+  /* signed fractional error of a shortcut against the truth, annual compounding */
+  shortcutError(k, r){ return Model.shortcut(k, r) / Model.tDouble(r, 1) - 1; },
+  /* the one rate where a shortcut is exactly right, by bisection */
+  exactRate(k, lo, hi){
+    let a = lo, b = hi;
+    for (let i = 0; i < 200; i++){
+      const mid = (a + b) / 2;
+      if (Model.shortcutError(k, a) * Model.shortcutError(k, mid) <= 0) b = mid; else a = mid;
+    }
+    return (a + b) / 2;
+  },
+  /* the rate at which a shortcut's error first reaches a given size, above the
+     crossing. Bisection again, on the absolute error. */
+  errorReaches(k, tol, lo, hi){
+    let a = lo, b = hi;
+    for (let i = 0; i < 200; i++){
+      const mid = (a + b) / 2;
+      if (Math.abs(Model.shortcutError(k, mid)) >= tol) b = mid; else a = mid;
+    }
+    return (a + b) / 2;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { rate: 7, year: 20, per: 0, rules: true };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+let W = 900, H = 620, FS = 13, NARROW = false, G_ = {};
+
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+/* Every dimension on this canvas is derived from the width the container
+   actually hands over, so the page has one layout rather than two. */
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 24) : 900);
+  NARROW = avail < 470;
+  W = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+  const padL = NARROW ? 44 : 62, padR = NARROW ? 18 : 26;
+  const topH = Math.round(Math.max(150, Math.min(300, W * (NARROW ? 0.70 : 0.40))));
+  const botH = Math.round(Math.max(110, Math.min(210, W * (NARROW ? 0.50 : 0.28))));
+  const t0 = NARROW ? 26 : 28;
+  const t1 = t0 + topH;
+  /* The top pane carries three rows beneath its axis: the year ticks, the bar
+     that shows two doublings taking the same time, and the two captions. A
+     fixed gap put the lower pane's title on the caption row, so every row is
+     named and the lower pane starts below the last of them. */
+  const tickY = t1 + FS + 6, barY = t1 + 2 * FS + 12, capY = t1 + 3 * FS + 20;
+  G_ = { x0: padL, x1: W - padR,
+         t0: t0, t1: t1, topH: topH,
+         tickY: tickY, barY: barY, capY: capY,
+         b0: Math.round(capY + 22 + FS),
+         botH: botH };
+  G_.b1 = G_.b0 + botH;
+  H = G_.b1 + 3 * FS + 14;
+  if (cv.width !== W * SS || cv.height !== H * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function niceStep(span, want){
+  const raw = span / want, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / mag;
+  let step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+  while (span / step < 2 && step > 0) step /= 2;
+  return step;
+}
+function tag(text, x, y, colour, align, backing){
+  ctx.save();
+  ctx.font = "700 " + FS + "px " + css("--font-mono");
+  ctx.textAlign = align || "left";
+  if (backing){
+    const w = ctx.measureText(text).width + 8;
+    const lx = align === "right" ? x - w : align === "center" ? x - w / 2 : x - 4;
+    ctx.fillStyle = css("--panel"); ctx.globalAlpha = 0.86;
+    ctx.fillRect(lx, y - FS, w, FS + 5); ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = colour; ctx.fillText(text, x, y);
+  ctx.restore();
+}
+function money(v){
+  if (v >= 1000) return v.toPrecision(4).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+  return v.toFixed(v < 10 ? 3 : 2);
+}
+
+function render(){
+  fitCanvas();
+  const ink = css("--ink"), muted = css("--muted"), accent = css("--accent"),
+        warn = css("--warn"), panel = css("--panel"), line = css("--line");
+  const r = state.rate / 100, m = PER[state.per], T = state.year;
+
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "alphabetic";
+
+  /* ================= the balance ================= */
+  const YMAX = 60;
+  const bal = (t) => Model.balance(r, m, t);
+  const top = bal(YMAX);
+  const gx = (t) => G_.x0 + (t / YMAX) * (G_.x1 - G_.x0);
+  /* a logarithmic money axis, because on a linear one every doubling but the
+     last is squashed into the floor and the evenly spaced rules are the point */
+  const lo = 0, hi = Math.log(top) / Math.log(2);
+  const gy = (v) => G_.t1 - (Math.log(v) / Math.log(2) - lo) / (hi - lo) * G_.topH;
+
+  ctx.font = "700 " + FS + "px " + css("--font-mono");
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(NARROW ? "ONE POUND, LEFT ALONE" : "ONE POUND LEFT ALONE, ON A DOUBLING SCALE",
+               G_.x0, G_.t0 - 10);
+
+  /* the doubling rules */
+  ctx.textAlign = "right"; ctx.font = FS + "px " + css("--font-mono");
+  for (let k = 0; Math.pow(2, k) <= top * 1.0001; k++){
+    const v = Math.pow(2, k), y = gy(v);
+    ctx.strokeStyle = k === 0 ? line : css("--accent-soft");
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(G_.x0, y); ctx.lineTo(G_.x1, y); ctx.stroke();
+    if (k % (hi > 9 ? 2 : 1) === 0 || k === 0){
+      ctx.fillStyle = muted;
+      ctx.fillText(String(v), G_.x0 - 6, y + 4);
+    }
+  }
+  /* the year axis */
+  ctx.strokeStyle = line; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(G_.x0, G_.t1); ctx.lineTo(G_.x1, G_.t1); ctx.stroke();
+  const ys = niceStep(YMAX, NARROW ? 4 : 6);
+  ctx.textAlign = "center"; ctx.fillStyle = muted;
+  for (let t = 0; t <= YMAX + 1e-9; t += ys)
+    ctx.fillText(String(Math.round(t)), gx(t), G_.tickY);
+
+  /* the curve */
+  ctx.strokeStyle = accent; ctx.lineWidth = 2.2; ctx.beginPath();
+  for (let i = 0; i <= 480; i++){
+    const t = YMAX * i / 480, y = gy(bal(t));
+    if (i === 0) ctx.moveTo(gx(t), y); else ctx.lineTo(gx(t), y);
+  }
+  ctx.stroke();
+
+  /* where the curve meets each doubling: evenly spaced, which is the point */
+  const t2 = Model.tDouble(r, m);
+  ctx.fillStyle = accent;
+  for (let k = 1; Math.pow(2, k) <= top * 1.0001; k++){
+    const t = k * t2;
+    if (t > YMAX) break;
+    ctx.beginPath(); ctx.arc(gx(t), gy(Math.pow(2, k)), 3.2, 0, 6.2832); ctx.fill();
+  }
+  /* the gap between the first two, drawn as a bar so it can be compared by eye */
+  if (2 * t2 <= YMAX){
+    const y = G_.barY;
+    ctx.strokeStyle = accent; ctx.lineWidth = 1.4;
+    for (const k of [0, 1]){
+      ctx.beginPath();
+      ctx.moveTo(gx(k * t2), y); ctx.lineTo(gx((k + 1) * t2), y);
+      ctx.moveTo(gx(k * t2), y - 3); ctx.lineTo(gx(k * t2), y + 3);
+      ctx.moveTo(gx((k + 1) * t2), y - 3); ctx.lineTo(gx((k + 1) * t2), y + 3);
+      ctx.stroke();
+    }
+    /* the label rides ON the bar, on a backing, because the row above it is the
+       year ticks and the row below it is the captions */
+    tag("equal steps", gx(t2), y + 4, accent, "center", true);
+  }
+
+  /* the year marker */
+  ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = warn; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(gx(T), G_.t0 - 2); ctx.lineTo(gx(T), G_.t1); ctx.stroke(); ctx.restore();
+  const bT = bal(T);
+  ctx.fillStyle = warn;
+  ctx.beginPath(); ctx.arc(gx(T), gy(bT), 4.4, 0, 6.2832); ctx.fill();
+  tag("year " + T.toFixed(T % 1 ? 2 : 0) + ": " + money(bT),
+      Math.min(gx(T) + 8, G_.x1), G_.t0 + FS + 2,
+      warn, gx(T) > (G_.x0 + G_.x1) / 2 ? "right" : "left", true);
+
+  ctx.textAlign = "left"; ctx.fillStyle = muted; ctx.font = FS + "px " + css("--font-mono");
+  ctx.fillText("years", G_.x0, G_.capY);
+  ctx.textAlign = "right";
+  ctx.fillText(NARROW ? PERSHORT[state.per] : "compounded " + PERNAME[state.per],
+               G_.x1, G_.capY);
+
+  /* ================= the shortcut error ================= */
+  const RLO = 1, RHI = 30;
+  const ex = (pc) => G_.x0 + ((pc - RLO) / (RHI - RLO)) * (G_.x1 - G_.x0);
+  let eMax = 0;
+  for (let pc = RLO; pc <= RHI; pc += 0.25)
+    eMax = Math.max(eMax, Math.abs(Model.shortcutError(72, pc / 100)),
+                          Math.abs(Model.shortcutError(70, pc / 100)));
+  const eLim = Math.ceil(eMax * 100 / 2) * 2 / 100;
+  const ey = (e) => G_.b0 + G_.botH / 2 - (e / eLim) * (G_.botH / 2);
+
+  ctx.font = "700 " + FS + "px " + css("--font-mono"); ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(NARROW ? "SHORTCUT ERROR" : "HOW WRONG THE SHORTCUTS ARE, AT EVERY RATE",
+               G_.x0, G_.b0 - 10);
+
+  ctx.font = FS + "px " + css("--font-mono");
+  /* The ladder is built outward from zero rather than up from the bottom of
+     the range. Starting at -eLim put the gridlines at -12, -2 and +8 per cent
+     and left the zero line, which is the whole point of this pane, unlabelled. */
+  /* asked for more divisions than it wants, because the ladder rounds up: at
+     four it handed back a single ten-per-cent rung either side of zero */
+  const estep = niceStep(2 * eLim, NARROW ? 3 : 6);
+  const rungs = [0];
+  for (let k = 1; k * estep <= eLim + 1e-9; k++){ rungs.push(k * estep); rungs.push(-k * estep); }
+  rungs.sort((a, b) => a - b);
+  ctx.textAlign = "right";
+  for (const e of rungs){
+    const y = ey(e);
+    ctx.strokeStyle = Math.abs(e) < 1e-12 ? css("--line") : css("--accent-soft");
+    ctx.lineWidth = Math.abs(e) < 1e-12 ? 1.4 : 1;
+    ctx.beginPath(); ctx.moveTo(G_.x0, y); ctx.lineTo(G_.x1, y); ctx.stroke();
+    ctx.fillStyle = Math.abs(e) < 1e-12 ? ink : muted;
+    ctx.fillText((e > 0 ? "+" : "") + (e * 100).toFixed(estep < 0.02 ? 1 : 0) + "%",
+                 G_.x0 - 6, y + 4);
+  }
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(G_.x0, G_.b1); ctx.lineTo(G_.x1, G_.b1); ctx.stroke();
+  ctx.textAlign = "center"; ctx.fillStyle = muted;
+  for (let pc = 5; pc <= RHI; pc += (NARROW ? 10 : 5))
+    ctx.fillText(pc + "%", ex(pc), G_.b1 + FS + 6);
+
+  if (state.rules){
+    for (const spec of [[72, accent, []], [70, muted, [4, 3]]]){
+      ctx.save();
+      ctx.strokeStyle = spec[1]; ctx.lineWidth = spec[0] === 72 ? 2.2 : 1.6;
+      ctx.setLineDash(spec[2]);
+      ctx.beginPath();
+      for (let i = 0; i <= 320; i++){
+        const pc = RLO + (RHI - RLO) * i / 320;
+        const y = Math.max(G_.b0 - 2, Math.min(G_.b1 + 2, ey(Model.shortcutError(spec[0], pc / 100))));
+        if (i === 0) ctx.moveTo(ex(pc), y); else ctx.lineTo(ex(pc), y);
+      }
+      ctx.stroke(); ctx.restore();
+    }
+    /* the single rate where the rule of 72 tells the truth */
+    const x0pc = Model.exactRate(72, 0.05, 0.12) * 100;
+    ctx.save(); ctx.setLineDash([2, 3]); ctx.strokeStyle = accent; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(ex(x0pc), G_.b0); ctx.lineTo(ex(x0pc), G_.b1); ctx.stroke(); ctx.restore();
+    tag(NARROW ? x0pc.toFixed(2) + "%" : "exact at " + x0pc.toFixed(2) + "%",
+        ex(x0pc) + 6, G_.b0 + FS + 2, accent, "left", true);
+    tag("rule of 70", G_.x1, G_.b0 + 2 * FS + 6, muted, "right", true);
+  }
+
+  /* where the reader is standing on the lower chart */
+  ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = warn; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(ex(state.rate), G_.b0); ctx.lineTo(ex(state.rate), G_.b1); ctx.stroke();
+  ctx.restore();
+  if (state.rules){
+    ctx.fillStyle = warn;
+    ctx.beginPath();
+    ctx.arc(ex(state.rate),
+            Math.max(G_.b0, Math.min(G_.b1, ey(Model.shortcutError(72, r)))), 4, 0, 6.2832);
+    ctx.fill();
+  }
+
+  ctx.font = FS + "px " + css("--font-mono"); ctx.fillStyle = muted;
+  ctx.textAlign = "left";
+  const capW = (t) => ctx.measureText(t).width;
+  const legend = ["rule of 72 solid, rule of 70 dashed", "72 solid, 70 dashed", "72 / 70"];
+  const rateCap = NARROW ? "rate" : "annual rate";
+  let leg = legend[2];
+  for (const cand of legend)
+    if (capW(rateCap) + capW(cand) + 18 <= G_.x1 - G_.x0){ leg = cand; break; }
+  ctx.fillText(rateCap, G_.x0, G_.b1 + 2 * FS + 8);
+  ctx.textAlign = "right";
+  ctx.fillText(leg, G_.x1, G_.b1 + 2 * FS + 8);
+
+  /* ---------- readouts ---------- */
+  const err = Model.shortcut(72, r) / t2 - 1;
+  el("rateout").textContent = state.rate.toFixed(1) + " %";
+  el("yearout").textContent = T.toFixed(T % 1 ? 2 : 1);
+  el("perout").textContent = PERSHORT[state.per];
+  el("oBal").textContent = money(bT);
+  el("oDbl").textContent = (T / t2).toFixed(2);
+  el("oT2").textContent = t2.toFixed(3) + " yr";
+  el("o72").textContent = Model.shortcut(72, r).toFixed(3) + " yr";
+  el("oErr").textContent = (err >= 0 ? "+" : "") + (err * 100).toFixed(2) + " %";
+  el("oEff").textContent = (Model.effective(r, m) * 100).toFixed(3) + " %";
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parse(input); render(); });
+}
+bind("rate", "rate", (i) => parseFloat(i.value));
+bind("year", "year", (i) => parseFloat(i.value));
+bind("per", "per", (i) => parseInt(i.value, 10));
+bind("rules", "rules", (i) => i.checked);
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("rate").value = defaults.rate; el("year").value = defaults.year;
+  el("per").value = defaults.per; el("rules").checked = defaults.rules;
+  render();
+});
+
+let rid = null;
+addEventListener("resize", () => { clearTimeout(rid); rid = setTimeout(render, 90); });
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
+render();
+
+/* ---- SELFTEST: minimum 5 numeric assertions against known values. ------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+  const MS = Model.PER;
+  const RS = [];
+  for (let i = 0; i <= 290; i++) RS.push((1 + i * 0.1) / 100);
+
+  /* 1. the two routes to the doubling time agree. Route A is ln2/ln(1+r) on the
+        platform's logarithm; route B is Newton's method on a logarithm and an
+        exponential written from series in this file. They share no code. */
+  let w1 = 0, n1 = 0;
+  for (const r of RS) for (const m of MS){
+    const A = Model.tDouble(r, m), B = Model.tDoubleNewton(r, m);
+    w1 = Math.max(w1, Math.abs(A - B) / A); n1++;
+  }
+  push("the closed form and a from-scratch Newton solve give the same doubling time",
+       w1 < 1e-13,
+       "worst relative disagreement " + w1.toExponential(3) + " over " + n1
+       + " rate and compounding combinations");
+
+  /* 2. and the from-scratch routines themselves are sound, which is what makes
+        route B worth anything as a check. */
+  let e2a = 0, e2b = 0;
+  for (let i = -60; i <= 200; i++){
+    const x = i / 100;
+    if (x > -1) e2a = Math.max(e2a, Math.abs(Model.ln1p(x) - Math.log1p(x))
+                                     / Math.max(1e-18, Math.abs(Math.log1p(x))));
+    e2b = Math.max(e2b, Math.abs(Model.expS(x) - Math.exp(x)) / Math.exp(x));
+  }
+  push("the hand-written logarithm and exponential match the library",
+       e2a < 1e-14 && e2b < 1e-14 && Math.abs(Model.LN2 - Math.LN2) < 1e-15,
+       "worst relative error " + e2a.toExponential(3) + " on ln(1+x) and "
+       + e2b.toExponential(3) + " on exp(x); ln 2 from the series is "
+       + Model.LN2.toPrecision(17));
+
+  /* 3. the task's headline identity, on annual compounding */
+  let w3 = 0;
+  for (const r of RS) w3 = Math.max(w3, Math.abs(Model.tDouble(r, 1) - Math.log(2) / Math.log(1 + r)));
+  push("annual doubling time is exactly ln2 / ln(1 + r)",
+       w3 <= 1e-12, "worst absolute difference " + w3.toExponential(3) + " years over "
+       + RS.length + " rates from 1 to 30 per cent");
+
+  /* 4. round trip: the balance at the doubling time is two, on every schedule */
+  let w4 = 0;
+  for (const r of RS) for (const m of MS)
+    w4 = Math.max(w4, Math.abs(Model.balance(r, m, Model.tDouble(r, m)) - 2));
+  push("the balance really is doubled at the doubling time",
+       w4 < 1e-14, "worst departure from 2.0 is " + w4.toExponential(3));
+
+  /* 5. the defining property of exponential growth: every doubling takes the
+        same time, so the k-th multiple of it lands exactly on 2^k. This is what
+        the evenly spaced dots on the chart are claiming. */
+  let w5 = 0;
+  for (const r of RS) for (const m of MS){
+    const t2 = Model.tDouble(r, m);
+    for (let k = 1; k <= 5; k++)
+      w5 = Math.max(w5, Math.abs(Model.balance(r, m, k * t2) - Math.pow(2, k)) / Math.pow(2, k));
+  }
+  push("doublings are evenly spaced: k doubling times multiply the money by 2 to the k",
+       w5 < 1e-13, "worst relative error " + w5.toExponential(3) + " over five doublings");
+
+  /* 6. the rule of 72 is exactly right at one rate, and this is it. The task
+        file asked for "within 0.5 per cent for r between 4 and 12 per cent",
+        which is not true: at 4 per cent the shortcut is out by 1.85 per cent and
+        at 12 per cent by 1.90. The honest band is asserted here instead. */
+  const x0 = Model.exactRate(72, 0.02, 0.15);
+  push("the rule of 72 is exact at one rate and one only",
+       near(x0 * 100, 7.846871, 1e-5)
+       && Math.abs(Model.shortcutError(72, x0)) < 1e-12,
+       "the crossing is at " + (x0 * 100).toFixed(6) + " per cent, where 72 / r gives "
+       + Model.shortcut(72, x0).toFixed(9) + " years against a true "
+       + Model.tDouble(x0, 1).toFixed(9));
+
+  /* 7. the real accuracy band, measured rather than assumed */
+  let w7 = 0, at7 = 0;
+  for (let pc = 4; pc <= 12 + 1e-9; pc += 0.01){
+    const e = Math.abs(Model.shortcutError(72, pc / 100));
+    if (e > w7){ w7 = e; at7 = pc; }
+  }
+  push("across the familiar 4 to 12 per cent band the rule of 72 is within two per cent",
+       w7 < 0.02 && w7 > 0.015,
+       "worst error over that band is " + (w7 * 100).toFixed(4) + " per cent at "
+       + at7.toFixed(2) + " per cent; the half-per-cent claim the task file made holds only "
+       + "between " + (Model.errorReaches(72, 0.005, 0.078, 0.02) * 100).toFixed(3) + " and "
+       + (Model.errorReaches(72, 0.005, 0.078, 0.2) * 100).toFixed(3) + " per cent");
+
+  /* 8. and it falls apart at high rates, as the task file said */
+  const five = Model.errorReaches(72, 0.05, 0.078, 0.4), e30 = Model.shortcutError(72, 0.30);
+  push("by thirty per cent the rule of 72 is out by more than five",
+       Math.abs(e30) > 0.05 && near(Math.abs(e30) * 100, 9.1572, 1e-3)
+       && near(five * 100, 19.2465, 1e-3),
+       "the five-per-cent line is crossed at " + (five * 100).toFixed(4)
+       + " per cent; at thirty the shortcut claims " + Model.shortcut(72, 0.3).toFixed(4)
+       + " years against a true " + Model.tDouble(0.3, 1).toFixed(4) + ", short by "
+       + (Math.abs(e30) * 100).toFixed(4) + " per cent");
+
+  /* 9. the rule of 70 is the one that is exact in the continuous limit */
+  let w9 = 0;
+  for (const r of RS) w9 = Math.max(w9, Math.abs(Model.tDouble(r, Infinity) - Math.LN2 / r));
+  push("with no pause between compoundings the doubling time is exactly ln2 over the rate",
+       w9 < 1e-14 && near(Math.LN2 * 100, 69.3147, 1e-3),
+       "worst difference " + w9.toExponential(3) + " years; the honest numerator is "
+       + (Math.LN2 * 100).toFixed(4) + ", not 70 and certainly not 72");
+
+  /* 10. compounding more often approaches e^rt, and the shortfall halves each
+         time the period halves, which is the first-order convergence claimed. */
+  const rr = 0.10, tt = 10, tgt = Math.exp(rr * tt), errs = [];
+  for (const mm of [8, 16, 32, 64, 128]) errs.push(Math.abs(Model.balance(rr, mm, tt) - tgt));
+  let ok10 = true;
+  for (let i = 0; i + 1 < errs.length; i++){
+    const ratio = errs[i] / errs[i + 1];
+    if (!(ratio > 1.95 && ratio < 2.05)) ok10 = false;
+    if (!(errs[i] > errs[i + 1])) ok10 = false;
+  }
+  push("periodic compounding converges on the continuous limit at first order",
+       ok10 && errs[errs.length - 1] < 2e-3,
+       "at ten per cent over ten years the shortfall runs "
+       + errs.map((e) => e.toExponential(2)).join(", ")
+       + " for 8, 16, 32, 64 and 128 periods a year, halving each time");
+
+  /* 11. more often is always worth more, and never worth more than continuous */
+  let ok11 = true, gap11 = 0;
+  for (const r of RS) for (let tt2 = 0.5; tt2 <= 60; tt2 += 2.5){
+    let prev = -Infinity;
+    for (const m of [1, 2, 4, 12, 52, 365]){
+      const b = Model.balance(r, m, tt2);
+      if (!(b > prev)) ok11 = false;
+      prev = b;
+    }
+    const cont = Model.balance(r, Infinity, tt2);
+    if (!(cont > prev)) ok11 = false;
+    gap11 = Math.max(gap11, cont / prev - 1);
+  }
+  push("shorter compounding periods always pay more, but never more than continuous",
+       ok11, "the sandwich holds everywhere on the grid; daily compounding falls short of "
+       + "continuous by at most " + (gap11 * 100).toFixed(4) + " per cent");
+
+  /* 12. monotone in rate and in time, which the task file asked for */
+  let ok12 = true;
+  for (const m of MS){
+    for (let tt3 = 0.5; tt3 <= 60; tt3 += 2.5){
+      let prev = -Infinity;
+      for (const r of RS){ const b = Model.balance(r, m, tt3); if (!(b > prev)) ok12 = false; prev = b; }
+    }
+    for (const r of [0.01, 0.07, 0.15, 0.30]){
+      let prev = -Infinity;
+      for (let tt4 = 0; tt4 <= 60; tt4 += 0.25){
+        const b = Model.balance(r, m, tt4); if (!(b > prev)) ok12 = false; prev = b;
+      }
+    }
+  }
+  push("the balance rises with the rate and with the years, without exception",
+       ok12, "checked on every compounding schedule across the full slider ranges");
+
+  /* 13. nothing in reach produces a non-number */
+  let ok13 = true;
+  for (const r of RS) for (const m of MS) for (let tt5 = 0; tt5 <= 60; tt5 += 1){
+    if (!Number.isFinite(Model.balance(r, m, tt5))) ok13 = false;
+    if (!Number.isFinite(Model.tDouble(r, m))) ok13 = false;
+    if (!Number.isFinite(Model.effective(r, m))) ok13 = false;
+  }
+  push("nothing reachable by the controls produces a non-number",
+       ok13, "balance, doubling time and effective rate are finite across the whole grid");
+
+  return t;
+};
+
+/* exposed for the verifier's control sweep */
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "slug": "plate-tectonics-seafloor-age",
+  "title": "The Ocean Floor Is a Tape Recorder",
+  "domain": "earth-science",
+  "difficulty": 3,
+  "summary": "Click anywhere on a synthetic ocean floor to read its age, and recover the spreading rate from the width of the magnetic stripes the way it was first done.",
+  "prerequisites": [],
+  "tags": ["seafloor-spreading", "plate-tectonics", "magnetic-reversals", "thermal-subsidence", "linear-regression"],
+  "interaction_pattern": "spatial-explore",
+  "sources": [
+    { "title": "Seafloor spreading", "url": "https://en.wikipedia.org/wiki/Seafloor_spreading" },
+    { "title": "Vine-Matthews-Morley hypothesis", "url": "https://en.wikipedia.org/wiki/Vine%E2%80%93Matthews%E2%80%93Morley_hypothesis" },
+    { "title": "Geomagnetic reversal", "url": "https://en.wikipedia.org/wiki/Geomagnetic_reversal" },
+    { "title": "Oceanic crust", "url": "https://en.wikipedia.org/wiki/Oceanic_crust" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}

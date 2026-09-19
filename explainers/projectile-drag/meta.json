@@ -1,0 +1,18 @@
+{
+  "slug": "projectile-drag",
+  "title": "The 45-Degree Rule Is a Vacuum Rule",
+  "domain": "physics",
+  "difficulty": 3,
+  "summary": "Fire the same shot into a vacuum and into air, side by side, and watch the parabola lose its symmetry and its best angle drop below 45 degrees.",
+  "prerequisites": [],
+  "tags": ["projectile-motion", "air-resistance", "quadratic-drag", "optimisation", "terminal-velocity"],
+  "interaction_pattern": "compare-side-by-side",
+  "sources": [
+    { "title": "Projectile motion", "url": "https://en.wikipedia.org/wiki/Projectile_motion" },
+    { "title": "Trajectory of a projectile", "url": "https://en.wikipedia.org/wiki/Trajectory_of_a_projectile" },
+    { "title": "Drag (physics)", "url": "https://en.wikipedia.org/wiki/Drag_(physics)" },
+    { "title": "Terminal velocity", "url": "https://en.wikipedia.org/wiki/Terminal_velocity" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 14
+}
