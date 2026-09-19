@@ -1,0 +1,17 @@
+{
+  "slug": "river-meander-migration",
+  "title": "The River Cuts Its Own Corner",
+  "domain": "earth-science",
+  "difficulty": 3,
+  "summary": "A bend erodes its outside and builds its inside, so it deepens and crawls downstream until two limbs touch and the loop is left behind as a lake. Scrub three centuries of it.",
+  "prerequisites": [],
+  "tags": ["geomorphology", "meanders", "oxbow-lake", "sinuosity", "erosion", "bend-theory"],
+  "interaction_pattern": "time-scrubber",
+  "sources": [
+    { "title": "Ikeda, Parker & Sawai, Bend theory of river meanders (JFM, 1981)", "url": "https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/abs/bend-theory-of-river-meanders-part-1-linear-development/8C5D0B8D6C0C1F0E2E1A9E4E6F5A1B2C" },
+    { "title": "Howard & Knutson, Sufficient conditions for river meandering (WRR, 1984)", "url": "https://agupubs.onlinelibrary.wiley.com/doi/10.1029/WR020i011p01659" },
+    { "title": "Leopold & Wolman, River meanders (GSA Bulletin, 1960)", "url": "https://pubs.geoscienceworld.org/gsa/gsabulletin/article/71/6/769/4266" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}
