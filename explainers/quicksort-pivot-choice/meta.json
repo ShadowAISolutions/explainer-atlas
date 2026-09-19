@@ -1,0 +1,19 @@
+{
+  "slug": "quicksort-pivot-choice",
+  "title": "Sorted Input Is Quicksort's Worst Case",
+  "domain": "computer-science",
+  "difficulty": 3,
+  "summary": "Race a last-element, random and median-of-three pivot on the same list and watch the textbook version go quadratic on data that is merely already sorted.",
+  "prerequisites": [],
+  "tags": [
+    "quicksort",
+    "pivot",
+    "worst-case",
+    "recursion-depth",
+    "algorithm-analysis"
+  ],
+  "interaction_pattern": "race-two-methods",
+  "sources": [],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}

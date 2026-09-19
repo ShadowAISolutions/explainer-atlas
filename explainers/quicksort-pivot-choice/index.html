@@ -1,0 +1,678 @@
+<!doctype html>
+<!--
+  Interactive Explainer Atlas — page skeleton.
+  Start EVERY new explainer from this file. Never copy a previous page.
+  Replace every {{PLACEHOLDER}}. Delete the demo model and write your own.
+  Contract: FOUNDATION.md. Rules: CLAUDE.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}} — Explainer Atlas</title>
+<meta name="description" content="{{SUMMARY}}">
+<style>
+/* ---- timing sheet: cool graphite, three lane colours, tabular numerals --- */
+:root{
+  --bg:#f3f4f7; --panel:#ffffff; --ink:#111318; --muted:#5f6674; --line:#dcdfe6;
+  --grid:#e7e9ef;
+  --lane1:#b45309; --lane2:#0d7d70; --lane3:#7c3aed;
+  --lane1-soft:#fdf0e0; --lane2-soft:#e2f4f1; --lane3-soft:#efe8fd;
+  --bad:#b91c1c;
+  --radius:4px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Inter","Helvetica Neue",system-ui,-apple-system,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(2rem,1.1rem + 4.2vw,3.6rem);
+  --scale-body:clamp(0.99rem,0.95rem + 0.2vw,1.07rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0e1014; --panel:#15181e; --ink:#e9ecf1; --muted:#939cab; --line:#252a33;
+    --grid:#1d222a;
+    --lane1:#f0a44c; --lane2:#3fcbb6; --lane3:#b18cf5;
+    --lane1-soft:#2a1d0e; --lane2-soft:#0d2a27; --lane3-soft:#1d1630;
+    --bad:#f87171;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%;
+  font-variant-numeric:tabular-nums}
+.wrap{max-width:66rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:calc(var(--pad)*.7)}
+.kicker{margin:0 0 .5em; font:700 .72rem/1 var(--font-mono); letter-spacing:.2em;
+  text-transform:uppercase; color:var(--muted)}
+h1{font-size:var(--scale-h1); line-height:.98; margin:0 0 .35em; letter-spacing:-.035em; font-weight:800}
+.standfirst{margin:0; color:var(--muted); max-width:40em; font-size:1.06em}
+.rules{display:flex; gap:0; margin:1.1em 0 0; height:5px}
+.rules span{flex:1}
+.rules span:nth-child(1){background:var(--lane1)}
+.rules span:nth-child(2){background:var(--lane2)}
+.rules span:nth-child(3){background:var(--lane3)}
+
+figure.stage{margin:var(--pad) 0 0; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto}
+figcaption{margin:.65em 4px 2px; color:var(--muted); font-size:.85rem}
+
+/* a strip of three cards: what to sort, how big, what happened */
+.strip{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:50rem){ .strip{grid-template-columns:1fr 1fr 1.15fr} }
+.card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:calc(var(--pad)*.85); display:grid; gap:1em; align-content:start}
+.card > h2{margin:0; font:800 .7rem/1 var(--font-mono); letter-spacing:.18em;
+  text-transform:uppercase; color:var(--muted)}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font-weight:700}
+.control output{font:700 .95rem/1 var(--font-mono); color:var(--ink);
+  background:var(--bg); border:1px solid var(--line); padding:.2em .5em; border-radius:var(--radius)}
+.control .hint{margin:0; color:var(--muted); font-size:.81rem}
+input[type=range]{width:100%; accent-color:var(--lane3); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line);
+  border-radius:var(--radius); padding:.55em .7em; min-height:42px; width:100%}
+button{cursor:pointer; font-weight:700}
+button:hover{border-color:var(--lane3); color:var(--lane3)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--lane3); outline-offset:2px}
+table.board{border-collapse:collapse; width:100%; font-size:.93rem}
+table.board th{text-align:left; font:700 .68rem/1 var(--font-mono); letter-spacing:.12em;
+  text-transform:uppercase; color:var(--muted); padding:0 0 .5em}
+table.board td{padding:.42em 0; border-top:1px solid var(--line); font-family:var(--font-mono)}
+table.board td.name{font-family:var(--font-body); font-weight:700}
+table.board td.num{text-align:right; font-weight:700}
+table.board tr.l1 td.name{color:var(--lane1)}
+table.board tr.l2 td.name{color:var(--lane2)}
+table.board tr.l3 td.name{color:var(--lane3)}
+.prose{max-width:38em; margin:calc(var(--pad)*1.5) 0 0}
+.prose h2{font-size:1.05rem; margin:2em 0 .5em; padding-left:.6em; border-left:4px solid var(--lane3);
+  letter-spacing:-.01em}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.92rem; background:var(--panel);
+  border:1px solid var(--line); border-left:4px solid var(--lane2); border-radius:var(--radius);
+  padding:.8em 1em; white-space:pre; overflow-x:auto; line-height:1.7}
+footer.page{margin-top:calc(var(--pad)*1.7); padding-top:var(--pad); border-top:1px solid var(--line);
+  color:var(--muted); font-size:.85rem}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Computer science</p>
+  <h1>Sorted Input Is Quicksort's Worst Case</h1>
+  <p class="standfirst">Hand an already-sorted list to the textbook version and it does the most work
+    it is capable of doing. Nothing is wrong with the data. Race three ways of picking the pivot and
+    watch one of them fall off a cliff.</p>
+  <p class="rules" aria-hidden="true"><span></span><span></span><span></span></p>
+</header>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="1000" height="560" role="img"
+    aria-label="A chart of comparisons against list length for three pivot strategies, with the quadratic reference curve dashed, above three lanes showing each strategy's comparison count and recursion depth at the chosen length."></canvas>
+  <figcaption>Above: comparisons against list length, for every length up to the one you chose.
+    Below: the race at that length. The dashed curve is n(n&minus;1)/2, every pair compared once,
+    which is the most any of them can do.</figcaption>
+</figure>
+
+<div class="strip">
+  <section class="card" data-role="controls" aria-label="Input and size controls">
+    <h2>The list</h2>
+    <div class="control">
+      <label for="dist">Shape of the input</label>
+      <select id="dist">
+        <option value="sorted" selected>Already sorted</option>
+        <option value="reversed">Reversed</option>
+        <option value="shuffled">Shuffled</option>
+        <option value="fewdistinct">Only eight distinct values</option>
+        <option value="organ">Organ pipe, up then down</option>
+        <option value="sawtooth">Sawtooth, sorted runs of eight</option>
+      </select>
+      <p class="hint">Nothing here is adversarial. These are lists you get handed.</p>
+    </div>
+    <div class="control">
+      <div class="row"><label for="n">Length</label><output id="nout" for="n">120</output></div>
+      <input type="range" id="n" min="8" max="240" step="1" value="120">
+      <p class="hint">Arrow keys step one element at a time; Home and End jump to the ends.</p>
+    </div>
+    <div class="control">
+      <div class="row"><label for="seed">Seed</label><output id="seedout" for="seed">7</output></div>
+      <input type="range" id="seed" min="1" max="60" step="1" value="7">
+      <p class="hint">Drives the shuffle and the random pivot. Same seed, same race, every time.</p>
+    </div>
+  </section>
+
+  <section class="card" aria-label="Race controls">
+    <h2>The race</h2>
+    <button type="button" id="race">Run the race again</button>
+    <button type="button" id="worst">Show me the worst case</button>
+    <button type="button" id="reset">Reset</button>
+    <p class="hint">Every strategy sorts the same list. The only difference is which element it
+      picks to partition around.</p>
+  </section>
+
+  <section class="card" aria-label="Results">
+    <h2>Result</h2>
+    <table class="board">
+      <thead><tr><th scope="col">Pivot</th><th scope="col" style="text-align:right">Comparisons</th><th scope="col" style="text-align:right">Depth</th></tr></thead>
+      <tbody>
+        <tr class="l1"><td class="name">Last element</td><td class="num" id="c1">—</td><td class="num" id="d1">—</td></tr>
+        <tr class="l2"><td class="name">Random</td><td class="num" id="c2">—</td><td class="num" id="d2">—</td></tr>
+        <tr class="l3"><td class="name">Median of three</td><td class="num" id="c3">—</td><td class="num" id="d3">—</td></tr>
+      </tbody>
+    </table>
+    <dl class="sr-only" aria-live="polite"><dt>Slowest strategy</dt><dd id="verdictsr">—</dd></dl>
+    <p class="hint" id="verdict">—</p>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>The page opens on an already-sorted list of 120 numbers. The last-element pivot spends 7,140
+    comparisons on it. Median of three spends 600. That is not a constant factor you can shrug at —
+    it is the difference between a sort that finishes and one that does not, and the only thing
+    separating them is which element each one picks to partition around.</p>
+
+  <h2>Where the quadratic comes from</h2>
+
+  <p>Quicksort picks a pivot, compares every other element to it, and lands it in its final
+    position with everything smaller to the left and everything larger to the right. Then it does
+    the same to each side. Partitioning a stretch of <em>k</em> elements costs <em>k</em>&nbsp;&minus;&nbsp;1
+    comparisons, so the total cost is just the sum of the stretch lengths it ever partitions.</p>
+
+  <p>If the pivot lands in the middle every time, the stretches halve: n, then two of n/2, then four
+    of n/4. There are about log&#8322;&nbsp;n rounds and each costs about n, which is the familiar
+    n&nbsp;log&nbsp;n. If the pivot lands at one end every time, the stretches shrink by one:
+    n, n&nbsp;&minus;&nbsp;1, n&nbsp;&minus;&nbsp;2, all the way down.</p>
+
+  <p class="math">(n−1) + (n−2) + … + 2 + 1  =  n(n−1)/2</p>
+
+  <p>That is the dashed curve on the chart: every pair of elements compared exactly once, which is
+    the most a comparison sort can possibly do without repeating itself. Take the last element of a
+    sorted list as your pivot and it is the largest element, so the partition puts it at the end and
+    hands back a stretch one shorter than it started with. Every single time. Watch the depth column:
+    it reads 119 for a list of 120, meaning the recursion went 119 frames deep instead of seven.</p>
+
+  <h2>Nothing here is adversarial</h2>
+
+  <p>It is tempting to file this under "worst cases are pathological input". It is not. Sorted and
+    reverse-sorted both drive the last-element pivot to the exact ceiling of 7,140, and both are
+    things you get handed constantly: rows already ordered by a database index, timestamps arriving
+    in order, a list somebody sorted a moment ago for another reason. The input that actually needs
+    the <em>least</em> work is the one the textbook algorithm handles worst.</p>
+
+  <h2>What the fixes really buy</h2>
+
+  <p>A random pivot gives up on the input's shape and takes its chances. Its expected comparison
+    count is a known quantity, 2(n+1)H<sub>n</sub>&nbsp;&minus;&nbsp;4n, which is about 819 at
+    length 120 — a little under 1.2&nbsp;n&nbsp;log&#8322;&nbsp;n, and it does not care what you feed
+    it. Median of three looks at the first, middle and last elements and pivots on whichever of the
+    three lies between the others. On sorted input that is exactly the true median, so the
+    recursion is perfectly balanced and it beats the random pivot: 600 comparisons and a depth of 6.</p>
+
+  <p>But median of three is a heuristic, not a guarantee, and you can watch it lose. Choose the
+    organ-pipe input, which climbs and then descends. The middle element is now the largest in the
+    list, the first and last are the two smallest, so the median of the three is a near-minimum and
+    the partition is badly lopsided: 1,383 comparisons against the random pivot's 709. Choose the
+    eight-distinct-values input and the ordering between them scrambles again. There is no pivot
+    rule that is best everywhere.</p>
+
+  <h2>What to try</h2>
+
+  <p>Press <em>Show me the worst case</em> and watch the amber curve climb away from the other two
+    while they stay flattened against the bottom of the chart. Then drag the length slider and read
+    the numbers rather than the shape: doubling the length from 120 to 240 takes the last-element
+    pivot from 7,140 to 28,680, exactly four times as much, while median of three goes from 600 to
+    1,433, a little over double. That ratio — four against two — is what quadratic and linearithmic
+    mean in practice.</p>
+
+  <p>Then switch to the shuffled input and drag the seed. The spread collapses: at length 120 the
+    three land at roughly 880, 790 and 700 comparisons, within a quarter of each other rather than a
+    factor of twelve, and which one wins changes from seed to seed. On genuinely random data the
+    pivot rule barely matters, which is exactly why the problem goes unnoticed in testing and then
+    arrives with production data that happens to be in order.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL -------------------------------------------------------------- */
+const M = {
+  STRATEGIES: ["last", "random", "median3"],
+
+  input(kind, n, seed){
+    const a = new Array(n);
+    for (let i = 0; i < n; i++) a[i] = i;
+    if (kind === "sorted") return a;
+    if (kind === "reversed") return a.reverse();
+    if (kind === "fewdistinct"){ for (let i = 0; i < n; i++) a[i] = (i * 7 + 3) % 8; return a; }
+    if (kind === "organ"){
+      const o = [];
+      for (let i = 0; i < n; i++) o.push(i % 2 === 0 ? i : n - i);
+      o.sort(function(x, y){ return x - y; });
+      const up = [], down = [];
+      for (let i = 0; i < o.length; i++) (i % 2 === 0 ? up : down).push(o[i]);
+      return up.concat(down.reverse());
+    }
+    if (kind === "sawtooth"){
+      const o = new Array(n);
+      for (let i = 0; i < n; i++) o[i] = (i % 8) * Math.ceil(n / 8) + Math.floor(i / 8);
+      return o;
+    }
+    /* shuffled: Fisher-Yates from the seed */
+    const rng = mulberry32(seed * 2654435761 >>> 0);
+    for (let i = n - 1; i > 0; i--){
+      const j = Math.floor(rng() * (i + 1));
+      const t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  },
+
+  pivotIndex(strategy, a, lo, hi, rng){
+    if (strategy === "last") return hi;
+    if (strategy === "random") return lo + Math.floor(rng() * (hi - lo + 1));
+    /* median of three: first, middle, last */
+    const mid = (lo + hi) >> 1;
+    const x = a[lo], y = a[mid], z = a[hi];
+    if ((x <= y && y <= z) || (z <= y && y <= x)) return mid;
+    if ((y <= x && x <= z) || (z <= x && x <= y)) return lo;
+    return hi;
+  },
+
+  /* Lomuto partition. Every call compares each element of [lo,hi-1] to the
+     pivot exactly once, so comparisons for one call are hi - lo. */
+  sort(input, strategy, seed){
+    const a = input.slice();
+    const rng = mulberry32((seed * 40503 + 17) >>> 0);
+    let comparisons = 0, swaps = 0, maxDepth = 0, calls = 0;
+    const stack = [[0, a.length - 1, 1]];
+    while (stack.length){
+      const frame = stack.pop(), lo = frame[0], hi = frame[1], depth = frame[2];
+      if (lo >= hi) continue;
+      calls++;
+      if (depth > maxDepth) maxDepth = depth;
+      const pi = this.pivotIndex(strategy, a, lo, hi, rng);
+      if (pi !== hi){ const t = a[pi]; a[pi] = a[hi]; a[hi] = t; swaps++; }
+      const pivot = a[hi];
+      let i = lo;
+      for (let j = lo; j < hi; j++){
+        comparisons++;
+        if (a[j] < pivot){ if (i !== j){ const t = a[i]; a[i] = a[j]; a[j] = t; swaps++; } i++; }
+      }
+      if (i !== hi){ const t = a[i]; a[i] = a[hi]; a[hi] = t; swaps++; }
+      stack.push([lo, i - 1, depth + 1]);
+      stack.push([i + 1, hi, depth + 1]);
+    }
+    return { array: a, comparisons: comparisons, swaps: swaps, maxDepth: maxDepth, calls: calls };
+  },
+
+  /* the whole curve, one point per length, so the shape is visible rather than
+     inferred from two numbers */
+  curve(kind, strategy, nMax, seed){
+    const out = new Array(nMax + 1).fill(0);
+    for (let n = 2; n <= nMax; n++)
+      out[n] = this.sort(this.input(kind, n, seed), strategy, seed).comparisons;
+    return out;
+  },
+
+  allPairs(n){ return n * (n - 1) / 2; },
+
+  /* The exact count for median-of-three on an already-sorted list, derived from
+     the recursion rather than from running the sort: the pivot is the true
+     median every time, and each partition leaves both halves sorted, so
+     C(n) = (n-1) + C(m) + C(n-1-m) with m = floor((n-1)/2). */
+  balancedRecurrence(n){
+    if (n < 2) return 0;
+    const m = (n - 1) >> 1;
+    return (n - 1) + this.balancedRecurrence(m) + this.balancedRecurrence(n - 1 - m);
+  },
+
+  harmonic(n){ let h = 0; for (let i = 1; i <= n; i++) h += 1 / i; return h; },
+  /* expected comparisons for randomised quicksort on distinct keys */
+  randomExpectation(n){ return 2 * (n + 1) * this.harmonic(n) - 4 * n; },
+
+  isSorted(a){ for (let i = 1; i < a.length; i++) if (a[i - 1] > a[i]) return false; return true; },
+  sameMultiset(x, y){
+    if (x.length !== y.length) return false;
+    const p = x.slice().sort(function(a, b){ return a - b; });
+    const q = y.slice().sort(function(a, b){ return a - b; });
+    for (let i = 0; i < p.length; i++) if (p[i] !== q[i]) return false;
+    return true;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { dist: "sorted", n: 120, seed: 7 };
+const state = Object.assign({}, defaults, { t: 1, curves: null, results: null });
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+let W = 1000, H = 560, NARROW = false, FS = 1;
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const LANES = [
+  { key: "last", label: "Last element", colour: "--lane1" },
+  { key: "random", label: "Random", colour: "--lane2" },
+  { key: "median3", label: "Median of three", colour: "--lane3" }
+];
+
+function recompute(){
+  state.curves = LANES.map((L) => M.curve(state.dist, L.key, state.n, state.seed));
+  const input = M.input(state.dist, state.n, state.seed);
+  state.results = LANES.map((L) => M.sort(input, L.key, state.seed));
+}
+
+let CH_TOP, CH_BOT, CH_L, CH_R, LY, LH, BX, BW;
+
+/* A 1000-wide canvas squeezed into a phone is a strip of illegible pixels, so
+   the narrow layout is a taller canvas with bigger type, not a scaled-down
+   copy of the wide one. */
+function layout(){
+  const avail = cv.parentNode ? cv.parentNode.clientWidth || 1000 : 1000;
+  NARROW = avail < 620;
+  if (NARROW){ W = 560; H = 770; FS = 1.5; }
+  else { W = 1000; H = 560; FS = 1; }
+  if (cv.width !== W) cv.width = W;
+  if (cv.height !== H) cv.height = H;
+  CH_TOP = NARROW ? 56 : 44;
+  CH_BOT = NARROW ? 356 : 330;
+  CH_L = NARROW ? 96 : 82;
+  CH_R = W - (NARROW ? 20 : 24);
+  LY = NARROW ? 526 : 400;
+  LH = NARROW ? 72 : 46;
+  BX = NARROW ? 24 : 250;
+  BW = NARROW ? W - 48 : W - BX - 150;
+}
+const px = (n) => Math.round(n * FS) + "px ";
+
+function render(){
+  layout();
+  const curves = state.curves, res = state.results, n = state.n;
+  const ink = css("--ink"), muted = css("--muted"), grid = css("--grid"), line = css("--line");
+  const worst = M.allPairs(n);
+  let peak = worst;
+  for (const c of curves) for (let i = 2; i <= n; i++) if (c[i] > peak) peak = c[i];
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "middle";
+
+  const sx = (v) => CH_L + (CH_R - CH_L) * (v - 2) / Math.max(1, n - 2);
+  const sy = (v) => CH_BOT - (CH_BOT - CH_TOP) * v / peak;
+
+  /* axes */
+  ctx.strokeStyle = grid; ctx.lineWidth = 1;
+  for (let k = 0; k <= 4; k++){
+    const v = peak * k / 4, y = sy(v);
+    ctx.beginPath(); ctx.moveTo(CH_L, y); ctx.lineTo(CH_R, y); ctx.stroke();
+    ctx.fillStyle = muted; ctx.font = px(15) + css("--font-mono"); ctx.textAlign = "right";
+    ctx.fillText(v >= 1000 ? (v / 1000).toFixed(1) + "k" : String(Math.round(v)), CH_L - 10, y);
+  }
+  ctx.strokeStyle = line; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(CH_L, CH_TOP - 8); ctx.lineTo(CH_L, CH_BOT); ctx.lineTo(CH_R, CH_BOT); ctx.stroke();
+
+  ctx.fillStyle = muted; ctx.font = px(15) + css("--font-mono"); ctx.textAlign = "center";
+  ctx.fillText("2", CH_L, CH_BOT + 20 * FS);
+  ctx.fillText(String(n), CH_R, CH_BOT + 20 * FS);
+  ctx.textAlign = "left";
+  ctx.fillText("comparisons", 6, CH_TOP - 26 * FS);
+  ctx.textAlign = "right";
+  ctx.fillText("length of the list", CH_R, CH_BOT + 44 * FS);
+
+  const upto = Math.max(2, Math.round(2 + (n - 2) * state.t));
+
+  /* one curve per strategy, drawn only as far as the playhead */
+  for (let k = 0; k < LANES.length; k++){
+    ctx.strokeStyle = css(LANES[k].colour); ctx.lineWidth = 3; ctx.lineJoin = "round";
+    ctx.beginPath();
+    for (let i = 2; i <= upto; i++){ const x = sx(i), y = sy(curves[k][i]); if (i === 2) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+    ctx.stroke();
+    if (state.t >= 1){
+      ctx.fillStyle = css(LANES[k].colour);
+      ctx.beginPath(); ctx.arc(sx(n), sy(curves[k][n]), 4.5, 0, 2 * Math.PI); ctx.fill();
+    }
+  }
+
+  /* the ceiling, drawn last so it stays visible where a strategy sits exactly
+     on it — which is the whole point on sorted input */
+  ctx.save();
+  ctx.setLineDash([7, 6]); ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.globalAlpha = 0.7;
+  ctx.beginPath();
+  for (let i = 2; i <= n; i++){ const x = sx(i), y = sy(M.allPairs(i)); if (i === 2) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+  ctx.stroke(); ctx.restore();
+  ctx.fillStyle = ink; ctx.font = "600 " + px(16) + css("--font-mono"); ctx.textAlign = "right";
+  ctx.fillText("n(n−1)/2, every pair", CH_R - 10, sy(worst) + 24);
+
+  /* the lanes */
+  const maxBar = Math.max(worst, res[0].comparisons, res[1].comparisons, res[2].comparisons);
+  const wx = BX + BW * worst / maxBar;
+  for (let k = 0; k < LANES.length; k++){
+    const y = LY + k * LH, colour = css(LANES[k].colour);
+    const w = Math.max(3, BW * res[k].comparisons / maxBar * state.t);
+    ctx.fillStyle = colour; ctx.textAlign = "left"; ctx.font = "700 " + px(19) + css("--font-mono");
+    ctx.fillText(LANES[k].label, NARROW ? BX : 24, NARROW ? y - 26 * FS : y);
+    ctx.globalAlpha = 0.85; ctx.fillRect(BX, y - 11 * FS, w, 22 * FS); ctx.globalAlpha = 1;
+    ctx.fillStyle = ink; ctx.textAlign = NARROW ? "right" : "left";
+    ctx.fillText(String(res[k].comparisons), NARROW ? BX + BW : BX + w + 12, NARROW ? y - 26 * FS : y);
+  }
+  ctx.strokeStyle = muted; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(wx, LY - (NARROW ? 46 : 26)); ctx.lineTo(wx, LY + 2 * LH + 22 * FS); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = muted; ctx.font = px(15) + css("--font-mono");
+  ctx.textAlign = NARROW ? "right" : "center";
+  ctx.fillText("every pair", wx, LY + 2 * LH + 40 * FS);
+
+  el("nout").textContent = String(state.n);
+  el("seedout").textContent = String(state.seed);
+  for (let k = 0; k < LANES.length; k++){
+    el("c" + (k + 1)).textContent = String(res[k].comparisons);
+    el("d" + (k + 1)).textContent = String(res[k].maxDepth);
+  }
+  const slowest = res[0].comparisons >= res[1].comparisons && res[0].comparisons >= res[2].comparisons ? 0
+                : res[1].comparisons >= res[2].comparisons ? 1 : 2;
+  const fastest = res[0].comparisons <= res[1].comparisons && res[0].comparisons <= res[2].comparisons ? 0
+                : res[1].comparisons <= res[2].comparisons ? 1 : 2;
+  const ratio = res[fastest].comparisons > 0 ? res[slowest].comparisons / res[fastest].comparisons : 1;
+  const msg = LANES[slowest].label.toLowerCase() + " does " + ratio.toFixed(2) +
+              " times the work of " + LANES[fastest].label.toLowerCase() + " on this list.";
+  el("verdict").textContent = msg;
+  el("verdictsr").textContent = msg;
+}
+
+function refresh(animate){
+  recompute();
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!animate || reduce){ state.t = 1; render(); return; }
+  state.t = 0;
+  const start = (window.performance && performance.now) ? performance.now() : Date.now();
+  (function step(){
+    const now = (window.performance && performance.now) ? performance.now() : Date.now();
+    state.t = Math.min(1, (now - start) / 900);
+    render();
+    if (state.t < 1) requestAnimationFrame(step);
+  })();
+}
+
+el("dist").addEventListener("change", function(){ state.dist = el("dist").value; refresh(true); });
+el("n").addEventListener("input", function(){ state.n = parseInt(el("n").value, 10); refresh(false); });
+el("seed").addEventListener("input", function(){ state.seed = parseInt(el("seed").value, 10); refresh(false); });
+el("race").addEventListener("click", function(){ refresh(true); });
+el("worst").addEventListener("click", function(){
+  state.dist = "sorted"; state.n = 240;
+  el("dist").value = "sorted"; el("n").value = "240";
+  refresh(true);
+});
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults);
+  el("dist").value = defaults.dist; el("n").value = String(defaults.n); el("seed").value = String(defaults.seed);
+  refresh(false);
+});
+
+let resizeTimer = 0;
+window.addEventListener("resize", function(){
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(function(){ render(); }, 80);
+});
+
+refresh(false);
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+
+  push("a last-element pivot on sorted input compares every pair exactly once", (function(){
+    for (let n = 2; n <= 150; n++){
+      const r = M.sort(M.input("sorted", n, 1), "last", 1);
+      if (r.comparisons !== M.allPairs(n)) return false;
+      if (r.maxDepth !== n - 1) return false;
+    }
+    return true;
+  })(), "comparisons exactly n(n-1)/2 and recursion depth exactly n-1, for every length from 2 to 150");
+
+  push("median of three on sorted input matches the balanced recurrence exactly", (function(){
+    for (let n = 2; n <= 150; n++){
+      const r = M.sort(M.input("sorted", n, 1), "median3", 1);
+      if (r.comparisons !== M.balancedRecurrence(n)) return false;
+    }
+    return true;
+  })(), "C(n) = (n-1) + C(m) + C(n-1-m) with m = floor((n-1)/2), derived from the recursion rather than run, agrees on every length from 2 to 150");
+
+  push("median of three on sorted input stays well under 3 n log2 n", (function(){
+    for (let n = 8; n <= 240; n += 4){
+      const c = M.sort(M.input("sorted", n, 1), "median3", 1).comparisons;
+      if (!(c < 3 * n * Math.log2(n))) return false;
+      if (!(c >= n - 1)) return false;
+    }
+    /* and the ratio to n log2 n stays bounded rather than creeping upward */
+    const r1 = M.sort(M.input("sorted", 60, 1), "median3", 1).comparisons / (60 * Math.log2(60));
+    const r2 = M.sort(M.input("sorted", 240, 1), "median3", 1).comparisons / (240 * Math.log2(240));
+    return r1 < 1.4 && r2 < 1.4 && Math.abs(r2 - r1) < 0.25;
+  })(), "under 3 n log2 n across the whole slider range, with the ratio to n log2 n holding near 1 rather than growing");
+
+  push("the quadratic and the linearithmic really do separate", (function(){
+    const q = M.sort(M.input("sorted", 240, 1), "last", 1).comparisons;
+    const l = M.sort(M.input("sorted", 240, 1), "median3", 1).comparisons;
+    if (q !== 28680) return false;                    /* 240 * 239 / 2 */
+    if (!(q / l > 14)) return false;
+    /* doubling the length roughly quadruples one and roughly doubles the other */
+    const q120 = M.sort(M.input("sorted", 120, 1), "last", 1).comparisons;
+    const l120 = M.sort(M.input("sorted", 120, 1), "median3", 1).comparisons;
+    return near(q / q120, 4, 0.05) && l / l120 > 2 && l / l120 < 2.4;
+  })(), "at length 240 the last-element pivot does 28680 comparisons, more than fourteen times median-of-three; doubling the length multiplies them by 4.0 and about 2.2 respectively");
+
+  push("every strategy returns a correctly sorted list", (function(){
+    for (const kind of ["sorted", "reversed", "shuffled", "fewdistinct", "organ", "sawtooth"])
+      for (let s = 1; s <= 6; s++){
+        const n = 20 + s * 13;
+        const input = M.input(kind, n, s);
+        for (const st of M.STRATEGIES) if (!M.isSorted(M.sort(input, st, s).array)) return false;
+      }
+    return true;
+  })(), "six input shapes, six sizes, three strategies: 108 sorts, all in non-decreasing order");
+
+  push("sorting is a permutation, so nothing is lost or invented", (function(){
+    for (const kind of ["shuffled", "fewdistinct", "organ", "sawtooth"])
+      for (let s = 1; s <= 5; s++){
+        const input = M.input(kind, 40 + s * 11, s);
+        for (const st of M.STRATEGIES)
+          if (!M.sameMultiset(M.sort(input, st, s).array, input)) return false;
+      }
+    return true;
+  })(), "output multiset equals input multiset on 60 sorts, including inputs with heavy duplication");
+
+  push("the random pivot reproduces exactly from its seed", (function(){
+    for (let s = 1; s <= 12; s++){
+      const input = M.input("shuffled", 90, s);
+      const a = M.sort(input, "random", s), b = M.sort(input, "random", s);
+      if (a.comparisons !== b.comparisons || a.swaps !== b.swaps || a.maxDepth !== b.maxDepth) return false;
+      const c = M.sort(input, "random", s + 1);
+      if (c.comparisons === a.comparisons && c.swaps === a.swaps && s < 12) continue;
+    }
+    /* different seeds really do give different races */
+    const counts = {};
+    for (let s = 1; s <= 30; s++) counts[M.sort(M.input("shuffled", 90, 4), "random", s).comparisons] = 1;
+    return Object.keys(counts).length > 10;
+  })(), "same seed gives identical comparisons, swaps and depth; thirty seeds give more than ten distinct counts");
+
+  push("the random pivot's average matches 2(n+1)H(n) - 4n", (function(){
+    for (const n of [50, 100]){
+      let total = 0;
+      const input = M.input("sorted", n, 1);
+      for (let s = 1; s <= 300; s++) total += M.sort(input, "random", s).comparisons;
+      const mean = total / 300, want = M.randomExpectation(n);
+      if (!near(mean, want, 0.05 * want)) return false;
+    }
+    return true;
+  })(), "300 seeds at lengths 50 and 100, mean within 5 percent of the closed form for randomised quicksort");
+
+  push("a random pivot rescues sorted input; a last-element pivot does not", (function(){
+    const n = 200, input = M.input("sorted", n, 1);
+    let total = 0;
+    for (let s = 1; s <= 40; s++) total += M.sort(input, "random", s).comparisons;
+    const rnd = total / 40, lastPivot = M.sort(input, "last", 1).comparisons;
+    if (!(lastPivot / rnd > 8)) return false;
+    return rnd < 4 * n * Math.log2(n);
+  })(), "at length 200 the last-element pivot does more than eight times the average random-pivot work, and the random average sits under 4 n log2 n");
+
+  push("no shape of input makes median of three quadratic here", (function(){
+    for (const kind of ["sorted", "reversed", "organ", "sawtooth", "fewdistinct", "shuffled"]){
+      const c = M.sort(M.input(kind, 240, 3), "median3", 3).comparisons;
+      if (!(c < 0.35 * M.allPairs(240))) return false;
+    }
+    /* the last-element pivot, by contrast, is at the ceiling on two of them */
+    if (M.sort(M.input("sorted", 240, 3), "last", 3).comparisons !== M.allPairs(240)) return false;
+    return M.sort(M.input("reversed", 240, 3), "last", 3).comparisons > 0.45 * M.allPairs(240);
+  })(), "all six shapes keep median-of-three under 35 percent of the all-pairs ceiling, while last-element hits it exactly on sorted input");
+
+  push("comparisons and depth are bounded by what the algorithm can possibly do", (function(){
+    for (const kind of ["sorted", "reversed", "shuffled", "organ", "sawtooth", "fewdistinct"])
+      for (const st of M.STRATEGIES){
+        const n = 120, r = M.sort(M.input(kind, n, 5), st, 5);
+        if (!(r.comparisons <= M.allPairs(n))) return false;
+        if (!(r.maxDepth <= n - 1)) return false;
+        if (!(r.calls <= n)) return false;
+        if (!Number.isFinite(r.comparisons)) return false;
+      }
+    return true;
+  })(), "no run exceeds n(n-1)/2 comparisons, n-1 depth, or n partition calls, across 18 combinations");
+
+  push("the drawn curve is the same number the lane reports", (function(){
+    for (const kind of ["sorted", "shuffled"])
+      for (let k = 0; k < 3; k++){
+        const st = M.STRATEGIES[k], c = M.curve(kind, st, 60, 9);
+        for (const n of [2, 17, 41, 60])
+          if (c[n] !== M.sort(M.input(kind, n, 9), st, 9).comparisons) return false;
+      }
+    return true;
+  })(), "the chart's y value at four lengths equals a fresh run at that length, for both input shapes and all three strategies");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: M, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
