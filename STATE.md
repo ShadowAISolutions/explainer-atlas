@@ -27,4 +27,17 @@ page is written — it is where a failing audit trend gets escalated.)*
 
 ## Batches
 
-*(none yet)*
+### batch/000 — 2026-09-19 — Phase 0 bootstrap
+- merged: numerical-integration-error, damped-harmonic-oscillator, huffman-coding
+- blocked: none
+- patterns: race-two-methods, perturb-and-observe, build-from-parts
+- learned: Three reference implementations, deliberately spread across three
+  domains and three interaction patterns so the variety rule starts from a
+  spread rather than a groove. Every assertion checks the model against a
+  closed form, a conservation law, or an exhaustive search — that bar is the
+  whole point of the atlas, and the next batch should hold it. Two practical
+  notes for the next session: write selftests as pure functions of known
+  inputs, never of the current UI state, because the verifier re-runs them at
+  every position of every control; and make sure no readout can print `NaN`,
+  `Infinity` or `undefined` in a degenerate regime (write "none" or
+  "unbounded"), because the verifier greps the rendered text for them.
