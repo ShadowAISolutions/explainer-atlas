@@ -1,0 +1,17 @@
+{
+  "slug": "bloom-filter-false-positives",
+  "title": "Yes, Probably. No, Definitely.",
+  "domain": "computer-science",
+  "difficulty": 3,
+  "summary": "A Bloom filter is certain when it says no and guessing when it says yes. Step through one key at a time and watch the maybes appear.",
+  "prerequisites": [],
+  "tags": ["probabilistic-data-structures", "hashing", "space-time-tradeoff", "false-positives"],
+  "interaction_pattern": "step-through",
+  "sources": [
+    { "title": "Burton H. Bloom, Space/Time Trade-offs in Hash Coding with Allowable Errors (CACM, 1970)", "url": "https://dl.acm.org/doi/10.1145/362686.362692" },
+    { "title": "Broder and Mitzenmacher, Network Applications of Bloom Filters: A Survey", "url": "https://www.eecs.harvard.edu/~michaelm/postscripts/im2005b.pdf" },
+    { "title": "Bose et al., On the false-positive rate of Bloom filters", "url": "https://doi.org/10.1016/j.ipl.2008.05.018" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}
