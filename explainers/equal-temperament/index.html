@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Every Interval Slightly Wrong, On Purpose — Explainer Atlas</title>
+<meta name="description" content="Put a just interval beside its equal-tempered twin and watch the beats appear. Twelve-tone equal temperament makes every key usable by making every interval a little out of tune.">
+<style>
+:root{
+  --bg:#faf7f2; --panel:#ffffff; --ink:#191614; --muted:#6d665c; --line:#e0d9cc;
+  --just:#1f6b4a; --just-soft:#e3f1ea; --eq:#a81f6a; --eq-soft:#fae3f0; --ink-soft:#f1ece3;
+  --radius:3px; --pad:clamp(14px,2.8vw,26px);
+  --font-body:"Charter","Bitstream Charter",Georgia,serif;
+  --font-head:"Inter",system-ui,-apple-system,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.6rem,1.05rem + 2.6vw,2.55rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.22vw,1.08rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#131211; --panel:#1b1917; --ink:#ece7e0; --muted:#9b9488; --line:#2c2924;
+    --just:#5fd3a0; --just-soft:#10281f; --eq:#f076b2; --eq-soft:#2c1120; --ink-soft:#24211d;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.66 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:60rem; margin:0 auto; padding:var(--pad)}
+header.page{text-align:center; padding-bottom:var(--pad); border-bottom:1px solid var(--line)}
+h1{font:800 var(--scale-h1)/1.1 var(--font-head); margin:.15em 0 .3em; letter-spacing:-.025em}
+.kicker{margin:0; color:var(--eq); font:700 .7rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.2em}
+.standfirst{margin:0 auto; color:var(--muted); max-width:38em}
+figure.stage{margin:var(--pad) 0 0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.65em; color:var(--muted); font-size:.83rem; line-height:1.55}
+.controls{margin-top:var(--pad); background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1.05em var(--pad); grid-template-columns:repeat(auto-fit,minmax(13rem,1fr)); align-items:end}
+.control{display:grid; gap:.3em; min-width:0}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font:700 .73rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.1em; color:var(--muted)}
+.control output{font:700 .95rem/1 var(--font-mono); color:var(--eq)}
+.control .hint{margin:0; color:var(--muted); font-size:.77rem; line-height:1.45}
+input[type=range]{width:100%; accent-color:var(--just); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:var(--radius); padding:.55em .7em; min-height:42px; width:100%}
+button{cursor:pointer; font:700 .8rem/1 var(--font-mono); text-transform:uppercase; letter-spacing:.08em}
+button:hover{border-color:var(--eq); color:var(--eq)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--eq); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:.6em; margin:var(--pad) 0 0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:.6em .75em; text-align:center}
+.readout dt{margin:0; color:var(--muted); font:400 .69rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.1em}
+.readout dd{margin:.15em 0 0; font:700 1.25rem/1.15 var(--font-head); letter-spacing:-.02em}
+.readout dd.j{color:var(--just)} .readout dd.e{color:var(--eq)}
+.prose{max-width:37em; margin:calc(var(--pad)*1.6) auto 0}
+.prose h2{font:800 .74rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.16em; color:var(--just); margin:2.2em 0 .55em}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.86em; background:var(--ink-soft); padding:.75em .85em; border-radius:var(--radius); border-left:3px solid var(--eq); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.8); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.82rem; text-align:center}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">music theory</p>
+  <h1>Every Interval Slightly Wrong, On Purpose</h1>
+  <p class="standfirst">A perfect fifth is two notes whose frequencies stand in the ratio 3&nbsp;to&nbsp;2. The fifth on a piano is not that. The mismatch is small, deliberate, and the reason you can play in any key.</p>
+</header>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="960" height="620" role="img"
+          aria-label="Left: the summed waveform of the two harmonics that should coincide in a just interval, holding a steady amplitude. Right: the same pair in equal temperament, whose amplitude swells and fades at the beat rate. Below: the cents error of all twelve equal-tempered intervals against their just ratios."></canvas>
+  <figcaption>Both panels plot the sum of the two harmonics that ought to land on the same frequency. On the left they do, so the wave holds steady. On the right they miss by a hair, so the sum swells and fades &mdash; that is the beating you hear as roughness.</figcaption>
+</figure>
+
+<section class="controls" data-role="controls" aria-label="Tuning controls">
+  <div class="control">
+    <label for="interval">Interval above the root</label>
+    <select id="interval">
+      <option value="1">minor 2nd &mdash; 16:15</option>
+      <option value="2">major 2nd &mdash; 9:8</option>
+      <option value="3">minor 3rd &mdash; 6:5</option>
+      <option value="4">major 3rd &mdash; 5:4</option>
+      <option value="5">perfect 4th &mdash; 4:3</option>
+      <option value="6">tritone &mdash; 45:32</option>
+      <option value="7" selected>perfect 5th &mdash; 3:2</option>
+      <option value="8">minor 6th &mdash; 8:5</option>
+      <option value="9">major 6th &mdash; 5:3</option>
+      <option value="10">minor 7th &mdash; 9:5</option>
+      <option value="11">major 7th &mdash; 15:8</option>
+      <option value="12">octave &mdash; 2:1</option>
+    </select>
+    <p class="hint">The just ratio is the small whole-number one. Equal temperament replaces it with 2 to the power n over 12.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="root">Root frequency</label>
+      <output id="rootout" for="root">440 Hz</output>
+    </div>
+    <input type="range" id="root" min="110" max="880" step="1" value="440">
+    <p class="hint">Beat rate is proportional to pitch, so the same interval beats twice as fast an octave up.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="window">Seconds shown</label>
+      <output id="windowout" for="window">2.00 s</output>
+    </div>
+    <input type="range" id="window" min="0.25" max="4" step="0.05" value="2">
+    <p class="hint">Widen the window to see slow beats; narrow it to see the wave itself.</p>
+  </div>
+
+  <div class="control">
+    <button type="button" id="play">Play both, 3 s</button>
+    <p class="hint" id="audiohint">Just first, then equal-tempered. Listen for the wobble on the second one.</p>
+    <button type="button" id="reset">Reset</button>
+  </div>
+</section>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Just ratio</dt><dd id="r1" class="j">&mdash;</dd></div>
+  <div><dt>Equal-tempered ratio</dt><dd id="r2" class="e">&mdash;</dd></div>
+  <div><dt>Error in cents</dt><dd id="r3" class="e">&mdash;</dd></div>
+  <div><dt>Beats per second</dt><dd id="r4" class="e">&mdash;</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>Two notes sound consonant when their frequencies share small whole-number ratios, because then their harmonics land on top of each other instead of near each other. A perfect fifth is 3:2 — three times the lower note's frequency is exactly twice the upper's, and that shared harmonic rings as a single clean tone.</p>
+
+  <p>Miss the ratio slightly and the two harmonics are no longer the same frequency. They drift in and out of phase, and their sum swells and fades at the difference between them. That is beating, and the ear hears it as roughness rather than as two pitches.</p>
+
+  <h2>Why not simply use the ratios</h2>
+
+  <p>Because they do not close. Stack twelve perfect fifths and you land almost, but not quite, seven octaves up:</p>
+
+  <p class="math">(3/2)&sup1;&sup2; = 129.746&hellip;   2&#8311; = 128   difference = 23.46 cents</p>
+
+  <p>That leftover is the Pythagorean comma, and it is nearly a quarter of a semitone — easily audible. A keyboard tuned in pure fifths starting from C has a D sharp and an E flat that are different notes. Historical tunings dealt with this by hiding the error: they made most keys sweet and one interval, the wolf, unusable. You simply did not write in that key.</p>
+
+  <p>Equal temperament makes a different trade. Define the semitone as the twelfth root of two and build everything from it:</p>
+
+  <p class="math">ratio(n) = 2^(n/12),  cents(f&#8321;,f&#8322;) = 1200 &middot; log&#8322;(f&#8322;/f&#8321;)</p>
+
+  <p>Now twelve fifths close exactly, because seven twelfths times twelve is exactly seven. The comma has not disappeared; it has been spread evenly, 1.955 cents taken off every fifth. Nothing is pure and nothing is unusable.</p>
+
+  <h2>Where the error actually lands</h2>
+
+  <p>Read the bar chart. The fifth and fourth are off by under two cents, which is below what most listeners notice on a sustained tone. The thirds and sixths are the casualties: the major third is nearly fourteen cents sharp, the minor third sixteen cents flat. Select the major third at 440 Hz and look at the beat rate — around seventeen beats a second, fast enough to sound like a buzz rather than a pulse. That is why an equal-tempered major third sounds busy next to a barbershop chord, where singers bend to the pure 5:4 with no fixed keyboard to stop them.</p>
+
+  <p>The cents unit is what makes this comparable. A cent is a hundredth of an equal-tempered semitone, defined logarithmically so that equal ratios give equal cents at any pitch. An interval 14 cents sharp is 14 cents sharp in every octave, even though its error in hertz grows with pitch.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set the interval to the perfect fifth and widen the window to four seconds: one slow swell, about one and a half per second at A440. Now switch to the major third without touching anything else — the envelope becomes a blur. Then drag the root down an octave to 220 Hz and watch every beat rate halve, while the cents error does not move at all. The error is a fixed proportion; only its expression in hertz depends on where you are on the keyboard.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL: ratios, cents, and the beat rate they imply ----------------- */
+const Model = {
+  /* just ratios of the twelve chromatic intervals, five-limit */
+  JUST: [[1,1],[16,15],[9,8],[6,5],[5,4],[4,3],[45,32],[3,2],[8,5],[5,3],[9,5],[15,8],[2,1]],
+  NAMES: ["unison","min 2","maj 2","min 3","maj 3","4th","tritone","5th","min 6","maj 6","min 7","maj 7","8ve"],
+
+  cents(f1, f2){ return 1200 * Math.log2(f2 / f1); },
+  equalRatio(n){ return Math.pow(2, n / 12); },
+  justRatio(n){ return this.JUST[n][0] / this.JUST[n][1]; },
+
+  /* how far the tempered interval sits from the pure one, in cents */
+  error(n){ return this.cents(this.justRatio(n), this.equalRatio(n)); },
+
+  /* the two harmonics that coincide in the pure interval p:q --
+     p times the lower note against q times the upper one */
+  clashing(n, root){
+    const p = this.JUST[n][0], q = this.JUST[n][1];
+    return {
+      p: p, q: q,
+      justLow: p * root,
+      justHigh: q * root * this.justRatio(n),
+      eqLow: p * root,
+      eqHigh: q * root * this.equalRatio(n)
+    };
+  },
+
+  /* beats per second between those harmonics under equal temperament */
+  beatRate(n, root){
+    const c = this.clashing(n, root);
+    return Math.abs(c.eqHigh - c.eqLow);
+  },
+
+  justBeatRate(n, root){
+    const c = this.clashing(n, root);
+    return Math.abs(c.justHigh - c.justLow);
+  },
+
+  /* sum of the two clashing harmonics at time t, normalised to [-1, 1] */
+  wave(fa, fb, t){ return 0.5 * (Math.sin(2 * Math.PI * fa * t) + Math.sin(2 * Math.PI * fb * t)); },
+
+  /* stacking k fifths and reducing by octaves, measured in cents */
+  stackFifths(k, pure){
+    const r = pure ? 1.5 : this.equalRatio(7);
+    return this.cents(1, Math.pow(r, k)) - 1200 * Math.floor(this.cents(1, Math.pow(r, k)) / 1200);
+  },
+
+  pythagoreanComma(){ return this.cents(Math.pow(2, 7), Math.pow(3 / 2, 12)); },
+  syntonicComma(){ return this.cents(1, 81 / 80); }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { interval: 7, root: 440, window: 2 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+const PANEL_Y = 34, PANEL_H = 300, BAR_Y = 410, BAR_H = 170, PAD = 16;
+
+function drawPanel(x0, wide, colour, label, fa, fb){
+  const muted = css("--muted"), line = css("--line");
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.strokeRect(x0 + 0.5, PANEL_Y + 0.5, wide - 1, PANEL_H - 1);
+  ctx.fillStyle = colour; ctx.font = "700 14px ui-monospace, monospace"; ctx.textAlign = "left";
+  ctx.fillText(label, x0 + 10, PANEL_Y - 10);
+
+  const mid = PANEL_Y + PANEL_H / 2, amp = PANEL_H / 2 - 16;
+  ctx.strokeStyle = line;
+  ctx.beginPath(); ctx.moveTo(x0, mid); ctx.lineTo(x0 + wide, mid); ctx.stroke();
+
+  /* the envelope: amplitude of the sum, |cos(pi * (fb - fa) * t)| */
+  const beat = Math.abs(fb - fa);
+  ctx.strokeStyle = colour; ctx.globalAlpha = 0.3; ctx.lineWidth = 1.5;
+  for (const sgn of [1, -1]){
+    ctx.beginPath();
+    for (let px = 0; px <= wide; px++){
+      const t = (px / wide) * state.window;
+      const y = mid - sgn * amp * Math.abs(Math.cos(Math.PI * beat * t));
+      if (px === 0) ctx.moveTo(x0 + px, y); else ctx.lineTo(x0 + px, y);
+    }
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  /* the wave itself, oversampled so fast cycles read as a band */
+  ctx.strokeStyle = colour; ctx.lineWidth = 1; ctx.globalAlpha = 0.85;
+  ctx.beginPath();
+  const SUB = 8;
+  for (let k = 0; k <= wide * SUB; k++){
+    const t = (k / (wide * SUB)) * state.window;
+    const y = mid - amp * Model.wave(fa, fb, t);
+    if (k === 0) ctx.moveTo(x0 + k / SUB, y); else ctx.lineTo(x0 + k / SUB, y);
+  }
+  ctx.stroke(); ctx.globalAlpha = 1;
+
+  ctx.fillStyle = muted; ctx.font = "12px ui-monospace, monospace"; ctx.textAlign = "right";
+  ctx.fillText(beat < 0.005 ? "no beating" : beat.toFixed(2) + " beats/s", x0 + wide - 10, PANEL_Y + PANEL_H - 10);
+}
+
+function render(){
+  const muted = css("--muted"), line = css("--line"), panel = css("--panel"),
+        just = css("--just"), eq = css("--eq"), ink = css("--ink");
+  const n = state.interval, root = state.root;
+
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, cv.width, cv.height);
+
+  const c = Model.clashing(n, root);
+  const wide = (cv.width - 3 * PAD) / 2;
+  drawPanel(PAD, wide, just,
+    "JUST  " + Model.JUST[n][0] + ":" + Model.JUST[n][1] + "  —  " + c.p + "× vs " + c.q + "×",
+    c.justLow, c.justHigh);
+  drawPanel(2 * PAD + wide, wide, eq,
+    "EQUAL  2^(" + n + "/12)  —  same two harmonics",
+    c.eqLow, c.eqHigh);
+
+  /* cents error of all twelve intervals */
+  const x0 = PAD, x1 = cv.width - PAD;
+  const mid = BAR_Y + BAR_H / 2, scale = (BAR_H / 2 - 24) / 18;
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, mid); ctx.lineTo(x1, mid); ctx.stroke();
+  ctx.fillStyle = muted; ctx.font = "12px ui-monospace, monospace"; ctx.textAlign = "left";
+  ctx.fillText("cents sharp or flat of the just interval", x0, BAR_Y - 10);
+
+  const bw = (x1 - x0) / 12;
+  for (let k = 1; k <= 12; k++){
+    const e = Model.error(k), h = e * scale;
+    const bx = x0 + (k - 1) * bw;
+    ctx.fillStyle = k === n ? eq : ink;
+    ctx.globalAlpha = k === n ? 0.95 : 0.22;
+    ctx.fillRect(bx + 5, h >= 0 ? mid - h : mid, bw - 10, Math.abs(h));
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = k === n ? eq : muted;
+    ctx.textAlign = "center";
+    ctx.fillText(Model.NAMES[k], bx + bw / 2, mid + (h >= 0 ? 16 : -8));
+    ctx.font = "11px ui-monospace, monospace";
+    ctx.fillText((e >= 0 ? "+" : "") + e.toFixed(1), bx + bw / 2, h >= 0 ? mid - h - 6 : mid - h + 16);
+    ctx.font = "12px ui-monospace, monospace";
+  }
+
+  const beat = Model.beatRate(n, root);
+  el("rootout").textContent = root + " Hz";
+  el("windowout").textContent = state.window.toFixed(2) + " s";
+  el("r1").textContent = Model.JUST[n][0] + ":" + Model.JUST[n][1];
+  el("r2").textContent = Model.equalRatio(n).toFixed(5);
+  el("r3").textContent = (Model.error(n) >= 0 ? "+" : "") + Model.error(n).toFixed(2);
+  el("r4").textContent = beat < 0.005 ? "none" : beat.toFixed(2);
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  const handler = () => { state[key] = parse(input); render(); };
+  input.addEventListener("input", handler);
+  input.addEventListener("change", handler);
+}
+bind("interval", "interval", (i) => parseInt(i.value, 10));
+bind("root", "root", (i) => parseInt(i.value, 10));
+bind("window", "window", (i) => parseFloat(i.value));
+/* optional audio: never created until asked for, and never fatal */
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults);
+  el("interval").value = String(defaults.interval);
+  el("root").value = String(defaults.root);
+  el("window").value = String(defaults.window);
+  render();
+});
+
+el("play").addEventListener("click", function(){
+  const Ctor = window.AudioContext || window.webkitAudioContext;
+  if (!Ctor){ el("audiohint").textContent = "This browser has no audio output available."; return; }
+  try {
+    const ac = new Ctor();
+    const n = state.interval, root = state.root;
+    const gain = ac.createGain();
+    gain.gain.value = 0.0001; gain.connect(ac.destination);
+    const t0 = ac.currentTime + 0.05;
+    const pairs = [[root, root * Model.justRatio(n), t0], [root, root * Model.equalRatio(n), t0 + 1.6]];
+    for (const pr of pairs){
+      for (const f of [pr[0], pr[1]]){
+        const o = ac.createOscillator();
+        o.type = "sawtooth"; o.frequency.value = f;
+        o.connect(gain); o.start(pr[2]); o.stop(pr[2] + 1.4);
+      }
+    }
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(0.08, t0 + 0.05);
+    gain.gain.setValueAtTime(0.08, t0 + 2.95);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 3.05);
+    setTimeout(function(){ try { ac.close(); } catch (e) {} }, 3600);
+    el("audiohint").textContent = "Playing: pure first, tempered second.";
+  } catch (e) {
+    el("audiohint").textContent = "Audio is unavailable here, but the chart shows the same thing.";
+  }
+});
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+
+  push("the equal-tempered semitone is the twelfth root of two", (function(){
+    if (!near(M.equalRatio(1), 1.0594630943592953, 1e-15)) return false;
+    if (!near(Math.pow(M.equalRatio(1), 12), 2, 1e-12)) return false;
+    return near(M.equalRatio(12), 2, 1e-12) && near(M.equalRatio(0), 1, 0);
+  })(), "1.059463 to 15 places, and twelve of them make exactly an octave");
+
+  push("cents is 1200 log2 of the frequency ratio, and it adds", (function(){
+    for (const pair of [[440, 660], [100, 101], [220, 440], [1, 81 / 80]])
+      if (!near(M.cents(pair[0], pair[1]), 1200 * Math.log2(pair[1] / pair[0]), 1e-9)) return false;
+    const a = 261.6, b = 329.6, c = 392;
+    if (!near(M.cents(a, b) + M.cents(b, c), M.cents(a, c), 1e-9)) return false;
+    return near(M.cents(440, 880), 1200, 1e-9) && near(M.cents(440, 440), 0, 0);
+  })(), "matches the definition to 1e-9 and is additive across a chain");
+
+  push("the tempered fifth is 1.955 cents flat of 3:2", (function(){
+    return near(M.error(7), -1.9550008653874, 1e-9) && near(Math.abs(M.error(7)), 1.955, 0.001);
+  })(), "cents(3/2, 2^(7/12)) = −1.955");
+
+  push("the tempered major third is 13.686 cents sharp of 5:4", (function(){
+    return near(M.error(4), 13.686286135165, 1e-9) && near(M.error(4), 13.686, 0.001);
+  })(), "cents(5/4, 2^(4/12)) = +13.686");
+
+  push("the twelve errors match the published table", (function(){
+    const want = [null, -11.7313, -3.9100, -15.6413, 13.6863, 1.9550, 9.7763,
+                  -1.9550, -13.6863, 15.6413, -17.5963, 11.7313, 0];
+    for (let n = 1; n <= 12; n++) if (!near(M.error(n), want[n], 0.001)) return false;
+    return true;
+  })(), "all twelve intervals within 0.001 cents of the standard five-limit table");
+
+  push("twelve pure fifths overshoot seven octaves by the Pythagorean comma", (function(){
+    if (!near(M.pythagoreanComma(), 23.460010384649, 1e-9)) return false;
+    if (!near(M.pythagoreanComma(), 23.46, 0.001)) return false;
+    return near(M.syntonicComma(), 21.5062896, 1e-6);
+  })(), "23.4600 cents; the syntonic comma comes out at 21.5063 as a cross-check");
+
+  push("twelve tempered fifths close exactly", (function(){
+    if (!near(M.cents(1, Math.pow(M.equalRatio(7), 12)) - 7 * 1200, 0, 1e-9)) return false;
+    return !near(M.cents(1, Math.pow(1.5, 12)) - 7 * 1200, 0, 1e-6);
+  })(), "7 x 1200 cents on the nose, where the pure stack misses by a comma");
+
+  push("a pure interval has no beats and a tempered one does", (function(){
+    for (let n = 1; n <= 12; n++){
+      if (!near(M.justBeatRate(n, 440), 0, 1e-9)) return false;
+      if (n !== 12 && !(M.beatRate(n, 440) > 0.5)) return false;
+    }
+    return near(M.beatRate(12, 440), 0, 1e-9);
+  })(), "the coinciding harmonics land exactly on each other only in just tuning");
+
+  push("beat rate scales with pitch while cents does not", (function(){
+    for (let n = 1; n <= 11; n++){
+      if (!near(M.beatRate(n, 880), 2 * M.beatRate(n, 440), 1e-9)) return false;
+      if (!near(M.error(n), M.error(n), 0)) return false;
+    }
+    return near(M.beatRate(7, 440), 1.4898, 0.0005) && near(M.beatRate(4, 440), 17.4610, 0.0005);
+  })(), "doubling the root doubles every beat rate; 1.49/s on the fifth, 17.46/s on the third");
+
+  push("tempered ratios rise monotonically and bracket the just ones", (function(){
+    for (let n = 0; n < 12; n++) if (!(M.equalRatio(n) < M.equalRatio(n + 1))) return false;
+    for (let n = 1; n < 12; n++) if (!(M.justRatio(n) < M.justRatio(n + 1))) return false;
+    let sharp = 0, flat = 0;
+    for (let n = 1; n <= 11; n++){ if (M.error(n) > 0) sharp++; else flat++; }
+    return sharp > 0 && flat > 0;
+  })(), "both series increase; the tempering runs sharp on some intervals and flat on others");
+
+  push("finite over every control combination", (function(){
+    for (let root = 110; root <= 880; root += 10)
+      for (let n = 1; n <= 12; n++){
+        if (!Number.isFinite(M.beatRate(n, root))) return false;
+        if (!Number.isFinite(M.error(n))) return false;
+        for (let k = 0; k <= 20; k++){
+          const c = M.clashing(n, root);
+          if (!Number.isFinite(M.wave(c.eqLow, c.eqHigh, k / 20 * 4))) return false;
+        }
+      }
+    return true;
+  })(), "78 root frequencies x 12 intervals, waveform sampled across the widest window");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
