@@ -1,0 +1,17 @@
+{
+  "slug": "big-o-crossover",
+  "title": "The Slower Algorithm Wins For A While",
+  "domain": "computer-science",
+  "difficulty": 2,
+  "summary": "Race insertion sort against merge sort, move the constant factor merge sort pays, and watch the size where the quadratic algorithm finally loses slide across the range real libraries tune for.",
+  "prerequisites": ["quicksort-pivot-choice"],
+  "tags": ["algorithms", "sorting", "complexity", "insertion-sort", "merge-sort", "constant-factors"],
+  "interaction_pattern": "race-two-methods",
+  "sources": [
+    { "title": "Knuth, The Art of Computer Programming, Volume 3: Sorting and Searching, section 5.2.4", "url": "https://www-cs-faculty.stanford.edu/~knuth/taocp.html" },
+    { "title": "Cormen, Leiserson, Rivest and Stein, Introduction to Algorithms, chapters 2 and 4", "url": "https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/" },
+    { "title": "Tim Peters, listsort.txt: the description of Timsort in the CPython source", "url": "https://github.com/python/cpython/blob/main/Objects/listsort.txt" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}
