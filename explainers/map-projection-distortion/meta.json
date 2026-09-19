@@ -1,0 +1,17 @@
+{
+  "slug": "map-projection-distortion",
+  "title": "Every Flat Map Is Wrong, and You Pick How",
+  "domain": "mathematics",
+  "difficulty": 3,
+  "summary": "Drag one circle around the globe across five projections and watch it stretch, shear or hold its area, with both principal scale factors read straight off the projection's derivatives.",
+  "prerequisites": [],
+  "tags": ["map-projection", "tissot-indicatrix", "conformal", "equal-area", "differential-geometry", "mercator"],
+  "interaction_pattern": "spatial-explore",
+  "sources": [
+    { "title": "Snyder, Map Projections: A Working Manual, USGS Professional Paper 1395 (1987)", "url": "https://pubs.usgs.gov/pp/1395/report.pdf" },
+    { "title": "Tissot, Memoire sur la representation des surfaces (1881)", "url": "https://archive.org/details/mmoiresurlarep00tiss" },
+    { "title": "Gauss, Disquisitiones generales circa superficies curvas (1827), the Theorema Egregium", "url": "https://archive.org/details/disquisitionesg00gausgoog" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}
