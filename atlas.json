@@ -1,6 +1,6 @@
 {
   "generated_at": "2026-09-19",
-  "count": 43,
+  "count": 47,
   "domains": {
     "biology": [
       "enzyme-michaelis-menten",
@@ -14,6 +14,7 @@
       "reaction-rate-order"
     ],
     "computer-science": [
+      "big-o-crossover",
       "dijkstra-vs-astar",
       "floating-point-precision",
       "quicksort-pivot-choice",
@@ -40,12 +41,14 @@
       "tragedy-of-the-commons"
     ],
     "information-theory": [
+      "arithmetic-coding-interval",
       "hamming-code",
       "huffman-coding",
       "shannon-channel-capacity"
     ],
     "linguistics": [
       "levenshtein-distance",
+      "markov-text-order",
       "sound-change-chain-shift"
     ],
     "mathematics": [
@@ -68,6 +71,7 @@
     ],
     "statistics": [
       "central-limit-theorem",
+      "confidence-interval-coverage",
       "regression-to-the-mean",
       "simpsons-paradox"
     ]
@@ -76,17 +80,53 @@
     "build-from-parts": 5,
     "compare-side-by-side": 4,
     "drag-parameter": 4,
-    "draw-input": 3,
+    "draw-input": 4,
     "guess-then-reveal": 4,
-    "live-code": 2,
+    "live-code": 3,
     "perturb-and-observe": 4,
-    "race-two-methods": 3,
+    "race-two-methods": 4,
     "spatial-explore": 4,
-    "step-through": 3,
+    "step-through": 4,
     "time-scrubber": 4,
     "tune-to-match": 3
   },
   "explainers": [
+    {
+      "slug": "arithmetic-coding-interval",
+      "title": "A Message Is One Number Between Zero and One",
+      "domain": "information-theory",
+      "difficulty": 3,
+      "summary": "Step an arithmetic coder forward one symbol at a time and watch a single interval narrow until its width is the probability of the whole message.",
+      "prerequisites": [],
+      "tags": [
+        "arithmetic-coding",
+        "huffman-coding",
+        "entropy",
+        "data-compression",
+        "information-content"
+      ],
+      "interaction_pattern": "step-through",
+      "sources": [
+        {
+          "title": "Arithmetic coding",
+          "url": "https://en.wikipedia.org/wiki/Arithmetic_coding"
+        },
+        {
+          "title": "Huffman coding",
+          "url": "https://en.wikipedia.org/wiki/Huffman_coding"
+        },
+        {
+          "title": "Shannon's source coding theorem",
+          "url": "https://en.wikipedia.org/wiki/Shannon%27s_source_coding_theorem"
+        },
+        {
+          "title": "Kraft–McMillan inequality",
+          "url": "https://en.wikipedia.org/wiki/Kraft%E2%80%93McMillan_inequality"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
     {
       "slug": "auction-formats-revenue",
       "title": "Two Auctions, Two Sets of Bids, One Revenue",
@@ -149,6 +189,41 @@
       "assertions_count": 12
     },
     {
+      "slug": "big-o-crossover",
+      "title": "The Slower Algorithm Wins For A While",
+      "domain": "computer-science",
+      "difficulty": 2,
+      "summary": "Race insertion sort against merge sort, move the constant factor merge sort pays, and watch the size where the quadratic algorithm finally loses slide across the range real libraries tune for.",
+      "prerequisites": [
+        "quicksort-pivot-choice"
+      ],
+      "tags": [
+        "algorithms",
+        "sorting",
+        "complexity",
+        "insertion-sort",
+        "merge-sort",
+        "constant-factors"
+      ],
+      "interaction_pattern": "race-two-methods",
+      "sources": [
+        {
+          "title": "Knuth, The Art of Computer Programming, Volume 3: Sorting and Searching, section 5.2.4",
+          "url": "https://www-cs-faculty.stanford.edu/~knuth/taocp.html"
+        },
+        {
+          "title": "Cormen, Leiserson, Rivest and Stein, Introduction to Algorithms, chapters 2 and 4",
+          "url": "https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/"
+        },
+        {
+          "title": "Tim Peters, listsort.txt: the description of Timsort in the CPython source",
+          "url": "https://github.com/python/cpython/blob/main/Objects/listsort.txt"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
       "slug": "central-limit-theorem",
       "title": "Draw Any Population You Like",
       "domain": "statistics",
@@ -203,6 +278,41 @@
         {
           "title": "Doubling time",
           "url": "https://en.wikipedia.org/wiki/Doubling_time"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
+      "slug": "confidence-interval-coverage",
+      "title": "Your Interval Either Contains It Or It Does Not",
+      "domain": "statistics",
+      "difficulty": 3,
+      "summary": "Draw a population, then watch a hundred confidence intervals appear and roughly five of them miss. The ninety-five is a property of the recipe, not of the interval in front of you.",
+      "prerequisites": [
+        "central-limit-theorem"
+      ],
+      "tags": [
+        "confidence-interval",
+        "coverage",
+        "sampling",
+        "students-t",
+        "skewness",
+        "inference"
+      ],
+      "interaction_pattern": "draw-input",
+      "sources": [
+        {
+          "title": "Neyman, Outline of a Theory of Statistical Estimation Based on the Classical Theory of Probability (1937)",
+          "url": "https://royalsocietypublishing.org/doi/10.1098/rsta.1937.0005"
+        },
+        {
+          "title": "NIST/SEMATECH e-Handbook of Statistical Methods, section 1.3.6.7.2: critical values of the t distribution",
+          "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3672.htm"
+        },
+        {
+          "title": "Morey, Hoekstra, Rouder, Lee and Wagenmakers, The Fallacy of Placing Confidence in Confidence Intervals (2016)",
+          "url": "https://link.springer.com/article/10.3758/s13423-015-0947-8"
         }
       ],
       "created_at": "2026-09-19",
@@ -676,6 +786,41 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 12
+    },
+    {
+      "slug": "markov-text-order",
+      "title": "Order Two Is Babble, Order Four Is Plagiarism",
+      "domain": "linguistics",
+      "difficulty": 2,
+      "summary": "Paste a training text, slide the memory of a Markov model from one character to eight, and watch its output cross from noise into verbatim quotation with almost nothing in between.",
+      "prerequisites": [
+        "shannon-channel-capacity"
+      ],
+      "tags": [
+        "markov-chain",
+        "language-model",
+        "n-gram",
+        "entropy",
+        "memorisation",
+        "text-generation"
+      ],
+      "interaction_pattern": "live-code",
+      "sources": [
+        {
+          "title": "Shannon, A Mathematical Theory of Communication (1948), section 3 on n-gram approximations to English",
+          "url": "https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf"
+        },
+        {
+          "title": "Jurafsky and Martin, Speech and Language Processing, chapter 3: N-gram Language Models",
+          "url": "https://web.stanford.edu/~jurafsky/slp3/3.pdf"
+        },
+        {
+          "title": "Carlini and others, Quantifying Memorization Across Neural Language Models (2023)",
+          "url": "https://arxiv.org/abs/2202.07646"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
     },
     {
       "slug": "matrix-determinant-area",
