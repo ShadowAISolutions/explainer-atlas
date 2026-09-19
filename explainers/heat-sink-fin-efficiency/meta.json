@@ -1,0 +1,16 @@
+{
+  "slug": "heat-sink-fin-efficiency",
+  "title": "The Far End of the Fin Is Cold",
+  "domain": "engineering",
+  "difficulty": 3,
+  "summary": "A longer cooling fin always dissipates more heat and always dissipates less per millimetre of metal. Put two fins side by side and watch the second one waste its length.",
+  "prerequisites": [],
+  "tags": ["engineering", "heat-transfer", "conduction", "convection", "diminishing-returns", "optimisation"],
+  "interaction_pattern": "compare-side-by-side",
+  "sources": [
+    { "title": "Incropera and DeWitt, Fundamentals of Heat and Mass Transfer, chapter 3: extended surfaces", "url": "https://archive.org/details/fundamentalsofhe0000incr" },
+    { "title": "Schneider, Conduction Heat Transfer (fin efficiency and the corrected length)", "url": "https://archive.org/details/conductionheattr0000schn" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}

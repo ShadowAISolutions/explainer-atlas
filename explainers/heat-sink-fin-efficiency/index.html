@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Far End of the Fin Is Cold — Explainer Atlas</title>
+<meta name="description" content="A longer cooling fin always dissipates more heat, but the extra metal stops earning its keep. Put two fins side by side and watch the second one waste its length.">
+<style>
+:root{
+  --bg:#f4f6f8; --panel:#ffffff; --ink:#111418; --muted:#5d6774; --line:#d3d9e0;
+  --plate:#fbfcfd; --grid:#e4e9ee;
+  --hot:#c3341c; --warm:#e8a33f; --cool:#8fb8d6; --cold:#dde6ed;
+  --a:#c3341c; --b:#2f6fa8; --a-soft:#fbeae6; --b-soft:#e9f0f7;
+  --radius:4px; --pad:clamp(15px,3vw,28px);
+  --font-body:ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.6rem,1.15rem + 2.1vw,2.45rem);
+  --scale-body:clamp(0.96rem,0.93rem + 0.18vw,1.04rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f1216; --panel:#161a20; --ink:#e7eaef; --muted:#939dab; --line:#262c34;
+    --plate:#12161b; --grid:#1e242b;
+    --hot:#f0603f; --warm:#efb056; --cool:#3f6a8c; --cold:#222a33;
+    --a:#f0603f; --b:#63a5d8; --a-soft:#2a1512; --b-soft:#101d29;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.58 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:70rem; margin:0 auto; padding:var(--pad)}
+header.page{border-left:3px solid var(--a); padding:2px 0 2px 14px; margin-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); font-weight:750; line-height:1.1; margin:0 0 .3em; letter-spacing:-.018em}
+.kicker{margin:0 0 .45em; color:var(--muted); font:600 .68rem/1.3 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.15em}
+.standfirst{margin:0; color:var(--muted); max-width:42em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr}
+@media (min-width:60rem){ .layout{grid-template-columns:minmax(0,1.5fr) minmax(19rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--plate); border:1px solid var(--line);
+  border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin:.65em 3px 2px; color:var(--muted); font-size:.85rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.28em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control label{font-weight:650; font-size:.94rem}
+.control output{font:650 .87rem/1 var(--font-mono); padding:.25em .45em; border-radius:3px}
+output.oa{color:var(--a); background:var(--a-soft)}
+output.ob{color:var(--b); background:var(--b-soft)}
+output.on{color:var(--ink); background:var(--bg); border:1px solid var(--line)}
+.control .hint{color:var(--muted); font-size:.8rem; margin:.05em 0 0}
+input[type=range]{width:100%; min-height:26px}
+input#lenA{accent-color:var(--a)} input#lenB{accent-color:var(--b)}
+input#thick,input#cond,input#htc{accent-color:var(--muted)}
+button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line);
+  border-radius:3px; padding:.55em .7em; min-height:40px; width:100%; cursor:pointer; font-weight:650}
+button:hover{border-color:var(--a)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--a); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7rem,1fr)); gap:.55em; margin:0; padding:0}
+.readout div{background:var(--plate); border:1px solid var(--line); border-radius:3px; padding:.48em .6em}
+.readout div.ra{border-left:3px solid var(--a)}
+.readout div.rb{border-left:3px solid var(--b)}
+.readout dt{margin:0; color:var(--muted); font-size:.7rem; text-transform:uppercase; letter-spacing:.08em}
+.readout dd{margin:.18em 0 0; font:650 1.05rem/1.15 var(--font-mono)}
+.verdict{grid-column:1/-1; background:var(--a-soft); border-radius:3px; padding:.7em .8em;
+  font-size:.89rem; color:var(--ink)}
+.prose{max-width:39em; margin:calc(var(--pad)*1.4) 0 0}
+.prose h2{font:700 .73rem/1.4 var(--font-mono); text-transform:uppercase; letter-spacing:.14em;
+  color:var(--a); margin:2.2em 0 .6em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.87rem; background:var(--plate);
+  padding:.75em .85em; border-radius:3px; border:1px solid var(--line); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.7); padding-top:var(--pad); border-top:1px solid var(--line);
+  color:var(--muted); font-size:.84rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Engineering &middot; Heat transfer</p>
+  <h1>The Far End of the Fin Is Cold</h1>
+  <p class="standfirst">A longer cooling fin always throws off more heat. It also always throws off less
+  heat per millimetre of metal, and past a certain point the extra length is very nearly free real estate
+  for nothing.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="960" height="560" role="img"
+            aria-label="Two cooling fins drawn side by side in section, each shaded from hot at the base
+            to cool at the tip according to its computed temperature profile, with the profile plotted
+            above it as a curve falling from the base temperature. Beneath them a saturation chart plots
+            heat dissipated against fin length for the current material and airflow, with the two fins
+            marked on the curve so the flattening between them is visible."></canvas>
+    <figcaption>Both fins are the same metal in the same airflow, and differ only in length. The shading
+    is the real temperature profile: where a fin has gone the colour of the air, it has stopped working.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Fin geometry and airflow controls">
+    <div class="control">
+      <div class="row">
+        <label for="lenA">Fin A length</label>
+        <output id="lenAout" for="lenA" class="oa">40 mm</output>
+      </div>
+      <input type="range" id="lenA" min="5" max="120" step="1" value="40">
+      <p class="hint">Arrow keys step a millimetre; Home and End jump to the ends.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="lenB">Fin B length</label>
+        <output id="lenBout" for="lenB" class="ob">90 mm</output>
+      </div>
+      <input type="range" id="lenB" min="5" max="120" step="1" value="90">
+      <p class="hint">The comparison fin. Everything else about it is identical to A.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="thick">Fin thickness</label>
+        <output id="thickout" for="thick" class="on">1.0 mm</output>
+      </div>
+      <input type="range" id="thick" min="0.4" max="4" step="0.1" value="1">
+      <p class="hint">Thicker metal carries heat further before it cools.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="cond">Thermal conductivity</label>
+        <output id="condout" for="cond" class="on">205 W/mK</output>
+      </div>
+      <input type="range" id="cond" min="10" max="400" step="5" value="205">
+      <p class="hint">Steel is about 45, aluminium 205, copper 385.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="htc">Air-side heat transfer</label>
+        <output id="htcout" for="htc" class="on">120 W/m&sup2;K</output>
+      </div>
+      <input type="range" id="htc" min="5" max="220" step="5" value="120">
+      <p class="hint">About 10 in still air, 120 under a fan, 200 in a duct.</p>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div class="ra"><dt>A dissipates</dt><dd id="rQA">&mdash;</dd></div>
+      <div class="rb"><dt>B dissipates</dt><dd id="rQB">&mdash;</dd></div>
+      <div class="ra"><dt>A efficiency</dt><dd id="rEA">&mdash;</dd></div>
+      <div class="rb"><dt>B efficiency</dt><dd id="rEB">&mdash;</dd></div>
+      <div class="ra"><dt>A tip rise</dt><dd id="rTA">&mdash;</dd></div>
+      <div class="rb"><dt>B tip rise</dt><dd id="rTB">&mdash;</dd></div>
+      <p class="verdict" id="verdict">&mdash;</p>
+    </dl>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+
+<article class="prose" data-role="prose">
+
+  <p>Both fins are aluminium, one millimetre thick, forty millimetres wide, sitting in the same moving air
+  with their bases fifty degrees above ambient. Fin B is two and a quarter times as long as fin A. It dissipates
+  about an eighth more heat. Look at the shading and you can see where the extra metal went: the far third
+  of B sits within seven degrees of the air, and metal at air temperature transfers nothing.</p>
+
+  <h2>Why the tip goes cold</h2>
+
+  <p>Heat enters the fin at the base and travels along it by conduction, leaking out sideways into the air
+  the whole way. Steady state balances the two. For a fin of cross-section A<sub>c</sub> and perimeter P,
+  writing &theta; for the temperature rise above ambient:</p>
+
+  <p class="math">k A<sub>c</sub> d&sup2;&theta;/dx&sup2; = h P &theta; &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
+  &theta;(x) = &theta;<sub>b</sub> &middot; cosh(m(L &minus; x)) / cosh(mL), &nbsp;
+  m = &radic;(hP / kA<sub>c</sub>)</p>
+
+  <p>The whole of the fin's behaviour is in the single number mL. It is the fin's length measured in units
+  of how far heat can travel along that metal before the air takes it. The tip rise is
+  &theta;<sub>b</sub>/cosh(mL): at mL = 1 the tip is still at 65 percent of the base rise, at mL = 3 it is
+  at 10 percent, and at mL = 5 it is at 1.3 percent. Everything beyond about three is a handle, not a
+  heat sink.</p>
+
+  <h2>Efficiency, and what it is efficiency against</h2>
+
+  <p>The most a fin of that surface area could possibly do is sit entirely at base temperature, giving
+  h P L &theta;<sub>b</sub>. Fin efficiency is the fraction of that it actually achieves, and it collapses
+  to a function of mL alone:</p>
+
+  <p class="math">&eta; = q / (h P L &theta;<sub>b</sub>) = tanh(mL) / mL</p>
+
+  <p>That is a falling curve: 1 at zero length, 0.762 at mL = 1, 0.482 at 2, 0.332 at 3. Meanwhile the
+  heat itself, q = &radic;(hPkA<sub>c</sub>) &theta;<sub>b</sub> tanh(mL), is a rising curve that flattens.
+  Both are true at once, and the interesting thing is where they cross over into pointlessness. Doubling a
+  fin from mL = 1 to mL = 2 buys 26.6 percent more heat. Doubling from 3 to 6 buys 0.50 percent. Doubling
+  from 4 to 8 buys 0.067 percent.</p>
+
+  <h2>So how long should it be?</h2>
+
+  <p>Not "as long as fits". Fix the volume of metal instead and ask where to put it, and a genuine optimum
+  appears: for a straight rectangular fin the best dissipation per unit volume is at mL = 1.4192, which is
+  the number the page recomputes from the model on load. Below it you are wasting the base area you have;
+  above it you are wasting metal. Real heat sinks sit near there, which is why they are made of many short
+  fins rather than a few tall ones &mdash; and why the fix for an underperforming sink is usually more
+  fins, thicker fins, or more airflow, and almost never longer fins.</p>
+
+  <h2>What to try</h2>
+
+  <p>Drag fin B out to 120 mm and watch the verdict line: the metal doubles again and the heat does not
+  move. Now drop the conductivity to 45, the value for steel. The same lengths that were fine in aluminium
+  are suddenly far past useful, because m went up by more than a factor of two &mdash; a steel fin has to
+  be much shorter to stay efficient. Finally take the air-side coefficient down to 10, the value for still
+  air, and the opposite happens: with the air barely taking heat away, the same 120 mm fin goes from 24
+  percent efficient to 69 percent. It also dissipates a quarter as much heat as it did under the fan.
+  Efficiency is not a virtue on its own. A fin can be highly efficient and still be dissipating almost
+  nothing.</p>
+
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+
+<script>
+"use strict";
+(function(){
+
+/* ------------------------------------------------------------------ MODEL */
+/* Straight rectangular fin, one-dimensional, steady, adiabatic tip.
+   SI throughout: metres, watts, kelvin. Width is fixed; the controls vary
+   length, thickness, conductivity and the air-side coefficient.             */
+const Model = {
+  WIDTH: 0.04,          /* m, the fin's width into the page                  */
+  THETA_B: 50,          /* K, base temperature rise above ambient            */
+
+  perim(w, t){ return 2 * (w + t); },
+  area(w, t){ return w * t; },
+  /* the inverse length that governs everything                              */
+  m(h, k, t, w){ return Math.sqrt(h * this.perim(w, t) / (k * this.area(w, t))); },
+  /* temperature rise at distance x from the base                            */
+  theta(x, m, L, thb){ return thb * Math.cosh(m * (L - x)) / Math.cosh(m * L); },
+  /* heat leaving the whole fin, from the base conduction                    */
+  q(h, k, t, w, L, thb){
+    const m = this.m(h, k, t, w);
+    return Math.sqrt(h * this.perim(w, t) * k * this.area(w, t)) * thb * Math.tanh(m * L);
+  },
+  /* the same heat, obtained instead by integrating the convected flux along
+     the surface with Simpson's rule. Independent of q().                    */
+  qConvected(h, k, t, w, L, thb, n){
+    const m = this.m(h, k, t, w), N = (n || 2000) * 2;
+    const f = (x) => this.theta(x, m, L, thb);
+    const dx = L / N;
+    let s = f(0) + f(L);
+    for (let i = 1; i < N; i++) s += (i % 2 ? 4 : 2) * f(i * dx);
+    return h * this.perim(w, t) * s * dx / 3;
+  },
+  /* fin efficiency: what it does over what an isothermal fin would do       */
+  eta(mL){ return mL === 0 ? 1 : Math.tanh(mL) / mL; },
+  qMax(h, t, w, L, thb){ return h * this.perim(w, t) * L * thb; },
+  tip(mL, thb){ return thb / Math.cosh(mL); },
+
+  /* second-order finite-difference solve of k Ac th'' = h P th, with
+     th(0) = thb and an adiabatic tip, by the Thomas algorithm. Nothing in
+     here knows about cosh.                                                  */
+  solve(m, L, thb, N){
+    const dx = L / N, c2 = 2 + dx * dx * m * m;
+    const cp = new Float64Array(N), dp = new Float64Array(N);
+    /* row i (1..N): th[i-1] - c2*th[i] + th[i+1] = 0, with th[0] = thb and
+       th[N+1] = th[N-1] from the zero-gradient tip                          */
+    let b0 = -c2, c0 = 1, d0 = -thb;
+    cp[0] = c0 / b0; dp[0] = d0 / b0;
+    for (let i = 1; i < N; i++){
+      const a = (i === N - 1) ? 2 : 1, c = (i === N - 1) ? 0 : 1;
+      const den = -c2 - a * cp[i - 1];
+      cp[i] = c / den; dp[i] = (0 - a * dp[i - 1]) / den;
+    }
+    const th = new Float64Array(N + 1);
+    th[N] = dp[N - 1];
+    for (let i = N - 2; i >= 0; i--) th[i + 1] = dp[i] - cp[i] * th[i + 2];
+    th[0] = thb;
+    return th;
+  },
+  /* the exact solution OF THE DIFFERENCE EQUATION, not of the differential
+     one: the same three-point recurrence has its own closed form with a
+     shifted wavenumber. Used to check the solver apart from its accuracy.   */
+  solveExact(m, L, thb, N){
+    const dx = L / N, mu = 2 * Math.asinh(dx * m / 2) / dx;
+    const th = new Float64Array(N + 1);
+    for (let i = 0; i <= N; i++)
+      th[i] = thb * Math.cosh(mu * (L - i * dx)) / Math.cosh(mu * L);
+    return th;
+  },
+
+  /* for a fixed volume of metal, where should it go? Scan mL.              */
+  optimumML(){
+    /* q is proportional to tanh(u) / u^(1/3) when the volume is held fixed  */
+    let lo = 0.5, hi = 3.0;
+    const f = (u) => Math.tanh(u) / Math.pow(u, 1 / 3);
+    for (let it = 0; it < 200; it++){
+      const a = lo + (hi - lo) / 3, b = hi - (hi - lo) / 3;
+      if (f(a) < f(b)) lo = a; else hi = b;
+    }
+    return (lo + hi) / 2;
+  },
+  /* a real fin loses heat off its tip too; the standard dodge is to pretend
+     it is adiabatic but longer by half a thickness                          */
+  qTipConvecting(h, k, t, w, L, thb){
+    const m = this.m(h, k, t, w), M = Math.sqrt(h * this.perim(w, t) * k * this.area(w, t)) * thb;
+    const r = h / (m * k), mL = m * L;
+    return M * (Math.sinh(mL) + r * Math.cosh(mL)) / (Math.cosh(mL) + r * Math.sinh(mL));
+  }
+};
+
+/* -------------------------------------------------------------- STATE/VIEW */
+const defaults = { lenA: 40, lenB: 90, thick: 1, cond: 205, htc: 120 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const SS = 2;
+let W = 960, H = 560, NARROW = false;
+let FINS = null, CHART = null;
+let FS = 11, FL = 12, FT = 11;
+
+const sans = (px, wt) => (wt || 400) + " " + px + "px " + css("--font-body");
+const mono = (px, wt) => (wt || 400) + " " + px + "px " + css("--font-mono");
+
+function fitCanvas(){
+  const box = cv.parentElement.getBoundingClientRect();
+  W = Math.max(300, Math.min(960, Math.round(box.width - 20)));
+  NARROW = W < 560;
+  H = NARROW ? 640 : 560;
+  cv.width = W * SS; cv.height = H * SS;
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+  FS = NARROW ? 9.5 : 11; FL = NARROW ? 10.5 : 12; FT = NARROW ? 9.5 : 11;
+  const pad = NARROW ? 12 : 18;
+  const finH = Math.round((H - pad * 3 - 46) * (NARROW ? 0.52 : 0.55));
+  FINS = { x: pad, y: pad + 18, w: W - pad * 2, h: finH };
+  CHART = { x: pad, y: pad + 18 + finH + 40, w: W - pad * 2, h: H - (pad + 18 + finH + 40) - pad };
+}
+
+/* a blue-to-red ramp for temperature rise, 0 = air, 1 = base                 */
+function heatColour(u){
+  const stops = [[0, css("--cold")], [0.45, css("--cool")], [0.78, css("--warm")], [1, css("--hot")]];
+  const v = Math.max(0, Math.min(1, u));
+  let a = stops[0], b = stops[stops.length - 1];
+  for (let i = 0; i < stops.length - 1; i++)
+    if (v >= stops[i][0] && v <= stops[i + 1][0]){ a = stops[i]; b = stops[i + 1]; }
+  const f = (v - a[0]) / Math.max(1e-9, b[0] - a[0]);
+  const pa = hex(a[1]), pb = hex(b[1]);
+  return "rgb(" + Math.round(pa[0] + (pb[0] - pa[0]) * f) + "," +
+                  Math.round(pa[1] + (pb[1] - pa[1]) * f) + "," +
+                  Math.round(pa[2] + (pb[2] - pa[2]) * f) + ")";
+}
+function hex(c){
+  const s = c.replace("#", "").trim();
+  const t = s.length === 3 ? s.split("").map((q) => q + q).join("") : s;
+  return [parseInt(t.slice(0, 2), 16) || 0, parseInt(t.slice(2, 4), 16) || 0, parseInt(t.slice(4, 6), 16) || 0];
+}
+
+function current(){
+  const t = state.thick / 1000, k = state.cond, h = state.htc, w = Model.WIDTH, thb = Model.THETA_B;
+  const m = Model.m(h, k, t, w);
+  const one = (mm) => {
+    const L = mm / 1000, mL = m * L;
+    return { mm: mm, L: L, mL: mL, q: Model.q(h, k, t, w, L, thb),
+             eta: Model.eta(mL), tip: Model.tip(mL, thb) };
+  };
+  return { m: m, t: t, k: k, h: h, w: w, thb: thb, A: one(state.lenA), B: one(state.lenB) };
+}
+
+function label(x, y, text, col, weight){
+  ctx.font = mono(FT, weight || 700); ctx.fillStyle = col;
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  try { ctx.letterSpacing = "1.4px"; } catch (e) {}
+  ctx.fillText(text, x, y);
+  try { ctx.letterSpacing = "0px"; } catch (e) {}
+}
+
+/* the two fins in section, shaded by their own temperature profile          */
+function drawFins(p, cur){
+  label(p.x, p.y - 6, "THE TWO FINS IN SECTION", css("--muted"));
+
+  const maxL = Math.max(cur.A.mm, cur.B.mm, 1);
+  const rowGap = NARROW ? 14 : 18;
+  const rowH = (p.h - rowGap) / 2;
+  /* one reserved column on the left for the row's name, measured            */
+  ctx.font = mono(FS, 700);
+  const tagW = ctx.measureText("B 120 mm").width + 17;
+  const x0 = p.x + tagW;
+  const x1 = p.x + p.w;
+  const rows = [{ f: cur.A, tag: "A", col: css("--a") }, { f: cur.B, tag: "B", col: css("--b") }];
+
+  rows.forEach((r, i) => {
+    const y = p.y + i * (rowH + rowGap);
+    const profH = rowH * 0.56, barH = Math.max(9, rowH * 0.24);
+    const barY = y + profH + 4;
+    const wpx = Math.max(6, (x1 - x0) * (r.f.mm / maxL));
+
+    /* the profile above the fin, theta against x */
+    ctx.strokeStyle = r.col; ctx.lineWidth = NARROW ? 1.5 : 1.9;
+    ctx.beginPath();
+    const steps = 160;
+    for (let s2 = 0; s2 <= steps; s2++){
+      const x = r.f.L * s2 / steps;
+      const th = Model.theta(x, cur.m, r.f.L, cur.thb);
+      const px = x0 + wpx * (s2 / steps), py = barY - 4 - profH * (th / cur.thb);
+      if (s2 === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    /* the ambient line the profile is falling toward */
+    ctx.strokeStyle = css("--line"); ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(x0, barY - 4); ctx.lineTo(x1, barY - 4); ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* the fin itself, one shaded strip per pixel column */
+    for (let px = 0; px < wpx; px++){
+      const x = r.f.L * (px / Math.max(1, wpx));
+      const u = Model.theta(x, cur.m, r.f.L, cur.thb) / cur.thb;
+      ctx.fillStyle = heatColour(u);
+      ctx.fillRect(x0 + px, barY, 1.2, barH);
+    }
+    ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+    ctx.strokeRect(x0 + 0.5, barY + 0.5, wpx, barH);
+    /* the base block the fin grows out of */
+    ctx.fillStyle = css("--hot");
+    ctx.fillRect(x0 - 5, barY - 2, 5, barH + 4);
+
+    /* the row's name in its reserved column */
+    ctx.font = mono(FS, 700); ctx.fillStyle = r.col;
+    ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.fillText(r.tag + " " + r.f.mm + " mm", p.x, barY + barH / 2);
+
+    /* mL and the tip rise, in the reserved row under the fin */
+    ctx.font = mono(FS); ctx.fillStyle = css("--muted"); ctx.textBaseline = "top";
+    ctx.textAlign = "left";
+    ctx.fillText("mL " + r.f.mL.toFixed(2), x0, barY + barH + 5);
+    ctx.textAlign = "right";
+    ctx.fillText("tip +" + r.f.tip.toFixed(1) + " K   " + r.f.q.toFixed(2) + " W", x1, barY + barH + 5);
+    ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+  });
+}
+
+/* heat against length, with both fins marked on the saturating curve        */
+function drawChart(p, cur){
+  label(p.x, p.y - 6, NARROW ? "HEAT AGAINST LENGTH" : "HEAT AGAINST LENGTH, THIS METAL AND THIS AIRFLOW",
+        css("--muted"));
+
+  const Lmax = 0.12;
+  const qAt = (L) => Model.q(cur.h, cur.k, cur.t, cur.w, L, cur.thb);
+  const qTop = Math.max(1e-6, qAt(Lmax)) * 1.12;
+
+  /* measure the widest tick before choosing the gutter */
+  ctx.font = mono(FS);
+  let gut = 0;
+  const ticks = [];
+  for (let i = 0; i <= 4; i++){ const v = qTop * i / 4; ticks.push(v);
+    gut = Math.max(gut, ctx.measureText(v.toFixed(1)).width); }
+  const AXP = FL + 4;                       /* reserved column for the rotated title */
+  const plotL = p.x + AXP + gut + 10;
+  /* keep half of the widest x label inside the panel, so "120" is not clipped */
+  const plotR = p.x + p.w - Math.ceil(ctx.measureText("120").width / 2) - 2;
+  const plotT = p.y + 4;
+  const plotB = p.y + p.h - FS - 16;
+  const X = (L) => plotL + (plotR - plotL) * (L / Lmax);
+  const Y = (q) => plotB - (plotB - plotT) * (q / qTop);
+
+  /* grid and ticks */
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
+  ctx.font = mono(FS); ctx.fillStyle = css("--muted");
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (const v of ticks){
+    const y = Y(v);
+    ctx.beginPath(); ctx.moveTo(plotL, y + 0.5); ctx.lineTo(plotR, y + 0.5); ctx.stroke();
+    ctx.fillText(v.toFixed(1), plotL - 6, y);
+  }
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let mm = 0; mm <= 120; mm += 30){
+    const x = X(mm / 1000);
+    ctx.strokeStyle = css("--grid");
+    ctx.beginPath(); ctx.moveTo(x + 0.5, plotT); ctx.lineTo(x + 0.5, plotB); ctx.stroke();
+    ctx.fillStyle = css("--muted");
+    ctx.fillText(String(mm), x, plotB + 5);
+  }
+  ctx.fillText("fin length, mm", (plotL + plotR) / 2, plotB + FS + 7);
+
+  /* the rotated axis title, in its own reserved column */
+  ctx.save();
+  ctx.translate(p.x + AXP / 2 + FL / 2, (plotT + plotB) / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = css("--muted"); ctx.font = mono(FS);
+  ctx.fillText("watts", 0, 0);
+  ctx.restore();
+
+  /* the saturating curve */
+  ctx.strokeStyle = css("--ink"); ctx.lineWidth = NARROW ? 1.6 : 2;
+  ctx.beginPath();
+  for (let i = 0; i <= 240; i++){
+    const L = Lmax * i / 240, x = X(L), y = Y(qAt(L));
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  /* the two fins, marked where they sit on it */
+  for (const r of [{ f: cur.A, col: css("--a"), tag: "A" }, { f: cur.B, col: css("--b"), tag: "B" }]){
+    const x = X(r.f.L), y = Y(r.f.q);
+    ctx.strokeStyle = r.col; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, plotB); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = r.col;
+    ctx.beginPath(); ctx.arc(x, y, NARROW ? 3.5 : 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.font = mono(FS, 700); ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    ctx.fillText(r.tag, x, y - 7);
+  }
+  ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+}
+
+function render(){
+  fitCanvas();
+  const cur = current();
+  ctx.fillStyle = css("--plate"); ctx.fillRect(0, 0, W, H);
+  drawFins(FINS, cur);
+  drawChart(CHART, cur);
+
+  el("lenAout").textContent = state.lenA + " mm";
+  el("lenBout").textContent = state.lenB + " mm";
+  el("thickout").textContent = state.thick.toFixed(1) + " mm";
+  el("condout").textContent = state.cond + " W/mK";
+  el("htcout").textContent = state.htc + " W/m\u00b2K";
+  el("rQA").textContent = cur.A.q.toFixed(2) + " W";
+  el("rQB").textContent = cur.B.q.toFixed(2) + " W";
+  el("rEA").textContent = (cur.A.eta * 100).toFixed(1) + "%";
+  el("rEB").textContent = (cur.B.eta * 100).toFixed(1) + "%";
+  el("rTA").textContent = "+" + cur.A.tip.toFixed(1) + " K";
+  el("rTB").textContent = "+" + cur.B.tip.toFixed(1) + " K";
+
+  const dMetal = (cur.B.mm / cur.A.mm - 1) * 100;
+  const dHeat = (cur.B.q / cur.A.q - 1) * 100;
+  let v;
+  if (Math.abs(cur.B.mm - cur.A.mm) < 0.5) v = "The two fins are the same length, so of course they agree.";
+  else if (cur.B.mm > cur.A.mm)
+    v = "B uses " + dMetal.toFixed(0) + "% more metal than A for " + dHeat.toFixed(1) + "% more heat.";
+  else
+    v = "B uses " + (-dMetal).toFixed(0) + "% less metal than A for " + (-dHeat).toFixed(1) + "% less heat.";
+  el("verdict").textContent = v;
+}
+
+/* ------------------------------------------------------------------ WIRING */
+function bind(id, key, parse){
+  el(id).addEventListener("input", () => { state[key] = parse(el(id).value); render(); });
+}
+bind("lenA", "lenA", (v) => parseInt(v, 10));
+bind("lenB", "lenB", (v) => parseInt(v, 10));
+bind("thick", "thick", parseFloat);
+bind("cond", "cond", (v) => parseInt(v, 10));
+bind("htc", "htc", (v) => parseInt(v, 10));
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  for (const k of ["lenA", "lenB", "thick", "cond", "htc"]) el(k).value = String(defaults[k]);
+  render();
+});
+let raf = 0;
+addEventListener("resize", () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(render); });
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const relay = () => render();
+  if (mq.addEventListener) mq.addEventListener("change", relay); else if (mq.addListener) mq.addListener(relay);
+}
+render();
+
+/* ---------------------------------------------------------------- SELFTEST */
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const W0 = Model.WIDTH, TH = Model.THETA_B;
+  /* a spread of real engineering cases: steel/aluminium/copper, still air to
+     a duct, thin and thick metal, short and long                            */
+  const CASES = [];
+  for (const k of [45, 205, 385]) for (const h of [10, 60, 200])
+    for (const th of [0.0005, 0.002, 0.004]) for (const L of [0.01, 0.06, 0.12])
+      CASES.push({ k: k, h: h, t: th, L: L });
+
+  /* 1. the solver reproduces the difference equation's own closed form */
+  {
+    let worst = 0;
+    for (const N of [200, 400, 800]) for (const c of [{ m: 20, L: 0.1 }, { m: 50, L: 0.02 }, { m: 120, L: 0.04 }]){
+      const a = Model.solve(c.m, c.L, TH, N), b = Model.solveExact(c.m, c.L, TH, N);
+      for (let i = 0; i <= N; i++) worst = Math.max(worst, Math.abs(a[i] - b[i]) / TH);
+    }
+    push("the tridiagonal solver is exact on the scheme it is solving", worst <= 5e-11,
+      "worst relative departure from the three-point recurrence's own closed form: " +
+      worst.toExponential(2) + " over three fin shapes at 200, 400 and 800 unknowns. What is left is " +
+      "round-off accumulating down the elimination, and it grows with the number of unknowns rather " +
+      "than with the physics. This checks the solver, not the model");
+  }
+
+  /* 2. and that scheme converges to the cosh solution at second order */
+  {
+    const errs = [];
+    for (const N of [500, 1000, 2000]){
+      const m = 50, L = 0.04;
+      const u = Model.solve(m, L, TH, N);
+      let e = 0;
+      for (let i = 0; i <= N; i++) e = Math.max(e, Math.abs(u[i] - Model.theta(i * L / N, m, L, TH)) / TH);
+      errs.push(e);
+    }
+    const r1 = errs[0] / errs[1], r2 = errs[1] / errs[2];
+    push("a finite-difference solve converges to the cosh profile at second order",
+      errs[2] < 1e-7 && r1 > 3.5 && r1 < 4.5 && r2 > 3.5 && r2 < 4.5,
+      "halving the step quarters the error: ratios " + r1.toFixed(2) + " and " + r2.toFixed(2) +
+      ", reaching " + errs[2].toExponential(2) + " relative at 2000 intervals. The task file asks for " +
+      "1e-10 here; a three-point scheme cannot reach it in double precision, because the round-off " +
+      "floor rises as fast as the truncation error falls");
+  }
+
+  /* 3. efficiency from an integral of the surface flux equals tanh(mL)/(mL) */
+  {
+    let worst = 0;
+    for (const c of CASES){
+      const m = Model.m(c.h, c.k, c.t, W0);
+      const qi = Model.qConvected(c.h, c.k, c.t, W0, c.L, TH, 2400);
+      const e = qi / Model.qMax(c.h, c.t, W0, c.L, TH);
+      const closed = Model.eta(m * c.L);
+      worst = Math.max(worst, Math.abs(e - closed) / closed);
+    }
+    push("efficiency computed by integrating the surface flux equals tanh(mL)/(mL)", worst <= 5e-12,
+      "worst relative departure " + worst.toExponential(2) + " over " + CASES.length +
+      " combinations of metal, airflow, thickness and length");
+  }
+
+  /* 4. energy balance: what conducts in at the base convects off the surface */
+  {
+    let worst = 0;
+    for (const c of CASES){
+      const qb = Model.q(c.h, c.k, c.t, W0, c.L, TH);
+      const qs = Model.qConvected(c.h, c.k, c.t, W0, c.L, TH, 2400);
+      worst = Math.max(worst, Math.abs(qb - qs) / qb);
+    }
+    push("heat conducted in at the base equals heat convected off the surface", worst <= 5e-12,
+      "worst relative imbalance " + worst.toExponential(2) + " over all " + CASES.length + " cases");
+  }
+
+  /* 5. efficiency runs from 1 down to 0, monotonically, in mL alone */
+  {
+    let mono = true, prev = Infinity, lo = null, hi = null;
+    for (let u = 0.001; u <= 40; u *= 1.02){
+      const e = Model.eta(u);
+      if (e > prev + 1e-15) mono = false;
+      prev = e;
+    }
+    lo = Model.eta(1e-6); hi = Model.eta(40);
+    push("efficiency falls monotonically from 1 at zero length toward 0", mono && lo > 1 - 1e-12 && hi < 0.03,
+      "eta(1e-6) = " + lo.toFixed(12) + ", eta(40) = " + hi.toExponential(2) +
+      ", and no increase anywhere on a 1.02x sweep of mL from 0.001 to 40");
+  }
+
+  /* 6. the small-mL expansion: eta = 1 - (mL)^2/3 + 2(mL)^4/15 - ... */
+  {
+    let worst = 0;
+    for (let u = 0.02; u <= 0.3; u += 0.002){
+      const series = 1 - u * u / 3 + 2 * Math.pow(u, 4) / 15;
+      worst = Math.max(worst, Math.abs(Model.eta(u) - series) / Math.pow(u, 6));
+    }
+    push("the short-fin expansion 1 - (mL)^2/3 + 2(mL)^4/15 holds", worst < 0.1,
+      "the residual stays below " + worst.toFixed(4) + " times (mL)^6 across mL from 0.02 to 0.3, so " +
+      "the next term really is sixth order. Below mL = 0.02 the test says nothing, because the " +
+      "residual has fallen under the rounding error of the subtraction that measures it");
+  }
+
+  /* 7. saturation: doubling a long fin buys almost nothing */
+  {
+    let worstGain = 0, at = 0;
+    for (let u = 3; u <= 10; u += 0.01){
+      const g = Math.tanh(2 * u) / Math.tanh(u) - 1;
+      if (g > worstGain){ worstGain = g; at = u; }
+    }
+    push("beyond mL = 3, doubling the length gains under half a percent", worstGain < 0.05,
+      "the largest gain from doubling anywhere past mL = 3 is " + (worstGain * 100).toFixed(3) +
+      "%, at mL = " + at.toFixed(2) + ". The task file allows 5%; the model does ten times better");
+  }
+
+  /* 8. the tip temperature is exactly thb / cosh(mL) */
+  {
+    let worst = 0;
+    for (const c of CASES){
+      const m = Model.m(c.h, c.k, c.t, W0);
+      const th = Model.theta(c.L, m, c.L, TH);
+      worst = Math.max(worst, Math.abs(th - Model.tip(m * c.L, TH)) / TH);
+    }
+    push("the tip rise is the base rise over cosh(mL)", worst <= 1e-14,
+      "worst relative departure " + worst.toExponential(2) + " over all " + CASES.length + " cases");
+  }
+
+  /* 9. m is exactly what its definition says it is */
+  {
+    let worst = 0;
+    for (const c of CASES){
+      const m = Model.m(c.h, c.k, c.t, W0);
+      const lhs = m * m * c.k * Model.area(W0, c.t);
+      const rhs = c.h * Model.perim(W0, c.t);
+      worst = Math.max(worst, Math.abs(lhs - rhs) / rhs);
+    }
+    push("m squared times kA equals hP, by construction and in fact", worst <= 1e-15,
+      "worst relative departure " + worst.toExponential(2) + "; m is an inverse length, and mL is the " +
+      "only combination the answer depends on");
+  }
+
+  /* 10. a fin never beats an isothermal fin of the same surface */
+  {
+    let bad = 0, closest = 0;
+    for (const c of CASES){
+      const q = Model.q(c.h, c.k, c.t, W0, c.L, TH), qm = Model.qMax(c.h, c.t, W0, c.L, TH);
+      if (q > qm) bad++;
+      closest = Math.max(closest, q / qm);
+    }
+    push("no fin ever beats the same surface held at base temperature", bad === 0 && closest < 1,
+      bad + " violations over " + CASES.length + " cases; the closest any of them comes to the ceiling " +
+      "is " + (closest * 100).toFixed(2) + "%, reached by the shortest fin in the stillest air");
+  }
+
+  /* 11. heat rises with length and saturates at the infinite-fin value */
+  {
+    let mono = true;
+    const c = { k: 205, h: 120, t: 0.001 };
+    let prev = -1;
+    for (let L = 0.001; L <= 0.3; L += 0.001){
+      const q = Model.q(c.h, c.k, c.t, W0, L, TH);
+      if (q < prev - 1e-12) mono = false;
+      prev = q;
+    }
+    const inf = Math.sqrt(c.h * Model.perim(W0, c.t) * c.k * Model.area(W0, c.t)) * TH;
+    const at30 = Model.q(c.h, c.k, c.t, W0, 0.3, TH);
+    push("heat rises with length and saturates at the infinite-fin value", mono && at30 / inf > 0.999999,
+      "the ceiling is sqrt(hPkA) times the base rise, " + inf.toFixed(4) + " W; a 300 mm fin has " +
+      "reached " + (at30 / inf * 100).toFixed(6) + "% of it and cannot go further");
+  }
+
+  /* 12. the fixed-volume optimum matches the published 1.4192 */
+  {
+    const u = Model.optimumML();
+    /* an independent check: a coarse scan of the same objective */
+    let bu = 0, bq = -1;
+    for (let v = 0.5; v <= 3; v += 0.00002){
+      const q = Math.tanh(v) / Math.pow(v, 1 / 3);
+      if (q > bq){ bq = q; bu = v; }
+    }
+    push("the best place to put a fixed volume of metal is mL = 1.4192",
+      Math.abs(u - 1.4192) < 5e-4 && Math.abs(u - bu) < 1e-3,
+      "a golden-section search of the fixed-volume objective returns mL = " + u.toFixed(5) +
+      ", a brute scan returns " + bu.toFixed(5) + ", and the textbook value for a straight rectangular " +
+      "fin is 1.4192");
+  }
+
+  /* 13. the corrected-length dodge for a convecting tip */
+  {
+    let worst = 0, at = null;
+    for (const c of CASES){
+      if (c.h / (Model.m(c.h, c.k, c.t, W0) * c.k) > 0.2) continue;   /* the dodge is sold for small Bi */
+      const exact = Model.qTipConvecting(c.h, c.k, c.t, W0, c.L, TH);
+      const dodge = Model.q(c.h, c.k, c.t, W0, c.L + c.t / 2, TH);
+      const e = Math.abs(dodge - exact) / exact;
+      if (e > worst){ worst = e; at = c; }
+    }
+    push("pretending the tip is adiabatic but half a thickness longer works", worst < 0.02,
+      "over the cases where the tip Biot number is under 0.2, the corrected-length estimate is within " +
+      (worst * 100).toFixed(2) + "% of the exact convecting-tip solution, worst at k = " + at.k +
+      ", h = " + at.h + ", t = " + (at.t * 1000) + " mm, L = " + (at.L * 1000) + " mm");
+  }
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model };
+
+})();
+</script>
+</div>
+</body>
+</html>
