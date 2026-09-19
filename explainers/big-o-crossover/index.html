@@ -1,0 +1,863 @@
+<!doctype html>
+<!--
+  Interactive Explainer Atlas — page skeleton.
+  Start EVERY new explainer from this file. Never copy a previous page.
+  Replace every {{PLACEHOLDER}}. Delete the demo model and write your own.
+  Contract: FOUNDATION.md. Rules: CLAUDE.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Slower Algorithm Wins For A While &#8212; Explainer Atlas</title>
+<meta name="description" content="Race insertion sort against merge sort, move the constant factor, and watch the crossover point slide to sizes real libraries care about.">
+<style>
+/* ---- tokens: restate these per page to vary the collection's feel ------- */
+:root{
+  --bg:#fcfbf9; --panel:#ffffff; --ink:#1a1a1a; --muted:#666060; --line:#e5e1dc;
+  --accent:#b4531f; --accent-soft:#fbeee4; --warn:#3d6f8e; --alt:#3d6f8e;
+  --radius:14px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.55rem,1.1rem + 2vw,2.3rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.06rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#15120f; --panel:#1e1a16; --ink:#ede8e2; --muted:#a79c92; --line:#332c25;
+    --accent:#e08b4c; --accent-soft:#2b2016; --warn:#7fb4d6; --alt:#7fb4d6;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.15; margin:0 0 .4em; letter-spacing:-.01em}
+.kicker{margin:0 0 .35em; color:var(--accent); font:600 .78rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.09em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas, figure.stage svg{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.86rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.83rem}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+.check{display:flex; align-items:center; gap:.6em}
+.check input{width:18px; height:18px; accent-color:var(--accent); margin:0; flex:none}
+.check label{font-weight:600}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .7em; min-height:40px}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.06em}
+.readout dd{margin:.18em 0 0; font:600 1.05rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.2rem; margin:2em 0 .45em; letter-spacing:-.01em; color:var(--accent)}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); background:var(--accent-soft); padding:.7em .85em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">computer science</p>
+  <h1>The Slower Algorithm Wins For A While</h1>
+  <p class="standfirst">Insertion sort is quadratic and merge sort is linearithmic, so merge sort is
+  faster. That sentence is about infinity. Below a few dozen elements it is simply wrong, which is
+  why the sort in your standard library is both algorithms.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="620" role="img"
+            aria-label="Above, two cost curves plotted against input size: insertion sort rising as a parabola and merge sort nearly as a straight line, crossing at a marked size. Below, grouped bars comparing what the two algorithms cost on four kinds of input at the chosen size."></canvas>
+    <figcaption>Above: what each algorithm costs as the input grows, with the size where merge sort
+    finally takes the lead. Below: the same two algorithms at the size you have chosen, on four
+    kinds of input.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row">
+        <label for="kind">Input</label>
+      </div>
+      <select id="kind">
+        <option value="reversed">exactly backwards</option>
+        <option value="random" selected>shuffled</option>
+        <option value="nearly">nearly sorted</option>
+        <option value="sorted">already sorted</option>
+      </select>
+      <p class="hint">Insertion sort's cost depends enormously on this. Merge sort's barely moves.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="n">Size</label>
+        <output id="nout" for="n">32</output>
+      </div>
+      <input type="range" id="n" min="2" max="200" step="1" value="32">
+      <p class="hint">How many elements to sort. Arrow keys step; End goes to two hundred.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="k">Merge sort's overhead</label>
+        <output id="kout" for="k">3.0&#215;</output>
+      </div>
+      <input type="range" id="k" min="1" max="8" step="0.25" value="3">
+      <p class="hint">What one merge-sort comparison costs against one insertion-sort comparison:
+      recursion, allocation and cache misses that the asymptotic order throws away.</p>
+    </div>
+
+    <div class="control">
+      <div class="check">
+        <input type="checkbox" id="model" checked>
+        <label for="model">Show the textbook curves</label>
+      </div>
+      <p class="hint">Lay the closed-form worst cases over the counts actually measured by running
+      the two sorts.</p>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Insertion cost</dt><dd id="oI">&#8212;</dd></div>
+      <div><dt>Merge cost</dt><dd id="oM">&#8212;</dd></div>
+      <div><dt>Faster here</dt><dd id="oF">&#8212;</dd></div>
+      <div><dt>Crossover size</dt><dd id="oX">&#8212;</dd></div>
+      <div><dt>Insertion comparisons</dt><dd id="oIc">&#8212;</dd></div>
+      <div><dt>Merge comparisons</dt><dd id="oMc">&#8212;</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Start over</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Both algorithms on this page sort the same array and both are counted the same way: one unit
+  per comparison for insertion sort, and one unit times the overhead slider for merge sort. That
+  slider is the whole argument. Asymptotic notation deliberately throws away constant factors, and
+  the constant factor is what decides which of these two you should actually call at size thirty.</p>
+
+  <p>Start with the shuffled input and walk the size slider up from two. Insertion sort's curve is a
+  parabola and merge sort's is very nearly a straight line, so the parabola must win eventually. It
+  does &#8212; but look where. With the overhead at three the crossing is somewhere in the dozens, not
+  in the thousands, and every size below it is one where the quadratic algorithm is the right call.</p>
+
+  <h2>Why the crossing moves</h2>
+
+  <p class="math">insertion &#8776; n&#178;/4 comparisons,  merge &#8804; n &#215; ceil(log&#8322; n) &#8722; 2^ceil(log&#8322; n) + 1</p>
+
+  <p>The second expression is not an estimate. It is the exact worst case of a top-down merge sort,
+  and this page checks it against every one of the 5,912 permutations of up to seven elements. Setting one cost equal
+  to the other and solving for n gives the crossover, and because the merge term is so nearly linear
+  the answer is roughly proportional to the overhead: double what a merge comparison costs and the
+  crossover roughly doubles too. Drag the overhead slider and watch the marker slide.</p>
+
+  <h2>The input matters more than the order does</h2>
+
+  <p>Now change the input. On an array that is already sorted, insertion sort makes exactly n &#8722; 1
+  comparisons &#8212; it is linear, better than merge sort at every size, and there is no crossover to
+  find. On an array that is exactly backwards it makes n(n&#8722;1)/2, the worst it can do. Merge sort
+  moves hardly at all between those two extremes, because it splits and merges the same way whatever
+  the data holds.</p>
+
+  <p>That asymmetry is worth more than the asymptotic order. Real inputs are very often nearly
+  sorted &#8212; log files, timestamps, an array with a few new entries appended &#8212; and insertion
+  sort's cost on nearly sorted data is close to linear. Choose the nearly sorted input and compare
+  the four bars in the lower chart: insertion sort's bar collapses while merge sort's does not move.</p>
+
+  <h2>What the library actually does</h2>
+
+  <p>This is not a curiosity. Practically every production sort is a hybrid: it recurses like merge
+  sort or quicksort down to some threshold, then hands the small pieces to insertion sort. The
+  threshold is exactly the crossover on this page &#8212; usually between sixteen and thirty-two
+  elements, tuned on the machine it will run on, which is why the number differs between libraries.
+  Timsort goes further and looks for runs that are already ordered, which is the same observation
+  about real input applied at full scale.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set the input to shuffled and the overhead to one, the fairest possible reading for merge sort:
+  the crossover is still not at two. Then take the overhead to eight and watch it slide past a
+  hundred. Finally switch to already sorted at any overhead and read the crossover box: there is
+  none, because a linear algorithm is never overtaken by a linearithmic one.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG. Never use bare Math.random(). ------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+
+/* ---- MODEL: pure functions of the parameters. No DOM in here. ----------- */
+/* Two independent routes to every headline number.                          */
+/*   Route A  runs the two sorts and counts the comparisons they make.       */
+/*   Route B  never touches an array: insertion's count on a fully ordered   */
+/*            or fully reversed input is a closed form, and merge sort's     */
+/*            count on those two inputs follows a recurrence that comes out  */
+/*            of the merge step's behaviour rather than out of running it.   */
+/* The two are asserted equal, and the crossover each one implies is         */
+/* asserted equal too.                                                       */
+const NMAX = 600;                       /* how far the crossover search runs */
+const NPLOT = 200;                      /* the size slider's ceiling         */
+const KINDS = ["reversed", "random", "nearly", "sorted"];
+
+const Model = {
+  /* deterministic inputs: same kind and size always give the same array */
+  gen(kind, n){
+    const a = [];
+    for (let i = 0; i < n; i++) a.push(i + 1);
+    if (kind === "sorted") return a;
+    if (kind === "reversed") return a.reverse();
+    const rng = mulberry32(SEED + n * 7919);
+    if (kind === "random"){
+      for (let i = n - 1; i > 0; i--){
+        const j = Math.floor(rng() * (i + 1));
+        const t = a[i]; a[i] = a[j]; a[j] = t;
+      }
+      return a;
+    }
+    /* nearly sorted: a quarter as many short-range swaps as there are items */
+    const swaps = Math.ceil(n / 4);
+    for (let s = 0; s < swaps; s++){
+      const i = Math.floor(rng() * n), d = 1 + Math.floor(rng() * 6);
+      const j = Math.min(n - 1, i + d);
+      const t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  },
+
+  /* ROUTE A, algorithm one. One count per comparison of two array entries. */
+  insertion(a){
+    const x = a.slice();
+    let c = 0;
+    for (let i = 1; i < x.length; i++){
+      const v = x[i];
+      let j = i - 1;
+      while (j >= 0){
+        c++;
+        if (x[j] > v){ x[j + 1] = x[j]; j--; } else break;
+      }
+      x[j + 1] = v;
+    }
+    return { out: x, c: c };
+  },
+
+  /* ROUTE A, algorithm two. Top-down, splitting at the midpoint. */
+  merge(a){
+    let c = 0;
+    function go(arr){
+      if (arr.length < 2) return arr;
+      const m = arr.length >> 1;
+      const L = go(arr.slice(0, m)), R = go(arr.slice(m));
+      const o = [];
+      let i = 0, j = 0;
+      while (i < L.length && j < R.length){
+        c++;
+        if (L[i] <= R[j]) o.push(L[i++]); else o.push(R[j++]);
+      }
+      while (i < L.length) o.push(L[i++]);
+      while (j < R.length) o.push(R[j++]);
+      return o;
+    }
+    const out = go(a.slice());
+    return { out: out, c: c };
+  },
+
+  /* ROUTE B. No array is created, sorted or read anywhere below this line. */
+  insRev(n){ return n * (n - 1) / 2; },        /* every comparison shifts     */
+  insSorted(n){ return n < 2 ? 0 : n - 1; },   /* one comparison per item     */
+  /* Reversed: after both halves are sorted every element of the right half
+     is smaller than every element of the left, so the merge drains the right
+     half at one comparison each and then copies the left half for free.     */
+  merRev(n){
+    if (n < 2) return 0;
+    const m = n >> 1, r = n - m;
+    return Model.merRev(m) + Model.merRev(r) + r;
+  },
+  /* Already ordered: the mirror image, so the left half is what drains.     */
+  merSorted(n){
+    if (n < 2) return 0;
+    const m = n >> 1, r = n - m;
+    return Model.merSorted(m) + Model.merSorted(r) + m;
+  },
+  /* The textbook worst case of this exact merge sort, over all inputs.      */
+  bound(n){
+    if (n < 2) return 0;
+    const L = Math.ceil(Math.log2(n));
+    return n * L - Math.pow(2, L) + 1;
+  },
+
+  /* memoised comparison counts, built once by route A */
+  _tab: {},
+  table(kind){
+    if (Model._tab[kind]) return Model._tab[kind];
+    const ci = [0, 0], cm = [0, 0];
+    for (let n = 2; n <= NMAX; n++){
+      const a = Model.gen(kind, n);
+      ci[n] = Model.insertion(a).c;
+      cm[n] = Model.merge(a).c;
+    }
+    return (Model._tab[kind] = { ci: ci, cm: cm });
+  },
+
+  /* the smallest size at which merge sort's total cost is strictly lower.
+     Returns 0 when there is none at or below NMAX, never null or NaN.      */
+  crossover(kind, k){
+    const t = Model.table(kind);
+    for (let n = 2; n <= NMAX; n++) if (k * t.cm[n] < t.ci[n]) return n;
+    return 0;
+  },
+  /* the same question answered from route B, for the two closed-form kinds */
+  crossoverClosed(kind, k){
+    const I = kind === "reversed" ? Model.insRev : Model.insSorted;
+    const M = kind === "reversed" ? Model.merRev : Model.merSorted;
+    for (let n = 2; n <= NMAX; n++) if (k * M(n) < I(n)) return n;
+    return 0;
+  },
+
+  at(kind, n, k){
+    const t = Model.table(kind);
+    const ci = t.ci[n], cm = t.cm[n];
+    return { ci: ci, cm: cm, costI: ci, costM: k * cm };
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { kind: "random", n: 32, k: 3, model: true };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+const SS = 2;
+let CW = 900, CH = 620, NARROW = false, FS = 13, G_ = null;
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 20) : 900);
+  NARROW = avail < 470;
+  CW = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+
+  const pad = NARROW ? 10 : 14;
+  const gutL = NARROW ? 40 : 56;
+  const plotL = gutL, plotR = CW - pad;
+  const plotTop = Math.round(pad + FS + 12);
+  const plotH = Math.round(CW * (NARROW ? 0.60 : 0.38));
+  const plotBot = plotTop + plotH;
+  const tickY = plotBot + FS + 5;          /* x tick numbers               */
+  const capY = plotBot + 2 * FS + 11;      /* x axis caption               */
+  /* the legend gets its own row rather than sitting inside the plot: the
+     crossover marker's label lives in the plot's upper left whenever the
+     crossover is small, which is most of the time.                        */
+  const legLab = ["insertion sort", kText() + " x merge sort"];
+  const legEst = 0.56 * FS * (legLab[0].length + legLab[1].length) + 76;
+  const legRows = legEst <= CW - pad * 2 ? 1 : 2;
+  const legTop = capY + 8;
+  const legH = legRows * (FS + 6);
+  const p2Title = Math.round(legTop + legH + 8 + FS); /* lower pane title   */
+  const barsTop = p2Title + 10;
+  const barH = Math.round(CW * (NARROW ? 0.46 : 0.26));
+  const barsBot = barsTop + barH;
+  const nameY = barsBot + FS + 4;          /* input-kind names             */
+  const cap2Y = barsBot + 2 * FS + 10;     /* lower pane caption           */
+  CH = cap2Y + 6;
+
+  G_ = { pad: pad, plotL: plotL, plotR: plotR, plotTop: plotTop, plotBot: plotBot,
+         tickY: tickY, capY: capY, legTop: legTop, legRows: legRows, legLab: legLab,
+         p2Title: p2Title, barsTop: barsTop,
+         barsBot: barsBot, nameY: nameY, cap2Y: cap2Y };
+
+  if (cv.width !== CW * SS || cv.height !== CH * SS){
+    cv.width = CW * SS; cv.height = CH * SS;
+  }
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function kText(){
+  return state.k.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+}
+function fmt(v){
+  if (!Number.isFinite(v)) return "0";
+  if (v >= 100000) return Math.round(v / 1000) + "k";
+  if (v >= 10000) return (v / 1000).toFixed(1) + "k";
+  return String(Math.round(v));
+}
+function niceStep(span, want){
+  if (!(span > 0)) return 1;
+  let step = Math.pow(10, Math.floor(Math.log10(span / want)));
+  const r = span / want / step;
+  if (r > 5) step *= 10; else if (r > 2.5) step *= 5; else if (r > 2) step *= 2.5;
+  else if (r > 1) step *= 2;
+  while (span / step < 2) step /= 2;
+  return step;
+}
+function wid(s){ return ctx.measureText(s).width; }
+function pick(sets, room){                 /* longest phrasing that fits */
+  for (let i = 0; i < sets.length; i++) if (wid(sets[i]) <= room) return sets[i];
+  return sets[sets.length - 1];
+}
+
+const NAMES = {
+  reversed: ["exactly backwards", "backwards", "back"],
+  random:   ["shuffled", "shuffled", "shuf"],
+  nearly:   ["nearly sorted", "nearly", "near"],
+  sorted:   ["already sorted", "sorted", "sort"]
+};
+
+function render(){
+  fitCanvas();
+  const G = G_, k = state.k, n = state.n, kind = state.kind;
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line");
+  const accent = css("--accent"), alt = css("--alt"), panel = css("--panel");
+
+  ctx.clearRect(0, 0, CW, CH);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, CW, CH);
+  ctx.textBaseline = "alphabetic";
+
+  const t = Model.table(kind);
+  const here = Model.at(kind, n, k);
+  const X = Model.crossover(kind, k);
+
+  /* ---------------- upper pane: cost against size --------------------- */
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["What each algorithm costs as the input grows",
+                     "Cost against input size", "Cost by size"],
+                    CW - G.pad * 2), G.pad, G.pad + FS);
+
+  let yMax = 0;
+  for (let i = 2; i <= NPLOT; i++){
+    if (t.ci[i] > yMax) yMax = t.ci[i];
+    if (k * t.cm[i] > yMax) yMax = k * t.cm[i];
+  }
+  if (!(yMax > 0)) yMax = 1;
+  const step = niceStep(yMax, 4);
+  yMax = Math.ceil(yMax / step) * step;
+
+  const pw = G.plotR - G.plotL, ph = G.plotBot - G.plotTop;
+  const xp = (v) => G.plotL + (v - 2) / (NPLOT - 2) * pw;
+  const yp = (v) => G.plotBot - Math.max(0, Math.min(1, v / yMax)) * ph;
+
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.textAlign = "right";
+  for (let v = 0; v <= yMax + 1e-9; v += step){
+    const y = Math.round(yp(v)) + 0.5;
+    ctx.beginPath(); ctx.moveTo(G.plotL, y); ctx.lineTo(G.plotR, y); ctx.stroke();
+    ctx.fillStyle = muted; ctx.fillText(fmt(v), G.plotL - 6, y + FS * 0.35);
+  }
+  ctx.textAlign = "center";
+  const xt = NARROW ? [2, 50, 100, 150, 200] : [2, 25, 50, 75, 100, 125, 150, 175, 200];
+  for (const v of xt){
+    ctx.fillStyle = muted; ctx.fillText(String(v), xp(v), G.tickY);
+  }
+
+  /* textbook curves, clipped so an off-scale one cannot leave the pane */
+  if (state.model){
+    ctx.save();
+    ctx.beginPath(); ctx.rect(G.plotL, G.plotTop, pw, ph); ctx.clip();
+    ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5;
+    ctx.strokeStyle = accent; ctx.globalAlpha = 0.55;
+    ctx.beginPath();
+    for (let i = 2; i <= NPLOT; i++){
+      const y = yp(Model.insRev(i));
+      if (i === 2) ctx.moveTo(xp(i), y); else ctx.lineTo(xp(i), y);
+    }
+    ctx.stroke();
+    ctx.strokeStyle = alt;
+    ctx.beginPath();
+    for (let i = 2; i <= NPLOT; i++){
+      const y = yp(k * Model.bound(i));
+      if (i === 2) ctx.moveTo(xp(i), y); else ctx.lineTo(xp(i), y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1; ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  /* measured curves */
+  ctx.lineWidth = 2.2; ctx.lineJoin = "round";
+  ctx.strokeStyle = accent; ctx.beginPath();
+  for (let i = 2; i <= NPLOT; i++){
+    const y = yp(t.ci[i]);
+    if (i === 2) ctx.moveTo(xp(i), y); else ctx.lineTo(xp(i), y);
+  }
+  ctx.stroke();
+  ctx.strokeStyle = alt; ctx.beginPath();
+  for (let i = 2; i <= NPLOT; i++){
+    const y = yp(k * t.cm[i]);
+    if (i === 2) ctx.moveTo(xp(i), y); else ctx.lineTo(xp(i), y);
+  }
+  ctx.stroke();
+
+  /* the size you have chosen */
+  ctx.strokeStyle = muted; ctx.lineWidth = 1;
+  const xn = Math.round(xp(n)) + 0.5;
+  ctx.beginPath(); ctx.moveTo(xn, G.plotTop); ctx.lineTo(xn, G.plotBot); ctx.stroke();
+  ctx.fillStyle = accent;
+  ctx.beginPath(); ctx.arc(xp(n), yp(here.costI), 4, 0, 6.2832); ctx.fill();
+  ctx.fillStyle = alt;
+  ctx.beginPath(); ctx.arc(xp(n), yp(here.costM), 4, 0, 6.2832); ctx.fill();
+
+  /* the crossover, when there is one inside the plotted range */
+  if (X >= 2 && X <= NPLOT){
+    ctx.strokeStyle = ink; ctx.lineWidth = 1.4; ctx.setLineDash([4, 4]);
+    const xx = Math.round(xp(X)) + 0.5;
+    ctx.beginPath(); ctx.moveTo(xx, G.plotTop); ctx.lineTo(xx, G.plotBot); ctx.stroke();
+    ctx.setLineDash([]);
+    const lab = pick(["crossover at " + X, "cross " + X, String(X)], pw * 0.55);
+    ctx.font = "600 " + FS + "px " + css("--font-body");
+    const lw = wid(lab) + 10;
+    let lx = xp(X) + 7;
+    if (lx + lw > G.plotR) lx = xp(X) - 7 - lw;
+    ctx.fillStyle = panel; ctx.globalAlpha = 0.88;
+    ctx.fillRect(lx, G.plotTop + 3, lw, FS + 7);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = ink; ctx.textAlign = "left";
+    ctx.fillText(lab, lx + 5, G.plotTop + 3 + FS + 1);
+    ctx.font = FS + "px " + css("--font-body");
+  }
+
+  ctx.textAlign = "center"; ctx.fillStyle = muted;
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.fillText(pick(["number of elements to sort", "elements to sort", "elements"], pw),
+               G.plotL + pw / 2, G.capY);
+
+  /* legend, on its own row: the plot's upper left belongs to the crossover
+     marker, which sits there whenever the crossover is a small size.       */
+  const leg = [[G.legLab[0], accent], [G.legLab[1], alt]];
+  const cellW = [];
+  for (const e of leg) cellW.push(24 + wid(e[0]));
+  if (G.legRows === 1){
+    let lx = (CW - (cellW[0] + cellW[1] + 22)) / 2;
+    for (let i = 0; i < 2; i++){
+      const y = G.legTop + FS * 0.62;
+      ctx.strokeStyle = leg[i][1]; ctx.lineWidth = 2.6;
+      ctx.beginPath(); ctx.moveTo(lx, y); ctx.lineTo(lx + 18, y); ctx.stroke();
+      ctx.fillStyle = muted; ctx.textAlign = "left";
+      ctx.fillText(leg[i][0], lx + 24, y + FS * 0.36);
+      lx += cellW[i] + 22;
+    }
+  } else {
+    for (let i = 0; i < 2; i++){
+      const lx = (CW - cellW[i]) / 2, y = G.legTop + i * (FS + 6) + FS * 0.62;
+      ctx.strokeStyle = leg[i][1]; ctx.lineWidth = 2.6;
+      ctx.beginPath(); ctx.moveTo(lx, y); ctx.lineTo(lx + 18, y); ctx.stroke();
+      ctx.fillStyle = muted; ctx.textAlign = "left";
+      ctx.fillText(leg[i][0], lx + 24, y + FS * 0.36);
+    }
+  }
+
+
+  /* ---------------- lower pane: the four inputs at this size ------------ */
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["The same two algorithms on four kinds of input, at " + n + " elements",
+                     "Four kinds of input at " + n + " elements",
+                     n + " elements, four inputs"], CW - G.pad * 2), G.pad, G.p2Title);
+
+  const bl = G.pad + (NARROW ? 4 : 10), br = CW - G.pad;
+  const gw = (br - bl) / KINDS.length;
+  let bMax = 1;
+  const vals = KINDS.map((kk) => {
+    const a = Model.at(kk, n, k);
+    bMax = Math.max(bMax, a.costI, a.costM);
+    return a;
+  });
+  const bh = G.barsBot - G.barsTop;
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(bl, Math.round(G.barsBot) + 0.5); ctx.lineTo(br, Math.round(G.barsBot) + 0.5);
+  ctx.stroke();
+
+  ctx.font = (FS - 1) + "px " + css("--font-mono");
+  const bw = Math.max(6, gw * 0.34);
+  for (let i = 0; i < KINDS.length; i++){
+    const kk = KINDS[i], a = vals[i];
+    const cx = bl + gw * (i + 0.5);
+    const sel = kk === kind;
+    const pair = [[a.costI, accent], [a.costM, alt]];
+    for (let j = 0; j < 2; j++){
+      const v = pair[j][0];
+      const h = Math.max(1, (v / bMax) * (bh - FS - 6));
+      const x = cx + (j === 0 ? -bw - 2 : 2);
+      ctx.globalAlpha = sel ? 1 : 0.42;
+      ctx.fillStyle = pair[j][1];
+      ctx.fillRect(x, G.barsBot - h, bw, h);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = muted; ctx.textAlign = "center";
+      ctx.fillText(fmt(v), x + bw / 2, G.barsBot - h - 4);
+    }
+  }
+  ctx.font = FS + "px " + css("--font-body");
+  const room = gw - 6;
+  let lvl = 2;
+  for (let s = 0; s < 3; s++){
+    let ok = true;
+    for (const kk of KINDS) if (wid(NAMES[kk][s]) > room) ok = false;
+    if (ok){ lvl = s; break; }
+  }
+  for (let i = 0; i < KINDS.length; i++){
+    const kk = KINDS[i];
+    ctx.fillStyle = kk === kind ? ink : muted;
+    ctx.textAlign = "center";
+    ctx.fillText(NAMES[kk][lvl], bl + gw * (i + 0.5), G.nameY);
+  }
+  ctx.fillStyle = muted; ctx.textAlign = "center";
+  ctx.fillText(pick(["cost in comparisons, insertion sort left, merge sort right",
+                     "insertion left, merge right", "insertion / merge"], br - bl),
+               (bl + br) / 2, G.cap2Y);
+
+  /* ---------------- readouts ------------------------------------------- */
+  el("nout").textContent = String(n);
+  el("kout").textContent = kText() + "x";
+  el("oI").textContent = fmt(here.costI);
+  el("oM").textContent = fmt(here.costM);
+  el("oF").textContent = here.costM < here.costI ? "merge sort"
+                       : here.costM > here.costI ? "insertion sort" : "a dead heat";
+  el("oX").textContent = X === 0 ? "none below " + NMAX : String(X);
+  el("oIc").textContent = fmt(here.ci);
+  el("oMc").textContent = fmt(here.cm);
+}
+
+el("kind").addEventListener("change", () => { state.kind = el("kind").value; render(); });
+el("n").addEventListener("input", () => { state.n = parseInt(el("n").value, 10); render(); });
+el("k").addEventListener("input", () => { state.k = parseFloat(el("k").value); render(); });
+el("model").addEventListener("change", () => { state.model = el("model").checked; render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("kind").value = defaults.kind; el("n").value = defaults.n;
+  el("k").value = defaults.k; el("model").checked = defaults.model;
+  render();
+});
+
+let rid = null;
+addEventListener("resize", () => { clearTimeout(rid); rid = setTimeout(render, 90); });
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
+render();
+
+/* ---- SELFTEST: minimum 5 numeric assertions against known values. ------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1. insertion sort on a reversed array: every comparison moves an item. */
+  let ok1 = true, s1 = "";
+  for (let n = 2; n <= 200; n++){
+    const c = Model.insertion(Model.gen("reversed", n)).c;
+    if (c !== n * (n - 1) / 2) ok1 = false;
+    if (n === 200) s1 = "at 200 elements it makes " + c;
+  }
+  push("insertion sort makes exactly n(n-1)/2 comparisons on a reversed array",
+       ok1, s1 + ", the closed form, for every size from 2 to 200");
+
+  /* 2. and exactly n-1 on an ordered one: linear, not quadratic. */
+  let ok2 = true;
+  for (let n = 2; n <= 200; n++)
+    if (Model.insertion(Model.gen("sorted", n)).c !== n - 1) ok2 = false;
+  push("insertion sort is linear on an already ordered array", ok2,
+       "exactly n minus 1 comparisons for every size from 2 to 200, 199 at the top of the slider");
+
+  /* 3. the textbook worst case, checked against every permutation up to 7. */
+  let ok3 = true, hit = [];
+  for (let n = 2; n <= 7; n++){
+    let worst = 0;
+    const base = [];
+    for (let i = 1; i <= n; i++) base.push(i);
+    (function perm(head, rest){
+      if (rest.length === 0){
+        const c = Model.merge(head).c;
+        if (c > worst) worst = c;
+        return;
+      }
+      for (let i = 0; i < rest.length; i++)
+        perm(head.concat([rest[i]]), rest.slice(0, i).concat(rest.slice(i + 1)));
+    })([], base);
+    if (worst !== Model.bound(n)) ok3 = false;
+    hit.push(n + ":" + worst);
+  }
+  push("merge sort's worst case equals n*ceil(log2 n) - 2^ceil(log2 n) + 1",
+       ok3, "exhaustive over every permutation of 2 to 7 elements, worst counts " + hit.join(" "));
+
+  /* 4. and the bound is never exceeded by any input the page can produce. */
+  let ok4 = true, tight = 0;
+  for (const kk of KINDS){
+    const tab = Model.table(kk);
+    for (let n = 2; n <= NMAX; n++){
+      if (tab.cm[n] > Model.bound(n)) ok4 = false;
+      const slack = Model.bound(n) - tab.cm[n];
+      if (slack > tight) tight = slack;
+    }
+  }
+  push("no input on this page ever pushes merge sort past that bound", ok4,
+       "checked to " + NMAX + " elements on all four inputs; the largest shortfall below the bound is " + tight);
+
+  /* 5. route B reproduces route A's counts without sorting anything. */
+  let ok5 = true, worst5 = 0;
+  for (let n = 2; n <= NMAX; n++){
+    const r = Model.table("reversed"), s = Model.table("sorted");
+    if (r.cm[n] !== Model.merRev(n)) ok5 = false;
+    if (s.cm[n] !== Model.merSorted(n)) ok5 = false;
+    if (r.ci[n] !== Model.insRev(n)) ok5 = false;
+    if (s.ci[n] !== Model.insSorted(n)) ok5 = false;
+    worst5 = Math.max(worst5, Math.abs(r.cm[n] - Model.merRev(n)));
+  }
+  push("counting by hand agrees with counting by running the sort", ok5,
+       "the recurrence for the ordered and reversed cases matches the measured counts exactly at all "
+       + (NMAX - 1) + " sizes, largest disagreement " + worst5);
+
+  /* 6. the crossover from the two routes is the same element, not within one. */
+  let ok6 = true, sample6 = "";
+  for (let i = 0; i < 29; i++){
+    const k = 1 + i * 0.25;
+    for (const kk of ["reversed", "sorted"]){
+      const a = Model.crossover(kk, k), b = Model.crossoverClosed(kk, k);
+      if (a !== b) ok6 = false;
+      if (kk === "reversed" && k === 3) sample6 = "at 3x overhead on a reversed array both say " + a;
+    }
+  }
+  push("both cost models put the crossover at the same size", ok6,
+       sample6 + "; equal for all 29 slider positions on both closed-form inputs");
+
+  /* 7. sorting is a permutation and the output is ordered. */
+  let ok7 = true;
+  for (const kk of KINDS){
+    for (const n of [2, 3, 5, 8, 13, 32, 57, 100, 200]){
+      const a = Model.gen(kk, n);
+      const key = a.slice().sort((p, q) => p - q).join(",");
+      for (const r of [Model.insertion(a), Model.merge(a)]){
+        if (r.out.join(",") !== key) ok7 = false;
+        for (let i = 1; i < n; i++) if (r.out[i - 1] > r.out[i]) ok7 = false;
+      }
+    }
+  }
+  push("both sorts return the same multiset, in order", ok7,
+       "output equals the sorted input exactly, for both algorithms, on all four inputs at nine sizes");
+
+  /* 8. exhaustively, on every permutation of up to 7 elements. */
+  let ok8 = true, count8 = 0;
+  for (let n = 2; n <= 7; n++){
+    const base = [];
+    for (let i = 1; i <= n; i++) base.push(i);
+    const key = base.join(",");
+    (function perm(head, rest){
+      if (rest.length === 0){
+        count8++;
+        if (Model.insertion(head).out.join(",") !== key) ok8 = false;
+        if (Model.merge(head).out.join(",") !== key) ok8 = false;
+        return;
+      }
+      for (let i = 0; i < rest.length; i++)
+        perm(head.concat([rest[i]]), rest.slice(0, i).concat(rest.slice(i + 1)));
+    })([], base);
+  }
+  push("neither sort can be broken by any small input", ok8,
+       "every one of the " + count8 + " permutations of 2 to 7 elements comes back correctly ordered");
+
+  /* 9. an ordered array has no crossover: linear never loses to linearithmic. */
+  let ok9 = true;
+  for (let i = 0; i < 29; i++)
+    if (Model.crossover("sorted", 1 + i * 0.25) !== 0) ok9 = false;
+  push("an already ordered array has no crossover at any overhead", ok9,
+       "merge sort never gets ahead below " + NMAX + " elements, at any of the 29 overhead settings");
+
+  /* 10. doubling the overhead roughly, but not exactly, doubles the crossover. */
+  let ok10 = true, ratios = [];
+  for (const k of [1, 2, 4]){
+    const a = Model.crossover("reversed", k), b = Model.crossover("reversed", 2 * k);
+    const r = b / a;
+    ratios.push(a + "->" + b);
+    if (!(r >= 1.8 && r <= 3.0)) ok10 = false;
+  }
+  push("doubling merge sort's overhead roughly doubles the crossover", ok10,
+       "on a reversed array " + ratios.join(", ") + "; above two because the merge term is not quite linear");
+
+  /* 11. the crossover really is a crossover: the winner flips across it. */
+  let ok11 = true;
+  for (const kk of KINDS){
+    for (let i = 0; i < 29; i++){
+      const k = 1 + i * 0.25, X = Model.crossover(kk, k);
+      if (X === 0) continue;
+      const before = Model.at(kk, X - 1, k), after = Model.at(kk, X, k);
+      if (!(before.costM >= before.costI)) ok11 = false;
+      if (!(after.costM < after.costI)) ok11 = false;
+    }
+  }
+  push("insertion sort is ahead at every size below the crossover", ok11,
+       "checked one element either side of every crossover the page can produce, on all four inputs");
+
+  /* 12. nearly ordered input is close to linear for insertion sort. */
+  const nearly = Model.table("nearly"), rand = Model.table("random");
+  const ratio200 = nearly.ci[200] / 200, randRatio = rand.ci[200] / 200;
+  push("nearly ordered input keeps insertion sort close to linear",
+       ratio200 < 4 && randRatio > 40,
+       "at 200 elements a nearly ordered array costs " + nearly.ci[200] + " comparisons, "
+       + ratio200.toFixed(2) + " per element, against " + rand.ci[200] + " when shuffled, "
+       + randRatio.toFixed(1) + " per element");
+
+  /* 13. nothing the controls can reach produces a non-finite cost. */
+  let ok13 = true;
+  for (const kk of KINDS)
+    for (let i = 0; i < 29; i++){
+      const k = 1 + i * 0.25;
+      for (const n of [2, 7, 32, 99, 200]){
+        const a = Model.at(kk, n, k);
+        if (!Number.isFinite(a.costI) || !Number.isFinite(a.costM)) ok13 = false;
+      }
+      if (!Number.isFinite(Model.crossover(kk, k))) ok13 = false;
+    }
+  push("every reachable setting produces a finite cost", ok13,
+       "all four inputs, 29 overheads and five sizes, plus the crossover search itself");
+
+  return t;
+};
+
+/* exposed for the verifier's control sweep */
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

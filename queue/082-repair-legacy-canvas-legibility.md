@@ -84,9 +84,23 @@ batch/003.
       gutter, both pane heights and all type derived from the width; below 470px
       the time ticks thin from every 2s to every 5s and the two long labels
       shorten. The effort strip had vanished entirely at 390.
-- [ ] batch/002 pages — `newton-raphson-basins`, `supply-demand-tax-incidence`
-      remain
-- [ ] batch/003 pages
+- [x] `supply-demand-tax-incidence` — batch/010. Container-tracking
+      `fitCanvas()`; the page had fixed `L/R/T/B` margins against a 940x560
+      surface, so at 390px both axes' numbers were under five effective
+      pixels. Below 470px the quantity ticks thin from every 50 to every 100,
+      the left gutter halves, the aspect goes nearly square so the crossing
+      is not squashed, and the two in-chart labels shorten (`lost trade` to
+      `lost`, `tax = 2.00` to `2.00`) and flip to the left of the wedge when
+      they would otherwise run off the right edge.
+- [x] `newton-raphson-basins` — batch/010, **no change needed**. Checked both
+      screenshots: the page is a full-width fractal with three short basin
+      labels and no axis numbers, so scaling it into a 390px viewport costs
+      nothing. Per the constraint below, a page that already reads acceptably
+      at 390 is left alone.
+- [ ] batch/003 pages — `ph-buffer-capacity`, `levenshtein-distance`,
+      `greenhouse-energy-balance`, `shannon-channel-capacity`,
+      `special-relativity-time-dilation` remain. AUDIT/001 confirmed
+      `shannon-channel-capacity`'s chart axis labels vanish at 390.
 
 **Use the container-tracking pattern, not the two-fixed-sizes one.** Clamp the
 container width, set the backing store to twice it, scale the context by two,

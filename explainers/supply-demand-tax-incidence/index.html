@@ -259,21 +259,45 @@ const el = (id) => document.getElementById(id);
 const cv = el("view"), ctx = cv.getContext("2d");
 function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
-const L = 62, R = 24, T = 26, B = 46;
 const QMAX = 200, PMAX = 22;
 
+/* container-tracking canvas: the margins, the type and the tick spacing are
+   all derived from the width the figure is actually given, so the diagram is
+   drawn for the viewport rather than scaled down into it.                   */
+const SS = 2;
+let CW = 940, CH = 560, NARROW = false, FS = 12;
+let L = 62, R = 24, T = 26, B = 46;
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 20) : 940);
+  NARROW = avail < 470;
+  CW = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+  L = NARROW ? 34 : 62;
+  R = NARROW ? 14 : 24;
+  T = FS + 14;
+  B = 2 * FS + (NARROW ? 20 : 24);
+  CH = Math.round(CW * (NARROW ? 0.95 : 0.60));
+  if (cv.width !== CW * SS || cv.height !== CH * SS){ cv.width = CW * SS; cv.height = CH * SS; }
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
 function render(){
+  fitCanvas();
   const muted = css("--muted"), line = css("--line"), panel = css("--panel"),
         buy = css("--buy"), buySoft = css("--buy-soft"), sell = css("--sell"),
         sellSoft = css("--sell-soft"), dwl = css("--dwl"), ink = css("--ink");
 
   const r = Model.solve(state.Ed, state.Es, state.tax, state.side);
 
-  ctx.clearRect(0, 0, cv.width, cv.height);
-  ctx.fillStyle = panel; ctx.fillRect(0, 0, cv.width, cv.height);
-  ctx.font = "12px ui-monospace, monospace";
+  ctx.clearRect(0, 0, CW, CH);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, CW, CH);
+  ctx.font = FS + "px ui-monospace, monospace";
 
-  const x1 = cv.width - R, y1 = cv.height - B;
+  const x1 = CW - R, y1 = CH - B;
   const qx = (q) => L + (q / QMAX) * (x1 - L);
   const py = (p) => y1 - (p / PMAX) * (y1 - T);
 
@@ -281,15 +305,15 @@ function render(){
   ctx.strokeStyle = line; ctx.lineWidth = 1; ctx.textAlign = "right"; ctx.fillStyle = muted;
   for (let p = 0; p <= PMAX; p += 5){
     ctx.beginPath(); ctx.moveTo(L, py(p)); ctx.lineTo(x1, py(p)); ctx.stroke();
-    ctx.fillText(String(p), L - 8, py(p) + 4);
+    ctx.fillText(String(p), L - 7, py(p) + FS * 0.35);
   }
   ctx.textAlign = "center";
-  for (let q = 0; q <= QMAX; q += 50){
+  for (let q = 0; q <= QMAX; q += (NARROW ? 100 : 50)){
     ctx.beginPath(); ctx.moveTo(qx(q), y1); ctx.lineTo(qx(q), y1 + 5); ctx.stroke();
-    ctx.fillText(String(q), qx(q), y1 + 20);
+    ctx.fillText(String(q), qx(q), y1 + FS + 6);
   }
-  ctx.textAlign = "left"; ctx.fillText("price", L, T - 9);
-  ctx.textAlign = "right"; ctx.fillText("quantity", x1, y1 + 36);
+  ctx.textAlign = "left"; ctx.fillText("price", L, T - 5);
+  ctx.textAlign = "right"; ctx.fillText("quantity", x1, y1 + 2 * FS + 10);
 
   /* the shaded burdens, drawn as rectangles over the traded quantity */
   ctx.fillStyle = buySoft;
@@ -306,9 +330,11 @@ function render(){
     ctx.closePath();
     ctx.fillStyle = dwl; ctx.globalAlpha = 0.45; ctx.fill(); ctx.globalAlpha = 1;
     ctx.strokeStyle = dwl; ctx.lineWidth = 1.2; ctx.stroke();
-    ctx.fillStyle = dwl; ctx.textAlign = "left"; ctx.font = "11px ui-monospace, monospace";
-    ctx.fillText("lost trade", qx(r.quantity) + 6, py(P0) + 26);
-    ctx.font = "12px ui-monospace, monospace";
+    ctx.fillStyle = dwl; ctx.textAlign = "left"; ctx.font = (FS - 1) + "px ui-monospace, monospace";
+    const dl = NARROW ? "lost" : "lost trade";
+    const dx = Math.min(qx(r.quantity) + 6, x1 - ctx.measureText(dl).width - 2);
+    ctx.fillText(dl, dx, py(P0) + FS + 12);
+    ctx.font = FS + "px ui-monospace, monospace";
   }
 
   /* the curves */
@@ -332,7 +358,7 @@ function render(){
     ctx.fillStyle = colour;
     ctx.textAlign = atStart ? "left" : "right";
     const lx = atStart ? Math.max(fx + 6, L + 4) : Math.min(lastX, x1 - 4);
-    const ly = atStart ? Math.max(fy + 14, T + 14) : Math.max(lastY - 6, T + 12);
+    const ly = atStart ? Math.max(fy + FS + 2, T + FS + 2) : Math.max(lastY - 6, T + FS);
     ctx.fillText(label, lx, ly);
   }
   curve((q) => Model.demandP(state.Ed, q), buy, "demand", true);
@@ -352,10 +378,15 @@ function render(){
   ctx.beginPath(); ctx.moveTo(L, py(P0)); ctx.lineTo(x1, py(P0)); ctx.stroke();
   ctx.setLineDash([]); ctx.globalAlpha = 1;
 
-  ctx.fillStyle = ink; ctx.textAlign = "left"; ctx.font = "700 12px ui-monospace, monospace";
-  if (state.tax > 0.01)
-    ctx.fillText("tax = " + state.tax.toFixed(2), qx(r.quantity) + 8, (py(r.buyerP) + py(r.sellerP)) / 2 + 4);
-  ctx.font = "12px ui-monospace, monospace";
+  ctx.fillStyle = ink; ctx.textAlign = "left"; ctx.font = "700 " + FS + "px ui-monospace, monospace";
+  if (state.tax > 0.01){
+    const tl = (NARROW ? "" : "tax = ") + state.tax.toFixed(2);
+    let tx = qx(r.quantity) + 8;
+    if (tx + ctx.measureText(tl).width > x1){ ctx.textAlign = "right"; tx = qx(r.quantity) - 8; }
+    ctx.fillText(tl, tx, (py(r.buyerP) + py(r.sellerP)) / 2 + FS * 0.35);
+    ctx.textAlign = "left";
+  }
+  ctx.font = FS + "px ui-monospace, monospace";
 
   /* readouts */
   const sharePct = r.buyerShare * 100;
@@ -391,6 +422,13 @@ el("reset").addEventListener("click", () => {
   el("side").value = defaults.side;
   render();
 });
+
+let rid = null;
+addEventListener("resize", () => { clearTimeout(rid); rid = setTimeout(render, 90); });
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
 render();
 
 /* ---- SELFTEST ----------------------------------------------------------- */

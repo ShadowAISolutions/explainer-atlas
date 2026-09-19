@@ -36,7 +36,7 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
     <p class="lede">One concept per page. Each page teaches a single idea through a working
     simulation you can take apart — every model on this site is checked numerically against
     closed forms, conservation laws, or published reference values before it ships.</p>
-    <p class="count">43 explainers · 13 domains · 499 assertions</p>
+    <p class="count">47 explainers · 13 domains · 551 assertions</p>
   </header>
   <main>
       <section aria-labelledby="d-biology">
@@ -101,6 +101,13 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
       <section aria-labelledby="d-computer-science">
         <h2 id="d-computer-science">computer science</h2>
         <ul class="grid">
+        <li class="card">
+          <a href="explainers/big-o-crossover/index.html">
+            <h3>The Slower Algorithm Wins For A While</h3>
+            <p>Race insertion sort against merge sort, move the constant factor merge sort pays, and watch the size where the quadratic algorithm finally loses slide across the range real libraries tune for.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 2 of 5">●●○○○</span> <span>race-two-methods</span> <span>13 checks</span></p>
+        </li>
         <li class="card">
           <a href="explainers/dijkstra-vs-astar/index.html">
             <h3>A Guess About Distance Is Worth Half the Search</h3>
@@ -246,6 +253,13 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
           <p class="meta"><span class="diff" aria-label="difficulty 2 of 5">●●○○○</span> <span>perturb-and-observe</span> <span>12 checks</span></p>
         </li>
         <li class="card">
+          <a href="explainers/arithmetic-coding-interval/index.html">
+            <h3>A Message Is One Number Between Zero and One</h3>
+            <p>Step an arithmetic coder forward one symbol at a time and watch a single interval narrow until its width is the probability of the whole message.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 3 of 5">●●●○○</span> <span>step-through</span> <span>13 checks</span></p>
+        </li>
+        <li class="card">
           <a href="explainers/huffman-coding/index.html">
             <h3>Building an Optimal Code, Two Symbols at a Time</h3>
             <p>Step through Huffman&#39;s greedy construction and see why merging the two rarest symbols yields a code no other prefix code can beat.</p>
@@ -270,6 +284,13 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
             <p>Step through the edit-distance table one cell at a time and see that every cell is the same three-way choice, then read the alignment back off the finished grid.</p>
           </a>
           <p class="meta"><span class="diff" aria-label="difficulty 2 of 5">●●○○○</span> <span>step-through</span> <span>12 checks</span></p>
+        </li>
+        <li class="card">
+          <a href="explainers/markov-text-order/index.html">
+            <h3>Order Two Is Babble, Order Four Is Plagiarism</h3>
+            <p>Paste a training text, slide the memory of a Markov model from one character to eight, and watch its output cross from noise into verbatim quotation with almost nothing in between.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 2 of 5">●●○○○</span> <span>live-code</span> <span>13 checks</span></p>
         </li>
         <li class="card">
           <a href="explainers/sound-change-chain-shift/index.html">
@@ -402,6 +423,13 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
             <p>Pick the top scorers and test them again. They fall back with no cause at all, and that alone is enough to manufacture a treatment effect that never happened.</p>
           </a>
           <p class="meta"><span class="diff" aria-label="difficulty 3 of 5">●●●○○</span> <span>guess-then-reveal</span> <span>13 checks</span></p>
+        </li>
+        <li class="card">
+          <a href="explainers/confidence-interval-coverage/index.html">
+            <h3>Your Interval Either Contains It Or It Does Not</h3>
+            <p>Draw a population, then watch a hundred confidence intervals appear and roughly five of them miss. The ninety-five is a property of the recipe, not of the interval in front of you.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 3 of 5">●●●○○</span> <span>draw-input</span> <span>13 checks</span></p>
         </li>
         </ul>
       </section>

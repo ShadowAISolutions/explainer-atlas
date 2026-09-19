@@ -33,6 +33,59 @@ files in `AUDIT/` before starting any batch.
 
 ## Batches
 
+### batch/010 — 2026-09-19
+- merged: big-o-crossover, confidence-interval-coverage, markov-text-order, plus
+  the batch/002 half of the legacy canvas repair (supply-demand-tax-incidence
+  rebuilt, newton-raphson-basins checked and left alone), and AUDIT/002
+- blocked: none
+- patterns: race-two-methods, draw-input, live-code
+- audit: AUDIT/002, mean 4.80, running average 4.54. Visual distinctiveness up
+  1.40 and interaction quality up 1.00 against AUDIT/001; nothing scored 2 or
+  below, so no repair tasks filed
+- learned:
+  1. **A task file's numeric target can be below the noise floor of the thing it
+     asks you to measure.** Task 071 wanted generated n-gram frequencies within
+     three per cent of the training text's over 50,000 characters. At that
+     length two independent runs of the *same* model differ from each other by
+     four to five per cent in total variation, so no model could have passed.
+     The fix is not a longer run to squeak under the number: it is to measure
+     the floor and assert against it. The page asserts that the distance from
+     the generated text to its source is SMALLER than the distance between two
+     independent generations, which is the claim "matches the statistics"
+     actually means, and it is falsifiable in a way a hand-picked threshold is
+     not. Four task files have now had a numeric claim corrected rather than
+     obeyed (007, 063, 076, 071).
+  2. **A vertical marker line that spans two panes will strike through whatever
+     sits between them.** The true-mean line on confidence-interval-coverage ran
+     from the population pane to the bottom of the interval stack and put a
+     strikethrough across the lower pane's title. Draw such a line as one
+     segment per pane, not one line through both. Same family as the batch/009
+     lesson about pane titles landing on the previous pane's captions: anything
+     that spans panes has to be told where the panes are.
+  3. **A label anchored inside a pane will cover the pane's own content sooner
+     or later.** The same page put "true mean 7.00" inside the population
+     histogram, where it sat on the tallest bars — exactly the bars nearest the
+     mean, every time. Moving it onto the pane's title row, right-aligned, with
+     the title shortened by measurement to fit what is left, is collision-proof
+     because the row belongs to nobody else.
+  4. **Size a text box to its text, not to a line count you guessed.** The
+     markov page reserved eleven lines and used six. Measure the monospace cell
+     in `fitCanvas`, divide the width by it, and derive the line count from the
+     output length. `measureText` is unaffected by the context transform, so it
+     can be called before the canvas is resized.
+  5. **Check that the prose still states the numbers the page actually
+     produces.** Three claims in markov-text-order's prose came from a
+     prototype that counted copied *starting positions*; the page counts
+     characters *inside* a copied run, which is the better measure and gives
+     very different figures (0, 0, 57, 95 rather than 0, 0, 18, 55). The title
+     was wrong in the same way and had to change. Read the selftest's own
+     detail strings back after the page goes green and reconcile every number
+     in the prose against them.
+  6. **A Python `str.replace` without an assertion is a silent no-op.** One
+     standfirst correction did not apply and reached a screenshot before it was
+     caught. Every patch in this batch that mattered used `assert old in s`
+     first; the one that did not was the one that failed.
+
 ### batch/009 — 2026-09-19
 - merged: projectile-drag, plate-tectonics-seafloor-age, electrochemical-cell-potential,
   compound-interest-doubling, plus three more pages of the legacy canvas repair

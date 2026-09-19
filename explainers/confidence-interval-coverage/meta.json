@@ -1,0 +1,17 @@
+{
+  "slug": "confidence-interval-coverage",
+  "title": "Your Interval Either Contains It Or It Does Not",
+  "domain": "statistics",
+  "difficulty": 3,
+  "summary": "Draw a population, then watch a hundred confidence intervals appear and roughly five of them miss. The ninety-five is a property of the recipe, not of the interval in front of you.",
+  "prerequisites": ["central-limit-theorem"],
+  "tags": ["confidence-interval", "coverage", "sampling", "students-t", "skewness", "inference"],
+  "interaction_pattern": "draw-input",
+  "sources": [
+    { "title": "Neyman, Outline of a Theory of Statistical Estimation Based on the Classical Theory of Probability (1937)", "url": "https://royalsocietypublishing.org/doi/10.1098/rsta.1937.0005" },
+    { "title": "NIST/SEMATECH e-Handbook of Statistical Methods, section 1.3.6.7.2: critical values of the t distribution", "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3672.htm" },
+    { "title": "Morey, Hoekstra, Rouder, Lee and Wagenmakers, The Fallacy of Placing Confidence in Confidence Intervals (2016)", "url": "https://link.springer.com/article/10.3758/s13423-015-0947-8" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}

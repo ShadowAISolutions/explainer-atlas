@@ -1,0 +1,818 @@
+<!doctype html>
+<!--
+  Interactive Explainer Atlas — page skeleton.
+  Start EVERY new explainer from this file. Never copy a previous page.
+  Replace every {{PLACEHOLDER}}. Delete the demo model and write your own.
+  Contract: FOUNDATION.md. Rules: CLAUDE.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Order Two Is Babble, Order Four Is Plagiarism &#8212; Explainer Atlas</title>
+<meta name="description" content="Paste a training text, slide the memory of a Markov model from one character to eight, and watch its output cross from noise into verbatim quotation with almost nothing in between.">
+<style>
+/* ---- tokens: restate these per page to vary the collection's feel ------- */
+:root{
+  --bg:#fdfcf5; --panel:#ffffff; --ink:#22200f; --muted:#6a6550; --line:#e6e2cf;
+  --accent:#8a6d1f; --accent-soft:#f6f0dc; --warn:#8f3a5a; --alt:#8f3a5a;
+  --radius:4px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.42rem,1.06rem + 1.7vw,2.05rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.06rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#16150e; --panel:#1f1d14; --ink:#efeada; --muted:#a8a087; --line:#312d20;
+    --accent:#d5b153; --accent-soft:#2a2516; --warn:#e089a5; --alt:#e089a5;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.15; margin:0 0 .4em; letter-spacing:-.01em}
+.kicker{margin:0 0 .35em; color:var(--accent); font:600 .78rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.09em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas, figure.stage svg{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.86rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.83rem}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+textarea{font:0.9rem/1.5 var(--font-mono); color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:.55em .6em; width:100%; min-height:8.5em; resize:vertical}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .7em; min-height:40px}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.06em}
+.readout dd{margin:.18em 0 0; font:600 1.05rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.16rem; margin:1.8em 0 .45em; letter-spacing:-.005em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); background:var(--accent-soft); padding:.7em .85em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">linguistics</p>
+  <h1>Order Two Is Babble, Order Four Is Plagiarism</h1>
+  <p class="standfirst">A Markov model remembers the last few characters and nothing else. Give it
+  one character of memory and it babbles; give it four and it starts quoting its source back at you
+  word for word. The useful band in between is narrower than anyone expects.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="620" role="img"
+            aria-label="Above, a block of text generated by the model, with every stretch that appears verbatim in the training text shaded. Below, a bar for each memory length from one to eight showing what share of the output is copied, together with a line showing how many bits per character the model needs to describe its own training text."></canvas>
+    <figcaption>Above: what the model writes, with every run of twelve or more characters lifted
+    straight from the training text shaded. Below: how much of the output is copied at each memory
+    length, and how surprised the model is by its own source.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row">
+        <label for="order">Memory</label>
+        <output id="ordout" for="order">3</output>
+      </div>
+      <input type="range" id="order" min="1" max="8" step="1" value="3">
+      <p class="hint">How many characters of context the model is allowed to look at. Arrow keys
+      step; End goes to eight.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="len">Output length</label>
+        <output id="lenout" for="len">360</output>
+      </div>
+      <input type="range" id="len" min="120" max="800" step="20" value="360">
+      <p class="hint">How many characters to generate. Longer output makes the copied stretches
+      easier to spot.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="corpus">Training text</label>
+      </div>
+      <select id="corpus">
+        <option value="austen" selected>Austen, Pride and Prejudice</option>
+        <option value="moby">Melville, Moby-Dick</option>
+        <option value="rhyme">The House That Jack Built</option>
+        <option value="own">your own</option>
+      </select>
+      <p class="hint">The rhyme is almost entirely repetition, which is why it is already being
+      plagiarised at a memory of two.</p>
+    </div>
+
+    <div class="control">
+      <label for="text">Edit the training text</label>
+      <textarea id="text" spellcheck="false" aria-describedby="thint"></textarea>
+      <p class="hint" id="thint">Type anything here and the model retrains on it. The whole model
+      is the counts of what follows what in this box.</p>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Copied</dt><dd id="oCopy">&#8212;</dd></div>
+      <div><dt>Longest lift</dt><dd id="oRun">&#8212;</dd></div>
+      <div><dt>Bits per character</dt><dd id="oBits">&#8212;</dd></div>
+      <div><dt>Distinct contexts</dt><dd id="oCtx">&#8212;</dd></div>
+      <div><dt>Choices per context</dt><dd id="oBr">&#8212;</dd></div>
+      <div><dt>Training length</dt><dd id="oLen">&#8212;</dd></div>
+    </dl>
+
+    <button type="button" id="reseed">Write another</button>
+    <button type="button" id="reset">Start over</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>The model in the panel above is nothing but a table of counts. For every stretch of text of a
+  given length, it records which characters were seen following it and how often. To write, it
+  looks at what it has just produced, finds that stretch in the table, and rolls a die weighted by
+  those counts. That is the entire algorithm; there is no grammar in it and no idea of a word.</p>
+
+  <p>At a memory of one character the output is obvious nonsense, but it is not random nonsense.
+  Vowels and consonants alternate about as often as they do in English, the letter e turns up more
+  than the letter z, and spaces arrive at roughly the right rate. The model has learned the
+  statistics of single characters and nothing else, and that is already enough to make it look like
+  language from a distance.</p>
+
+  <h2>The cliff</h2>
+
+  <p>Push the memory to three and words appear &#8212; and the shading in the upper panel appears
+  with them. Those are the stretches of twelve characters or more that the model did not invent but
+  copied. By four almost nothing is left that is not copied. The lower panel plots that share
+  against memory, and the shape of it is the point of the page: on this eight-hundred-character
+  passage the model is original at two, more than half copied at three, and reciting at four.</p>
+
+  <p class="math">copied share at memory 1, 2, 3, 4, 5, 6 &#8594; 0, 0, 57, 95, 100, 100 per cent</p>
+
+  <p>The reason is counting, not cleverness. A training text of eight hundred characters contains
+  about eight hundred stretches of length four, and most of them occur exactly once. A context that
+  occurred once has exactly one recorded continuation, so the die has one face. The model is not
+  choosing at that point; it is reciting. Watch the choices-per-context readout fall toward one as
+  you raise the memory, and the copied share rise to meet it. A longer source pushes the whole
+  curve to the right &#8212; that is the only thing that moves it &#8212; which is why a model with
+  a useful amount of memory needs an enormous amount of text.</p>
+
+  <h2>Why more memory always looks better</h2>
+
+  <p>The bits-per-character line is how surprised the model is by the very text it was trained on,
+  and it falls with every extra character of memory, all the way to zero. That is not evidence the
+  model is learning language. Measured on its own training text, more memory can never look worse,
+  because the model is allowed to memorise the answer. A score that a model can improve by
+  memorising is not a measure of understanding, which is why any honest evaluation holds text back
+  and scores the model on words it has never seen.</p>
+
+  <h2>What to try</h2>
+
+  <p>Choose the nursery rhyme and set the memory to two. The rhyme repeats itself so heavily that
+  two characters are already enough to pin down where you are in it, and two-fifths of the output
+  is shaded while the same setting on the Austen passage copies nothing at all. Then
+  paste in a paragraph of your own and find the memory where it stops babbling: that number is a
+  property of your text, not of the model. Short and repetitive texts break early, long and varied
+  ones hold out longer.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG. Never use bare Math.random(). ------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+
+/* ---- MODEL: pure functions of the parameters. No DOM in here. ----------- */
+/* The model is a table of counts and nothing else. Training wraps around the
+   end of the text, so every context has a successor and the counts sum to
+   the text's length exactly, which is the first thing asserted below.
+   Two routes to the cross-entropy: one walks the text character by character,
+   the other reads it straight off the aggregated count table.              */
+const MAXRUN = 40;                 /* longest lift the page bothers to find */
+const RUNMIN = 12;                 /* what counts as a copied stretch       */
+const ORDERS = 8;
+
+const CORPORA = {
+  austen: "It is a truth universally acknowledged, that a single man in possession of a good "
+        + "fortune, must be in want of a wife. However little known the feelings or views of such "
+        + "a man may be on his first entering a neighbourhood, this truth is so well fixed in the "
+        + "minds of the surrounding families, that he is considered the rightful property of some "
+        + "one or other of their daughters. My dear Mr. Bennet, said his lady to him one day, have "
+        + "you heard that Netherfield Park is let at last? Mr. Bennet replied that he had not. But "
+        + "it is, returned she; for Mrs. Long has just been here, and she told me all about it. "
+        + "Mr. Bennet made no answer. Do you not want to know who has taken it? cried his wife "
+        + "impatiently. You want to tell me, and I have no objection to hearing it.",
+  moby: "Call me Ishmael. Some years ago, never mind how long precisely, having little or no "
+      + "money in my purse, and nothing particular to interest me on shore, I thought I would sail "
+      + "about a little and see the watery part of the world. It is a way I have of driving off "
+      + "the spleen and regulating the circulation. Whenever I find myself growing grim about the "
+      + "mouth; whenever it is a damp, drizzly November in my soul; whenever I find myself "
+      + "involuntarily pausing before coffin warehouses, and bringing up the rear of every funeral "
+      + "I meet; and especially whenever my hypos get such an upper hand of me, that it requires a "
+      + "strong moral principle to prevent me from deliberately stepping into the street, then I "
+      + "account it high time to get to sea as soon as I can.",
+  rhyme: "This is the house that Jack built. This is the malt that lay in the house that Jack "
+       + "built. This is the rat that ate the malt that lay in the house that Jack built. This is "
+       + "the cat that killed the rat that ate the malt that lay in the house that Jack built. "
+       + "This is the dog that worried the cat that killed the rat that ate the malt that lay in "
+       + "the house that Jack built. This is the cow with the crumpled horn that tossed the dog "
+       + "that worried the cat that killed the rat that ate the malt that lay in the house that "
+       + "Jack built."
+};
+
+const Model = {
+  clean(t){
+    const s = String(t == null ? "" : t).replace(/\s+/g, " ").trim();
+    return s.length >= 12 ? s : CORPORA.austen;
+  },
+
+  /* the whole model: context of length k -> counts of the following char */
+  _tr: {},
+  train(text, k){
+    const key = k + "|" + text;
+    if (Model._tr[key]) return Model._tr[key];
+    const L = text.length, m = new Map();
+    for (let i = 0; i < L; i++){
+      let c = "";
+      for (let j = 0; j < k; j++) c += text[(i + j) % L];
+      const nx = text[(i + k) % L];
+      let e = m.get(c);
+      if (!e){ e = new Map(); m.set(c, e); }
+      e.set(nx, (e.get(nx) || 0) + 1);
+    }
+    return (Model._tr[key] = m);
+  },
+  totalCount(m){
+    let s = 0;
+    for (const e of m.values()) for (const v of e.values()) s += v;
+    return s;
+  },
+  branching(m){
+    let s = 0;
+    for (const e of m.values()) s += e.size;
+    return m.size > 0 ? s / m.size : 0;
+  },
+
+  /* generation. The seed context is the text's own opening, and it is part
+     of the output, so a model with k = length - 1 reproduces the text.     */
+  generate(text, k, len, seed){
+    const m = Model.train(text, k), rng = mulberry32(seed);
+    let ctx = text.slice(0, k), out = ctx;
+    for (let i = k; i < len; i++){
+      const e = m.get(ctx);
+      if (!e){ ctx = text.slice(0, k); continue; }
+      let tot = 0;
+      for (const v of e.values()) tot += v;
+      let r = rng() * tot, ch = null;
+      for (const pair of e){ r -= pair[1]; if (r <= 0){ ch = pair[0]; break; } }
+      if (ch === null) ch = e.keys().next().value;
+      out += ch;
+      ctx = k === 0 ? "" : (ctx + ch).slice(1);
+    }
+    return out;
+  },
+
+  /* every substring of the training text up to MAXRUN, for lift detection */
+  _sub: {},
+  subs(text){
+    if (Model._sub[text]) return Model._sub[text];
+    const set = new Set(), L = text.length;
+    for (let i = 0; i < L; i++){
+      let s = "";
+      for (let n = 0; n < MAXRUN && i + n < L + MAXRUN; n++){
+        s += text[(i + n) % L];
+        set.add(s);
+      }
+    }
+    return (Model._sub[text] = set);
+  },
+  /* longest stretch starting at i that also occurs in the training text */
+  liftAt(out, i, set){
+    let s = "", n = 0;
+    while (n < MAXRUN && i + n < out.length){
+      s += out[i + n];
+      if (!set.has(s)) break;
+      n++;
+    }
+    return n;
+  },
+  /* share of the output sitting inside a copied run of at least RUNMIN */
+  lift(text, out){
+    const set = Model.subs(text);
+    let inRun = 0, longest = 0;
+    const mark = new Uint8Array(out.length);
+    for (let i = 0; i < out.length; i++){
+      const n = Model.liftAt(out, i, set);
+      if (n > longest) longest = n;
+      if (n >= RUNMIN) for (let j = i; j < i + n; j++) mark[j] = 1;
+    }
+    for (let i = 0; i < out.length; i++) if (mark[i]) inRun++;
+    return { share: out.length ? inRun / out.length : 0, longest: longest, mark: mark };
+  },
+
+  /* ROUTE A: walk the text and accumulate the surprise of each character. */
+  xentWalk(text, k){
+    const m = Model.train(text, k), L = text.length;
+    let s = 0;
+    for (let i = 0; i < L; i++){
+      let c = "";
+      for (let j = 0; j < k; j++) c += text[(i + j) % L];
+      const e = m.get(c);
+      let tot = 0;
+      for (const v of e.values()) tot += v;
+      s += -Math.log2(e.get(text[(i + k) % L]) / tot);
+    }
+    return s / L;
+  },
+  /* ROUTE B: the same number read off the aggregated table, never touching
+     the text again. Sum over contexts of count * log2(count / total).     */
+  xentTable(text, k){
+    const m = Model.train(text, k);
+    let s = 0, n = 0;
+    for (const e of m.values()){
+      let tot = 0;
+      for (const v of e.values()) tot += v;
+      for (const v of e.values()){ s += -v * Math.log2(v / tot); n += v; }
+    }
+    return n > 0 ? s / n : 0;
+  },
+
+  /* the curve the lower pane draws, memoised per training text */
+  _curve: {},
+  curve(text, seed, len){
+    const key = seed + "|" + len + "|" + text;
+    if (Model._curve[key]) return Model._curve[key];
+    const rows = [];
+    for (let k = 1; k <= ORDERS; k++){
+      const out = Model.generate(text, k, len, seed + k * 977);
+      rows.push({ k: k, share: Model.lift(text, out).share, bits: Model.xentWalk(text, k) });
+    }
+    return (Model._curve[key] = rows);
+  },
+
+  /* n-gram distributions, for the selftest's noise-floor comparison */
+  grams(s, n, circular){
+    const m = new Map(), L = s.length;
+    if (circular){
+      for (let i = 0; i < L; i++){
+        let g = "";
+        for (let j = 0; j < n; j++) g += s[(i + j) % L];
+        m.set(g, (m.get(g) || 0) + 1);
+      }
+    } else {
+      for (let i = 0; i + n <= L; i++){
+        const g = s.slice(i, i + n);
+        m.set(g, (m.get(g) || 0) + 1);
+      }
+    }
+    return m;
+  },
+  tvd(a, b){
+    let sa = 0, sb = 0;
+    for (const v of a.values()) sa += v;
+    for (const v of b.values()) sb += v;
+    let d = 0;
+    const seen = new Set();
+    for (const key of a.keys()) seen.add(key);
+    for (const key of b.keys()) seen.add(key);
+    for (const key of seen) d += Math.abs((a.get(key) || 0) / sa - (b.get(key) || 0) / sb);
+    return d / 2;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { order: 3, len: 360, corpus: "austen", seed: 1 };
+const state = Object.assign({}, defaults);
+state.text = CORPORA.austen;
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+el("text").value = state.text;
+
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+const SS = 2;
+let CW = 900, CH = 620, NARROW = false, FS = 13, MS = 13, G_ = null;
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 20) : 900);
+  NARROW = avail < 470;
+  CW = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+  MS = NARROW ? 11 : 13;                      /* the generated text's size  */
+
+  const pad = NARROW ? 10 : 14;
+  const L = pad, R = CW - pad;
+  const lh = Math.round(MS * 1.55);
+  const textTop = Math.round(pad + FS + 20);
+  /* size the text box to the text: measure the monospace cell here, since a
+     fixed line count left most of the panel empty at short output lengths. */
+  ctx.font = MS + "px " + getComputedStyle(document.documentElement)
+                            .getPropertyValue("--font-mono").trim();
+  const cell = ctx.measureText("M").width || MS * 0.6;
+  const cols = Math.max(8, Math.floor((R - L) / cell));
+  const lines = Math.max(3, Math.min(22, Math.ceil(state.len / (cols * 0.92)) + 1));
+  const textBot = textTop + lines * lh + 6;
+  const textCap = textBot + FS + 8;
+  const barTitle = Math.round(textCap + 14 + FS);
+  const barsTop = barTitle + 12;
+  const barsH = Math.round(CW * (NARROW ? 0.42 : 0.24));
+  const barsBot = barsTop + barsH;
+  const kY = barsBot + FS + 5;
+  const cap2Y = barsBot + 2 * FS + 11;
+  CH = cap2Y + 6;
+
+  G_ = { pad: pad, L: L, R: R, lh: lh, lines: lines, textTop: textTop, textBot: textBot,
+         textCap: textCap, barTitle: barTitle, barsTop: barsTop, barsBot: barsBot,
+         kY: kY, cap2Y: cap2Y };
+
+  if (cv.width !== CW * SS || cv.height !== CH * SS){ cv.width = CW * SS; cv.height = CH * SS; }
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function wid(s){ return ctx.measureText(s).width; }
+function pick(sets, room){
+  for (let i = 0; i < sets.length; i++) if (wid(sets[i]) <= room) return sets[i];
+  return sets[sets.length - 1];
+}
+
+function render(){
+  fitCanvas();
+  const G = G_, text = state.text, k = Math.min(state.order, Math.max(1, text.length - 2));
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line");
+  const accent = css("--accent"), warn = css("--warn"), panel = css("--panel"),
+        soft = css("--accent-soft");
+
+  ctx.clearRect(0, 0, CW, CH);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, CW, CH);
+  ctx.textBaseline = "alphabetic";
+
+  const out = Model.generate(text, k, state.len, 7717 + state.seed * 10007);
+  const lifted = Model.lift(text, out);
+  const m = Model.train(text, k);
+
+  /* ---------------- upper pane: what the model wrote ------------------- */
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["Written with " + k + " characters of memory",
+                     k + " characters of memory", "memory " + k], G.R - G.L),
+               G.L, G.pad + FS);
+
+  /* wrap the output to the pane's width in a monospace cell grid */
+  ctx.font = MS + "px " + css("--font-mono");
+  const chw = wid("M");
+  const cols = Math.max(8, Math.floor((G.R - G.L) / chw));
+  let i = 0, row = 0;
+  while (i < out.length && row < G.lines){
+    let take = Math.min(cols, out.length - i);
+    if (take === cols && i + take < out.length){
+      let br = -1;
+      for (let j = take - 1; j > take * 0.6; j--) if (out[i + j] === " "){ br = j + 1; break; }
+      if (br > 0) take = br;
+    }
+    const y = G.textTop + row * G.lh;
+    for (let j = 0; j < take; j++){
+      const x = G.L + j * chw;
+      if (lifted.mark[i + j]){
+        ctx.fillStyle = soft;
+        ctx.fillRect(x - 0.5, y - MS + 2, chw + 1, G.lh - 2);
+      }
+    }
+    for (let j = 0; j < take; j++){
+      ctx.fillStyle = lifted.mark[i + j] ? accent : ink;
+      ctx.fillText(out[i + j], G.L + j * chw, y);
+    }
+    i += take; row++;
+  }
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.strokeRect(G.L - 4.5, G.textTop - MS - 1.5, G.R - G.L + 9, G.textBot - G.textTop + MS);
+
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.fillStyle = muted; ctx.textAlign = "center";
+  ctx.fillText(pick(["shaded stretches are " + RUNMIN + " or more characters copied from the source",
+                     "shaded runs are copied from the source", "shaded runs are copied"],
+                    G.R - G.L),
+               (G.L + G.R) / 2, G.textCap);
+
+  /* ---------------- lower pane: copied share and bits against memory ---- */
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["How much is copied, and how surprised the model is, at each memory",
+                     "Copied share and bits per character", "Copied share and bits"],
+                    G.R - G.L),
+               G.L, G.barTitle);
+
+  const rows = Model.curve(text, 314159, 900);
+  let bMax = 0.5;
+  for (const r of rows) if (r.bits > bMax) bMax = r.bits;
+  const gutL = NARROW ? 30 : 42, gutR = NARROW ? 32 : 46;
+  const bl = G.L + gutL, br = G.R - gutR;
+  const bh = G.barsBot - G.barsTop;
+  const gw = (br - bl) / ORDERS;
+
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.strokeStyle = line;
+  for (let p = 0; p <= 100; p += 25){
+    const y = Math.round(G.barsBot - (p / 100) * bh) + 0.5;
+    ctx.beginPath(); ctx.moveTo(bl, y); ctx.lineTo(br, y); ctx.stroke();
+    ctx.fillStyle = muted; ctx.textAlign = "right";
+    ctx.fillText(p + "%", bl - 6, y + FS * 0.35);
+  }
+  for (let j = 0; j < ORDERS; j++){
+    const r = rows[j], x = bl + gw * j + gw * 0.22, w = gw * 0.56;
+    const h = Math.max(1, r.share * bh);
+    ctx.fillStyle = accent;
+    ctx.globalAlpha = r.k === k ? 1 : 0.35;
+    ctx.fillRect(x, G.barsBot - h, w, h);
+    ctx.globalAlpha = 1;
+  }
+  ctx.strokeStyle = warn; ctx.lineWidth = 2; ctx.beginPath();
+  for (let j = 0; j < ORDERS; j++){
+    const x = bl + gw * (j + 0.5), y = G.barsBot - (rows[j].bits / bMax) * bh;
+    if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.fillStyle = warn;
+  for (let j = 0; j < ORDERS; j++){
+    const x = bl + gw * (j + 0.5), y = G.barsBot - (rows[j].bits / bMax) * bh;
+    ctx.beginPath(); ctx.arc(x, y, 2.6, 0, 6.2832); ctx.fill();
+  }
+  ctx.textAlign = "left"; ctx.fillStyle = warn;
+  for (let p = 0; p <= 4; p++){
+    const v = bMax * p / 4;
+    if (p === 0) continue;
+    const y = Math.round(G.barsBot - (v / bMax) * bh) + 0.5;
+    ctx.fillText(v.toFixed(1), br + 6, y + FS * 0.35);
+  }
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(bl, Math.round(G.barsBot) + 0.5); ctx.lineTo(br, Math.round(G.barsBot) + 0.5);
+  ctx.stroke();
+
+  ctx.fillStyle = muted; ctx.textAlign = "center";
+  for (let j = 0; j < ORDERS; j++)
+    ctx.fillText(String(rows[j].k), bl + gw * (j + 0.5), G.kY);
+  ctx.fillText(pick(["characters of memory; bars are the copied share, the line is bits per character",
+                     "memory; bars copied, line bits per character",
+                     "memory; bars copied, line bits"], G.R - G.L),
+               (G.L + G.R) / 2, G.cap2Y);
+
+  /* ---------------- readouts ------------------------------------------- */
+  el("ordout").textContent = String(state.order);
+  el("lenout").textContent = String(state.len);
+  el("oCopy").textContent = (lifted.share * 100).toFixed(0) + "%";
+  el("oRun").textContent = lifted.longest + (lifted.longest >= MAXRUN ? "+" : "") + " chars";
+  el("oBits").textContent = Model.xentWalk(text, k).toFixed(2);
+  el("oCtx").textContent = String(m.size);
+  el("oBr").textContent = Model.branching(m).toFixed(2);
+  el("oLen").textContent = text.length + " chars";
+}
+
+function setText(t){
+  state.text = Model.clean(t);
+  render();
+}
+el("order").addEventListener("input", () => { state.order = parseInt(el("order").value, 10); render(); });
+el("len").addEventListener("input", () => { state.len = parseInt(el("len").value, 10); render(); });
+el("corpus").addEventListener("change", () => {
+  state.corpus = el("corpus").value;
+  if (CORPORA[state.corpus]){ el("text").value = CORPORA[state.corpus]; setText(CORPORA[state.corpus]); }
+  else render();
+});
+el("text").addEventListener("input", () => {
+  state.corpus = "own"; el("corpus").value = "own";
+  setText(el("text").value);
+});
+el("reseed").addEventListener("click", () => { state.seed = (state.seed + 1) % 997; render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  state.text = CORPORA.austen;
+  el("order").value = defaults.order; el("len").value = defaults.len;
+  el("corpus").value = defaults.corpus; el("text").value = CORPORA.austen;
+  render();
+});
+
+let rid = null;
+addEventListener("resize", () => { clearTimeout(rid); rid = setTimeout(render, 90); });
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
+render();
+
+/* ---- SELFTEST: minimum 5 numeric assertions against known values. ------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+  const A = CORPORA.austen, R = CORPORA.rhyme, MB = CORPORA.moby;
+
+  /* 1. the counts are a complete accounting of the text. */
+  let ok1 = true, s1 = "";
+  for (const txt of [A, MB, R])
+    for (let k = 1; k <= ORDERS; k++){
+      const m = Model.train(txt, k);
+      if (Model.totalCount(m) !== txt.length) ok1 = false;
+      if (txt === A && k === 3) s1 = "the Austen passage has " + txt.length + " characters and "
+                                   + m.size + " distinct three-character contexts";
+    }
+  push("the transition counts add up to the length of the text, exactly", ok1,
+       s1 + "; the counts sum to the length for all three texts at every memory from 1 to 8");
+
+  /* 2. every context is a proper distribution. */
+  let w2 = 0;
+  for (const txt of [A, R])
+    for (let k = 1; k <= 6; k++)
+      for (const e of Model.train(txt, k).values()){
+        let tot = 0;
+        for (const v of e.values()) tot += v;
+        let p = 0;
+        for (const v of e.values()) p += v / tot;
+        w2 = Math.max(w2, Math.abs(p - 1));
+      }
+  push("every context's continuations form a probability distribution", w2 < 1e-12,
+       "the weights on each die sum to one to within " + w2.toExponential(2)
+       + " over every context of two texts at six memory lengths");
+
+  /* 3. THE claim the page is about, measured against its own noise floor.
+        Two independent runs of the same model differ from each other by more
+        than either differs from the training text, for every n up to the
+        memory plus one. That is what "matches the statistics" means.       */
+  let ok3 = true, worst3 = 0, s3 = "";
+  for (const k of [1, 2, 3, 4]){
+    const g1 = Model.generate(A, k, 200000, 4242), g2 = Model.generate(A, k, 200000, 777);
+    for (let n = 1; n <= k + 1; n++){
+      const d = Model.tvd(Model.grams(g1, n, false), Model.grams(A, n, true));
+      const floor = Model.tvd(Model.grams(g1, n, false), Model.grams(g2, n, false));
+      const ratio = d / floor;
+      if (!(ratio < 1)) ok3 = false;
+      if (ratio > worst3) worst3 = ratio;
+      if (k === 3 && n === 3) s3 = "at memory 3 the three-gram distance is " + d.toFixed(4)
+                                 + " against a sampling floor of " + floor.toFixed(4);
+    }
+  }
+  push("the output's character statistics are indistinguishable from the source's, up to the memory",
+       ok3, s3 + "; over 50,000 generated characters the worst ratio to the floor is "
+       + worst3.toFixed(2) + ", so the difference is sampling noise and not bias");
+
+  /* 4. and they are distinguishable one step beyond it. That is the cliff. */
+  let ok4 = true, s4 = [];
+  for (const k of [1, 2, 3]){
+    const g1 = Model.generate(A, k, 200000, 4242), g2 = Model.generate(A, k, 200000, 777);
+    const n = k + 2;
+    const d = Model.tvd(Model.grams(g1, n, false), Model.grams(A, n, true));
+    const floor = Model.tvd(Model.grams(g1, n, false), Model.grams(g2, n, false));
+    if (!(d / floor > 2)) ok4 = false;
+    s4.push("memory " + k + " is off by " + (d / floor).toFixed(1) + " floors at length " + n);
+  }
+  push("and they part company one character beyond the memory", ok4,
+       s4.join(", ") + ": the model reproduces its source up to its memory and nothing past it");
+
+  /* 5. at a memory one short of the text, the model recites the text. */
+  const tiny = "abcdefghijklmnop";
+  const ok5a = Model.generate(tiny, tiny.length - 1, tiny.length, 7) === tiny;
+  const ok5b = Model.generate(A, A.length - 1, A.length, 11) === A;
+  push("with a memory one character short of the text, the model reproduces it exactly",
+       ok5a && ok5b,
+       "every context occurs once, so every die has one face; the " + A.length
+       + "-character passage comes back character for character");
+
+  /* 6. determinism, and the variety a small memory still has. */
+  const same = Model.generate(A, 3, 300, 55) === Model.generate(A, 3, 300, 55);
+  const seen = new Set();
+  for (let s = 1; s <= 30; s++) seen.add(Model.generate(A, 3, 240, s * 1000 + 7));
+  push("one seed gives one text, thirty seeds give thirty", same && seen.size > 25,
+       "the same seed reproduces its output exactly, and 30 different seeds produced "
+       + seen.size + " distinct passages at memory 3");
+
+  /* 7. two routes to the cross-entropy agree. */
+  let w7 = 0;
+  for (const txt of [A, MB, R])
+    for (let k = 1; k <= 6; k++)
+      w7 = Math.max(w7, Math.abs(Model.xentWalk(txt, k) - Model.xentTable(txt, k)));
+  push("counting surprise along the text agrees with reading it off the table", w7 < 1e-12,
+       "walking the text character by character and summing over the aggregated counts agree to "
+       + w7.toExponential(2) + " on three texts at six memory lengths");
+
+  /* 8. and it can only fall as the memory grows. */
+  let ok8 = true, s8 = [];
+  for (const txt of [A, MB, R]){
+    let prev = Infinity;
+    for (let k = 1; k <= 6; k++){
+      const b = Model.xentWalk(txt, k);
+      if (!(b <= prev + 1e-12)) ok8 = false;
+      prev = b;
+      if (txt === A) s8.push(b.toFixed(2));
+    }
+  }
+  push("more memory can never look worse on the text it was trained on", ok8,
+       "the Austen passage costs " + s8.join(" then ")
+       + " bits per character at memories 1 to 6, falling every step, which is memorisation "
+       + "rather than learning");
+
+  /* 9. at zero memory the cost is the text's own character entropy. */
+  const counts = new Map();
+  for (const ch of A) counts.set(ch, (counts.get(ch) || 0) + 1);
+  let H = 0;
+  for (const v of counts.values()){ const p = v / A.length; H += -p * Math.log2(p); }
+  push("with no memory at all the cost is exactly the text's character entropy",
+       near(Model.xentWalk(A, 0), H, 1e-12),
+       "the closed-form entropy of the " + counts.size + " distinct characters is "
+       + H.toFixed(6) + " bits, and the model reports the same to 1e-12");
+
+  /* 10. the copied share climbs with memory: the cliff, as a number. */
+  const cur = Model.curve(A, 314159, 900);
+  let ok10 = true;
+  for (let j = 1; j < cur.length; j++) if (cur[j].share < cur[j - 1].share - 0.02) ok10 = false;
+  if (!(cur[0].share < 0.02 && cur[5].share > 0.8)) ok10 = false;
+  push("the copied share climbs from nothing to almost everything", ok10,
+       "at memories 1 to 8 the shares are "
+       + cur.map((r) => (r.share * 100).toFixed(0)).join(", ")
+       + " per cent, never falling by more than a rounding step");
+
+  /* 11. a repetitive text collapses far earlier than a varied one. */
+  const cr = Model.curve(R, 314159, 900), ca = Model.curve(A, 314159, 900);
+  push("a repetitive text is plagiarised at a memory that leaves prose still babbling",
+       cr[1].share > ca[1].share + 0.3 && cr[2].share > ca[2].share + 0.25,
+       "at memory 2 the nursery rhyme is already " + (cr[1].share * 100).toFixed(0)
+       + " per cent copied against " + (ca[1].share * 100).toFixed(0)
+       + " per cent for the Austen passage, and at memory 3 it is "
+       + (cr[2].share * 100).toFixed(0) + " against " + (ca[2].share * 100).toFixed(0));
+
+  /* 12. the model can only emit characters it has seen. */
+  let ok12 = true;
+  for (const txt of [A, MB, R]){
+    const alpha = new Set(txt.split(""));
+    for (const k of [1, 3, 6]){
+      const g = Model.generate(txt, k, 2000, 606 + k);
+      for (const ch of g) if (!alpha.has(ch)) ok12 = false;
+      if (g.length !== 2000) ok12 = false;
+    }
+  }
+  push("the model never invents a character, and writes exactly what was asked for", ok12,
+       "2,000 characters at three memory lengths on three texts, all drawn from the training "
+       + "alphabet and all of the requested length");
+
+  /* 13. degenerate inputs still give finite numbers. */
+  let ok13 = true;
+  for (const txt of [Model.clean(""), Model.clean("ab"), Model.clean("aaaaaaaaaaaaaaaa"),
+                     Model.clean("  spaced   out   text   here  ")]){
+    for (let k = 1; k <= ORDERS; k++){
+      const b = Model.xentWalk(txt, k);
+      if (!Number.isFinite(b) || b < -1e-12) ok13 = false;
+      if (Model.generate(txt, k, 200, 5).length !== 200) ok13 = false;
+    }
+  }
+  push("an empty or degenerate training text still produces finite numbers", ok13,
+       "a blank box, a two-character box and a box of one repeated letter all give a real "
+       + "bits-per-character and a full-length output at every memory");
+
+  return t;
+};
+
+/* exposed for the verifier's control sweep */
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "slug": "markov-text-order",
+  "title": "Order Two Is Babble, Order Four Is Plagiarism",
+  "domain": "linguistics",
+  "difficulty": 2,
+  "summary": "Paste a training text, slide the memory of a Markov model from one character to eight, and watch its output cross from noise into verbatim quotation with almost nothing in between.",
+  "prerequisites": ["shannon-channel-capacity"],
+  "tags": ["markov-chain", "language-model", "n-gram", "entropy", "memorisation", "text-generation"],
+  "interaction_pattern": "live-code",
+  "sources": [
+    { "title": "Shannon, A Mathematical Theory of Communication (1948), section 3 on n-gram approximations to English", "url": "https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf" },
+    { "title": "Jurafsky and Martin, Speech and Language Processing, chapter 3: N-gram Language Models", "url": "https://web.stanford.edu/~jurafsky/slp3/3.pdf" },
+    { "title": "Carlini and others, Quantifying Memorization Across Neural Language Models (2023)", "url": "https://arxiv.org/abs/2202.07646" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}
