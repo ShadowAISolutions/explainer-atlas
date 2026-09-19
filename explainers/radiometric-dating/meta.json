@@ -1,0 +1,22 @@
+{
+  "slug": "radiometric-dating",
+  "title": "The Clock Does Not Care How Much You Started With",
+  "domain": "earth-science",
+  "difficulty": 3,
+  "summary": "Scrub through geological time and watch the parent-to-daughter ratio give the same age whatever the sample size, then see the isochron rescue the date when the daughter was there from the start.",
+  "prerequisites": [],
+  "tags": [
+    "radioactive-decay",
+    "geochronology",
+    "half-life",
+    "isochron",
+    "exponential-decay"
+  ],
+  "interaction_pattern": "time-scrubber",
+  "sources": [
+    { "title": "Nicolaysen, Graphic Interpretation of Discordant Age Measurements on Metamorphic Rocks, Ann. NY Acad. Sci. 91, 1961", "url": "https://nyaspubs.onlinelibrary.wiley.com/doi/10.1111/j.1749-6632.1961.tb35472.x" },
+    { "title": "IAEA Live Chart of Nuclides", "url": "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}

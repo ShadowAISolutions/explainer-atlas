@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Clock Does Not Care How Much You Started With — Explainer Atlas</title>
+<meta name="description" content="Scrub through geological time and watch the parent-to-daughter ratio give the same age whatever the sample size, then see the isochron rescue the date when the daughter was there from the start.">
+<style>
+:root{
+  --bg:#eef0f4; --panel:#ffffff; --ink:#1a1d26; --muted:#5b6070; --line:#d5d9e2;
+  --accent:#5b21b6; --accent-soft:#ede6fb; --parent:#0d7490; --daughter:#b45309;
+  --grid:#e2e5ec;
+  --radius:0px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Charter","Bitstream Charter",Cambria,Georgia,serif;
+  --font-ui:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.55rem,1.05rem + 2.2vw,2.35rem);
+  --scale-body:clamp(1rem,0.96rem + 0.2vw,1.08rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#111318; --panel:#191c24; --ink:#e6e8ee; --muted:#969bab; --line:#2a2e39;
+    --accent:#a78bfa; --accent-soft:#241a3a; --parent:#38bdf8; --daughter:#fbbf24;
+    --grid:#232733;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:72rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:calc(var(--pad)*0.7); border-bottom:1px solid var(--line)}
+h1{font-size:var(--scale-h1); line-height:1.12; margin:0 0 .3em; font-weight:600}
+.kicker{margin:0 0 .5em; color:var(--accent); font:700 .72rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.15em}
+.standfirst{margin:0; color:var(--muted); max-width:42em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:62rem){ .layout{grid-template-columns:minmax(0,1.9fr) minmax(16rem,0.85fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:0; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin:0; padding:.65em .9em; color:var(--muted); font-size:.85rem; font-family:var(--font-ui); line-height:1.45; border-top:1px solid var(--line)}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1.1em; font-family:var(--font-ui)}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font-weight:700; font-size:.92rem}
+.control output{font:700 .88rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.26em .48em}
+.control .hint{color:var(--muted); font-size:.79rem; line-height:1.4; margin:0}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:600 .9rem/1.2 var(--font-ui); color:inherit; background:var(--bg); border:1px solid var(--line); padding:.6em .7em; min-height:40px; width:100%; border-radius:0}
+button{cursor:pointer}
+button:hover,select:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr)); gap:1px; margin:0; padding:0; background:var(--line)}
+.readout div{background:var(--panel); padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font:600 .68rem/1.3 var(--font-ui); text-transform:uppercase; letter-spacing:.08em}
+.readout dd{margin:.15em 0 0; font:700 1.02rem/1.2 var(--font-mono)}
+.prose{max-width:38em; margin:calc(var(--pad)*1.6) auto 0}
+.prose h2{font:700 .95rem/1.3 var(--font-ui); text-transform:uppercase; letter-spacing:.11em; color:var(--accent); margin:2.1em 0 .5em}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.9em; background:var(--accent-soft); padding:.75em .9em;
+  border-left:3px solid var(--accent); overflow-x:auto; white-space:pre}
+footer.page{margin-top:calc(var(--pad)*1.8); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem; font-family:var(--font-ui)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Earth science</p>
+  <h1>The Clock Does Not Care How Much You Started With</h1>
+  <p class="standfirst">You cannot weigh a rock and learn its age. You can count what has turned into what, and that ratio is the same whether you picked up a gram or a tonne.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="760" height="580" role="img"
+            aria-label="Top: parent and daughter isotope curves against time with a scrubber at the chosen age. Bottom: an isochron plot of five minerals, whose slope gives the age even when daughter was present from the start."></canvas>
+    <figcaption>Above: the two isotopes trading places, with the sample you are measuring marked. Below: five minerals from the same rock, plotted so that the slope of the line through them is the age and the intercept is whatever daughter was there on day one.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row"><label for="sys">Isotope system</label></div>
+      <select id="sys">
+        <option value="c14">Carbon-14 &#8594; Nitrogen-14</option>
+        <option value="k40">Potassium-40 &#8594; Argon-40</option>
+        <option value="u238">Uranium-238 &#8594; Lead-206</option>
+        <option value="rb87">Rubidium-87 &#8594; Strontium-87</option>
+      </select>
+      <p class="hint">Each has its own half-life, and that is the only thing that changes between them.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="age">Age, in half-lives</label>
+        <output id="ageout" for="age">1.00</output>
+      </div>
+      <input type="range" id="age" min="0" max="8" step="0.02" value="1">
+      <p class="hint">Scrub the clock. Arrow keys step by a fiftieth of a half-life.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="amt">How much you collected</label>
+        <output id="amtout" for="amt">100</output>
+      </div>
+      <input type="range" id="amt" min="5" max="500" step="5" value="100">
+      <p class="hint">Arbitrary units of parent atoms on day one. Watch the age readout as you move it.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="d0">Daughter already present</label>
+        <output id="d0out" for="d0">0.00</output>
+      </div>
+      <input type="range" id="d0" min="0" max="1.5" step="0.01" value="0">
+      <p class="hint">Daughter isotope the rock was born with, relative to a stable reference isotope. This is what wrecks the simple ratio.</p>
+    </div>
+
+    <button type="button" id="reset">Reset</button>
+  </section>
+
+  <dl class="readout" aria-live="polite" style="grid-column:1/-1">
+    <div><dt>Half-life</dt><dd id="rHl">5730 a</dd></div>
+    <div><dt>Parent remaining</dt><dd id="rRem">50.00%</dd></div>
+    <div><dt>True age</dt><dd id="rTrue">5730 a</dd></div>
+    <div><dt>Age from the raw ratio</dt><dd id="rNaive">5730 a</dd></div>
+    <div><dt>Age from the isochron</dt><dd id="rIso">5730 a</dd></div>
+  </dl>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Drag the third slider, the one labelled how much you collected, from 5 to 500 and watch the age readout. It does not move. A hundred times more material decays a hundred times faster in absolute terms, and the fraction left behind is identical, which is the whole reason radiometric dating works on a chip of zircon the size of a full stop.</p>
+
+  <h2>Why a fraction and not an amount</h2>
+  <p>Each atom of the parent isotope has a fixed probability of decaying in the next second, unaffected by temperature, pressure, chemistry or what its neighbours are doing. So the number decaying per second is proportional to how many are left, which gives an exponential:</p>
+  <p class="math">N(t) = N&#8320; &#183; 2^(&#8722;t / T)     equivalently  N&#8320; &#183; e^(&#8722;&#955;t),  &#955;T = ln 2</p>
+  <p>Nothing survives that is not a ratio. Divide N(t) by N&#8320; and the starting amount is gone, and since every parent atom that leaves becomes exactly one daughter atom, the daughter count D is N&#8320; &#8722; N. Rearranging for the age gives an expression made entirely of things you can measure today:</p>
+  <p class="math">t = T &#183; log&#8322;( 1 + D/N )</p>
+  <p>You never need to know N&#8320;. That is the trick, and it is the only trick, and everything else in the subject is about the conditions under which it holds.</p>
+
+  <h2>Four clocks with wildly different reaches</h2>
+  <p>Switch the isotope system. Carbon-14 has a half-life of 5730 years, so after ten half-lives &#8212; 57,300 years &#8212; a thousandth of the original remains and the measurement runs out of signal. That is the ceiling on radiocarbon, and it is a property of the isotope, not of the instrument. Uranium-238 takes 4.468 billion years to halve, which is why zircons carrying it date the oldest rocks on Earth but are useless on a Roman coin: after two thousand years the ratio has barely left zero.</p>
+  <p>Notice what does not change: the shape on the upper chart is exactly the same curve for all four. Only the axis labels differ. A clock is a clock; picking one is entirely about matching its half-life to the interval you are trying to measure.</p>
+
+  <h2>The assumption that breaks first</h2>
+  <p>The formula above assumed every daughter atom got there by decay. Push the fourth slider up and watch the raw-ratio age run away from the true age &#8212; it reads far too old, because it is crediting inherited daughter to a decay that never happened. Argon-argon and rubidium-strontium dating live with this constantly; rocks do not form chemically pure.</p>
+  <p>The isochron on the lower chart fixes it without ever knowing the initial amount. Take several minerals from the same rock, which crystallised at the same moment but locked in different parent concentrations. Divide everything by a stable isotope of the daughter element, which does not decay and is not produced, and each mineral plots as a point satisfying</p>
+  <p class="math">D/D&#8347; = (D/D&#8347;)&#8320; + (P/D&#8347;) &#183; (e^(&#955;t) &#8722; 1)</p>
+  <p>That is a straight line. Its intercept is the inherited daughter, which the fit hands you for free instead of requiring you to assume it, and its slope is e^(&#955;t) &#8722; 1, so the age is ln(1 + slope)/&#955;. Move the daughter slider and the whole line slides up the y-axis while its slope, and therefore the isochron age, does not budge.</p>
+
+  <h2>What to try</h2>
+  <p>Set potassium-argon, put the age at 2 half-lives and the initial daughter at 0. Both age readouts agree at 2.50 billion years. Now push the initial daughter to 1.00: the raw ratio climbs to 3.29 billion years, almost a third too old, while the isochron stays exactly where it was. That gap is the difference between a date you can publish and a date that is an artefact of your assumption.</p>
+  <p>Then take the age slider down below about a tenth of a half-life on any system. The isochron points crowd towards a horizontal line, the slope becomes tiny, and small scatter in the measurements swamps it. That is the other end of the range: a clock cannot read a time much shorter than the interval it ticks in.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &#183; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+const LN2 = Math.log(2);
+
+/* ---- MODEL -------------------------------------------------------------- */
+const Model = {
+  SYSTEMS: {
+    c14:  { name: "Carbon-14", daughter: "Nitrogen-14", ref: "C-12", halfLife: 5730 },
+    k40:  { name: "Potassium-40", daughter: "Argon-40", ref: "Ar-36", halfLife: 1.248e9 },
+    u238: { name: "Uranium-238", daughter: "Lead-206", ref: "Pb-204", halfLife: 4.468e9 },
+    rb87: { name: "Rubidium-87", daughter: "Strontium-87", ref: "Sr-86", halfLife: 4.97e10 }
+  },
+
+  /* Five minerals from one rock, with different parent concentrations. */
+  MINERALS: [0.45, 1.15, 2.05, 3.10, 4.35],
+
+  lambda(sys){ return LN2 / this.SYSTEMS[sys].halfLife; },
+
+  remaining(sys, t){ return Math.pow(2, -t / this.SYSTEMS[sys].halfLife); },
+
+  remainingByExp(sys, t){ return Math.exp(-this.lambda(sys) * t); },
+
+  parent(sys, n0, t){ return n0 * this.remaining(sys, t); },
+  daughter(sys, n0, t){ return n0 - this.parent(sys, n0, t); },
+
+  /* Age from the parent-daughter ratio alone, assuming no inherited daughter. */
+  ageFromRatio(sys, parent, daughter){
+    if (parent <= 0) return Infinity;
+    return this.SYSTEMS[sys].halfLife * Math.log2(1 + daughter / parent);
+  },
+
+  /* Forward-integrate dN/dt = -lambda N with RK4, in units of half-lives, as
+     an independent check on the closed form. */
+  decayByRK4(sys, n0, t, steps){
+    const T = this.SYSTEMS[sys].halfLife, lam = this.lambda(sys);
+    const m = steps || 4000, h = t / m;
+    let n = n0;
+    for (let k = 0; k < m; k++){
+      const k1 = -lam * n;
+      const k2 = -lam * (n + h * k1 / 2);
+      const k3 = -lam * (n + h * k2 / 2);
+      const k4 = -lam * (n + h * k3);
+      n += h * (k1 + 2 * k2 + 2 * k3 + k4) / 6;
+    }
+    return T > 0 ? n : n0;
+  },
+
+  /* Mean lifetime by quadrature of t * lambda * exp(-lambda t). */
+  meanLifeByQuadrature(sys, steps){
+    const lam = this.lambda(sys), T = this.SYSTEMS[sys].halfLife;
+    const m = steps || 60000, hi = 40 * T;
+    let s = 0;
+    for (let k = 0; k < m; k++){
+      const t = hi * (k + 0.5) / m;
+      s += t * lam * Math.exp(-lam * t);
+    }
+    return s * hi / m;
+  },
+
+  /* Isochron points: each mineral's daughter-to-reference ratio against its
+     parent-to-reference ratio, with optional seeded measurement scatter. */
+  isochron(sys, t, d0, scatter, seed){
+    const g = Math.expm1(this.lambda(sys) * t);
+    const rng = mulberry32(seed || SEED);
+    const pts = [];
+    for (const x of this.MINERALS){
+      const jitter = scatter ? (rng() - 0.5) * 2 * scatter : 0;
+      pts.push([x, d0 + x * g + jitter]);
+    }
+    return pts;
+  },
+
+  /* Ordinary least squares slope and intercept. */
+  fit(pts){
+    let n = pts.length, sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (const p of pts){ sx += p[0]; sy += p[1]; sxx += p[0] * p[0]; sxy += p[0] * p[1]; }
+    const den = n * sxx - sx * sx;
+    const slope = (n * sxy - sx * sy) / den;
+    return { slope: slope, intercept: (sy - slope * sx) / n };
+  },
+
+  ageFromSlope(sys, slope){
+    if (!(slope > -1)) return NaN;
+    return Math.log1p(slope) / this.lambda(sys);
+  },
+
+  isochronAge(sys, t, d0, scatter, seed){
+    return this.ageFromSlope(sys, this.fit(this.isochron(sys, t, d0, scatter, seed)).slope);
+  },
+
+  /* What the raw ratio reports when the rock was born with daughter already
+     in it: the inherited amount is credited to decay that never happened. */
+  naiveAge(sys, t, d0){
+    const x = this.MINERALS[0];
+    const g = Math.expm1(this.lambda(sys) * t);
+    return this.ageFromRatio(sys, x, d0 + x * g);
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { sys: "c14", age: 1, amt: 100, d0: 0 };
+const state = Object.assign({}, defaults);
+const SCATTER = 0.012;
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+let W = 760, H = 580, NARROW = false;
+
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888"; }
+const UI = '-apple-system,system-ui,"Segoe UI",Roboto,sans-serif';
+const MONO = 'ui-monospace,SFMono-Regular,Menlo,monospace';
+
+function years(y){
+  if (!Number.isFinite(y)) return "beyond reach";
+  if (y >= 1e9) return (y / 1e9).toFixed(2) + " Ga";
+  if (y >= 1e6) return (y / 1e6).toFixed(2) + " Ma";
+  if (y >= 1e4) return Math.round(y / 100) * 100 + " a";
+  return Math.round(y) + " a";
+}
+
+function layout(){
+  const avail = cv.parentNode ? (cv.parentNode.clientWidth || 760) : 760;
+  NARROW = avail < 560;
+  if (NARROW){ W = 350; H = 700; } else { W = 760; H = 580; }
+  if (cv.width !== W * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function drawDecay(p){
+  const INK = css("--ink"), MUT = css("--muted"), GRID = css("--grid"),
+        P = css("--parent"), D = css("--daughter"), AC = css("--accent");
+  const L = 52, R = 22, T = 52, B = 40;
+  const x0 = p.x + L, x1 = p.x + p.w - R, y0 = p.y + T, y1 = p.y + p.h - B;
+  const TMAX = 8;
+  const X = (h) => x0 + (x1 - x0) * h / TMAX;
+  const Y = (f) => y1 - (y1 - y0) * f;
+
+  ctx.strokeStyle = GRID; ctx.lineWidth = 1;
+  for (let k = 0; k <= 4; k++){ const y = Y(k / 4); ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); }
+
+  ctx.strokeStyle = D; ctx.lineWidth = 2.6; ctx.beginPath();
+  for (let k = 0; k <= 200; k++){ const h = TMAX * k / 200, v = 1 - Math.pow(2, -h);
+    if (k === 0) ctx.moveTo(X(h), Y(v)); else ctx.lineTo(X(h), Y(v)); }
+  ctx.stroke();
+  ctx.strokeStyle = P; ctx.lineWidth = 2.6; ctx.beginPath();
+  for (let k = 0; k <= 200; k++){ const h = TMAX * k / 200, v = Math.pow(2, -h);
+    if (k === 0) ctx.moveTo(X(h), Y(v)); else ctx.lineTo(X(h), Y(v)); }
+  ctx.stroke();
+
+  const rem = Math.pow(2, -state.age);
+  ctx.strokeStyle = AC; ctx.lineWidth = 1.8; ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(X(state.age), y0 - 6); ctx.lineTo(X(state.age), y1); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = P; ctx.beginPath(); ctx.arc(X(state.age), Y(rem), 5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = D; ctx.beginPath(); ctx.arc(X(state.age), Y(1 - rem), 5, 0, Math.PI * 2); ctx.fill();
+
+  ctx.fillStyle = MUT; ctx.font = "12px " + MONO;
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let k = 0; k <= 4; k++) ctx.fillText((25 * k) + "%", x0 - 7, Y(k / 4));
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let h = 0; h <= TMAX; h += NARROW ? 2 : 1) ctx.fillText(String(h), X(h), y1 + 7);
+  ctx.font = "12px " + UI;
+  ctx.fillText("half-lives elapsed", (x0 + x1) / 2, y1 + 23);
+
+  ctx.fillStyle = INK; ctx.font = "700 15px " + UI;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("One sample, trading places", p.x + 10, p.y + 8);
+  ctx.font = "700 12.5px " + UI;
+  ctx.fillStyle = P; ctx.fillText("parent left", p.x + 10, p.y + 30);
+  ctx.fillStyle = D; ctx.fillText("daughter made", p.x + 10 + (NARROW ? 110 : 110), p.y + 30);
+  ctx.fillStyle = AC; ctx.textAlign = "right";
+  ctx.fillText(years(state.age * Model.SYSTEMS[state.sys].halfLife), x1, p.y + 30);
+}
+
+function drawIsochron(p, pts, fit, g){
+  const INK = css("--ink"), MUT = css("--muted"), GRID = css("--grid"),
+        AC = css("--accent"), D = css("--daughter");
+  const L = 56, R = 22, T = NARROW ? 68 : 52, B = 42;
+  const x0 = p.x + L, x1 = p.x + p.w - R, y0 = p.y + T, y1 = p.y + p.h - B;
+  const XMAX = 5;
+  let ymax = 0.6;
+  for (const q of pts) ymax = Math.max(ymax, q[1] * 1.18);
+  ymax = Math.min(ymax, 40);
+  const X = (x) => x0 + (x1 - x0) * x / XMAX;
+  const Y = (y) => y1 - (y1 - y0) * Math.min(y, ymax) / ymax;
+
+  ctx.strokeStyle = GRID; ctx.lineWidth = 1;
+  for (let k = 0; k <= 4; k++){ const y = Y(ymax * k / 4); ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); }
+
+  ctx.strokeStyle = AC; ctx.lineWidth = 2.4; ctx.beginPath();
+  ctx.moveTo(X(0), Y(fit.intercept));
+  ctx.lineTo(X(XMAX), Y(fit.intercept + fit.slope * XMAX));
+  ctx.stroke();
+
+  if (state.d0 > 0){
+    ctx.strokeStyle = D; ctx.lineWidth = 1.6; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(x0, Y(state.d0)); ctx.lineTo(x1, Y(state.d0)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = D; ctx.font = "700 12.5px " + UI;
+    ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+    ctx.fillText("inherited daughter " + state.d0.toFixed(2), x1, Y(state.d0) - 5);
+  }
+
+  ctx.fillStyle = AC;
+  for (const q of pts){
+    ctx.beginPath(); ctx.arc(X(q[0]), Y(q[1]), 5.5, 0, Math.PI * 2); ctx.fill();
+  }
+
+  ctx.fillStyle = MUT; ctx.font = "12px " + MONO;
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let k = 0; k <= 4; k++) ctx.fillText((ymax * k / 4).toFixed(2), x0 - 7, Y(ymax * k / 4));
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let k = 0; k <= 5; k++) ctx.fillText(String(k), X(k), y1 + 7);
+  ctx.font = "12px " + UI;
+  ctx.fillText("parent / stable reference", (x0 + x1) / 2, y1 + 23);
+
+  ctx.fillStyle = INK; ctx.font = "700 15px " + UI;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("Five minerals, one rock", p.x + 10, p.y + 8);
+  ctx.font = "700 12.5px " + UI; ctx.fillStyle = AC;
+  ctx.fillText("slope " + fit.slope.toFixed(4) + "  =  e^(λt) − 1", p.x + 10, p.y + 30);
+  ctx.fillStyle = MUT;
+  ctx.fillText("true slope " + g.toFixed(4), p.x + 10 + (NARROW ? 0 : 230), p.y + 30 + (NARROW ? 17 : 0));
+}
+
+function render(){
+  layout();
+  const S = Model.SYSTEMS[state.sys];
+  const t = state.age * S.halfLife;
+  const g = Math.expm1(Model.lambda(state.sys) * t);
+  const pts = Model.isochron(state.sys, t, state.d0, SCATTER, SEED);
+  const fit = Model.fit(pts);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+  const p = NARROW
+    ? { a: { x: 0, y: 0, w: W, h: 330 }, b: { x: 0, y: 330, w: W, h: 370 } }
+    : { a: { x: 0, y: 0, w: W, h: 285 }, b: { x: 0, y: 285, w: W, h: 295 } };
+  drawDecay(p.a);
+  ctx.fillStyle = css("--line"); ctx.fillRect(p.b.x + 10, p.b.y, p.b.w - 20, 1);
+  drawIsochron(p.b, pts, fit, g);
+
+  const parent = Model.parent(state.sys, state.amt, t);
+  const daughter = Model.daughter(state.sys, state.amt, t);
+  el("ageout").textContent = state.age.toFixed(2);
+  el("amtout").textContent = String(state.amt);
+  el("d0out").textContent = state.d0.toFixed(2);
+  el("rHl").textContent = years(S.halfLife);
+  el("rRem").textContent = (100 * Model.remaining(state.sys, t)).toFixed(2) + "%";
+  el("rTrue").textContent = years(t);
+  el("rNaive").textContent = state.age === 0 && state.d0 > 0 ? "invented" : years(Model.naiveAge(state.sys, t, state.d0));
+  el("rIso").textContent = years(Model.ageFromSlope(state.sys, fit.slope));
+  el("rRem").title = "parent " + parent.toFixed(2) + ", daughter " + daughter.toFixed(2);
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parse(input.value); render(); });
+}
+bind("age", "age", parseFloat);
+bind("amt", "amt", (v) => parseInt(v, 10));
+bind("d0", "d0", parseFloat);
+el("sys").addEventListener("change", () => { state.sys = el("sys").value; render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("sys").value = defaults.sys;
+  el("age").value = String(defaults.age);
+  el("amt").value = String(defaults.amt);
+  el("d0").value = String(defaults.d0);
+  render();
+});
+
+let rt = 0;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+function rel(a, b){ return Math.abs(a - b) / Math.abs(b); }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+  const M = Model, KEYS = Object.keys(M.SYSTEMS);
+
+  push("the two ways of writing the decay law agree to 1e-14", (function(){
+    for (const s of KEYS){
+      const T = M.SYSTEMS[s].halfLife;
+      for (let k = 0; k <= 80; k++){
+        const tt = T * k / 10;
+        if (!near(M.remaining(s, tt), M.remainingByExp(s, tt), 1e-14)) return false;
+      }
+      if (!near(M.lambda(s) * T, Math.LN2, 1e-15)) return false;
+    }
+    return true;
+  })(), "2^(-t/T) equals exp(-lambda t) at 324 points across four systems, and lambda times the half-life is exactly ln 2");
+
+  push("RK4 on dN/dt = -lambda N reproduces the closed form", (function(){
+    for (const s of KEYS){
+      const T = M.SYSTEMS[s].halfLife;
+      for (const k of [0.5, 1, 3, 6]){
+        const want = M.parent(s, 100, k * T);
+        const got = M.decayByRK4(s, 100, k * T, 4000);
+        if (!(rel(got, want) < 1e-10)) return false;
+      }
+    }
+    return true;
+  })(), "integrating the differential equation forward, with no exponential anywhere in the loop, lands within 1e-10 relative of N0 times 2^(-t/T)");
+
+  push("carbon-14 halves in exactly 5730 years, and keeps halving", (function(){
+    if (M.SYSTEMS.c14.halfLife !== 5730) return false;
+    if (!near(M.remaining("c14", 5730), 0.5, 1e-15)) return false;
+    for (let k = 1; k <= 10; k++){
+      if (!near(M.remaining("c14", 5730 * k), Math.pow(2, -k), 1e-15)) return false;
+    }
+    return near(M.remaining("c14", 57300), 1 / 1024, 1e-15);
+  })(), "after ten half-lives exactly one part in 1024 is left, which is where radiocarbon runs out of signal");
+
+  push("parent plus daughter equals what you started with, always", (function(){
+    for (const s of KEYS){
+      const T = M.SYSTEMS[s].halfLife;
+      for (const n0 of [5, 100, 500]){
+        for (let k = 0; k <= 40; k++){
+          const tt = T * k / 5;
+          if (!near(M.parent(s, n0, tt) + M.daughter(s, n0, tt), n0, 1e-12 * n0)) return false;
+        }
+      }
+    }
+    return true;
+  })(), "492 checks: nothing is created or lost, every parent atom that leaves becomes exactly one daughter");
+
+  push("the age does not depend on how much you collected", (function(){
+    for (const s of KEYS){
+      const T = M.SYSTEMS[s].halfLife;
+      for (const k of [0.3, 1, 2.5, 5, 8]){
+        const tt = k * T;
+        let first = null;
+        for (let n0 = 5; n0 <= 500; n0 += 5){
+          const a = M.ageFromRatio(s, M.parent(s, n0, tt), M.daughter(s, n0, tt));
+          if (first === null) first = a;
+          if (!(rel(a, first) < 1e-13)) return false;
+          if (!(rel(a, tt) < 1e-13)) return false;
+        }
+      }
+    }
+    return true;
+  })(), "100 sample sizes from 5 to 500 units, at five ages, in four systems: every one recovers the true age to 1e-13 relative");
+
+  push("the isochron slope is exactly e^(lambda t) - 1 with clean data", (function(){
+    for (const s of KEYS){
+      const T = M.SYSTEMS[s].halfLife;
+      for (const k of [0.25, 1, 3, 7]){
+        for (const d0 of [0, 0.4, 1.5]){
+          const tt = k * T;
+          const f = M.fit(M.isochron(s, tt, d0, 0, SEED));
+          if (!(rel(f.slope, Math.expm1(M.lambda(s) * tt)) < 1e-12)) return false;
+          if (!near(f.intercept, d0, 1e-10 * (1 + d0))) return false;
+          if (!(rel(M.isochronAge(s, tt, d0, 0, SEED), tt) < 1e-12)) return false;
+        }
+      }
+    }
+    return true;
+  })(), "48 combinations: the fitted slope gives the age back to 1e-12 relative and the intercept returns the inherited daughter, which was never told to the fit");
+
+  push("the isochron survives measurement scatter to better than half a per cent", (function(){
+    for (const s of KEYS){
+      for (const k of [1, 2, 4]){
+        const tt = k * M.SYSTEMS[s].halfLife;
+        for (const d0 of [0, 0.8]){
+          for (const seed of [11, 22, 33, 44]){
+            const got = M.isochronAge(s, tt, d0, 0.012, seed);
+            if (!(rel(got, tt) < 0.005)) return false;
+          }
+        }
+      }
+    }
+    return true;
+  })(), "96 noisy fits with scatter of 0.012 in the ratios all land inside 0.5 per cent of the true age, at one half-life and beyond");
+
+  push("the raw ratio is fooled by inherited daughter and the isochron is not", (function(){
+    for (const s of KEYS){
+      const T = M.SYSTEMS[s].halfLife, tt = 2 * T;
+      if (!(rel(M.naiveAge(s, tt, 0), tt) < 1e-12)) return false;
+      let prev = M.naiveAge(s, tt, 0);
+      for (const d0 of [0.25, 0.5, 1, 1.5]){
+        const bad = M.naiveAge(s, tt, d0);
+        if (!(bad > prev)) return false;
+        prev = bad;
+        if (!(rel(M.isochronAge(s, tt, d0, 0, SEED), tt) < 1e-12)) return false;
+      }
+      if (!(M.naiveAge(s, tt, 1) > 2.6 * T)) return false;
+      if (!(rel(M.naiveAge(s, 2 * T, 1) / T, 2.6372, 1e-3) < 1e-3)) return false;
+    }
+    return true;
+  })(), "with no inherited daughter the raw ratio is exact; with one unit of it a rock that is two half-lives old reads 2.637 half-lives, and it keeps climbing, while the isochron stays on 2.000");
+
+  push("the mean lifetime is the half-life over ln 2", (function(){
+    for (const s of KEYS){
+      const T = M.SYSTEMS[s].halfLife;
+      if (!(rel(M.meanLifeByQuadrature(s, 60000), T / Math.LN2) < 1e-6)) return false;
+    }
+    return true;
+  })(), "integrating t times the decay density gives 1/lambda, about 1.4427 half-lives, for all four systems");
+
+  push("the age reported rises with the measured daughter-to-parent ratio", (function(){
+    for (const s of KEYS){
+      let prev = -1;
+      for (let k = 1; k <= 60; k++){
+        const ratio = k / 4;
+        const a = M.ageFromRatio(s, 1, ratio);
+        if (!(a > prev)) return false;
+        prev = a;
+      }
+      if (!near(M.ageFromRatio(s, 1, 1), M.SYSTEMS[s].halfLife, 1e-9 * M.SYSTEMS[s].halfLife)) return false;
+      if (!near(M.ageFromRatio(s, 1, 0), 0, 1e-15)) return false;
+    }
+    return true;
+  })(), "equal parts parent and daughter reads exactly one half-life; no daughter reads exactly zero");
+
+  push("the four half-lives are the published ones and span seven orders of magnitude", (function(){
+    if (M.SYSTEMS.c14.halfLife !== 5730) return false;
+    if (M.SYSTEMS.k40.halfLife !== 1.248e9) return false;
+    if (M.SYSTEMS.u238.halfLife !== 4.468e9) return false;
+    if (M.SYSTEMS.rb87.halfLife !== 4.97e10) return false;
+    const r = M.SYSTEMS.rb87.halfLife / M.SYSTEMS.c14.halfLife;
+    return r > 8e6 && r < 9e6;
+  })(), "5730 a, 1.248 Ga, 4.468 Ga and 49.7 Ga; the longest clock ticks about 8.7 million times slower than the shortest");
+
+  push("nothing is non-finite across the control grid", (function(){
+    for (const s of KEYS){
+      const T = M.SYSTEMS[s].halfLife;
+      for (let k = 0; k <= 40; k++){
+        const tt = (k / 5) * T;
+        for (let j = 0; j <= 15; j++){
+          const d0 = j * 0.1;
+          const vals = [M.remaining(s, tt), M.naiveAge(s, tt, d0),
+                        M.isochronAge(s, tt, d0, SCATTER, SEED), M.fit(M.isochron(s, tt, d0, SCATTER, SEED)).intercept];
+          for (const x of vals) if (!Number.isFinite(x)) return false;
+        }
+      }
+    }
+    return true;
+  })(), "four systems by 41 ages by 16 inherited-daughter levels, every reported number finite");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
