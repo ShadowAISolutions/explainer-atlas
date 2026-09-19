@@ -1,0 +1,19 @@
+{
+  "slug": "prisoners-dilemma-iterated",
+  "title": "Write a Strategy, Enter the Tournament",
+  "domain": "game-theory",
+  "difficulty": 3,
+  "summary": "Write your own iterated prisoners dilemma strategy in the page and watch it play a round robin, then turn on noise and see which strategies can recover from a mistake.",
+  "prerequisites": [],
+  "tags": [
+    "prisoners-dilemma",
+    "cooperation",
+    "tournament",
+    "folk-theorem",
+    "noise"
+  ],
+  "interaction_pattern": "live-code",
+  "sources": [],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}

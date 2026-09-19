@@ -1,0 +1,766 @@
+<!doctype html>
+<!--
+  Interactive Explainer Atlas — page skeleton.
+  Start EVERY new explainer from this file. Never copy a previous page.
+  Replace every {{PLACEHOLDER}}. Delete the demo model and write your own.
+  Contract: FOUNDATION.md. Rules: CLAUDE.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}} — Explainer Atlas</title>
+<meta name="description" content="{{SUMMARY}}">
+<style>
+/* ---- bench notebook: cool clinical ground, serif display, one match green - */
+:root{
+  --bg:#eef3f5; --panel:#ffffff; --ink:#0f2129; --muted:#566a75; --line:#d5dee2;
+  --grid:#e3eaee;
+  --accent:#0e6f85; --accent-soft:#dcedf1;
+  --data:#b0203f; --model:#0e6f85; --match:#4d7c0f; --miss:#b45309;
+  --radius:2px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Inter","Helvetica Neue",system-ui,-apple-system,sans-serif;
+  --font-display:Georgia,"Iowan Old Style","Times New Roman",serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.8rem,1.15rem + 3vw,3rem);
+  --scale-body:clamp(1rem,0.96rem + 0.2vw,1.08rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0d1417; --panel:#141d21; --ink:#e4ecef; --muted:#8fa3ad; --line:#223035;
+    --grid:#1b262b;
+    --accent:#4bbcd4; --accent-soft:#0f2a31;
+    --data:#f0728d; --model:#4bbcd4; --match:#a3d34a; --miss:#e8a75c;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.63 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-left:5px solid var(--accent); padding:.1em 0 .1em 1em; margin-bottom:var(--pad)}
+.kicker{margin:0 0 .3em; font:700 .72rem/1 var(--font-mono); letter-spacing:.2em;
+  text-transform:uppercase; color:var(--accent)}
+h1{font-family:var(--font-display); font-size:var(--scale-h1); line-height:1.08;
+  margin:0 0 .3em; letter-spacing:-.015em; font-weight:700}
+.standfirst{margin:0; color:var(--muted); max-width:42em}
+
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius) var(--radius) 0 0; border-bottom:0; padding:10px 10px 4px}
+figure.stage canvas{display:block; width:100%; height:auto}
+figcaption{margin:.4em 4px .5em; color:var(--muted); font-size:.83rem}
+
+/* the control bar is welded to the bottom of the chart, one instrument */
+.controls{background:var(--panel); border:1px solid var(--line);
+  border-radius:0 0 var(--radius) var(--radius); padding:var(--pad);
+  display:grid; gap:1.1em}
+.knobs{display:grid; gap:1em 1.6em; grid-template-columns:1fr}
+@media (min-width:42rem){ .knobs{grid-template-columns:1fr 1fr} }
+@media (min-width:62rem){ .knobs{grid-template-columns:repeat(4,1fr)} }
+.control{display:grid; gap:.28em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font-weight:700}
+.control output{font:700 .95rem/1 var(--font-mono); color:var(--accent);
+  background:var(--accent-soft); padding:.22em .5em; border-radius:var(--radius)}
+.control .hint{margin:0; color:var(--muted); font-size:.8rem}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line);
+  border-radius:var(--radius); padding:.55em .7em; min-height:42px; width:100%}
+button{cursor:pointer; font-weight:700}
+button:hover{border-color:var(--accent); color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+
+.gauge{display:grid; gap:.45em; padding-top:.9em; border-top:1px solid var(--line)}
+.gauge .row{display:flex; justify-content:space-between; align-items:baseline; gap:1em; flex-wrap:wrap}
+.gauge .label{font:700 .72rem/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--muted)}
+.gauge .verdict{font-weight:700}
+.bar{height:16px; background:var(--bg); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden}
+.bar i{display:block; height:100%; background:var(--match); width:0}
+.buttons{display:grid; gap:.6em; grid-template-columns:1fr 1fr}
+@media (min-width:42rem){ .buttons{grid-template-columns:repeat(3,1fr)} }
+
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:.55em; margin:var(--pad) 0 0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:.5em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.09em}
+.readout dd{margin:.15em 0 0; font:700 1.06rem/1.2 var(--font-mono)}
+
+.prose{max-width:38em; margin:calc(var(--pad)*1.5) 0 0}
+.prose h2{font-family:var(--font-display); font-size:1.28rem; font-weight:700; margin:1.9em 0 .45em}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.9rem; background:var(--panel);
+  border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:var(--radius);
+  padding:.8em 1em; white-space:pre; overflow-x:auto; line-height:1.75}
+footer.page{margin-top:calc(var(--pad)*1.7); padding-top:var(--pad); border-top:1px solid var(--line);
+  color:var(--muted); font-size:.85rem}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Chemistry</p>
+  <h1>The Balanced Equation Will Not Tell You This</h1>
+  <p class="standfirst">Four vials, four unlabelled reactions. You cannot work out how fast any of
+    them goes from its chemical formula. You have to watch the concentration fall and read the shape
+    of the curve.</p>
+</header>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="1000" height="540" role="img"
+    aria-label="Left: measured concentration against time as points, with the rate law you have tuned drawn through them. Right: the same measurements plotted three ways — concentration, its logarithm, and its reciprocal — with the straightness of each reported, because only the plot matching the true reaction order comes out as a straight line."></canvas>
+  <figcaption>Left: the measurements, with your rate law drawn through them. Right: the same numbers
+    plotted three ways. Only one of the three is a straight line, and which one tells you the order.</figcaption>
+</figure>
+
+<section class="controls" data-role="controls" aria-label="Fit the rate law">
+  <div class="knobs">
+    <div class="control">
+      <label for="vial">Vial</label>
+      <select id="vial">
+        <option value="0" selected>Vial A</option>
+        <option value="1">Vial B</option>
+        <option value="2">Vial C</option>
+        <option value="3">Vial D</option>
+      </select>
+      <p class="hint">Each holds a different reaction. Nothing on the label gives the order away.</p>
+    </div>
+    <div class="control">
+      <div class="row"><label for="order">Order n</label><output id="orderout" for="order">2.0</output></div>
+      <input type="range" id="order" min="0" max="2.5" step="0.1" value="2">
+      <p class="hint">The exponent in rate = k[A]&#8319;. Arrow keys step by 0.1.</p>
+    </div>
+    <div class="control">
+      <div class="row"><label for="logk">Rate constant k</label><output id="logkout" for="logk">0.100</output></div>
+      <input type="range" id="logk" min="-2.3" max="0.7" step="0.02" value="-1">
+      <p class="hint">Moves on a logarithmic scale, because rate constants span decades.</p>
+    </div>
+    <div class="control">
+      <div class="row"><label for="a0">Starting concentration</label><output id="a0out" for="a0">1.00</output></div>
+      <input type="range" id="a0" min="0.2" max="2" step="0.02" value="1">
+      <p class="hint">Molar. The measurements start where they start; match them.</p>
+    </div>
+  </div>
+
+  <div class="gauge">
+    <div class="row">
+      <span class="label">Fit to the measurements</span>
+      <span class="verdict" id="verdict">—</span>
+    </div>
+    <div class="bar" role="img" aria-labelledby="verdict"><i id="barfill"></i></div>
+    <div class="buttons">
+      <button type="button" id="best">Snap k to the best value</button>
+      <button type="button" id="reveal">Reveal this vial</button>
+      <button type="button" id="reset">Reset</button>
+    </div>
+  </div>
+</section>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Residual</dt><dd id="rres">—</dd></div>
+  <div><dt>Noise floor</dt><dd id="rnoise">—</dd></div>
+  <div><dt>Half-life now</dt><dd id="rhalf">—</dd></div>
+  <div><dt>Second half-life</dt><dd id="rhalf2">—</dd></div>
+  <div><dt>Straightest plot</dt><dd id="rstraight">—</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>Vial A is open when the page loads, with the order slider parked on 2. It is not 2. Press
+    <em>Snap k to the best value</em> and watch what the best possible rate constant can and cannot
+    do: the curve can be dragged through the early points or the late ones, never both, and the fit
+    gauge stays near empty. A wrong order is a wrong shape, and no amount of tuning k will fix a
+    shape. Move the order down to 1 and press it again.</p>
+
+  <h2>What the order actually is</h2>
+
+  <p>A reaction's rate is how fast the reactant disappears, and for a very large class of reactions
+    that rate depends on the concentration through a single power:</p>
+
+  <p class="math">d[A]/dt = −k [A]ⁿ</p>
+
+  <p>The exponent n is the order. It is not the stoichiometric coefficient in the balanced equation,
+    it cannot be deduced from the formula, and it is frequently not a whole number — vial D here is
+    order 1.5, which is what you get when a step in the mechanism involves a species in equilibrium
+    with A. The order is a summary of the mechanism, and the only way to it is measurement.</p>
+
+  <p>Integrating that equation gives the curve drawn through the points. For n&nbsp;=&nbsp;1 it is an
+    exponential; for every other n it is a power:</p>
+
+  <p class="math">n = 1:   [A] = [A]₀ e^(−kt)
+n ≠ 1:   [A]^(1−n) = [A]₀^(1−n) − (1−n) k t</p>
+
+  <h2>Read it off the half-lives</h2>
+
+  <p>The two half-life readouts are the fastest diagnostic on the page. Set the order to 1 and drag
+    the rate constant: both readouts move together and stay equal. That is the signature of first
+    order — 0.693/k, with no mention of concentration in it, which is why radioactive decay has a
+    half-life you can print on a chart and a second-order reaction does not.</p>
+
+  <p>Now set the order to 2. The second half-life is exactly twice the first, because for n = 2 the
+    half-life is 1/(k[A]₀) and the concentration has halved. Vial B takes 2.75 minutes to lose its
+    first half and 5.49 to lose the next. Set the order to 0 and it inverts: each half-life is half
+    the one before, because a zero-order reaction chews through reactant at a flat rate regardless of
+    how much is left, and simply stops when there is none. Vial C runs out entirely at 21.4 minutes.</p>
+
+  <h2>Or read it off the straight line</h2>
+
+  <p>The three small panels on the right are the method that predates curve fitting and still gets
+    taught first. Plot the measurements three ways — concentration, its logarithm, its reciprocal —
+    and whichever comes out straight names the order, because each is exactly the integrated rate law
+    for n = 0, 1 and 2 rearranged into y = mx + c. The panel with the highest R² is marked in green.</p>
+
+  <p>On vial A, ln[A] scores 0.990 while the other two sit at 0.91 and 0.90. On vial C the plain
+    concentration scores 0.9975. On vial D — the order-1.5 one — the first- and second-order panels
+    come out at 0.983 and 0.982, a tie, and that tie is itself the finding: no integer order fits, so
+    the order is somewhere between. That is the case the linearised plots handle badly and the fitted
+    curve handles well, which is why chemists now do both.</p>
+
+  <h2>What to try</h2>
+
+  <p>Open vial C and leave the order at 1. Press <em>Snap k to the best value</em> and look at the
+    fit gauge: the best first-order law is still four times worse than the noise. Then move the order
+    to 0 and press it again. The gauge fills and the residual drops onto the noise floor, which is
+    where a correct model should land — matching the data better than the noise floor would mean you
+    were fitting the measurement error, not the chemistry.</p>
+
+  <p>Then open vial D and try every order in turn. Nothing reaches the floor until you pass 1.4, and
+    the best fit is at 1.5. Press <em>Reveal this vial</em> to check.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL -------------------------------------------------------------- */
+const M = {
+  /* Integrated rate law for d[A]/dt = -k [A]^n, clamped at zero because a
+     concentration cannot go negative — for n < 1 the reaction genuinely runs
+     out of A at a finite time. */
+  conc(a0, k, n, t){
+    if (t <= 0) return a0;
+    if (a0 <= 0) return 0;
+    if (Math.abs(n - 1) < 1e-12) return a0 * Math.exp(-k * t);
+    const p = 1 - n;
+    const inside = Math.pow(a0, p) + (n - 1) * k * t * -1 * -1;
+    /* A^(1-n) = a0^(1-n) - (1-n) k t */
+    const val = Math.pow(a0, p) - p * k * t;
+    void inside;
+    if (p > 0){ return val <= 0 ? 0 : Math.pow(val, 1 / p); }
+    return Math.pow(val, 1 / p);            /* n > 1: val grows, A decays to 0 */
+  },
+
+  /* The time at which A runs out entirely. Finite only for n < 1. */
+  exhaustionTime(a0, k, n){
+    if (n >= 1) return Infinity;
+    return Math.pow(a0, 1 - n) / ((1 - n) * k);
+  },
+
+  /* Time to fall from a to a/2, from the integrated law. */
+  halfLife(a, k, n){
+    if (a <= 0) return Infinity;
+    if (Math.abs(n - 1) < 1e-12) return Math.LN2 / k;
+    return (Math.pow(2, n - 1) - 1) * Math.pow(a, 1 - n) / ((n - 1) * k);
+  },
+
+  /* An independent route to the same curve: fourth-order Runge-Kutta on
+     d[A]/dt = -k A^n, sharing no algebra with the closed form above. */
+  concByRK4(a0, k, n, t, steps){
+    const h = t / steps;
+    const f = (A) => (A <= 0 ? 0 : -k * Math.pow(A, n));
+    let A = a0;
+    for (let i = 0; i < steps; i++){
+      const k1 = f(A), k2 = f(Math.max(0, A + h * k1 / 2));
+      const k3 = f(Math.max(0, A + h * k2 / 2)), k4 = f(Math.max(0, A + h * k3));
+      A = A + h * (k1 + 2 * k2 + 2 * k3 + k4) / 6;
+      if (A < 0) A = 0;
+    }
+    return A;
+  },
+
+  /* Each vial is followed for about three half-lives, which is what a
+     kineticist actually does: run it much longer and the signal sinks into the
+     detector noise, where the logarithm and the reciprocal both go wild. */
+  VIALS: [
+    { name: "Vial A", a0: 1.00, k: 0.180, n: 1, noise: 0.012, tMax: 13 },
+    { name: "Vial B", a0: 1.40, k: 0.260, n: 2, noise: 0.014, tMax: 16 },
+    { name: "Vial C", a0: 0.90, k: 0.042, n: 0, noise: 0.011, tMax: 17 },
+    { name: "Vial D", a0: 1.20, k: 0.120, n: 1.5, noise: 0.013, tMax: 21 }
+  ],
+
+  /* Deterministic Gaussian noise, so every reader sees the same measurements. */
+  measurements(vialIndex){
+    const v = this.VIALS[vialIndex], rng = mulberry32(9176 + vialIndex * 7919), out = [];
+    const count = 26;
+    for (let i = 0; i < count; i++){
+      const t = v.tMax * i / (count - 1);
+      const u1 = Math.max(1e-12, rng()), u2 = rng();
+      const g = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      const clean = this.conc(v.a0, v.k, v.n, t);
+      out.push({ t: t, a: Math.max(0.0005, clean + v.noise * g), clean: clean });
+    }
+    return out;
+  },
+
+  /* root-mean-square distance between a candidate law and the measurements */
+  residual(points, a0, k, n){
+    let s = 0;
+    for (const p of points){ const d = this.conc(a0, k, n, p.t) - p.a; s += d * d; }
+    return Math.sqrt(s / points.length);
+  },
+
+  /* the best k for a given order, by golden-section search on log k */
+  bestK(points, a0, n){
+    const f = (lk) => this.residual(points, a0, Math.pow(10, lk), n);
+    let lo = -2.6, hi = 0.9;
+    const gr = (Math.sqrt(5) - 1) / 2;
+    let c = hi - gr * (hi - lo), d = lo + gr * (hi - lo);
+    let fc = f(c), fd = f(d);
+    for (let i = 0; i < 70; i++){
+      if (fc < fd){ hi = d; d = c; fd = fc; c = hi - gr * (hi - lo); fc = f(c); }
+      else { lo = c; c = d; fc = fd; d = lo + gr * (hi - lo); fd = f(d); }
+    }
+    return Math.pow(10, (lo + hi) / 2);
+  },
+
+  /* least-squares straightness of y against t: the classic diagnostic plots */
+  rSquared(points, transform){
+    const xs = [], ys = [];
+    for (const p of points){
+      const y = transform(p.a);
+      if (!Number.isFinite(y)) continue;
+      xs.push(p.t); ys.push(y);
+    }
+    const m = xs.length;
+    if (m < 3) return 0;
+    let sx = 0, sy = 0;
+    for (let i = 0; i < m; i++){ sx += xs[i]; sy += ys[i]; }
+    const mx = sx / m, my = sy / m;
+    let sxy = 0, sxx = 0, syy = 0;
+    for (let i = 0; i < m; i++){
+      const dx = xs[i] - mx, dy = ys[i] - my;
+      sxy += dx * dy; sxx += dx * dx; syy += dy * dy;
+    }
+    if (sxx <= 0 || syy <= 0) return 0;
+    return (sxy * sxy) / (sxx * syy);
+  },
+
+  DIAGNOSTICS: [
+    { order: 0, label: "[A]", f: (a) => a },
+    { order: 1, label: "ln [A]", f: (a) => (a > 0 ? Math.log(a) : NaN) },
+    { order: 2, label: "1 / [A]", f: (a) => (a > 0 ? 1 / a : NaN) }
+  ],
+
+  straightest(points){
+    let best = -1, bestR = -1;
+    for (let i = 0; i < this.DIAGNOSTICS.length; i++){
+      const r = this.rSquared(points, this.DIAGNOSTICS[i].f);
+      if (r > bestR){ bestR = r; best = i; }
+    }
+    return { index: best, r2: bestR };
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { vial: 0, order: 2, logk: -1, a0: 1 };
+const state = Object.assign({}, defaults, { revealed: false, points: M.measurements(0) });
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+let W = 1000, H = 540, NARROW = false, FS = 1;
+let MX0, MY0, MX1, MY1, DX0, DX1, DH, DGAP, DY0;
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const kOf = () => Math.pow(10, state.logk);
+
+/* Side by side on a wide screen; the diagnostics drop underneath the main
+   chart on a narrow one, with larger type, rather than shrinking to a strip. */
+function layout(){
+  const avail = cv.parentNode ? cv.parentNode.clientWidth || 1000 : 1000;
+  NARROW = avail < 640;
+  if (NARROW){
+    W = 560; H = 1080; FS = 1.5;
+    MX0 = 100; MY0 = 58; MX1 = W - 24; MY1 = 430;
+    DX0 = 100; DX1 = W - 24; DH = 150; DGAP = 48; DY0 = 510;
+  } else {
+    W = 1000; H = 540; FS = 1;
+    MX0 = 76; MY0 = 46; MX1 = 560; MY1 = H - 56;
+    DX0 = 640; DX1 = W - 26; DH = 128; DGAP = 32; DY0 = 46;
+  }
+  if (cv.width !== W) cv.width = W;
+  if (cv.height !== H) cv.height = H;
+}
+const px = (n) => Math.round(n * FS) + "px ";
+
+function frame(x0, y0, x1, y1, title){
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0, y1); ctx.lineTo(x1, y1); ctx.stroke();
+  ctx.fillStyle = css("--muted"); ctx.font = "600 " + px(16) + css("--font-mono");
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(title, x0 - (NARROW ? 76 : 0), y0 - 10 * FS);
+}
+
+function render(){
+  layout();
+  const pts = state.points, v = M.VIALS[state.vial];
+  const k = kOf(), n = state.order, a0 = state.a0;
+  const res = M.residual(pts, a0, k, n);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+
+  /* -------- main panel: concentration against time -------- */
+  let aMax = 0;
+  for (const p of pts) if (p.a > aMax) aMax = p.a;
+  aMax = Math.max(aMax, a0) * 1.12;
+  const tMax = v.tMax;
+  const mx = (t) => MX0 + (MX1 - MX0) * t / tMax;
+  const my = (a) => MY1 - (MY1 - MY0) * a / aMax;
+
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
+  for (let i = 1; i <= 4; i++){
+    const y = my(aMax * i / 4);
+    ctx.beginPath(); ctx.moveTo(MX0, y); ctx.lineTo(MX1, y); ctx.stroke();
+    ctx.fillStyle = css("--muted"); ctx.font = px(15) + css("--font-mono");
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillText((aMax * i / 4).toFixed(2), MX0 - 9, y);
+  }
+  frame(MX0, MY0, MX1, MY1, "concentration  [A]  against time");
+  ctx.fillStyle = css("--muted"); ctx.font = px(15) + css("--font-mono");
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText("0", MX0, MY1 + 10 * FS);
+  ctx.fillText(tMax + " min", MX1, MY1 + 10 * FS);
+
+  /* the tuned law */
+  ctx.strokeStyle = css("--model"); ctx.lineWidth = 3 * FS; ctx.lineJoin = "round";
+  ctx.beginPath();
+  for (let i = 0; i <= 200; i++){
+    const t = tMax * i / 200, x = mx(t), y = my(M.conc(a0, k, n, t));
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  /* the measurements */
+  ctx.fillStyle = css("--data");
+  for (const p of pts){
+    ctx.beginPath(); ctx.arc(mx(p.t), my(p.a), 4.2 * FS, 0, 2 * Math.PI); ctx.fill();
+  }
+
+  /* half-life ticks along the tuned curve */
+  ctx.strokeStyle = css("--muted"); ctx.setLineDash([3, 4]); ctx.lineWidth = 1.3;
+  let a = a0, tAcc = 0;
+  for (let h = 0; h < 3; h++){
+    const dt = M.halfLife(a, k, n);
+    if (!Number.isFinite(dt) || dt <= 0) break;
+    tAcc += dt; a = a / 2;
+    if (tAcc > tMax) break;
+    ctx.beginPath(); ctx.moveTo(mx(tAcc), MY1); ctx.lineTo(mx(tAcc), my(a)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(MX0, my(a)); ctx.lineTo(mx(tAcc), my(a)); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  /* -------- three diagnostic panels -------- */
+  const st = M.straightest(pts);
+  for (let i = 0; i < 3; i++){
+    const y0 = DY0 + i * (DH + DGAP), y1 = y0 + DH;
+    const d = M.DIAGNOSTICS[i], r2 = M.rSquared(pts, d.f);
+    const ys = [];
+    for (const p of pts){ const y = d.f(p.a); if (Number.isFinite(y)) ys.push({ t: p.t, y: y }); }
+    let lo = Infinity, hi = -Infinity;
+    for (const q of ys){ if (q.y < lo) lo = q.y; if (q.y > hi) hi = q.y; }
+    const span = hi - lo || 1;
+    const qx = (t) => DX0 + (DX1 - DX0) * t / tMax;
+    const qy = (y) => y1 - (y1 - y0) * (y - lo + span * 0.08) / (span * 1.16);
+
+    const win = i === st.index;
+    ctx.fillStyle = win ? css("--match") : css("--muted");
+    ctx.font = "700 " + px(16) + css("--font-mono"); ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.fillText(d.label + " vs t   — order " + d.order, DX0, y0 - 10 * FS);
+    ctx.textAlign = "right";
+    /* on a narrow screen the heading and the score will not share a line */
+    ctx.fillText("R² " + r2.toFixed(4), DX1 - (NARROW ? 8 : 0),
+                 NARROW ? y0 + 22 * FS : y0 - 10);
+    ctx.strokeStyle = win ? css("--match") : css("--line");
+    ctx.lineWidth = win ? 2 : 1.2;
+    ctx.strokeRect(DX0, y0, DX1 - DX0, DH);
+    ctx.fillStyle = win ? css("--match") : css("--data");
+    for (const q of ys){ ctx.beginPath(); ctx.arc(qx(q.t), qy(q.y), 3 * FS, 0, 2 * Math.PI); ctx.fill(); }
+  }
+
+  /* -------- readouts -------- */
+  el("orderout").textContent = n.toFixed(1);
+  el("logkout").textContent = k.toFixed(3);
+  el("a0out").textContent = a0.toFixed(2);
+  el("rres").textContent = res.toFixed(4);
+  el("rnoise").textContent = v.noise.toFixed(4);
+  const h1 = M.halfLife(a0, k, n), h2 = M.halfLife(a0 / 2, k, n);
+  el("rhalf").textContent = Number.isFinite(h1) ? h1.toFixed(2) + " min" : "never";
+  el("rhalf2").textContent = Number.isFinite(h2) ? h2.toFixed(2) + " min" : "never";
+  el("rstraight").textContent = M.DIAGNOSTICS[st.index].label + ", order " + M.DIAGNOSTICS[st.index].order;
+
+  const ratio = Math.min(1, v.noise / Math.max(res, 1e-9));
+  el("barfill").style.width = (100 * ratio).toFixed(1) + "%";
+  let verdict;
+  if (state.revealed) verdict = v.name + " is order " + v.n + ", k = " + v.k + ", [A]₀ = " + v.a0.toFixed(2);
+  else if (res <= v.noise * 1.25) verdict = "At the noise floor. This is as good as the data allows.";
+  else if (res <= v.noise * 2.5) verdict = "Close. Nudge the order before touching k.";
+  else if (res <= v.noise * 8) verdict = "The shape is wrong, not just the scale.";
+  else verdict = "Nowhere near. Try the plot marked in green on the right.";
+  el("verdict").textContent = verdict;
+}
+
+/* ---- controls ----------------------------------------------------------- */
+function bind(id, key, parse){
+  el(id).addEventListener("input", function(){ state[key] = parse(el(id).value); render(); });
+}
+bind("order", "order", parseFloat);
+bind("logk", "logk", parseFloat);
+bind("a0", "a0", parseFloat);
+
+el("vial").addEventListener("change", function(){
+  state.vial = parseInt(el("vial").value, 10);
+  state.points = M.measurements(state.vial);
+  state.revealed = false;
+  render();
+});
+el("best").addEventListener("click", function(){
+  const k = M.bestK(state.points, state.a0, state.order);
+  state.logk = Math.max(-2.3, Math.min(0.7, Math.log10(k)));
+  el("logk").value = String(state.logk);
+  render();
+});
+el("reveal").addEventListener("click", function(){
+  const v = M.VIALS[state.vial];
+  state.revealed = true;
+  state.order = v.n; state.a0 = v.a0;
+  state.logk = Math.max(-2.3, Math.min(0.7, Math.log10(v.k)));
+  el("order").value = String(state.order);
+  el("a0").value = String(state.a0);
+  el("logk").value = String(state.logk);
+  render();
+});
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults, { revealed: false, points: M.measurements(defaults.vial) });
+  el("vial").value = String(defaults.vial);
+  el("order").value = String(defaults.order);
+  el("logk").value = String(defaults.logk);
+  el("a0").value = String(defaults.a0);
+  render();
+});
+
+let resizeTimer = 0;
+window.addEventListener("resize", function(){
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(function(){ render(); }, 80);
+});
+
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+
+  push("the integrated law matches Runge-Kutta integration of the differential law", (function(){
+    for (const n of [0, 0.5, 1, 1.5, 2, 2.5])
+      for (const k of [0.05, 0.18, 0.6])
+        for (const a0 of [0.4, 1, 1.8])
+          for (const time of [2, 9, 25]){
+            const exhaust = M.exhaustionTime(a0, k, n);
+            if (time >= exhaust * 0.98) continue;     /* past exhaustion the law is a clamp, not a solution */
+            const closed = M.conc(a0, k, n, time);
+            const stepped = M.concByRK4(a0, k, n, time, 20000);
+            if (!near(stepped, closed, 1e-8 + 1e-8 * closed)) return false;
+          }
+    return true;
+  })(), "162 combinations of order, rate constant, starting concentration and time, closed form against RK4 with 20000 steps, to 1e-8");
+
+  push("a first-order half-life does not depend on where you start", (function(){
+    for (const k of [0.03, 0.18, 0.9]){
+      const want = Math.LN2 / k;
+      for (const a0 of [0.2, 0.7, 1.4, 3, 10]){
+        if (!near(M.halfLife(a0, k, 1), want, 1e-13)) return false;
+        /* and the curve really does halve in that time */
+        if (!near(M.conc(a0, k, 1, want), a0 / 2, 1e-12 * a0)) return false;
+      }
+    }
+    return true;
+  })(), "ln2/k for five starting concentrations at three rate constants, and the integrated law halves in exactly that time");
+
+  push("a second-order half-life is inversely proportional to where you start", (function(){
+    const k = 0.26;
+    for (const a0 of [0.25, 0.5, 1, 2, 4]){
+      if (!near(M.halfLife(a0, k, 2), 1 / (k * a0), 1e-12)) return false;
+      if (!near(M.conc(a0, k, 2, 1 / (k * a0)), a0 / 2, 1e-12)) return false;
+    }
+    /* doubling the start halves the half-life, exactly */
+    return near(M.halfLife(1, k, 2) / M.halfLife(2, k, 2), 2, 1e-12);
+  })(), "1/(k[A]0) for five starting concentrations, and successive half-lives double as the concentration halves");
+
+  push("successive half-lives tell the orders apart", (function(){
+    const k = 0.2, a0 = 1;
+    /* zero order: each half-life is half the previous one */
+    if (!near(M.halfLife(a0 / 2, k, 0) / M.halfLife(a0, k, 0), 0.5, 1e-12)) return false;
+    /* first order: every half-life is the same */
+    if (!near(M.halfLife(a0 / 2, k, 1) / M.halfLife(a0, k, 1), 1, 1e-13)) return false;
+    /* second order: each is twice the previous */
+    if (!near(M.halfLife(a0 / 2, k, 2) / M.halfLife(a0, k, 2), 2, 1e-12)) return false;
+    /* and order 1.5 sits between first and second, as it must */
+    const r = M.halfLife(a0 / 2, k, 1.5) / M.halfLife(a0, k, 1.5);
+    return r > 1 && r < 2 && near(r, Math.pow(2, 0.5), 1e-12);
+  })(), "ratios of exactly 0.5, 1, 2 for orders 0, 1, 2, and exactly sqrt(2) for order 1.5");
+
+  push("a zero-order concentration falls in a straight line of slope minus k", (function(){
+    for (const k of [0.02, 0.042, 0.3]){
+      const a0 = 0.9;
+      const gone = M.exhaustionTime(a0, k, 0);
+      if (!near(gone, a0 / k, 1e-12)) return false;
+      for (let i = 0; i <= 20; i++){
+        const time = gone * i / 20 * 0.999;
+        if (!near(M.conc(a0, k, 0, time), a0 - k * time, 1e-12)) return false;
+      }
+      /* and it stays at zero afterwards rather than going negative */
+      if (M.conc(a0, k, 0, gone * 1.5) !== 0) return false;
+    }
+    return true;
+  })(), "a0 - k*t exactly at 21 times for three rate constants, exhaustion at a0/k, and a hard floor at zero afterwards");
+
+  push("concentration never goes negative anywhere in the control ranges", (function(){
+    for (let oi = 0; oi <= 25; oi++){
+      const n = oi / 10;
+      for (let ki = -23; ki <= 7; ki += 3){
+        const k = Math.pow(10, ki / 10);
+        for (let ai = 2; ai <= 20; ai += 3){
+          const a0 = ai / 10;
+          for (let time = 0; time <= 26; time += 2){
+            const a = M.conc(a0, k, n, time);
+            if (!(a >= 0) || !Number.isFinite(a)) return false;
+            if (a > a0 + 1e-12) return false;         /* and it never rises */
+          }
+        }
+      }
+    }
+    return true;
+  })(), "every order, rate constant, starting concentration and time on the sliders: finite, never negative, never above where it started");
+
+  push("the curve falls monotonically, at the rate the differential law demands", (function(){
+    for (const n of [0, 0.5, 1, 1.5, 2, 2.5])
+      for (const k of [0.04, 0.3]){
+        const a0 = 1.2;
+        let prev = a0;
+        for (let time = 0.25; time <= 26; time += 0.25){
+          const a = M.conc(a0, k, n, time);
+          if (a > prev + 1e-12) return false;
+          prev = a;
+        }
+        /* a central difference of the closed form recovers -k A^n */
+        for (const time of [1, 4, 11]){
+          if (time >= M.exhaustionTime(a0, k, n) * 0.9) continue;
+          const h = 1e-5;
+          const slope = (M.conc(a0, k, n, time + h) - M.conc(a0, k, n, time - h)) / (2 * h);
+          const want = -k * Math.pow(M.conc(a0, k, n, time), n);
+          if (!near(slope, want, 1e-6 * (1 + Math.abs(want)))) return false;
+        }
+      }
+    return true;
+  })(), "monotone over 104 time steps per case, and the numerical derivative of the closed form equals -k[A]^n at three times in each");
+
+  push("the straightest plot names the true order, and ties when the order is not an integer", (function(){
+    for (let i = 0; i < 3; i++){
+      const v = M.VIALS[i], pts = M.measurements(i), st = M.straightest(pts);
+      if (M.DIAGNOSTICS[st.index].order !== v.n) return false;
+      if (!(st.r2 > 0.98)) return false;
+      /* and it wins by a margin, rather than scraping in */
+      for (let j = 0; j < 3; j++){
+        if (j === st.index) continue;
+        if (!(st.r2 - M.rSquared(pts, M.DIAGNOSTICS[j].f) > 0.04)) return false;
+      }
+    }
+    /* vial D is order 1.5, so the two plots either side of it are all but tied
+       and neither can be declared the answer */
+    const d = M.measurements(3);
+    const r1 = M.rSquared(d, M.DIAGNOSTICS[1].f), r2 = M.rSquared(d, M.DIAGNOSTICS[2].f);
+    return Math.abs(r1 - r2) < 0.01 && r1 > 0.97 && r2 > 0.97;
+  })(), "for the three integer-order vials the winning plot is above 0.98 and clears the next by more than 0.04; for the order-1.5 vial the first- and second-order plots agree to within 0.01");
+
+  push("a wrong order cannot be rescued by any rate constant", (function(){
+    for (let i = 0; i < 3; i++){
+      const v = M.VIALS[i], pts = M.measurements(i);
+      const right = M.residual(pts, v.a0, M.bestK(pts, v.a0, v.n), v.n);
+      if (!(right < v.noise * 1.3)) return false;
+      for (const n of [0, 1, 2]){
+        if (n === v.n) continue;
+        const wrong = M.residual(pts, v.a0, M.bestK(pts, v.a0, n), n);
+        if (!(wrong > right * 2.5)) return false;
+      }
+    }
+    return true;
+  })(), "for each of the three integer-order vials, the best fit at the true order sits at the noise floor while the best fit at either wrong order is more than 2.5 times worse");
+
+  push("the best-fit rate constant recovers the one the vial was built with", (function(){
+    for (let i = 0; i < 4; i++){
+      const v = M.VIALS[i], pts = M.measurements(i);
+      const k = M.bestK(pts, v.a0, v.n);
+      if (!near(k, v.k, 0.1 * v.k)) return false;
+    }
+    return true;
+  })(), "golden-section search on the noisy measurements lands within 10 percent of each vial's true k, including the order-1.5 vial");
+
+  push("the measurements are reproducible and sit close to the clean curve", (function(){
+    for (let i = 0; i < 4; i++){
+      const a = M.measurements(i), b = M.measurements(i);
+      if (a.length !== 26 || b.length !== 26) return false;
+      let worst = 0;
+      for (let j = 0; j < a.length; j++){
+        if (a[j].a !== b[j].a || a[j].t !== b[j].t) return false;
+        worst = Math.max(worst, Math.abs(a[j].a - a[j].clean));
+      }
+      if (!(worst < M.VIALS[i].noise * 4)) return false;
+      if (!(worst > 0)) return false;
+    }
+    return true;
+  })(), "same numbers on every call, 26 points each, every point within four noise widths of the true curve and none exactly on it");
+
+  push("the residual is zero on noiseless data and grows with the error", (function(){
+    const clean = [];
+    for (let i = 0; i <= 20; i++){
+      const time = i * 1.3;
+      clean.push({ t: time, a: M.conc(1, 0.18, 1, time) });
+    }
+    if (!near(M.residual(clean, 1, 0.18, 1), 0, 1e-14)) return false;
+    let prev = 0;
+    for (const dk of [0.001, 0.005, 0.02, 0.08]){
+      const r = M.residual(clean, 1, 0.18 + dk, 1);
+      if (!(r > prev)) return false;
+      prev = r;
+    }
+    return true;
+  })(), "exactly 0 when the law used to build the points is fed back in, and strictly increasing as the rate constant is detuned");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: M, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

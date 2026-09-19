@@ -1,0 +1,712 @@
+<!doctype html>
+<!--
+  Interactive Explainer Atlas — page skeleton.
+  Start EVERY new explainer from this file. Never copy a previous page.
+  Replace every {{PLACEHOLDER}}. Delete the demo model and write your own.
+  Contract: FOUNDATION.md. Rules: CLAUDE.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}} — Explainer Atlas</title>
+<meta name="description" content="{{SUMMARY}}">
+<style>
+/* ---- drafting paper: pale blue ground, ink navy, one vermilion accent ---- */
+:root{
+  --bg:#eef1f5; --panel:#fdfdfc; --ink:#141b2b; --muted:#5d6a80; --line:#c9d2de;
+  --grid:#d4dce7; --axis:#8c9ab0;
+  --accent:#c8321e; --accent-soft:#fae5e1; --col1:#1f4e8c; --col2:#0f7a63;
+  --shape:#1f4e8c; --image:#c8321e;
+  --radius:3px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.7rem,1.05rem + 2.9vw,2.9rem);
+  --scale-body:clamp(1rem,0.96rem + 0.22vw,1.09rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#10151d; --panel:#161c26; --ink:#e6ebf2; --muted:#93a0b4; --line:#27303d;
+    --grid:#1f2732; --axis:#4a5769;
+    --accent:#ff7a5e; --accent-soft:#2b1913; --col1:#6ba6ef; --col2:#4fd0ae;
+    --shape:#6ba6ef; --image:#ff7a5e;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.65 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:70rem; margin:0 auto; padding:0 var(--pad) var(--pad)}
+header.page{max-width:44rem; margin:0 auto; padding:calc(var(--pad)*1.6) 0 var(--pad); text-align:center}
+h1{font-size:var(--scale-h1); line-height:1.06; margin:0 0 .4em; letter-spacing:-.025em; font-weight:800}
+.kicker{margin:0 0 .7em; color:var(--accent); font:700 .72rem/1.3 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.22em}
+.standfirst{margin:0 auto; color:var(--muted); max-width:34em}
+
+/* the stage is a full-bleed banner; the control card overlaps its lower edge */
+.banner{background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+figure.stage{margin:0 auto; max-width:78rem; padding:0}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:none; cursor:crosshair}
+figcaption{max-width:44rem; margin:0 auto; padding:.6em var(--pad) 1em; color:var(--muted); font-size:.85rem; text-align:center}
+
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  max-width:56rem; margin:-26px auto 0; position:relative; z-index:2;
+  padding:calc(var(--pad)*.9) var(--pad); box-shadow:0 10px 30px rgba(20,27,43,.09)}
+.matrixbar{display:grid; gap:.9em 1.4em; grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:52rem){ .matrixbar{grid-template-columns:repeat(4,minmax(0,1fr))} }
+.control{display:grid; gap:.25em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font-weight:700; font-family:var(--font-mono); font-size:.92rem}
+.control label .who{font-family:var(--font-body); font-weight:500; color:var(--muted); font-size:.8rem; letter-spacing:.01em}
+.control output{font:700 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft);
+  padding:.26em .5em; border-radius:var(--radius)}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+.tools{display:flex; flex-wrap:wrap; gap:.6em; align-items:end; margin-top:1.1em;
+  padding-top:1em; border-top:1px dashed var(--line)}
+.tools .grow{flex:1 1 12rem; display:grid; gap:.25em}
+.tools .hint{margin:0; color:var(--muted); font-size:.79rem; flex-basis:100%}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line);
+  border-radius:var(--radius); padding:.55em .8em; min-height:42px}
+button{cursor:pointer; font-weight:700; font-size:.92rem}
+button:hover{border-color:var(--accent); color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:.55em;
+  max-width:56rem; margin:1.1em auto 0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:.5em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.71rem; text-transform:uppercase; letter-spacing:.1em}
+.readout dd{margin:.15em 0 0; font:700 1.1rem/1.2 var(--font-mono)}
+.prose{max-width:38em; margin:calc(var(--pad)*1.7) auto 0}
+.prose h2{font-size:1.02rem; margin:2em 0 .5em; letter-spacing:.09em; text-transform:uppercase;
+  font-weight:800; color:var(--accent)}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.92rem; background:var(--panel); padding:.85em 1em;
+  border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:var(--radius);
+  overflow-x:auto; white-space:pre; line-height:1.7}
+footer.page{max-width:38em; margin:calc(var(--pad)*1.8) auto 0; padding-top:var(--pad);
+  border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+
+<header class="page">
+  <p class="kicker">Mathematics</p>
+  <h1>Draw Anything. It Grows by ad&nbsp;&minus;&nbsp;bc.</h1>
+  <p class="standfirst">A two-by-two matrix takes every shape in the plane and multiplies its area by
+    one number. Draw a shape on the left and watch the right-hand pane swell, shrink, flip or collapse.</p>
+</header>
+
+<div class="banner">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1040" height="430" role="img"
+      aria-label="Two grids side by side. On the left, a shape you draw together with the unit square. On the right, the same shape after the matrix has been applied, together with the parallelogram spanned by the matrix columns. Both panes report their area."></canvas>
+  </figure>
+</div>
+
+<div class="wrap">
+
+  <section class="controls" data-role="controls" aria-label="Matrix entries and shape">
+    <div class="matrixbar">
+      <div class="control">
+        <div class="row"><label for="a">a <span class="who">first column, x</span></label><output id="aout" for="a">1.00</output></div>
+        <input type="range" id="a" min="-3" max="3" step="0.05" value="1">
+      </div>
+      <div class="control">
+        <div class="row"><label for="b">b <span class="who">second column, x</span></label><output id="bout" for="b">0.40</output></div>
+        <input type="range" id="b" min="-3" max="3" step="0.05" value="0.4">
+      </div>
+      <div class="control">
+        <div class="row"><label for="c">c <span class="who">first column, y</span></label><output id="cout" for="c">0.30</output></div>
+        <input type="range" id="c" min="-3" max="3" step="0.05" value="0.3">
+      </div>
+      <div class="control">
+        <div class="row"><label for="d">d <span class="who">second column, y</span></label><output id="dout" for="d">1.20</output></div>
+        <input type="range" id="d" min="-3" max="3" step="0.05" value="1.2">
+      </div>
+    </div>
+
+    <div class="tools">
+      <div class="grow">
+        <label for="shape">Shape in the left pane</label>
+        <select id="shape">
+          <option value="square" selected>Unit square</option>
+          <option value="disc">Disc</option>
+          <option value="tri">Triangle</option>
+          <option value="ell">Letter L</option>
+          <option value="star">Five-pointed star</option>
+        </select>
+      </div>
+      <button type="button" id="singular">Make it singular</button>
+      <button type="button" id="reset">Reset</button>
+      <p class="hint">Drag in the left pane to draw your own outline; release to close it. Sliders take
+        arrow keys, and Home and End jump to the ends of the range.</p>
+    </div>
+  </section>
+
+  <dl class="readout" aria-live="polite">
+    <div><dt>Determinant</dt><dd id="rdet">—</dd></div>
+    <div><dt>Area drawn</dt><dd id="rsrc">—</dd></div>
+    <div><dt>Area after</dt><dd id="rimg">—</dd></div>
+    <div><dt>Ratio</dt><dd id="rratio">—</dd></div>
+  </dl>
+
+  <figcaption>Left: your shape on the plain grid, with the unit square outlined. Right: every point
+    multiplied by the matrix, with the parallelogram the two columns span. The ratio of the two areas
+    is the same number whatever you draw.</figcaption>
+
+  <article class="prose" data-role="prose">
+    <p>The left pane holds a shape. The right pane holds the same shape after every one of its
+      points has been multiplied by the matrix. Change any of the four sliders and the right-hand
+      figure stretches, leans, spins or turns inside out — but the ratio of the two areas, sitting in
+      the fourth readout, does not depend on what you drew. Switch from the square to the star to a
+      scribble of your own and the number stays put. One matrix, one area factor, every shape.</p>
+
+    <p>That number is the determinant.</p>
+
+    <h2>Why it is ad minus bc</h2>
+
+    <p>Start with the unit square, the dashed outline in the left pane. Its corners are the origin,
+      the two basis vectors, and their sum. A matrix sends the first basis vector to its first
+      column and the second to its second, so the square is carried to the parallelogram spanned by
+      the columns — the dashed outline on the right. Whatever area factor the matrix has, this is
+      where you can read it off, because the square you started with had area one.</p>
+
+    <p>So work out that parallelogram's area. Take the rectangle that just contains it, of width
+      a&nbsp;+&nbsp;b and height c&nbsp;+&nbsp;d, and cut away the two triangles of area bc/2, the
+      two triangles of area ac/2, and the two of area bd/2 that lie outside the parallelogram:</p>
+
+    <p class="math">(a + b)(c + d) − 2·(bc/2) − 2·(ac/2) − 2·(bd/2)
+  = ac + ad + bc + bd − bc − ac − bd
+  = ad − bc</p>
+
+    <p>Every other shape follows for free. Any region can be approximated as finely as you like by
+      little squares; the matrix is linear, so it treats each little square exactly as it treated
+      the unit square, scaling every one by the same factor. Add them up and the whole region has
+      been scaled by that factor too. This is why the ratio readout ignores your drawing.</p>
+
+    <h2>The sign is not decoration</h2>
+
+    <p>Set a, b and d all to 1, then drag c up from zero. The determinant is 1&nbsp;&minus;&nbsp;c,
+      so it falls steadily, touches zero when c reaches 1, and is negative above that — and the
+      right-hand shape, which had been a leaning copy of the left one, is now a mirror image of it. The
+      determinant carries both the area factor and the orientation: positive means a shape traced
+      anticlockwise is still traced anticlockwise afterwards, negative means the plane has been
+      turned over. The unsigned area alone cannot tell you that, which is why the shoelace formula
+      that computes it keeps its sign rather than throwing it away.</p>
+
+    <h2>Zero is a collapse, not a small number</h2>
+
+    <p>Press <em>Make it singular</em>. It solves ad = bc for d and moves that slider there, and the
+      right-hand pane goes flat: your shape, whatever it was, becomes a segment lying along the line
+      through the first column. Both columns now point along that one line, so the whole plane has
+      been pressed onto it. Area zero is exactly the statement that the columns are linearly
+      dependent, and it is why a zero determinant means the matrix has no inverse — once everything
+      is on a line, nothing can tell you which of the infinitely many points that arrived at a given
+      spot was the original.</p>
+
+    <h2>What to try</h2>
+
+    <p>Set a = 1, b = 0, c = 0, d = 1 and then raise b alone. The determinant stays at exactly 1 no
+      matter how far you push it: that is a shear, and a shear slides the plane sideways without
+      compressing it. Pick the disc and watch it become a badly leaning ellipse whose area never
+      moves off 3.142.</p>
+
+    <p>Then swap the two columns — put a's value into b and b's into a, and the same for c and d.
+      The picture on the right is identical, because the parallelogram is the same set of points,
+      but the determinant has changed sign. Order matters to orientation and not to area.</p>
+
+    <p>Finally, draw something wildly non-convex in the left pane — a comb, a spiral, a signature —
+      and check the ratio again. Still ad minus bc.</p>
+  </article>
+
+  <footer class="page">
+    <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+  </footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG. Never use bare Math.random(). ------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL: pure functions. No DOM in here. ----------------------------- */
+const M = {
+  /* the definition */
+  det(m){ return m.a * m.d - m.b * m.c; },
+
+  /* an independent second route to the same number: Gaussian elimination with
+     partial pivoting, determinant = product of pivots times the swap sign.
+     It shares no algebra with ad - bc, so agreement between the two is a real
+     check rather than a restatement. */
+  detByElimination(m){
+    const r = [[m.a, m.b], [m.c, m.d]];
+    let sign = 1;
+    if (Math.abs(r[1][0]) > Math.abs(r[0][0])){ const t = r[0]; r[0] = r[1]; r[1] = t; sign = -1; }
+    if (r[0][0] === 0) return 0;
+    const f = r[1][0] / r[0][0];
+    r[1][1] -= f * r[0][1];
+    return sign * r[0][0] * r[1][1];
+  },
+
+  apply(m, p){ return { x: m.a * p.x + m.b * p.y, y: m.c * p.x + m.d * p.y }; },
+  map(m, poly){ const o = []; for (let i = 0; i < poly.length; i++) o.push(this.apply(m, poly[i])); return o; },
+
+  /* matrix product, in the order "apply n first, then m" */
+  mul(m, n){
+    return { a: m.a * n.a + m.b * n.c, b: m.a * n.b + m.b * n.d,
+             c: m.c * n.a + m.d * n.c, d: m.c * n.b + m.d * n.d };
+  },
+
+  /* shoelace: positive when the vertices run anticlockwise */
+  signedArea(poly){
+    let s = 0;
+    for (let i = 0, n = poly.length; i < n; i++){
+      const p = poly[i], q = poly[(i + 1) % n];
+      s += p.x * q.y - q.x * p.y;
+    }
+    return s / 2;
+  },
+  area(poly){ return Math.abs(this.signedArea(poly)); },
+
+  columns(m){
+    return [{ x: 0, y: 0 }, { x: m.a, y: m.c }, { x: m.a + m.b, y: m.c + m.d }, { x: m.b, y: m.d }];
+  },
+
+  /* the nearest singular matrix along the direction that changes d alone;
+     used by the "make it singular" button, and exact by construction */
+  singularD(m){ return m.a === 0 ? null : m.b * m.c / m.a; },
+
+  rotation(t){ return { a: Math.cos(t), b: -Math.sin(t), c: Math.sin(t), d: Math.cos(t) }; },
+  shear(k){ return { a: 1, b: k, c: 0, d: 1 }; },
+  scaling(s){ return { a: s, b: 0, c: 0, d: s }; },
+
+  /* the shape library, all closed polygons in world units */
+  shape(name){
+    if (name === "square") return [{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}];
+    if (name === "tri") return [{x:-0.2,y:-0.3},{x:1.6,y:0.1},{x:0.4,y:1.5}];
+    if (name === "ell") return [{x:0,y:0},{x:1.4,y:0},{x:1.4,y:0.5},{x:0.5,y:0.5},{x:0.5,y:1.9},{x:0,y:1.9}];
+    if (name === "disc"){
+      const o = [];
+      for (let i = 0; i < 72; i++){
+        const t = 2 * Math.PI * i / 72;
+        o.push({ x: 0.5 + Math.cos(t), y: 0.5 + Math.sin(t) });
+      }
+      return o;
+    }
+    if (name === "star"){
+      const o = [];
+      for (let i = 0; i < 10; i++){
+        const r = i % 2 === 0 ? 1.1 : 0.45, t = -Math.PI / 2 + Math.PI * i / 5;
+        o.push({ x: 0.5 + r * Math.cos(t), y: 0.6 + r * Math.sin(t) });
+      }
+      return o;
+    }
+    return this.shape("square");
+  },
+
+  /* a seeded convex-ish test polygon, for assertions over many shapes */
+  testPolygon(seed){
+    const rng = mulberry32(seed), n = 5 + Math.floor(rng() * 6), o = [];
+    for (let i = 0; i < n; i++){
+      const t = 2 * Math.PI * i / n, r = 0.4 + 1.4 * rng();
+      o.push({ x: r * Math.cos(t), y: r * Math.sin(t) });
+    }
+    return o;
+  },
+  testMatrix(seed){
+    const rng = mulberry32(seed);
+    return { a: 6 * rng() - 3, b: 6 * rng() - 3, c: 6 * rng() - 3, d: 6 * rng() - 3 };
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { a: 1, b: 0.4, c: 0.3, d: 1.2, shape: "square" };
+const state = Object.assign({}, defaults, { poly: M.shape("square"), drawn: null, drawing: false });
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* Two panes, side by side on a wide screen and stacked on a narrow one, so the
+   grids stay legible instead of shrinking to a strip. */
+const PAD = 16;
+let W = 1040, H = 430, UNIT = 66, STACKED = false, PANES = [];
+
+function layout(){
+  const avail = cv.parentNode ? cv.parentNode.clientWidth || 1040 : 1040;
+  STACKED = avail < 640;
+  if (STACKED){ W = 520; H = 900; UNIT = 74; }
+  else { W = 1040; H = 430; UNIT = 66; }
+  if (cv.width !== W) cv.width = W;
+  if (cv.height !== H) cv.height = H;
+  PANES = STACKED
+    ? [{ x: 0, y: 0, w: W, h: H / 2 }, { x: 0, y: H / 2, w: W, h: H / 2 }]
+    : [{ x: 0, y: 0, w: W / 2, h: H }, { x: W / 2, y: 0, w: W / 2, h: H }];
+}
+
+const centre = (pane) => {
+  const r = PANES[pane];
+  return { x: r.x + r.w / 2, y: r.y + r.h / 2 + 0.6 * UNIT };
+};
+
+function toScreen(p, pane){
+  const c = centre(pane);
+  return { x: c.x + p.x * UNIT, y: c.y - p.y * UNIT };
+}
+function toWorld(sx, sy, pane){
+  const c = centre(pane);
+  return { x: (sx - c.x) / UNIT, y: (c.y - sy) / UNIT };
+}
+
+function grid(pane, label){
+  const c = centre(pane), r = PANES[pane];
+  const x0 = r.x + PAD, x1 = r.x + r.w - PAD, y0 = r.y + PAD + 34, y1 = r.y + r.h - PAD;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x0, y0, x1 - x0, y1 - y0); ctx.clip();
+
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
+  for (let i = -20; i <= 20; i++){
+    const gx = c.x + i * UNIT, gy = c.y - i * UNIT;
+    ctx.beginPath(); ctx.moveTo(gx, y0); ctx.lineTo(gx, y1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x0, gy); ctx.lineTo(x1, gy); ctx.stroke();
+  }
+  ctx.strokeStyle = css("--axis"); ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(x0, c.y); ctx.lineTo(x1, c.y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(c.x, y0); ctx.lineTo(c.x, y1); ctx.stroke();
+  ctx.restore();
+
+  ctx.fillStyle = css("--muted");
+  ctx.font = "600 " + (STACKED ? 21 : 17) + "px " + css("--font-mono");
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText(label, x0 + 2, r.y + PAD + 6);
+}
+
+function poly(points, pane, fill, stroke, width, dash){
+  if (points.length < 2) return;
+  ctx.save();
+  if (dash) ctx.setLineDash(dash);
+  ctx.beginPath();
+  for (let i = 0; i < points.length; i++){
+    const q = toScreen(points[i], pane);
+    if (i === 0) ctx.moveTo(q.x, q.y); else ctx.lineTo(q.x, q.y);
+  }
+  ctx.closePath();
+  if (fill){ ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = width || 2; ctx.stroke(); }
+  ctx.restore();
+}
+
+function arrow(from, to, pane, colour, label){
+  const p = toScreen(from, pane), q = toScreen(to, pane);
+  const dx = q.x - p.x, dy = q.y - p.y, len = Math.hypot(dx, dy);
+  ctx.save();
+  ctx.strokeStyle = colour; ctx.fillStyle = colour; ctx.lineWidth = 2.6;
+  ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+  if (len > 8){
+    const ux = dx / len, uy = dy / len, hx = q.x - ux * 13, hy = q.y - uy * 13;
+    ctx.beginPath();
+    ctx.moveTo(q.x, q.y);
+    ctx.lineTo(hx - uy * 6, hy + ux * 6);
+    ctx.lineTo(hx + uy * 6, hy - ux * 6);
+    ctx.closePath(); ctx.fill();
+  }
+  if (label){
+    ctx.font = "700 16px " + css("--font-mono");
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(label, q.x + (len > 8 ? 14 * dx / len : 14), q.y + (len > 8 ? 14 * dy / len : -14));
+  }
+  ctx.restore();
+}
+
+function hex(varname, alpha){
+  const h = css(varname).replace("#", "");
+  const n = parseInt(h.length === 3 ? h.split("").map((k) => k + k).join("") : h, 16);
+  return "rgba(" + ((n >> 16) & 255) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + alpha + ")";
+}
+
+function render(){
+  layout();
+  const m = { a: state.a, b: state.b, c: state.c, d: state.d };
+  const src = state.poly, img = M.map(m, src);
+  const det = M.det(m);
+  const aSrc = M.area(src), aImg = M.area(img);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+
+  grid(0, "before");
+  grid(1, "after   × matrix");
+
+  /* unit square and its image: the same object before and after */
+  poly(M.shape("square"), 0, hex("--muted", 0.10), hex("--muted", 0.55), 1.5, [5, 4]);
+  poly(M.columns(m), 1, hex("--image", 0.13), hex("--image", 0.6), 1.5, [5, 4]);
+
+  poly(src, 0, hex("--shape", 0.26), css("--shape"), 2.4);
+  poly(img, 1, hex("--image", 0.26), css("--image"), 2.4);
+
+  arrow({ x: 0, y: 0 }, { x: 1, y: 0 }, 0, hex("--col1", 0.75), "e₁");
+  arrow({ x: 0, y: 0 }, { x: 0, y: 1 }, 0, hex("--col2", 0.75), "e₂");
+  arrow({ x: 0, y: 0 }, { x: m.a, y: m.c }, 1, css("--col1"), "col 1");
+  arrow({ x: 0, y: 0 }, { x: m.b, y: m.d }, 1, css("--col2"), "col 2");
+
+  ctx.fillStyle = css("--ink");
+  ctx.font = "700 " + (STACKED ? 23 : 19) + "px " + css("--font-mono");
+  ctx.textAlign = "right"; ctx.textBaseline = "top";
+  ctx.fillText("area " + aSrc.toFixed(3), PANES[0].x + PANES[0].w - PAD - 2, PANES[0].y + PAD + 6);
+  ctx.fillStyle = Math.abs(det) < 1e-9 ? css("--accent") : css("--ink");
+  ctx.fillText("area " + aImg.toFixed(3), PANES[1].x + PANES[1].w - PAD - 2, PANES[1].y + PAD + 6);
+
+  el("aout").textContent = state.a.toFixed(2);
+  el("bout").textContent = state.b.toFixed(2);
+  el("cout").textContent = state.c.toFixed(2);
+  el("dout").textContent = state.d.toFixed(2);
+  el("rdet").textContent = det.toFixed(4);
+  el("rsrc").textContent = aSrc.toFixed(4);
+  el("rimg").textContent = aImg.toFixed(4);
+  el("rratio").textContent = aSrc > 1e-9 ? (aImg / aSrc).toFixed(4) : "no area to scale";
+}
+
+/* ---- controls ----------------------------------------------------------- */
+function bindRange(id){
+  const input = el(id);
+  input.addEventListener("input", function(){ state[id] = parseFloat(input.value); render(); });
+}
+["a", "b", "c", "d"].forEach(bindRange);
+
+el("shape").addEventListener("change", function(){
+  state.shape = el("shape").value;
+  state.drawn = null;
+  state.poly = M.shape(state.shape);
+  render();
+});
+
+el("singular").addEventListener("click", function(){
+  const nd = M.singularD({ a: state.a, b: state.b, c: state.c, d: state.d });
+  if (nd === null || Math.abs(nd) > 3){
+    /* a cannot reach a singular d inside the slider range: collapse column two instead */
+    state.b = 0; state.d = 0;
+    el("b").value = "0"; el("d").value = "0";
+  } else {
+    state.d = Math.round(nd / 0.05) * 0.05;
+    el("d").value = String(state.d);
+  }
+  render();
+});
+
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults, { poly: M.shape(defaults.shape), drawn: null, drawing: false });
+  ["a", "b", "c", "d"].forEach(function(k){ el(k).value = String(defaults[k]); });
+  el("shape").value = defaults.shape;
+  render();
+});
+
+/* freehand drawing in the left pane; the select is the keyboard equivalent */
+function paneOf(ev){
+  const r = cv.getBoundingClientRect();
+  const sx = (ev.clientX - r.left) * W / r.width, sy = (ev.clientY - r.top) * H / r.height;
+  return { sx: sx, sy: sy, pane: (STACKED ? sy >= H / 2 : sx >= W / 2) ? 1 : 0 };
+}
+cv.addEventListener("pointerdown", function(ev){
+  const q = paneOf(ev);
+  if (q.pane !== 0) return;
+  state.drawing = true; state.drawn = [toWorld(q.sx, q.sy, 0)];
+  state.poly = state.drawn;
+  cv.setPointerCapture(ev.pointerId);
+  ev.preventDefault();
+});
+cv.addEventListener("pointermove", function(ev){
+  if (!state.drawing) return;
+  const q = paneOf(ev), p = toWorld(q.sx, q.sy, 0), last = state.drawn[state.drawn.length - 1];
+  if (Math.hypot(p.x - last.x, p.y - last.y) > 0.06){ state.drawn.push(p); render(); }
+});
+function endDraw(){
+  if (!state.drawing) return;
+  state.drawing = false;
+  if (state.drawn.length < 3){ state.drawn = null; state.poly = M.shape(state.shape); }
+  render();
+}
+cv.addEventListener("pointerup", endDraw);
+cv.addEventListener("pointercancel", endDraw);
+
+let resizeTimer = 0;
+window.addEventListener("resize", function(){
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(render, 80);
+});
+
+layout();
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+
+  push("the determinant is ad minus bc, on cases computed by hand", (function(){
+    if (!near(M.det({a:1,b:0,c:0,d:1}), 1, 0)) return false;
+    if (!near(M.det({a:3,b:2,c:1,d:4}), 10, 0)) return false;
+    if (!near(M.det({a:2,b:6,c:1,d:3}), 0, 0)) return false;
+    if (!near(M.det({a:0,b:1,c:1,d:0}), -1, 0)) return false;
+    return near(M.det({a:-2,b:0.5,c:4,d:-1}), 0, 1e-15);
+  })(), "identity 1, [[3,2],[1,4]] 10, a dependent pair 0, the swap -1, and a second dependent pair 0");
+
+  push("elimination reaches the same determinant by a different route", (function(){
+    for (let s = 1; s <= 200; s++){
+      const m = M.testMatrix(s * 37 + 5);
+      const want = M.det(m), got = M.detByElimination(m);
+      if (!near(got, want, 1e-12 + 1e-12 * Math.abs(want))) return false;
+    }
+    return true;
+  })(), "partial-pivoted Gaussian elimination, product of pivots times the swap sign, agrees with ad-bc on 200 seeded matrices");
+
+  push("the parallelogram the columns span has area |det|", (function(){
+    for (let s = 1; s <= 120; s++){
+      const m = M.testMatrix(s * 91 + 13);
+      if (!near(M.area(M.columns(m)), Math.abs(M.det(m)), 1e-12)) return false;
+    }
+    return true;
+  })(), "shoelace area of the column parallelogram against |ad-bc| on 120 seeded matrices, to 1e-12");
+
+  push("every shape's area is multiplied by |det|, not just the unit square", (function(){
+    for (let s = 1; s <= 60; s++){
+      const m = M.testMatrix(s * 13 + 2), q = M.testPolygon(s * 7 + 1);
+      const a0 = M.area(q), a1 = M.area(M.map(m, q));
+      if (a0 < 1e-6) continue;
+      if (!near(a1 / a0, Math.abs(M.det(m)), 1e-9 * Math.max(1, Math.abs(M.det(m))))) return false;
+    }
+    /* and on the five library shapes under one awkward matrix */
+    const m = { a: -1.35, b: 0.8, c: 2.1, d: 0.45 };
+    for (const nm of ["square", "disc", "tri", "ell", "star"]){
+      const q = M.shape(nm);
+      if (!near(M.area(M.map(m, q)) / M.area(q), Math.abs(M.det(m)), 1e-9)) return false;
+    }
+    return true;
+  })(), "60 seeded polygons under 60 seeded matrices, plus all five library shapes under one matrix, every ratio equal to |det|");
+
+  push("the sign of the determinant is exactly the orientation flip", (function(){
+    for (let s = 1; s <= 80; s++){
+      const m = M.testMatrix(s * 29 + 4), q = M.testPolygon(s * 5 + 3);
+      const before = M.signedArea(q), after = M.signedArea(M.map(m, q)), det = M.det(m);
+      if (Math.abs(before) < 1e-6 || Math.abs(det) < 1e-6) continue;
+      if (Math.sign(after) !== Math.sign(before) * Math.sign(det)) return false;
+      if (!near(after, before * det, 1e-9 * Math.max(1, Math.abs(before * det)))) return false;
+    }
+    return true;
+  })(), "signed shoelace area after equals signed area before times the determinant, sign included, on 80 seeded pairs");
+
+  push("the determinant is zero exactly when the columns are dependent", (function(){
+    for (let s = 1; s <= 60; s++){
+      const rng = mulberry32(s * 17 + 9);
+      const a = 4 * rng() - 2, c = 4 * rng() - 2, k = 4 * rng() - 2;
+      if (!near(M.det({ a: a, b: k * a, c: c, d: k * c }), 0, 1e-14)) return false;
+    }
+    /* and non-zero whenever they are not: a perpendicular pair of unit vectors */
+    for (let s = 1; s <= 60; s++){
+      const th = 2 * Math.PI * s / 60;
+      if (!near(Math.abs(M.det(M.rotation(th))), 1, 1e-12)) return false;
+    }
+    return true;
+  })(), "60 dependent column pairs give exactly 0, and 60 rotations give exactly 1");
+
+  push("swapping the columns negates the determinant", (function(){
+    for (let s = 1; s <= 100; s++){
+      const m = M.testMatrix(s * 53 + 6);
+      const swapped = { a: m.b, b: m.a, c: m.d, d: m.c };
+      if (!near(M.det(swapped), -M.det(m), 1e-13)) return false;
+      /* the parallelogram is the same set of points, so its unsigned area is unchanged */
+      if (!near(M.area(M.columns(swapped)), M.area(M.columns(m)), 1e-12)) return false;
+    }
+    return true;
+  })(), "100 seeded matrices: the determinant changes sign, the area does not");
+
+  push("det(AB) equals det(A) times det(B)", (function(){
+    for (let s = 1; s <= 50; s++){
+      const A = M.testMatrix(s * 11 + 1), B = M.testMatrix(s * 23 + 8);
+      const want = M.det(A) * M.det(B);
+      if (!near(M.det(M.mul(A, B)), want, 1e-10 * Math.max(1, Math.abs(want)))) return false;
+    }
+    return true;
+  })(), "50 seeded pairs, to 1e-10 relative: areas multiply because the maps compose");
+
+  push("composing the maps and multiplying the matrices agree vertex by vertex", (function(){
+    for (let s = 1; s <= 40; s++){
+      const A = M.testMatrix(s * 19 + 3), B = M.testMatrix(s * 31 + 7), q = M.testPolygon(s * 3 + 2);
+      const twoSteps = M.map(A, M.map(B, q)), oneStep = M.map(M.mul(A, B), q);
+      for (let i = 0; i < q.length; i++){
+        if (!near(twoSteps[i].x, oneStep[i].x, 1e-12)) return false;
+        if (!near(twoSteps[i].y, oneStep[i].y, 1e-12)) return false;
+      }
+    }
+    return true;
+  })(), "apply B then A against applying AB once, 40 seeded triples, every vertex to 1e-12");
+
+  push("rotations and shears have determinant one; scalings square theirs", (function(){
+    for (let i = 0; i <= 48; i++){
+      if (!near(M.det(M.rotation(2 * Math.PI * i / 48)), 1, 1e-12)) return false;
+      if (!near(M.det(M.shear(-4 + 8 * i / 48)), 1, 1e-15)) return false;
+    }
+    for (let i = 1; i <= 40; i++){
+      const sc = i / 8;
+      if (!near(M.det(M.scaling(sc)), sc * sc, 1e-12)) return false;
+    }
+    /* a shear distorts every shape and still preserves its area exactly */
+    const q = M.shape("disc"), a0 = M.area(q);
+    for (let i = 0; i <= 20; i++)
+      if (!near(M.area(M.map(M.shear(-3 + 0.3 * i), q)), a0, 1e-12)) return false;
+    return true;
+  })(), "49 rotations, 49 shears, 40 scalings, and a disc whose area survives 21 shears unchanged");
+
+  push("a singular matrix collapses every shape onto a line", (function(){
+    for (let s = 1; s <= 40; s++){
+      const m = M.testMatrix(s * 41 + 5);
+      const sd = M.singularD(m);
+      if (sd === null) continue;
+      const sing = { a: m.a, b: m.b, c: m.c, d: sd };
+      if (!near(M.det(sing), 0, 1e-12 * Math.max(1, Math.abs(m.a * sd)))) return false;
+      const img = M.map(sing, M.testPolygon(s * 3 + 1));
+      if (!near(M.area(img), 0, 1e-10)) return false;
+      /* every image point lies on the line through column one */
+      for (const p of img)
+        if (!near(p.x * m.c - p.y * m.a, 0, 1e-9 * Math.max(1, Math.abs(p.x) + Math.abs(p.y)))) return false;
+    }
+    return true;
+  })(), "40 matrices made singular by solving ad = bc for d: area 0, and every image point on the span of column one");
+
+  push("the readouts stay finite across the whole control range", (function(){
+    const shapes = ["square", "disc", "tri", "ell", "star"].map((n) => M.shape(n));
+    for (let a = -3; a <= 3; a += 0.5) for (let b = -3; b <= 3; b += 0.5)
+      for (let c = -3; c <= 3; c += 1.5) for (let d = -3; d <= 3; d += 1.5){
+        const m = { a: a, b: b, c: c, d: d };
+        if (!Number.isFinite(M.det(m))) return false;
+        for (const q of shapes) if (!Number.isFinite(M.area(M.map(m, q)))) return false;
+      }
+    return true;
+  })(), "no NaN or Infinity in the determinant or any shape's area over a grid of the four sliders");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: M, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
