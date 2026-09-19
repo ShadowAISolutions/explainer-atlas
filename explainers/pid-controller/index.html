@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Three Knobs, Three Different Ways to Be Wrong — Explainer Atlas</title>
+<meta name="description" content="Tune a PID controller by hand against a target step response and find out what each of the three terms fixes, and what each one breaks.">
+<style>
+:root{
+  --bg:#eef1f4; --grid:#dde3e9; --panel:#ffffff; --ink:#10161c; --muted:#5a6672; --line:#ccd5dd;
+  --p:#1a5fb4; --i:#c64600; --d:#127b5b; --target:#8b93a0; --bad:#b32d2d;
+  --radius:2px; --pad:clamp(13px,2.5vw,22px);
+  --font-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.45rem,1.05rem + 2vw,2.05rem);
+  --scale-body:clamp(0.93rem,0.9rem + 0.18vw,1rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f1418; --grid:#182026; --panel:#151c22; --ink:#e3e9ef; --muted:#8e9aa7; --line:#232d36;
+    --p:#5ea8ff; --i:#ff9152; --d:#43cfa2; --target:#6c7682; --bad:#ff6b6b;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; color:var(--ink);
+  background:var(--bg);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:26px 26px;
+  font:var(--scale-body)/1.62 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:63rem; margin:0 auto; padding:var(--pad)}
+header.page{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.13; margin:0 0 .3em; letter-spacing:-.02em; font-weight:800}
+.kicker{margin:0 0 .45em; color:var(--i); font:700 .68rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.19em}
+.standfirst{margin:0; color:var(--muted); max-width:44em}
+.instrument{margin-top:var(--pad); background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  display:grid; grid-template-columns:1fr; gap:0}
+@media (min-width:54rem){ .instrument{grid-template-columns:minmax(0,1fr) 17rem} }
+figure.stage{margin:0; padding:var(--pad); overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.79rem; line-height:1.5}
+.controls{padding:var(--pad); border-top:1px solid var(--line); display:grid; gap:.95em; align-content:start}
+@media (min-width:54rem){ .controls{border-top:0; border-left:1px solid var(--line)} }
+.control{display:grid; gap:.25em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.5em}
+.control label{font:700 .72rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.09em}
+.control output{font:700 .92rem/1 var(--font-mono)}
+.control .hint{margin:0; color:var(--muted); font-size:.74rem; line-height:1.45}
+#kp{accent-color:var(--p)} #ki{accent-color:var(--i)} #kd{accent-color:var(--d)}
+label[for=kp],#kpout{color:var(--p)} label[for=ki],#kiout{color:var(--i)} label[for=kd],#kdout{color:var(--d)}
+input[type=range]{width:100%; min-height:24px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:var(--radius); padding:.5em .65em; min-height:40px; width:100%}
+button{cursor:pointer; font:700 .76rem/1 var(--font-mono); text-transform:uppercase; letter-spacing:.07em}
+button:hover{border-color:var(--p); color:var(--p)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--i); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:1px; margin:var(--pad) 0 0; padding:0;
+  background:var(--line); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden}
+.readout div{background:var(--panel); padding:.6em .75em}
+.readout dt{margin:0; color:var(--muted); font:400 .67rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.1em}
+.readout dd{margin:.18em 0 0; font:700 1.05rem/1.2 var(--font-mono)}
+.prose{max-width:37em; margin:calc(var(--pad)*1.5) 0 0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad) calc(var(--pad)*1.2)}
+.prose h2{font:800 .74rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.15em; margin:2em 0 .5em}
+.prose h2.p{color:var(--p)} .prose h2.i{color:var(--i)} .prose h2.d{color:var(--d)}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.86em; background:var(--bg); padding:.7em .8em; border-radius:var(--radius); border-left:3px solid var(--i); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.8rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">engineering</p>
+  <h1>Three Knobs, Three Different Ways to Be Wrong</h1>
+  <p class="standfirst">A controller watches the gap between where a thing is and where it should be, and pushes. How hard it pushes is three separate decisions, and each one fixes a fault the other two cannot.</p>
+</header>
+
+<div class="instrument">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="540" role="img"
+            aria-label="A step response plot. The dashed grey curve is the target response. The solid coloured curve is the controlled system's output for the current gains. A second panel below shows the controller's output effort over the same time."></canvas>
+    <figcaption>Grey dashed: the response you are aiming for. Solid: what your gains actually produce. Lower strip: how hard the controller is pushing to get it.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Controller gains">
+    <div class="control">
+      <label for="plant">System being controlled</label>
+      <select id="plant">
+        <option value="tank" selected>heated tank &mdash; settles by itself</option>
+        <option value="motor">motor &mdash; coasts, no friction to stop it</option>
+      </select>
+      <p class="hint">Two plants with very different habits. The same gains will not suit both.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="kp">Kp &mdash; proportional</label><output id="kpout" for="kp">1.00</output></div>
+      <input type="range" id="kp" min="0" max="12" step="0.05" value="1">
+      <p class="hint">Push in proportion to the current gap.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="ki">Ki &mdash; integral</label><output id="kiout" for="ki">0.00</output></div>
+      <input type="range" id="ki" min="0" max="8" step="0.05" value="0">
+      <p class="hint">Push in proportion to the gap accumulated so far.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="kd">Kd &mdash; derivative</label><output id="kdout" for="kd">0.00</output></div>
+      <input type="range" id="kd" min="0" max="6" step="0.05" value="0">
+      <p class="hint">Push against how fast the thing is currently moving.</p>
+    </div>
+
+    <button type="button" id="reset">Reset gains</button>
+  </section>
+</div>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Steady-state error</dt><dd id="r1">&mdash;</dd></div>
+  <div><dt>Overshoot</dt><dd id="r2">&mdash;</dd></div>
+  <div><dt>Settling time</dt><dd id="r3">&mdash;</dd></div>
+  <div><dt>Match with target</dt><dd id="r4">&mdash;</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>At time zero the setpoint jumps from 0 to 1 and stays there. Everything you see after that is the system trying to catch up. The controller only ever sees one number, the error e&nbsp;=&nbsp;setpoint&nbsp;&minus;&nbsp;output, and turns it into a push:</p>
+
+  <p class="math">u = Kp&middot;e + Ki&middot;&int;e dt &minus; Kd&middot;(rate of change of the output)</p>
+
+  <h2 class="p">Proportional: fast, and permanently short</h2>
+
+  <p>Set Ki and Kd to zero and raise Kp on the heated tank. The response gets quicker, and the final value gets closer to 1 — but never reaches it. It settles at Kp/(1&nbsp;+&nbsp;Kp), leaving an error of exactly 1/(1&nbsp;+&nbsp;Kp). The reason is structural: the only thing producing any push at all is the error itself, so if the error went to zero the push would go with it and the tank would cool. A proportional controller needs a permanent error to keep working.</p>
+
+  <p>Raising Kp shrinks that gap but never closes it, and on the motor it buys something worse. Switch plants: the motor has nothing to stop it, so a big proportional push sends it sailing past the setpoint and the error reverses. You get ringing that takes longer to die out the harder you push.</p>
+
+  <h2 class="i">Integral: patient, and prone to overshoot</h2>
+
+  <p>Integral action keeps a running total of the error. As long as any gap remains, the total keeps growing and the push keeps rising, so the only resting state is zero error. Add a little Ki on the tank and watch the final value climb onto 1 and stay.</p>
+
+  <p>The cost is memory. By the time the output reaches the setpoint, the accumulated total is large and still pushing, so the system sails past and the integral has to be unwound from the other side. Too much Ki and that unwinding never converges — the system oscillates with growing amplitude. On the motor, with the plant's own integration on top, the whole loop goes unstable once</p>
+
+  <p class="math">(2 + Kd) &middot; Kp &lt; Ki</p>
+
+  <p>which is the Routh&ndash;Hurwitz condition for this loop's characteristic polynomial. It is not a rule of thumb; cross that line and the poles move into the right half-plane. Drag Ki up with Kp at 2 and Kd at 0 and the plot diverges just past Ki&nbsp;=&nbsp;4.</p>
+
+  <h2 class="d">Derivative: steadying, and easily fooled</h2>
+
+  <p>Derivative action pushes against motion rather than against error, so it acts as damping. On the motor, adding Kd is what makes an aggressive Kp usable: it lets you raise the loop's speed without the ringing, and it widens the stability condition above. It is also the term that adds nothing at all in steady state, since the output has stopped moving by then.</p>
+
+  <p>Its weakness is that a derivative amplifies anything fast, and real measurements are noisy. Here the signal is clean, so Kd looks like a free win. On a real sensor it is the term people turn down first.</p>
+
+  <h2>What to try</h2>
+
+  <p>Match the grey target on each plant. On the motor you can hit it almost exactly with Kp near 4.85, Ki at zero and Kd near 1.10 — no integral needed, because a motor that coasts already holds its position without a push. On the tank the same gains leave you short, and you have to bring Ki up to close the gap, which is the whole lesson in one drag.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL: two plants, one PID loop, RK4 ------------------------------- */
+const TAU = 1, DRAG = 2, DT = 0.002, CLAMP = 1e6;
+
+const Model = {
+  TAU: TAU, DRAG: DRAG, DT: DT,
+  /* the response being aimed at: second order, zeta 0.7, natural freq 2.2 */
+  TARGET_Z: 0.7, TARGET_W: 2.2,
+
+  target(t){
+    const z = this.TARGET_Z, w = this.TARGET_W, wd = w * Math.sqrt(1 - z * z);
+    return 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + (z * w / wd) * Math.sin(wd * t));
+  },
+
+  /* u is derivative-on-measurement, so a step in the setpoint gives no kick */
+  effort(plant, s, Kp, Ki, Kd){
+    const e = 1 - s.y;
+    if (plant === "tank") return Kp * e + Ki * s.I - Kd * this.rate(plant, s, Kp, Ki, Kd);
+    return Kp * e + Ki * s.I - Kd * s.v;
+  },
+
+  rate(plant, s, Kp, Ki, Kd){
+    /* the tank's algebraic loop solves in closed form */
+    if (plant === "tank") return (Kp * (1 - s.y) + Ki * s.I - s.y) / (TAU + Kd);
+    return s.v;
+  },
+
+  deriv(plant, s, Kp, Ki, Kd){
+    const e = 1 - s.y;
+    if (plant === "tank") return { y: (Kp * e + Ki * s.I - s.y) / (TAU + Kd), v: 0, I: e };
+    return { y: s.v, v: Kp * e + Ki * s.I - (Kd + DRAG) * s.v, I: e };
+  },
+
+  /* unit step from rest; y is sampled every DT seconds */
+  simulate(plant, Kp, Ki, Kd, T){
+    const n = Math.round(T / DT), y = new Float64Array(n + 1), u = new Float64Array(n + 1);
+    let s = { y: 0, v: 0, I: 0 }, diverged = false;
+    const add = (a, b, h) => ({ y: a.y + h * b.y, v: a.v + h * b.v, I: a.I + h * b.I });
+    u[0] = this.effort(plant, s, Kp, Ki, Kd);
+    for (let k = 1; k <= n; k++){
+      const k1 = this.deriv(plant, s, Kp, Ki, Kd);
+      const k2 = this.deriv(plant, add(s, k1, DT / 2), Kp, Ki, Kd);
+      const k3 = this.deriv(plant, add(s, k2, DT / 2), Kp, Ki, Kd);
+      const k4 = this.deriv(plant, add(s, k3, DT), Kp, Ki, Kd);
+      s = { y: s.y + DT / 6 * (k1.y + 2 * k2.y + 2 * k3.y + k4.y),
+            v: s.v + DT / 6 * (k1.v + 2 * k2.v + 2 * k3.v + k4.v),
+            I: s.I + DT / 6 * (k1.I + 2 * k2.I + 2 * k3.I + k4.I) };
+      if (!Number.isFinite(s.y) || Math.abs(s.y) > CLAMP){
+        diverged = true;
+        s = { y: (s.y < 0 ? -1 : 1) * CLAMP, v: 0, I: 0 };
+      }
+      y[k] = s.y;
+      const uu = this.effort(plant, s, Kp, Ki, Kd);
+      u[k] = Number.isFinite(uu) ? Math.max(-CLAMP, Math.min(CLAMP, uu)) : CLAMP;
+      if (diverged) for (let j = k; j <= n; j++){ y[j] = y[k]; u[j] = u[k]; }
+      if (diverged) break;
+    }
+    return { y: y, u: u, diverged: diverged, T: T };
+  },
+
+  /* what a proportional-only loop on a unit-gain plant must settle at */
+  proportionalError(Kp){ return 1 / (1 + Kp); },
+
+  /* the motor under proportional control alone is textbook second order */
+  zeta(Kp, Kd){ return (DRAG + Kd) / (2 * Math.sqrt(Kp)); },
+  overshootFormula(z){ return z >= 1 ? 0 : Math.exp(-Math.PI * z / Math.sqrt(1 - z * z)); },
+
+  /* Routh-Hurwitz for s^3 + (DRAG+Kd)s^2 + Kp s + Ki */
+  routhStable(Kp, Ki, Kd){
+    const b2 = DRAG + Kd;
+    if (Ki === 0) return b2 > 0 && Kp > 0;
+    return b2 > 0 && Ki > 0 && b2 * Kp > Ki;
+  },
+
+  peak(run){ let m = -Infinity; for (let i = 0; i < run.y.length; i++) if (run.y[i] > m) m = run.y[i]; return m; },
+
+  steadyError(run){ return 1 - run.y[run.y.length - 1]; },
+
+  /* first time after which the output stays within 2% of the setpoint */
+  settleTime(run){
+    for (let i = run.y.length - 1; i >= 0; i--)
+      if (Math.abs(run.y[i] - 1) > 0.02) return (i + 1) * DT <= run.T ? (i + 1) * DT : Infinity;
+    return 0;
+  },
+
+  /* peak-to-peak of a slice, used to tell decay from growth */
+  spread(run, from, to){
+    let mx = -Infinity, mn = Infinity;
+    for (let i = from; i < to; i++){ const v = run.y[i]; if (v > mx) mx = v; if (v < mn) mn = v; }
+    return mx - mn;
+  },
+
+  /* does the simulation itself settle down? */
+  simulationStable(plant, Kp, Ki, Kd){
+    const run = this.simulate(plant, Kp, Ki, Kd, 90);
+    if (run.diverged) return false;
+    const n = run.y.length;
+    const mid = this.spread(run, Math.floor(n * 0.45), Math.floor(n * 0.65));
+    const end = this.spread(run, Math.floor(n * 0.80), n);
+    return end < 1e-3 || end < mid * 0.7;
+  },
+
+  /* root-mean-square distance from the target response */
+  mismatch(run){
+    let s = 0, n = 0;
+    for (let i = 0; i < run.y.length; i += 5){
+      const d = run.y[i] - this.target(i * DT);
+      s += d * d; n++;
+    }
+    return Math.sqrt(s / n);
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { plant: "tank", Kp: 1, Ki: 0, Kd: 0 };
+const state = Object.assign({}, defaults);
+const T_SHOW = 10;
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+const L = 52, R = 18, TOP = 22, PLOT_H = 330, U_TOP = 396, U_H = 120;
+
+function render(){
+  const muted = css("--muted"), line = css("--line"), panel = css("--panel"),
+        tgt = css("--target"), bad = css("--bad"), ink = css("--ink"),
+        colour = state.Ki > 0 ? css("--i") : (state.Kd > 0 ? css("--d") : css("--p"));
+
+  const run = Model.simulate(state.plant, state.Kp, state.Ki, state.Kd, T_SHOW);
+  const stable = !run.diverged && Math.abs(run.y[run.y.length - 1]) < 50;
+
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.font = "12px ui-monospace, monospace";
+
+  const x1 = cv.width - R;
+  const tx = (t) => L + (t / T_SHOW) * (x1 - L);
+  const ty = (v) => TOP + PLOT_H - (v / 1.6) * PLOT_H;
+
+  ctx.strokeStyle = line; ctx.lineWidth = 1; ctx.textAlign = "right"; ctx.fillStyle = muted;
+  for (const v of [0, 0.5, 1, 1.5]){
+    ctx.beginPath(); ctx.moveTo(L, ty(v)); ctx.lineTo(x1, ty(v)); ctx.stroke();
+    ctx.fillText(v.toFixed(1), L - 8, ty(v) + 4);
+  }
+  ctx.textAlign = "center";
+  for (let t = 0; t <= T_SHOW; t += 2){
+    ctx.beginPath(); ctx.moveTo(tx(t), ty(0)); ctx.lineTo(tx(t), ty(0) + 5); ctx.stroke();
+    ctx.fillText(t + "s", tx(t), ty(0) + 20);
+  }
+  ctx.textAlign = "left";
+  ctx.fillText("output (setpoint = 1)", L, TOP - 7);
+
+  /* setpoint */
+  ctx.strokeStyle = ink; ctx.globalAlpha = 0.25; ctx.setLineDash([2, 4]);
+  ctx.beginPath(); ctx.moveTo(L, ty(1)); ctx.lineTo(x1, ty(1)); ctx.stroke();
+  ctx.setLineDash([]); ctx.globalAlpha = 1;
+
+  /* target */
+  ctx.strokeStyle = tgt; ctx.lineWidth = 2; ctx.setLineDash([7, 5]);
+  ctx.beginPath();
+  for (let px = 0; px <= x1 - L; px++){
+    const t = (px / (x1 - L)) * T_SHOW, y = ty(Model.target(t));
+    if (px === 0) ctx.moveTo(L + px, y); else ctx.lineTo(L + px, y);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  /* the response */
+  ctx.strokeStyle = stable ? colour : bad; ctx.lineWidth = 2.6; ctx.lineJoin = "round";
+  ctx.beginPath();
+  const step = Math.max(1, Math.floor(run.y.length / (x1 - L) / 2));
+  let started = false;
+  for (let i = 0; i < run.y.length; i += step){
+    const v = Math.max(-0.4, Math.min(1.9, run.y[i]));
+    const x = tx(i * Model.DT), y = ty(v);
+    if (!started){ ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  if (!stable){
+    ctx.fillStyle = bad; ctx.font = "700 15px ui-monospace, monospace"; ctx.textAlign = "center";
+    ctx.fillText("UNSTABLE — the output runs away", (L + x1) / 2, TOP + 40);
+    ctx.font = "12px ui-monospace, monospace";
+  }
+
+  /* effort strip */
+  let umax = 1;
+  for (let i = 0; i < run.u.length; i++){ const a = Math.abs(run.u[i]); if (a < 1e5 && a > umax) umax = a; }
+  const uy = (v) => U_TOP + U_H / 2 - (Math.max(-umax, Math.min(umax, v)) / umax) * (U_H / 2 - 6);
+  ctx.strokeStyle = line; ctx.textAlign = "left"; ctx.fillStyle = muted;
+  ctx.fillText("controller effort  (peak " + (umax < 1e5 ? umax.toFixed(1) : "off scale") + ")", L, U_TOP - 7);
+  ctx.beginPath(); ctx.moveTo(L, uy(0)); ctx.lineTo(x1, uy(0)); ctx.stroke();
+  ctx.strokeStyle = stable ? colour : bad; ctx.lineWidth = 1.6; ctx.globalAlpha = 0.8;
+  ctx.beginPath();
+  for (let i = 0; i < run.u.length; i += step){
+    const x = tx(i * Model.DT), y = uy(run.u[i]);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke(); ctx.globalAlpha = 1;
+
+  /* readouts */
+  const err = Model.steadyError(run);
+  const peak = Model.peak(run);
+  const st = Model.settleTime(run);
+  const mm = Model.mismatch(run);
+
+  el("kpout").textContent = state.Kp.toFixed(2);
+  el("kiout").textContent = state.Ki.toFixed(2);
+  el("kdout").textContent = state.Kd.toFixed(2);
+  el("r1").textContent = !stable ? "diverging" : (Math.abs(err) < 1e-4 ? "none" : err.toFixed(4));
+  el("r2").textContent = !stable ? "diverging" : (peak > 1.0001 ? ((peak - 1) * 100).toFixed(1) + "%" : "none");
+  el("r3").textContent = !stable ? "never" : (Number.isFinite(st) ? st.toFixed(2) + " s" : "not within " + T_SHOW + " s");
+  el("r4").textContent = !stable ? "no match" : (mm < 0.02 ? "matched" : mm.toFixed(3) + " off");
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  const handler = () => { state[key] = parse(input); render(); };
+  input.addEventListener("input", handler);
+  input.addEventListener("change", handler);
+}
+bind("plant", "plant", (i) => i.value);
+bind("kp", "Kp", (i) => parseFloat(i.value));
+bind("ki", "Ki", (i) => parseFloat(i.value));
+bind("kd", "Kd", (i) => parseFloat(i.value));
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("plant").value = defaults.plant;
+  el("kp").value = String(defaults.Kp);
+  el("ki").value = String(defaults.Ki);
+  el("kd").value = String(defaults.Kd);
+  render();
+});
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+
+  push("proportional control alone leaves an error of 1/(1+Kp)", (function(){
+    for (const Kp of [0.5, 1, 2, 3.5, 5, 8, 12]){
+      const run = M.simulate("tank", Kp, 0, 0, 40);
+      if (!near(M.steadyError(run), M.proportionalError(Kp), 1e-6)) return false;
+    }
+    return true;
+  })(), "simulated final error matches the closed form to 1e-6 at seven gains");
+
+  push("integral action removes the error entirely", (function(){
+    /* pairs whose slowest closed-loop pole is faster than -0.25, so 120 s
+       of simulation is comfortably long enough to reach the steady state */
+    const pairs = [[0.5, 0.5], [0.5, 1], [0.5, 2.5], [1, 1], [1, 2.5],
+                   [3, 1], [3, 2.5], [6, 2.5]];
+    for (const pr of pairs){
+      const run = M.simulate("tank", pr[0], pr[1], 0, 120);
+      if (!(Math.abs(M.steadyError(run)) < 1e-6)) return false;
+      /* the same gains with Ki removed leave a large permanent error */
+      const noI = M.simulate("tank", pr[0], 0, 0, 120);
+      if (!near(M.steadyError(noI), M.proportionalError(pr[0]), 1e-6)) return false;
+    }
+    return true;
+  })(), "final error below 1e-6 for eight gain pairs, where the same Kp alone leaves up to 0.67");
+
+  push("the second-order overshoot formula predicts the simulated peak", (function(){
+    for (const Kp of [2, 3, 4, 6, 9, 16, 25]){
+      const z = M.zeta(Kp, 0);
+      if (z >= 1) continue;
+      const want = M.overshootFormula(z);
+      const got = M.peak(M.simulate("motor", Kp, 0, 0, 40)) - 1;
+      if (!(Math.abs(got - want) / want < 0.01)) return false;
+    }
+    return true;
+  })(), "exp(-pi*zeta/sqrt(1-zeta^2)) within 1% of the measured peak at every gain");
+
+  push("critical damping produces no overshoot at all", (function(){
+    if (!near(M.zeta(1, 0), 1, 1e-12)) return false;
+    if (!(M.peak(M.simulate("motor", 1, 0, 0, 40)) <= 1 + 1e-6)) return false;
+    return M.overshootFormula(1) === 0 && M.overshootFormula(1.4) === 0;
+  })(), "Kp = 1 puts zeta at exactly 1 on this plant; the peak never exceeds the setpoint");
+
+  push("derivative action damps: raising Kd lowers the peak", (function(){
+    let prev = Infinity;
+    for (const Kd of [0, 0.5, 1, 2, 3]){
+      const p = M.peak(M.simulate("motor", 9, 0, Kd, 40));
+      if (!(p <= prev + 1e-9)) return false;
+      prev = p;
+      if (!near(M.zeta(9, Kd), (2 + Kd) / 6, 1e-12)) return false;
+    }
+    return prev < M.peak(M.simulate("motor", 9, 0, 0, 40));
+  })(), "peak falls monotonically as Kd rises, matching zeta = (2+Kd)/(2 sqrt(Kp))");
+
+  push("the simulation agrees with Routh-Hurwitz", (function(){
+    let checked = 0;
+    for (const Kp of [0.5, 2, 8])
+      for (const Ki of [0.25, 2, 8, 20])
+        for (const Kd of [0, 1, 6]){
+          const margin = Math.abs((M.DRAG + Kd) * Kp - Ki) / Math.max(1, Ki);
+          if (margin < 0.4) continue;         /* skip the boundary itself */
+          checked++;
+          if (M.simulationStable("motor", Kp, Ki, Kd) !== M.routhStable(Kp, Ki, Kd)) return false;
+        }
+    return checked >= 30;
+  })(), "gain triples away from the boundary: (2+Kd)Kp > Ki predicts settling exactly");
+
+  push("crossing the Routh boundary actually destabilises the loop", (function(){
+    /* Kp = 2, Kd = 0: the condition says Ki must stay below 4 */
+    if (!M.routhStable(2, 3, 0) || M.routhStable(2, 6, 0)) return false;
+    if (!M.simulationStable("motor", 2, 3, 0)) return false;
+    return !M.simulationStable("motor", 2, 6, 0);
+  })(), "Ki = 3 settles and Ki = 6 does not, with the predicted boundary at 4");
+
+  push("the target curve is the exact second-order step response", (function(){
+    const z = M.TARGET_Z, w = M.TARGET_W;
+    if (!near(M.target(0), 0, 1e-12)) return false;
+    if (!near(M.target(400), 1, 1e-9)) return false;
+    const peakT = Math.PI / (w * Math.sqrt(1 - z * z));
+    const over = M.target(peakT) - 1;
+    return near(over, M.overshootFormula(z), 1e-9);
+  })(), "starts at 0, tends to 1, and peaks at the analytic overshoot for zeta = 0.7");
+
+  push("the stated tuning really does match the target", (function(){
+    const run = M.simulate("motor", 4.84, 0, 1.08, 20);
+    if (!(M.mismatch(run) < 0.01)) return false;
+    if (!near(M.zeta(4.84, 1.08), M.TARGET_Z, 0.002)) return false;
+    return near(Math.sqrt(4.84), M.TARGET_W, 0.002);
+  })(), "Kp 4.84 and Kd 1.08 give zeta 0.700 and omega 2.200, RMS mismatch under 0.01");
+
+  push("runs are reproducible", (function(){
+    const a = M.simulate("tank", 3, 1.5, 0.5, 8), b = M.simulate("tank", 3, 1.5, 0.5, 8);
+    for (let i = 0; i < a.y.length; i++) if (a.y[i] !== b.y[i]) return false;
+    return true;
+  })(), "identical arrays from two runs at the same gains");
+
+  push("every gain combination produces finite output", (function(){
+    for (const plant of ["tank", "motor"])
+      for (let Kp = 0; Kp <= 12; Kp += 3)
+        for (let Ki = 0; Ki <= 8; Ki += 2)
+          for (let Kd = 0; Kd <= 6; Kd += 3){
+            const run = M.simulate(plant, Kp, Ki, Kd, 10);
+            for (let i = 0; i < run.y.length; i += 200)
+              if (!Number.isFinite(run.y[i]) || !Number.isFinite(run.u[i])) return false;
+            if (!Number.isFinite(M.mismatch(run))) return false;
+          }
+    return true;
+  })(), "2 plants x 5 Kp x 5 Ki x 3 Kd, output and effort both clamped and finite");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
