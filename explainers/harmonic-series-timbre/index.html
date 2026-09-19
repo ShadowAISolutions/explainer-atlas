@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timbre Is a List of Numbers — Explainer Atlas</title>
+<meta name="description" content="Stack sine waves one harmonic at a time and watch a square, a sawtooth and a triangle assemble themselves out of nothing but amplitudes.">
+<style>
+:root{
+  --bg:#f7f5ef; --panel:#fffdf7; --ink:#1b1f3b; --muted:#5f6488; --line:#ddd8c8;
+  --accent:#a3186b; --accent-soft:#fbe6f1; --gold:#9a6a00; --ghost:#b9b3a0;
+  --radius:2px; --pad:clamp(14px,3vw,26px);
+  --font-body:Optima,Candara,"Gill Sans","Gill Sans MT",system-ui,sans-serif;
+  --font-ui:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.6rem,1.05rem + 2.4vw,2.5rem);
+  --scale-body:clamp(1rem,0.96rem + 0.2vw,1.08rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#101222; --panel:#171a2e; --ink:#e9e8f5; --muted:#9a9ec4; --line:#2a2e4a;
+    --accent:#f472b6; --accent-soft:#2a1224; --gold:#e0b45c; --ghost:#4a4f70;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:70rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:calc(var(--pad)*0.6); border-bottom:2px solid var(--ink)}
+h1{font-size:var(--scale-h1); line-height:1.1; margin:0 0 .3em; letter-spacing:.005em; font-weight:600}
+.kicker{margin:0 0 .5em; color:var(--accent); font:700 .72rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.2em}
+.standfirst{margin:0; color:var(--muted); max-width:42em}
+.controls{margin-top:var(--pad); background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.1em var(--pad);
+  grid-template-columns:1fr; font-family:var(--font-ui)}
+@media (min-width:46rem){ .controls{grid-template-columns:repeat(3,1fr); align-items:start} }
+.control{display:grid; gap:.3em; align-content:start}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font-weight:700; font-size:.92rem}
+.control output{font:700 .9rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.26em .48em; border-radius:2px}
+.control .hint{color:var(--muted); font-size:.79rem; line-height:1.4; margin:0}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:600 .9rem/1.2 var(--font-ui); color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:2px; padding:.6em .7em; min-height:40px; width:100%}
+button{cursor:pointer}
+button:hover,select:hover{border-color:var(--accent)}
+.btnpair{display:grid; grid-template-columns:1fr 1fr; gap:.5em}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+figure.stage{margin:var(--pad) 0 0; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.55em; color:var(--muted); font-size:.85rem; font-family:var(--font-ui); line-height:1.45}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8rem,1fr)); gap:0; margin:var(--pad) 0 0; padding:0;
+  border:1px solid var(--line); border-radius:var(--radius); background:var(--panel); overflow:hidden}
+.readout div{padding:.6em .8em; border-right:1px solid var(--line)}
+.readout div:last-child{border-right:0}
+.readout dt{margin:0; color:var(--muted); font:600 .7rem/1.3 var(--font-ui); text-transform:uppercase; letter-spacing:.09em}
+.readout dd{margin:.15em 0 0; font:700 1.08rem/1.2 var(--font-mono)}
+.prose{max-width:38em; margin:calc(var(--pad)*1.6) auto 0}
+.prose h2{font:600 1.24rem/1.3 var(--font-body); margin:2em 0 .5em; color:var(--accent)}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.9em; background:var(--accent-soft); padding:.75em .9em;
+  border-radius:2px; border-left:3px solid var(--accent); overflow-x:auto; white-space:pre}
+footer.page{margin-top:calc(var(--pad)*1.8); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem; font-family:var(--font-ui)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Music theory</p>
+  <h1>Timbre Is a List of Numbers</h1>
+  <p class="standfirst">A violin and a clarinet playing the same note are sending the same frequencies down the same air. The only thing that differs is how loud each one is.</p>
+</header>
+
+<section class="controls" data-role="controls" aria-label="Simulation controls">
+  <div class="control">
+    <div class="row">
+      <label for="n">Harmonics stacked</label>
+      <output id="nout" for="n">1</output>
+    </div>
+    <input type="range" id="n" min="1" max="32" step="1" value="1">
+    <p class="hint">Drag from 1 upward and watch the shape assemble. Each step adds exactly one sine wave.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="f0">Fundamental</label>
+      <output id="f0out" for="f0">220 Hz</output>
+    </div>
+    <input type="range" id="f0" min="55" max="880" step="5" value="220">
+    <p class="hint">The pitch. Every partial is an exact whole-number multiple of it, which is why you hear one note and not a chord.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="recipe">Amplitude recipe</label>
+    </div>
+    <select id="recipe">
+      <option value="square">Square: odd harmonics, 1/n</option>
+      <option value="saw">Sawtooth: every harmonic, 1/n</option>
+      <option value="triangle">Triangle: odd harmonics, 1/n&#178;</option>
+      <option value="soft">Soft: every harmonic, 1/n&#178;</option>
+    </select>
+    <p class="hint">The whole of timbre, in one list. Nothing else about the sound changes.</p>
+    <div class="btnpair">
+      <button type="button" id="play">Listen</button>
+      <button type="button" id="reset">Reset</button>
+    </div>
+  </div>
+</section>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="1040" height="520" role="img"
+          aria-label="Top: the individual sine harmonics drawn faintly, their running sum drawn boldly, and the ideal waveform ghosted behind it. Bottom: the amplitude of each harmonic as a bar chart."></canvas>
+  <figcaption>Faint lines are the individual partials. The heavy line is their sum. The dotted line is the waveform the infinite series converges to &#8212; the gap between it and the sum is everything the harmonics you have not added yet were carrying.</figcaption>
+</figure>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Partials summed</dt><dd id="rN">1 of 1</dd></div>
+  <div><dt>Highest partial</dt><dd id="rTop">220 Hz</dd></div>
+  <div><dt>RMS by Parseval</dt><dd id="rRms">0.9003</dd></div>
+  <div><dt>Energy still missing</dt><dd id="rErr">43.5%</dd></div>
+  <div><dt>Measured pitch</dt><dd id="rPitch">220.0 Hz</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>Start with the harmonics slider at 1. That is a pure sine wave, and it is the only sound in music that has no timbre to speak of &#8212; a flute played softly is about as close as an instrument gets. Now drag the slider right. Nothing is being filtered, distorted or shaped. Sine waves at 2, 3, 4 times the fundamental are simply being added, at amplitudes taken from the recipe, and a square wave appears.</p>
+
+  <h2>The only number that matters is the ratio</h2>
+  <p>A periodic sound of frequency f&#8320; can contain energy at f&#8320;, 2f&#8320;, 3f&#8320; and so on, and at nothing in between &#8212; anything else would not repeat at the right rate. Fourier's theorem says that is not merely allowed but complete: every reasonable waveform of period T is a sum of sines at whole multiples of 1/T, and the amplitudes are determined uniquely by</p>
+  <p class="math">a&#8345; = (2/T) &#8747; x(t) &#183; sin(2&#960;nt/T) dt      over one period</p>
+  <p>So a timbre is a list. Push the fundamental slider from 220 Hz to 440 and every partial doubles with it; the shape on screen does not change at all, because the shape depends only on the ratios between the amplitudes, never on the pitch. This is why you recognise a clarinet across its whole range.</p>
+
+  <h2>Three recipes, three shapes</h2>
+  <p>The square wave uses odd harmonics only, falling as 1/n: 4/&#960; times 1, a third, a fifth, a seventh. Drop the even harmonics from any sound and you get that hollow, woody quality &#8212; a clarinet's lowest register does roughly this, because a tube closed at one end supports only odd modes. The sawtooth keeps every harmonic at 1/n and sounds brighter and brassier; bowed strings are close to it. The triangle keeps odd harmonics but falls as 1/n&#178;, which is very much faster, so it is nearly a sine with a hint of edge.</p>
+  <p>That last difference is worth watching. Set the recipe to square with 32 harmonics: the readout says 11.3 per cent of the waveform's amplitude is still missing, and quadrupling the partials only halves it. Switch to triangle and the same 32 partials leave 0.22 per cent behind &#8212; fifty times less &#8212; because there, quadrupling the partials divides the shortfall by eight. Smooth waveforms need few harmonics; waveforms with a jump in them need infinitely many and never quite get there.</p>
+
+  <h2>The corner that will not lie flat</h2>
+  <p>The stubborn overshoot at the square wave's vertical edge is the Gibbs phenomenon, and it is one of the genuinely surprising results in analysis. As you add harmonics the ripple gets narrower and moves closer to the edge, but its height does not shrink. It converges on a fixed 8.95 per cent of the size of the jump, forever, for any function with a discontinuity. Where the square wave is exactly 1, the partial sum peaks at 1.17898 whether you use nine harmonics or nine hundred, and that number is (2/&#960;) times the integral of sin t over t from 0 to &#960; &#8212; an integral with no Fourier series anywhere in it.</p>
+  <p>What does shrink is the area under the ripple, which is why the series still converges in the sense that matters for energy. Parseval's identity says the mean square of the sum is exactly half the sum of the squared amplitudes:</p>
+  <p class="math">RMS&#178; = &#189; &#183; (a&#8321;&#178; + a&#8322;&#178; + a&#8323;&#178; + &#8230;)</p>
+  <p>For the square wave those squares are 1, 1/9, 1/25, 1/49, and they add to &#960;&#178;/8, which is exactly what makes the root mean square come out at 1. Every harmonic you leave off is a specific, countable amount of missing energy.</p>
+
+  <h2>What to try</h2>
+  <p>Put the recipe on sawtooth and step the harmonic count from 1 to 6 one click at a time. The ramp is recognisable by about 4, and the last 26 partials are only sharpening the corner. Then switch to soft and notice that the second harmonic is already down at a quarter and the shape barely moves after 5 &#8212; a spectrum that falls as 1/n&#178; is nearly finished before it starts.</p>
+  <p>Finally, press Listen on square and then on soft at the same pitch and the same harmonic count. Same note, same fundamental, same everything a tuner would measure. They do not sound remotely alike, and the only difference between them is the list.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &#183; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+const TAU = Math.PI * 2;
+
+/* ---- MODEL: signed Fourier amplitudes and the sums they build ----------- */
+const Model = {
+  RECIPES: ["square", "saw", "triangle", "soft"],
+  MAXN: 32,
+
+  /* Signed amplitude of the n-th sine partial. These are the classical
+     Fourier coefficients, not an approximation of them. */
+  amp(recipe, n){
+    if (n < 1) return 0;
+    const odd = (n % 2) === 1;
+    if (recipe === "square")   return odd ? 4 / (Math.PI * n) : 0;
+    if (recipe === "saw")      return (odd ? 1 : -1) * 2 / (Math.PI * n);
+    if (recipe === "triangle") return odd ? ((((n - 1) / 2) % 2 === 0) ? 1 : -1) * 8 / (Math.PI * Math.PI * n * n) : 0;
+    if (recipe === "soft")     return 1 / (n * n);
+    return 0;
+  },
+
+  coeffs(recipe, N){
+    const a = new Array(N);
+    for (let n = 1; n <= N; n++) a[n - 1] = this.amp(recipe, n);
+    return a;
+  },
+
+  sum(a, th){
+    let s = 0;
+    for (let k = 0; k < a.length; k++){ const c = a[k]; if (c !== 0) s += c * Math.sin((k + 1) * th); }
+    return s;
+  },
+
+  /* The function the series converges to, in closed form where one exists.
+     "soft" is the Clausen function, which has none, so it is summed far. */
+  ideal(recipe, th){
+    if (recipe === "square"){ const v = Math.sin(th); return v > 1e-14 ? 1 : (v < -1e-14 ? -1 : 0); }
+    if (recipe === "saw"){ let x = ((th + Math.PI) % TAU + TAU) % TAU - Math.PI; return x / Math.PI; }
+    if (recipe === "triangle") return (2 / Math.PI) * Math.asin(Math.sin(th));
+    let s = 0; for (let n = 1; n <= 4000; n++) s += Math.sin(n * th) / (n * n);
+    return s;
+  },
+
+  /* Parseval: the mean square of a sine series is half the sum of squares. */
+  parsevalRms(a){
+    let e = 0; for (let k = 0; k < a.length; k++) e += a[k] * a[k];
+    return Math.sqrt(e / 2);
+  },
+
+  /* Total energy of the complete series, in closed form. */
+  totalEnergy(recipe){
+    if (recipe === "square")   return (16 / (Math.PI * Math.PI)) * (Math.PI * Math.PI / 8);
+    if (recipe === "saw")      return (4 / (Math.PI * Math.PI)) * (Math.PI * Math.PI / 6);
+    if (recipe === "triangle") return (64 / Math.pow(Math.PI, 4)) * (Math.pow(Math.PI, 4) / 96);
+    return Math.pow(Math.PI, 4) / 90;
+  },
+
+  /* Fraction of the waveform's amplitude still carried by partials not yet
+     added: sqrt of the energy tail over the total energy. */
+  missing(recipe, N){
+    const tot = this.totalEnergy(recipe);
+    let have = 0;
+    for (let n = 1; n <= N; n++){ const c = this.amp(recipe, n); have += c * c; }
+    return Math.sqrt(Math.max(0, tot - have) / tot);
+  },
+
+  /* The n-th coefficient obtained the other way round: by quadrature of the
+     limit waveform against sin(n theta). Independent of amp(). */
+  coeffByQuadrature(recipe, n, samples){
+    const m = samples || 20000;
+    let s = 0;
+    for (let k = 0; k < m; k++){
+      const th = TAU * (k + 0.5) / m;
+      s += this.ideal(recipe, th) * Math.sin(n * th);
+    }
+    return 2 * s / m;
+  },
+
+  /* Pitch measured the way an ear does it: count upward zero crossings. */
+  measuredPitch(recipe, N, f0, periods, perPeriod){
+    const P = periods || 20, S = perPeriod || 256;
+    const a = this.coeffs(recipe, N);
+    const m = P * S, eps = 1e-9, th0 = -Math.PI / 2;
+    let sign = -1, crossings = 0;
+    for (let k = 0; k <= m; k++){
+      const v = this.sum(a, th0 + TAU * P * k / m);
+      if (v > eps){ if (sign < 0) crossings++; sign = 1; }
+      else if (v < -eps){ sign = -1; }
+    }
+    return crossings * f0 / P;
+  },
+
+  /* The Wilbraham-Gibbs limit, from its integral rather than from a sum:
+     (2/pi) times the integral of sin(t)/t from 0 to pi. */
+  gibbsLimit(samples){
+    const m = samples || 20000;
+    let s = 0;
+    for (let k = 0; k < m; k++){ const t = Math.PI * (k + 0.5) / m; s += Math.sin(t) / t; }
+    return (2 / Math.PI) * (Math.PI * s / m);
+  },
+
+  /* Peak of the partial sum, which for a waveform with a jump settles on the
+     Wilbraham-Gibbs overshoot instead of falling to the true peak. */
+  peak(recipe, N, samples){
+    const a = this.coeffs(recipe, N), m = samples || 6000;
+    let p = 0;
+    for (let k = 0; k < m; k++){ const v = Math.abs(this.sum(a, Math.PI * k / m)); if (v > p) p = v; }
+    return p;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { n: 1, f0: 220, recipe: "square" };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+let W = 1040, H = 520, NARROW = false;
+
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888"; }
+const UI = '-apple-system,system-ui,"Segoe UI",Roboto,sans-serif';
+const MONO = 'ui-monospace,SFMono-Regular,Menlo,monospace';
+
+/* The limit waveforms depend on no control, so sample them once. */
+const CURVE_PTS = 900;
+const IDEAL = {};
+for (const r of Model.RECIPES){
+  const arr = new Float64Array(CURVE_PTS + 1);
+  for (let k = 0; k <= CURVE_PTS; k++) arr[k] = Model.ideal(r, 2 * TAU * k / CURVE_PTS);
+  IDEAL[r] = arr;
+}
+const IDEAL_PEAK = {};
+for (const r of Model.RECIPES){
+  let p = 0; for (const v of IDEAL[r]) p = Math.max(p, Math.abs(v));
+  IDEAL_PEAK[r] = p;
+}
+
+function layout(){
+  const avail = cv.parentNode ? (cv.parentNode.clientWidth || 1040) : 1040;
+  NARROW = avail < 620;
+  if (NARROW){ W = 350; H = 700; } else { W = 1040; H = 545; }
+  if (cv.width !== W * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function drawWave(p, a){
+  const C = { ink: css("--ink"), muted: css("--muted"), line: css("--line"),
+              accent: css("--accent"), ghost: css("--ghost"), gold: css("--gold") };
+  const L = NARROW ? 48 : 52, R = NARROW ? 14 : 30, T = NARROW ? 72 : 54, B = 26;
+  const x0 = p.x + L, x1 = p.x + p.w - R, y0 = p.y + T, y1 = p.y + p.h - B;
+  const yc = (y0 + y1) / 2, half = (y1 - y0) / 2;
+  const span = Math.max(1.16, IDEAL_PEAK[state.recipe] * 1.16);
+  const X = (k) => x0 + (x1 - x0) * k / CURVE_PTS;
+  const Y = (v) => yc - half * (v / span);
+
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, yc); ctx.lineTo(x1, yc); ctx.stroke();
+  for (let q = 1; q <= 4; q++){
+    const px = x0 + (x1 - x0) * q / 4;
+    ctx.strokeStyle = C.line; ctx.setLineDash([2, 5]);
+    ctx.beginPath(); ctx.moveTo(px, y0); ctx.lineTo(px, y1); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  ctx.lineWidth = 1; ctx.strokeStyle = C.gold; ctx.globalAlpha = 0.5;
+  for (let k = 0; k < a.length; k++){
+    const c = a[k]; if (c === 0) continue;
+    ctx.beginPath();
+    for (let j = 0; j <= CURVE_PTS; j += 2){
+      const th = 2 * TAU * j / CURVE_PTS, v = c * Math.sin((k + 1) * th);
+      if (j === 0) ctx.moveTo(X(j), Y(v)); else ctx.lineTo(X(j), Y(v));
+    }
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.strokeStyle = C.ghost; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  const ref = IDEAL[state.recipe];
+  for (let k = 0; k <= CURVE_PTS; k++){
+    if (k === 0) ctx.moveTo(X(k), Y(ref[k])); else ctx.lineTo(X(k), Y(ref[k]));
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  ctx.strokeStyle = C.accent; ctx.lineWidth = 2.8; ctx.lineJoin = "round";
+  ctx.beginPath();
+  for (let k = 0; k <= CURVE_PTS; k++){
+    const v = Model.sum(a, 2 * TAU * k / CURVE_PTS);
+    if (k === 0) ctx.moveTo(X(k), Y(v)); else ctx.lineTo(X(k), Y(v));
+  }
+  ctx.stroke();
+
+  const live = a.filter((c) => c !== 0).length;
+  ctx.fillStyle = C.ink; ctx.font = "700 15px " + UI;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("Two periods of the sum", p.x + 10, p.y + 8);
+  ctx.font = "600 13px " + UI; ctx.fillStyle = C.gold;
+  ctx.fillText(live + (live === 1 ? " partial" : " partials") + " in faint gold", p.x + 10, p.y + 30);
+  ctx.fillStyle = C.ghost;
+  ctx.fillText("dotted: the limit waveform", p.x + 10 + (NARROW ? 0 : 200), p.y + 30 + (NARROW ? 16 : 0));
+  ctx.fillStyle = C.muted; ctx.font = "13px " + MONO;
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText("+" + span.toFixed(2), x0 - 6, y0 + 6);
+  ctx.fillText("0", x0 - 6, yc);
+  ctx.fillText("-" + span.toFixed(2), x0 - 6, y1 - 6);
+}
+
+function drawSpectrum(p, N){
+  const C = { ink: css("--ink"), muted: css("--muted"), line: css("--line"),
+              accent: css("--accent"), ghost: css("--ghost") };
+  const L = NARROW ? 48 : 52, R = NARROW ? 14 : 30, T = 54, B = 46;
+  const x0 = p.x + L, x1 = p.x + p.w - R, y0 = p.y + T, y1 = p.y + p.h - B;
+  const M = Model.MAXN;
+  const slot = (x1 - x0) / M;
+  let top = 0;
+  for (let n = 1; n <= M; n++) top = Math.max(top, Math.abs(Model.amp(state.recipe, n)));
+  top = top || 1;
+
+  ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(x0, y1); ctx.lineTo(x1, y1); ctx.stroke();
+
+  for (let n = 1; n <= M; n++){
+    const v = Math.abs(Model.amp(state.recipe, n));
+    const bw = Math.max(2, slot * 0.62);
+    const bx = x0 + slot * (n - 0.5) - bw / 2;
+    const bh = (y1 - y0) * (v / top);
+    const on = n <= N;
+    if (v === 0){
+      ctx.fillStyle = C.line;
+      ctx.fillRect(bx, y1 - 3, bw, 3);
+      continue;
+    }
+    ctx.fillStyle = on ? C.accent : C.ghost;
+    ctx.globalAlpha = on ? 1 : 0.42;
+    ctx.fillRect(bx, y1 - bh, bw, bh);
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.fillStyle = C.muted; ctx.font = "12px " + MONO;
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  const step = NARROW ? 8 : 4;
+  for (let n = 1; n <= M; n += step) ctx.fillText(String(n), x0 + slot * (n - 0.5), y1 + 7);
+  ctx.textAlign = "left"; ctx.font = "13px " + UI;
+  ctx.fillText("harmonic number", x0, y1 + 24);
+
+  ctx.fillStyle = C.ink; ctx.font = "700 15px " + UI;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("The recipe, bar by bar", p.x + 10, p.y + 8);
+  ctx.fillStyle = C.ghost; ctx.font = "600 13px " + UI;
+  ctx.fillText("pale bars are not in the sum yet", p.x + 10, p.y + 30);
+}
+
+function render(){
+  layout();
+  const a = Model.coeffs(state.recipe, state.n);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+  const p = NARROW
+    ? { a: { x: 0, y: 0, w: W, h: 370 }, b: { x: 0, y: 370, w: W, h: 330 } }
+    : { a: { x: 0, y: 0, w: W, h: 335 }, b: { x: 0, y: 335, w: W, h: 210 } };
+  drawWave(p.a, a);
+  ctx.fillStyle = css("--line"); ctx.fillRect(p.b.x + 8, p.b.y, p.b.w - 16, 1);
+  drawSpectrum(p.b, state.n);
+
+  const live = a.filter((c) => c !== 0).length;
+  el("nout").textContent = String(state.n);
+  el("f0out").textContent = state.f0 + " Hz";
+  el("rN").textContent = live + " of " + state.n;
+  el("rTop").textContent = (state.f0 * state.n) + " Hz";
+  el("rRms").textContent = Model.parsevalRms(a).toFixed(4);
+  el("rErr").textContent = (100 * Model.missing(state.recipe, state.n)).toFixed(1) + "%";
+  el("rPitch").textContent = Model.measuredPitch(state.recipe, state.n, state.f0).toFixed(1) + " Hz";
+}
+
+/* ---- optional audio: lazy, click-only, and never required --------------- */
+let ac = null;
+function listen(){
+  const btn = el("play");
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC){ btn.textContent = "No audio here"; return; }
+    if (!ac) ac = new AC();
+    if (ac.state === "suspended" && ac.resume) ac.resume();
+    const N = state.n;
+    const real = new Float32Array(N + 1), imag = new Float32Array(N + 1);
+    for (let n = 1; n <= N; n++) imag[n] = Model.amp(state.recipe, n);
+    const wave = ac.createPeriodicWave(real, imag);
+    const osc = ac.createOscillator(), g = ac.createGain();
+    osc.setPeriodicWave(wave);
+    osc.frequency.value = state.f0;
+    const t0 = ac.currentTime;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.22, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.3);
+    osc.connect(g); g.connect(ac.destination);
+    osc.start(t0); osc.stop(t0 + 1.35);
+  } catch (e){
+    btn.textContent = "No audio here";
+  }
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parse(input.value); render(); });
+}
+bind("n", "n", (v) => parseInt(v, 10));
+bind("f0", "f0", (v) => parseInt(v, 10));
+el("recipe").addEventListener("change", () => { state.recipe = el("recipe").value; render(); });
+el("play").addEventListener("click", listen);
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("n").value = String(defaults.n);
+  el("f0").value = String(defaults.f0);
+  el("recipe").value = defaults.recipe;
+  render();
+});
+
+let rt = 0;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+
+  push("the square wave is odd harmonics falling as 4/(pi n)", (function(){
+    for (let n = 1; n <= 64; n++){
+      const c = M.amp("square", n);
+      if (n % 2 === 0){ if (c !== 0) return false; }
+      else if (!near(c, 4 / (Math.PI * n), 1e-15)) return false;
+    }
+    return near(M.amp("square", 1), 1.2732395447351628, 1e-15);
+  })(), "a1 = 1.27323954, a2 = 0 exactly, a3 = a1/3, up to the 64th");
+
+  push("the sawtooth is every harmonic at 2/(pi n) with alternating sign", (function(){
+    for (let n = 1; n <= 64; n++){
+      const want = (n % 2 === 1 ? 1 : -1) * 2 / (Math.PI * n);
+      if (!near(M.amp("saw", n), want, 1e-15)) return false;
+    }
+    return true;
+  })(), "signs alternate from the first partial and the magnitude is exactly half the square's");
+
+  push("the triangle is odd harmonics at 8/(pi^2 n^2) with alternating sign", (function(){
+    for (let n = 1; n <= 64; n++){
+      const c = M.amp("triangle", n);
+      if (n % 2 === 0){ if (c !== 0) return false; continue; }
+      const want = ((((n - 1) / 2) % 2 === 0) ? 1 : -1) * 8 / (Math.PI * Math.PI * n * n);
+      if (!near(c, want, 1e-15)) return false;
+    }
+    return near(M.amp("triangle", 3), -0.09006327, 1e-8);
+  })(), "third partial is -0.09006327, a ninth of the first and inverted");
+
+  push("every coefficient matches a quadrature of the waveform it builds", (function(){
+    for (const r of ["square", "saw", "triangle"]){
+      for (const n of [1, 2, 3, 5, 8]){
+        const q = M.coeffByQuadrature(r, n, 30000);
+        if (!near(M.amp(r, n), q, 2e-4)) return false;
+      }
+    }
+    return true;
+  })(), "integrating each limit waveform against sin(n theta) by midpoint quadrature recovers the analytic amplitudes, including the zeros at the even partials");
+
+  push("Parseval holds exactly against a direct root mean square", (function(){
+    for (const r of M.RECIPES){
+      for (const N of [1, 2, 5, 13, 32]){
+        const a = M.coeffs(r, N);
+        const m = 4 * N + 7;
+        let e = 0;
+        for (let k = 0; k < m; k++){ const v = M.sum(a, TAU * k / m); e += v * v; }
+        if (!near(Math.sqrt(e / m), M.parsevalRms(a), 1e-12)) return false;
+      }
+    }
+    return true;
+  })(), "sampling above the Nyquist rate of the partial sum makes the discrete RMS exact, and it equals sqrt(sum of squares / 2) to 1e-12");
+
+  push("the closed-form total energies are the ones Euler's sums give", (function(){
+    for (const r of M.RECIPES){
+      let e = 0; for (let n = 1; n <= 50000; n++){ const c = M.amp(r, n); e += c * c; }
+      if (!near(e, M.totalEnergy(r), 5e-5)) return false;
+    }
+    return near(M.totalEnergy("square"), 2, 1e-12) && near(M.totalEnergy("saw"), 2 / 3, 1e-12);
+  })(), "square sums to exactly 2 and sawtooth to 2/3, matching sum 1/n^2 over odd n = pi^2/8 and over all n = pi^2/6");
+
+  push("the measured pitch is the fundamental, whatever is stacked on it", (function(){
+    for (const r of M.RECIPES){
+      for (const N of [1, 7, 32]){
+        for (const f0 of [55, 220, 880]){
+          if (!near(M.measuredPitch(r, N, f0, 8, 128), f0, 0.1)) return false;
+        }
+      }
+    }
+    return true;
+  })(), "upward zero crossings over eight periods give exactly f0 for 36 combinations of recipe, partial count and pitch, to 0.1 Hz");
+
+  push("the square wave's overshoot stops shrinking, at the Gibbs integral", (function(){
+    const g = M.gibbsLimit(20000);
+    if (!near(g, 1.1789797, 1e-6)) return false;
+    let last = 0;
+    for (const N of [9, 33, 129]){
+      const pk = M.peak("square", N, 3000);
+      if (!(pk > 1.17 && pk < 1.19)) return false;
+      last = pk;
+    }
+    return near(last, g, 1e-4);
+  })(), "the peak of the partial sum holds near 1.17898 from 9 partials to 129, and that number is (2/pi) times the integral of sin t / t over 0 to pi, computed independently of any Fourier sum");
+
+  push("the smooth recipes converge to their own peak; only the jump rings", (function(){
+    for (const N of [5, 11, 31]){
+      if (!(M.peak("triangle", N, 2000) <= 1 + 1e-9)) return false;
+    }
+    for (const N of [31, 201]){ if (!(1 - M.peak("triangle", N, 2000) < 1 / N)) return false; }
+    const cl = 1.0149416064;
+    if (!near(IDEAL_PEAK.soft, cl, 1e-5)) return false;
+    for (const N of [11, 31, 201]){
+      if (!(Math.abs(M.peak("soft", N, 2000) - cl) < 2 / N)) return false;
+    }
+    if (!near(M.peak("soft", 201, 2000), cl, 1e-4)) return false;
+    return Math.abs(M.peak("square", 201, 3000) - 1) > 0.17;
+  })(), "triangle rises to 1 from below, staying inside its own 1/N tail bound, and soft settles on Clausen's 1.01494161 to 1e-4 by 201 partials, while the square is still 17 per cent out");
+
+  push("missing energy falls as 1/sqrt(N) for a jump and as N^-1.5 for a corner", (function(){
+    const sq = [32, 128].map((N) => M.missing("square", N));
+    const tr = [32, 128].map((N) => M.missing("triangle", N));
+    if (!near(sq[0] / sq[1], 2, 0.08)) return false;
+    if (!near(tr[0] / tr[1], 8, 0.7)) return false;
+    if (!near(M.missing("square", 32) / M.missing("triangle", 32), 50.3, 1.5)) return false;
+    if (M.missing("square", 1) !== M.missing("square", 2)) return false;
+    return M.missing("square", 1) > M.missing("square", 3);
+  })(), "quadrupling the partials halves the square's missing amplitude but cuts the triangle's by eight, leaving the square fifty times further from its target at 32 partials; adding an even harmonic to a square changes nothing at all, exactly");
+
+  push("nothing has a constant offset and everything is odd about the origin", (function(){
+    for (const r of M.RECIPES){
+      const a = M.coeffs(r, 32);
+      for (const th of [0.3, 1.1, 2.7, 4.9]){
+        if (!near(M.sum(a, th) + M.sum(a, -th), 0, 1e-12)) return false;
+      }
+      let mean = 0; const m = 997;
+      for (let k = 0; k < m; k++) mean += M.sum(a, TAU * k / m);
+      if (!near(mean / m, 0, 1e-12)) return false;
+    }
+    return true;
+  })(), "x(-t) = -x(t) exactly, and the mean over a period is zero, so there is no DC term to hear");
+
+  push("nothing is non-finite across the control grid", (function(){
+    for (const r of M.RECIPES){
+      for (let N = 1; N <= 32; N++){
+        const a = M.coeffs(r, N);
+        if (!Number.isFinite(M.parsevalRms(a))) return false;
+        if (!Number.isFinite(M.missing(r, N))) return false;
+        for (let k = 0; k < 64; k++) if (!Number.isFinite(M.sum(a, TAU * k / 64))) return false;
+      }
+    }
+    return true;
+  })(), "four recipes by 32 harmonic counts, sampled around the period");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
