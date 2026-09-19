@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Null Model Every Population Fails — Explainer Atlas</title>
+<meta name="description" content="Hardy-Weinberg on a de Finetti triangle. Turn selection and mutation on and off and watch the population leave the curve and be dragged back onto it.">
+<style>
+:root{
+  --bg:#f8f5ee; --panel:#fffdf8; --ink:#1d1c18; --muted:#605c50; --line:#e0dbcd;
+  --accent:#4a5d23; --accent-soft:#e9eede; --alt:#9c4221; --third:#2c5282;
+  --quiet:#c3bfae;
+  --radius:14px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.5rem,1.05rem + 2vw,2.2rem);
+  --scale-body:clamp(0.99rem,0.95rem + 0.2vw,1.07rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#14140f; --panel:#1c1c16; --ink:#eae7dc; --muted:#a09b8c; --line:#2f2e25;
+    --accent:#a3bf62; --accent-soft:#232a15; --alt:#e08a5c; --third:#7fb0e8;
+    --quiet:#4d4b3e;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink); font:var(--scale-body)/1.65 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:63rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:2px solid var(--accent); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.16; margin:0 0 .4em; letter-spacing:-.01em}
+.kicker{margin:0 0 .35em; color:var(--alt); font:700 .75rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.14em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.32fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.7em; color:var(--muted); font-size:.86rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .9rem/1 var(--font-mono); color:var(--panel); background:var(--accent); padding:.28em .55em; border-radius:999px}
+.control .hint{color:var(--muted); font-size:.83rem; margin:0}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:999px; padding:.55em .8em; min-height:40px; cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,[tabindex]):focus-visible{outline:2.5px solid var(--alt); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.4rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.73rem; text-transform:uppercase; letter-spacing:.07em}
+.readout dd{margin:.18em 0 0; font:600 1rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.14rem; margin:1.8em 0 .45em; color:var(--accent)}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); background:var(--accent-soft); padding:.75em .9em; border-radius:10px; border-left:4px solid var(--accent); overflow-x:auto; font-size:.94em}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Biology</p>
+  <h1>The Null Model Every Population Fails</h1>
+  <p class="standfirst">Hardy-Weinberg says allele frequencies sit still. That is not a prediction about nature, it is a statement of what happens when nothing is happening &mdash; and its real use is telling you which assumption broke.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="860" role="img"
+            aria-label="A de Finetti triangle. Its bottom left corner is a population of all aa, its bottom right corner all AA, and its apex all heterozygotes. The olive curve across it holds every population in Hardy-Weinberg proportions. Blue dots mark newborns each generation and rust dots the survivors after selection, joined into a zigzag that climbs off the curve and walks rightward when selection is switched on."></canvas>
+    <figcaption>Every possible population is one point in this triangle. Horizontal position is the frequency of A. Newborns land on the olive curve; selection lifts the survivors off it.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row">
+        <label for="p0">Starting frequency of A</label>
+        <output id="p0out" for="p0">0.35</output>
+      </div>
+      <input type="range" id="p0" min="2" max="98" step="1" value="35">
+      <p class="hint">Where the population begins. Arrow keys step; Home and End jump.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="sel">Selection against aa</label>
+        <output id="selout" for="sel">0.60</output>
+      </div>
+      <input type="range" id="sel" min="0" max="100" step="1" value="60">
+      <p class="hint">The share of aa individuals that fail to reproduce. Zero restores the null model.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="mut">Mutation A to a</label>
+        <output id="mutout" for="mut">0</output>
+      </div>
+      <input type="range" id="mut" min="0" max="8" step="1" value="0">
+      <p class="hint">New copies of a made each generation, on a thousandfold ladder.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="gens">Generations</label>
+        <output id="gensout" for="gens">30</output>
+      </div>
+      <input type="range" id="gens" min="0" max="120" step="1" value="30">
+      <p class="hint">How far to run. Zero shows the founding population alone.</p>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Frequency of A</dt><dd id="r1">&mdash;</dd></div>
+      <div><dt>Heterozygotes</dt><dd id="r2">&mdash;</dd></div>
+      <div><dt>Change per generation</dt><dd id="r3">&mdash;</dd></div>
+      <div><dt>Balance point for a</dt><dd id="r4">&mdash;</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Pull the selection slider down to zero. The zigzag collapses to a single
+     dot, sitting on the olive curve, and it stays there however many
+     generations you ask for. That is the whole of the Hardy-Weinberg
+     principle: with random mating and nothing else going on, allele
+     frequencies do not move, and the genotype proportions are whatever the
+     allele frequencies imply. It is not a law about populations. It is a
+     description of what an absence looks like.</p>
+
+  <h2>Reading the triangle</h2>
+  <p>Every population with two alleles is three numbers that add to one, so it
+     is one point in a triangle. The bottom-left corner is a population of
+     nothing but aa, the bottom-right nothing but AA, and the apex one in which
+     every individual is a carrier. Height above the base is the share of
+     heterozygotes. The useful accident of drawing it this way is that
+     horizontal position works out to be exactly the frequency of A &mdash;
+     homozygotes contribute all of their alleles and heterozygotes half, which
+     is the same arithmetic the triangle's geometry already does.</p>
+  <p class="math">newborns at frequency p:  p&sup2; AA,  2pq Aa,  q&sup2; aa</p>
+  <p>That curve is the parabola those three numbers trace as p runs from 0 to
+     1, and one round of random mating puts any population onto it. Try it in
+     your head: a population of 60 per cent AA and 40 per cent aa, with no
+     carriers at all, has the same allele frequency as one with 30 per cent AA,
+     60 per cent carriers and 10 per cent aa. After a single generation both
+     are the same population, 0.36 / 0.48 / 0.16, sitting on the curve.
+     Mating erases the arrangement of the parents and keeps only the count.</p>
+
+  <h2>What the deviation means</h2>
+  <p>Now put selection back. Each generation the blue dot is the newborns, on
+     the curve where mating left them, and the rust dot is who survives to
+     breed. Removing three fifths of the aa individuals lifts the survivors
+     <em>above</em> the curve, not below it: the lost aa homozygotes are
+     replaced proportionally by everyone else, and carriers gain most because
+     there are more of them. The first generation of newborns is 45.5 per cent
+     carriers and its survivors are 61.0 per cent, which is the tall vertical
+     jump at the left of the run. The next generation of newborns lands back on
+     the curve, but further to the right.</p>
+  <p>How that rightward walk peters out is the real lesson. Thirty generations
+     of culling three fifths of every aa individual take a from 0.65 down to
+     0.056; the next ninety take it only to 0.014, and the zigzags shrink to
+     nothing as they go. Set selection to 1
+     &mdash; every aa individual dies before reproducing, the harshest
+     selection possible &mdash; and the model has a closed form: one over the
+     frequency of a rises by exactly one per generation. Getting a from one in
+     ten down to one in a hundred takes 90 generations. Getting it from one in
+     a hundred to one in a thousand takes 900. At a frequency of one per cent
+     there are 198 carriers for every affected individual, and selection cannot
+     see a single one of them.</p>
+
+  <h2>Where it settles</h2>
+  <p>Selection alone drives a recessive towards zero and never arrives. Add
+     mutation and it stops somewhere: new copies of a appear at rate mu per
+     generation, selection removes them at a rate that scales with q&sup2;, and
+     the two come level when mu equals s q&sup2;. So the resting frequency is
+     the square root of mu over s &mdash; the readout names it, and the
+     self-test finds the model's own fixed point by bisection and confirms it
+     agrees to one part in a hundred million. A square root is a weak lever: a
+     mutation rate a thousand times lower buys only a thirty-onefold reduction
+     in the allele.</p>
+
+  <h2>What to try</h2>
+  <p>Set selection to zero and mutation to its largest setting. The population
+     slides towards the left-hand corner without ever leaving the curve &mdash;
+     mutation changes the frequency but never the proportions, so this is a
+     departure that Hardy-Weinberg proportions cannot detect at all. Now push
+     selection back up to 1 with that mutation rate still on. The two pull in
+     opposite directions and the run stops dead at p = 0.68, which is the
+     square root of 0.1 taken off one, exactly where the readout says the
+     balance should be.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG. Never use bare Math.random(). ------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+const MUTS = [0, 1e-6, 1e-5, 1e-4, 1e-3, 3e-3, 0.01, 0.03, 0.1];
+
+/* ---- MODEL: pure functions of the parameters. No DOM in here. ----------- */
+/* p is the frequency of A, q = 1 - p the frequency of a.                    */
+const Model = {
+  /* newborns, under random mating, from a gamete pool at frequency p */
+  zygotes(p){
+    const q = 1 - p;
+    return { AA: p * p, Aa: 2 * p * q, aa: q * q };
+  },
+
+  /* survivors, after aa loses a share s of its members. One corner of the
+     parameter space kills everybody -- an all-aa population under lethal
+     selection -- and the function has to be total, so that case reports an
+     empty population rather than dividing by zero.                         */
+  adults(p, s){
+    const z = Model.zygotes(p), w = 1 - s * (1 - p) * (1 - p);
+    if (w === 0) return { AA: 0, Aa: 0, aa: 0, wbar: 0 };
+    return { AA: z.AA / w, Aa: z.Aa / w, aa: z.aa * (1 - s) / w, wbar: w };
+  },
+
+  /* the allele frequency any genotype distribution carries into the next
+     gamete pool: homozygotes give one allele, heterozygotes give half     */
+  alleleOf(g){ return g.AA + g.Aa / 2; },
+
+  /* one full generation: random mating, then selection, then mutation */
+  step(p, s, mu){
+    const a = Model.adults(p, s);
+    return Model.alleleOf(a) * (1 - mu);
+  },
+
+  /* the textbook change in the frequency of a under selection alone */
+  deltaQ(q, s){
+    return -s * q * q * (1 - q) / (1 - s * q * q);
+  },
+
+  /* the whole run, newborns and survivors kept separately so the drawing
+     and the assertions read the same numbers */
+  run(p0, s, mu, gens){
+    const out = [];
+    let p = p0;
+    for (let t = 0; t <= gens; t++){
+      const z = Model.zygotes(p), a = Model.adults(p, s);
+      out.push({ p: p, zyg: z, adu: a });
+      p = Model.alleleOf(a) * (1 - mu);
+    }
+    return out;
+  },
+
+  /* where mutation making a and selection removing it come out level */
+  balance(s, mu){ return s > 0 ? Math.sqrt(mu / s) : NaN; },
+
+  /* a lethal recessive has a closed form: 1/q grows by exactly one each
+     generation, so q_t = q0 / (1 + t q0) */
+  lethalQ(q0, t){ return q0 / (1 + t * q0); }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { p0: 35, sel: 60, mut: 0, gens: 30 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+const FONT = 'system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+const MINUS = String.fromCharCode(0x2212);
+const ARROW = String.fromCharCode(0x2192);
+
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function wid(t){ return ctx.measureText(t).width; }
+function pick(list, room){
+  for (let i = 0; i < list.length; i++) if (wid(list[i]) <= room) return list[i];
+  return "";
+}
+
+let G = null;
+
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth - 28;
+  const CW = Math.max(280, Math.min(1000, avail || 820));
+  const NARROW = CW < 470;
+  const P = NARROW ? 14 : 24;
+  const FS = NARROW ? 12 : 13;
+  const apexPad = FS + 16;
+  const TW = CW - 2 * P;
+  const TH = TW * Math.sqrt(3) / 2;
+  const baseY = apexPad + TH;
+  const tickY = baseY + 7;
+  const nameY = tickY + FS + 7;
+  const H = nameY + FS + 8;
+
+  cv.width = Math.round(CW * SS);
+  cv.height = Math.round(H * SS);
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+
+  G = { CW: CW, H: H, NARROW: NARROW, P: P, FS: FS, TW: TW, TH: TH,
+        apexPad: apexPad, baseY: baseY, tickY: tickY, nameY: nameY };
+}
+
+/* the de Finetti map: horizontal position IS the allele frequency, and
+   height above the base IS the share of heterozygotes                      */
+const X = (g) => G.P + (g.AA + g.Aa / 2) * G.TW;
+const Y = (g) => G.baseY - g.Aa * G.TH;
+
+/* how much clear room a legend row has before it meets the triangle's edge */
+function roomAt(y){
+  return (G.TW / 2) * (G.baseY - y) / G.TH - 28;
+}
+
+function render(){
+  if (!G) fitCanvas();
+  const p0 = state.p0 / 100, s = state.sel / 100, mu = MUTS[state.mut];
+  const hist = Model.run(p0, s, mu, state.gens);
+  const last = hist[hist.length - 1];
+
+  const panel = css("--panel"), ink = css("--ink"), muted = css("--muted");
+  const line = css("--line"), quiet = css("--quiet"), bg = css("--bg");
+  const accent = css("--accent"), alt = css("--alt"), third = css("--third");
+  const FS = G.FS;
+
+  ctx.clearRect(0, 0, G.CW, G.H);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, G.CW, G.H);
+  ctx.font = FS + "px " + FONT;
+
+  /* the triangle of every possible population */
+  const ax = G.P + G.TW / 2, ay = G.apexPad;
+  ctx.beginPath();
+  ctx.moveTo(G.P, G.baseY); ctx.lineTo(G.P + G.TW, G.baseY); ctx.lineTo(ax, ay); ctx.closePath();
+  ctx.fillStyle = bg; ctx.fill();
+  ctx.strokeStyle = quiet; ctx.lineWidth = 1.2; ctx.stroke();
+
+  /* faint verticals every quarter of the allele frequency */
+  ctx.strokeStyle = quiet; ctx.lineWidth = 0.7; ctx.globalAlpha = 0.6;
+  for (let i = 1; i <= 3; i++){
+    const p = i / 4, top = G.baseY - 2 * p * (1 - p) * G.TH;
+    ctx.beginPath();
+    ctx.moveTo(G.P + p * G.TW, G.baseY); ctx.lineTo(G.P + p * G.TW, top);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  /* every population in Hardy-Weinberg proportions */
+  ctx.strokeStyle = accent; ctx.lineWidth = 2.6; ctx.lineJoin = "round";
+  ctx.beginPath();
+  for (let i = 0; i <= 200; i++){
+    const p = i / 200, g = Model.zygotes(p);
+    const x = X(g), y = Y(g);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  /* the run: newborn, survivor, newborn, survivor ... */
+  const n = hist.length;
+  ctx.lineWidth = 1; ctx.strokeStyle = muted;
+  for (let t = 0; t < n; t++){
+    ctx.globalAlpha = 0.16 + 0.84 * (n === 1 ? 1 : t / (n - 1));
+    ctx.beginPath();
+    ctx.moveTo(X(hist[t].zyg), Y(hist[t].zyg));
+    ctx.lineTo(X(hist[t].adu), Y(hist[t].adu));
+    if (t + 1 < n) ctx.lineTo(X(hist[t + 1].zyg), Y(hist[t + 1].zyg));
+    ctx.stroke();
+  }
+  for (let t = 0; t < n; t++){
+    ctx.globalAlpha = 0.16 + 0.84 * (n === 1 ? 1 : t / (n - 1));
+    ctx.fillStyle = third;
+    ctx.beginPath(); ctx.arc(X(hist[t].zyg), Y(hist[t].zyg), 3, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = alt;
+    ctx.beginPath(); ctx.arc(X(hist[t].adu), Y(hist[t].adu), 3, 0, 6.2832); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  /* where it has got to */
+  ctx.fillStyle = alt;
+  ctx.beginPath(); ctx.arc(X(last.adu), Y(last.adu), 5.5, 0, 6.2832); ctx.fill();
+  ctx.strokeStyle = third; ctx.lineWidth = 2.4;
+  ctx.beginPath(); ctx.arc(X(last.zyg), Y(last.zyg), 7.5, 0, 6.2832); ctx.stroke();
+
+  /* legend rows sit in the triangle's empty upper-left, each measured
+     against the distance to the sloping edge at its own height          */
+  const LEG = [[accent, ["Hardy-Weinberg curve", "HW curve", "the curve"]],
+               [third, ["newborns", "born"]],
+               [alt, ["survivors", "left"]]];
+  ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  for (let i = 0; i < LEG.length; i++){
+    const y = G.apexPad + 10 + i * (FS + 7);
+    const label = pick(LEG[i][1], roomAt(y));
+    if (!label) continue;
+    ctx.strokeStyle = LEG[i][0]; ctx.lineWidth = 3.2; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(G.P + 6, y); ctx.lineTo(G.P + 20, y); ctx.stroke();
+    ctx.fillStyle = muted;
+    ctx.fillText(label, G.P + 26, y);
+  }
+
+  /* the apex names itself on its own row above the triangle */
+  ctx.fillStyle = muted; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+  ctx.fillText("all Aa", ax, G.apexPad - 4);
+
+  /* the allele-frequency ticks get a row of their own under the base */
+  ctx.textBaseline = "top";
+  const TICKS = G.NARROW ? [0, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1];
+  ctx.strokeStyle = quiet; ctx.lineWidth = 1;
+  for (let i = 0; i < TICKS.length; i++){
+    const x = G.P + TICKS[i] * G.TW;
+    ctx.beginPath(); ctx.moveTo(x, G.baseY); ctx.lineTo(x, G.baseY + 4); ctx.stroke();
+    ctx.textAlign = TICKS[i] === 0 ? "left" : (TICKS[i] === 1 ? "right" : "center");
+    ctx.fillText(TICKS[i] === 0 ? "0" : (TICKS[i] === 1 ? "1" : String(TICKS[i])), x, G.tickY);
+  }
+
+  /* and the corners name themselves on a second row, below the ticks */
+  ctx.fillStyle = muted;
+  ctx.textAlign = "left";  ctx.fillText("all aa", G.P, G.nameY);
+  ctx.textAlign = "right"; ctx.fillText("all AA", G.P + G.TW, G.nameY);
+  const room = G.TW - 2 * (wid("all aa") + 16);
+  const mid = pick(["frequency of A " + ARROW, "frequency of A", ""], room);
+  if (mid){ ctx.textAlign = "center"; ctx.fillText(mid, G.P + G.TW / 2, G.nameY); }
+
+  /* readouts */
+  el("p0out").textContent = p0.toFixed(2);
+  el("selout").textContent = s.toFixed(2);
+  el("mutout").textContent = mu === 0 ? "0" : mu.toExponential(0).replace("e-", "e" + MINUS);
+  el("gensout").textContent = String(state.gens);
+  const pNow = Model.alleleOf(last.zyg);
+  const pNext = Model.step(pNow, s, mu);
+  const d = pNext - pNow;
+  el("r1").textContent = pNow.toFixed(4);
+  el("r2").textContent = last.zyg.Aa.toFixed(4);
+  el("r3").textContent = (d < -5e-7 ? MINUS : (d > 5e-7 ? "+" : " ")) + Math.abs(d).toFixed(5);
+  const b = Model.balance(s, mu);
+  el("r4").textContent = (s > 0 && mu > 0 && b <= 1) ? b.toFixed(4) : "none";
+}
+
+function bind(id, key){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parseInt(input.value, 10); render(); });
+}
+bind("p0", "p0"); bind("sel", "sel"); bind("mut", "mut"); bind("gens", "gens");
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("p0").value = defaults.p0; el("sel").value = defaults.sel;
+  el("mut").value = defaults.mut; el("gens").value = defaults.gens;
+  render();
+});
+
+let rt = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(rt);
+  rt = setTimeout(() => { fitCanvas(); render(); }, 120);
+});
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const onScheme = () => render();
+  if (mq.addEventListener) mq.addEventListener("change", onScheme);
+  else if (mq.addListener) mq.addListener(onScheme);
+}
+fitCanvas();
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+
+  /* 1 -- the three newborn classes account for everyone */
+  let w1 = 0;
+  for (let i = 0; i <= 200; i++){
+    const g = Model.zygotes(i / 200);
+    w1 = Math.max(w1, Math.abs(g.AA + g.Aa + g.aa - 1));
+  }
+  push("newborn frequencies sum to one at 201 allele frequencies", w1 <= 1e-15,
+       "worst departure from one " + w1.toExponential(2));
+
+  /* 2 -- and so do the survivors, whatever selection removes, except in the
+         one corner where selection removes everybody */
+  let w2 = 0, extinctions = 0, okExtinct = true;
+  for (let i = 0; i <= 50; i++) for (let j = 0; j <= 20; j++){
+    const a = Model.adults(i / 50, j / 20), tot = a.AA + a.Aa + a.aa;
+    if (a.wbar === 0){ extinctions++; okExtinct = okExtinct && tot === 0; }
+    else w2 = Math.max(w2, Math.abs(tot - 1));
+  }
+  /* three divisions by the mean fitness, so the floor here is a few ulps
+     rather than the single rounding the newborn sum costs                */
+  push("survivor frequencies sum to one across 1071 (p, s) pairs",
+       w2 <= 1e-14 && okExtinct && extinctions === 1,
+       "worst departure from one " + w2.toExponential(2)
+       + "; the single extinction corner (all aa, lethal) reports an empty population");
+
+  /* 3 -- the null model really is still */
+  let w3 = 0;
+  for (let i = 1; i < 100; i++){
+    const p0 = i / 100;
+    let p = p0;
+    for (let g = 0; g < 50; g++) p = Model.step(p, 0, 0);
+    w3 = Math.max(w3, Math.abs(p - p0));
+  }
+  push("50 generations with no selection and no mutation move nothing", w3 <= 1e-15,
+       "worst drift over 99 starting frequencies " + w3.toExponential(2));
+
+  /* 4 -- the model's own change equals the textbook delta q */
+  let w4 = 0;
+  for (let i = 1; i < 40; i++) for (let j = 1; j <= 20; j++){
+    const q = i / 40, s = j / 20;
+    const qAfter = 1 - Model.alleleOf(Model.adults(1 - q, s));
+    w4 = Math.max(w4, Math.abs((qAfter - q) - Model.deltaQ(q, s)));
+  }
+  push("change in a matches -s q^2 (1-q) / (1 - s q^2)", w4 <= 1e-9,
+       "worst difference over 780 (q, s) pairs " + w4.toExponential(2));
+
+  /* 5 -- half and half is as mixed as a population can be */
+  let best = -1, bestP = -1;
+  for (let i = 0; i <= 1000; i++){
+    const h = Model.zygotes(i / 1000).Aa;
+    if (h > best){ best = h; bestP = i / 1000; }
+  }
+  push("heterozygotes peak at p = 0.5, at exactly 0.5",
+       bestP === 0.5 && Math.abs(best - 0.5) <= 1e-16 && Model.zygotes(0.5).Aa === 0.5,
+       "peak " + best.toFixed(16) + " at p = " + bestP);
+
+  /* 6 -- one round of random mating forgets how the parents were arranged */
+  const same = [{ AA: 0.36, Aa: 0.48, aa: 0.16 },
+                { AA: 0.60, Aa: 0.00, aa: 0.40 },
+                { AA: 0.30, Aa: 0.60, aa: 0.10 }];
+  let w6 = 0;
+  const ref = Model.zygotes(Model.alleleOf(same[0]));
+  same.forEach(function(g){
+    const z = Model.zygotes(Model.alleleOf(g));
+    w6 = Math.max(w6, Math.abs(z.AA - ref.AA), Math.abs(z.Aa - ref.Aa), Math.abs(z.aa - ref.aa));
+  });
+  push("three very different parent generations give identical children",
+       w6 <= 1e-15 && Math.abs(ref.Aa - 0.48) <= 1e-15,
+       "worst difference " + w6.toExponential(2) + "; all three land on 0.36 / 0.48 / 0.16");
+
+  /* 7 -- a lethal recessive has a closed form */
+  let w7 = 0;
+  [0.1, 0.4, 0.8].forEach(function(q0){
+    let p = 1 - q0;
+    for (let g = 1; g <= 120; g++){
+      p = Model.step(p, 1, 0);
+      w7 = Math.max(w7, Math.abs((1 - p) - Model.lethalQ(q0, g)));
+    }
+  });
+  push("a lethal recessive follows q0 / (1 + t q0) exactly", w7 <= 1e-12,
+       "worst difference over 360 generations " + w7.toExponential(2));
+
+  /* 8 -- mutation alone is geometric decay */
+  let w8 = 0;
+  [1e-3, 0.01, 0.03, 0.1].forEach(function(mu){
+    let p = 0.9;
+    for (let g = 1; g <= 200; g++){
+      p = Model.step(p, 0, mu);
+      w8 = Math.max(w8, Math.abs(p - 0.9 * Math.pow(1 - mu, g)));
+    }
+  });
+  push("mutation alone gives p0 (1 - mu)^t exactly", w8 <= 1e-12,
+       "worst difference over 800 generations " + w8.toExponential(2));
+
+  /* 9 -- where making a and removing it come out level */
+  let w9 = 0;
+  [0.02, 0.05, 0.1, 0.25, 0.5, 1].forEach(function(s){
+    [1e-6, 1e-5, 1e-4, 1e-3].forEach(function(mu){
+      let lo = 1e-12, hi = 0.9999;
+      for (let k = 0; k < 200; k++){
+        const m = (lo + hi) / 2;
+        if ((1 - Model.step(1 - m, s, mu)) - m > 0) lo = m; else hi = m;
+      }
+      w9 = Math.max(w9, Math.abs(((lo + hi) / 2) / Math.sqrt(mu / s) - 1));
+    });
+  });
+  push("mutation and selection balance at the square root of mu over s", w9 <= 1e-8,
+       "worst relative departure over 24 pairs " + w9.toExponential(2));
+
+  /* 10 -- the picture's horizontal axis is the allele frequency, exactly */
+  const rng = mulberry32(SEED);
+  let w10 = 0;
+  for (let i = 0; i < 200; i++){
+    let a = rng(), b = rng(), c = rng();
+    const tot = a + b + c; a /= tot; b /= tot; c /= tot;
+    const g = { AA: a, Aa: b, aa: c };
+    w10 = Math.max(w10, Math.abs((g.AA + g.Aa / 2) - Model.alleleOf(g)));
+  }
+  push("the plotted position is the allele frequency for any population",
+       w10 <= 1e-15, "worst difference over 200 random populations " + w10.toExponential(2));
+
+  /* 11 -- culling aa leaves a surplus of carriers */
+  let ok11 = true, worstSurplus = Infinity;
+  for (let i = 1; i < 40; i++) for (let j = 1; j <= 20; j++){
+    const a = Model.adults(i / 40, j / 20), pa = Model.alleleOf(a);
+    const surplus = a.Aa - 2 * pa * (1 - pa);
+    if (!(surplus > 0)) ok11 = false;
+    worstSurplus = Math.min(worstSurplus, surplus);
+  }
+  push("removing aa always leaves more carriers than the curve allows", ok11,
+       "smallest surplus over 780 (p, s) pairs " + worstSurplus.toExponential(2));
+
+  /* 12 -- nothing leaks over a long run under any setting */
+  let ok12 = true;
+  [0, 0.1, 0.5, 1].forEach(function(s){
+    MUTS.forEach(function(mu){
+      let p = 0.7;
+      for (let g = 0; g < 200; g++){
+        const z = Model.zygotes(p), a = Model.adults(p, s);
+        if (!(z.AA >= 0 && z.Aa >= 0 && z.aa >= 0 && a.AA >= 0 && a.Aa >= 0 && a.aa >= 0)) ok12 = false;
+        if (Math.abs(z.AA + z.Aa + z.aa - 1) > 1e-14) ok12 = false;
+        if (Math.abs(a.AA + a.Aa + a.aa - 1) > 1e-14) ok12 = false;
+        p = Model.step(p, s, mu);
+        if (!(p >= 0 && p <= 1)) ok12 = false;
+      }
+    });
+  });
+  push("36 settings run 200 generations without a frequency leaving [0, 1]", ok12,
+       "every generation of every run keeps all three classes non-negative and summing to one");
+
+  /* 13 -- mean fitness never falls */
+  let ok13 = true, worstDrop = 0;
+  [0.05, 0.2, 0.6, 1].forEach(function(s){
+    let p = 0.05, prev = -1;
+    for (let g = 0; g < 300; g++){
+      const w = Model.adults(p, s).wbar;
+      if (prev >= 0){ ok13 = ok13 && (w >= prev - 1e-15); worstDrop = Math.min(worstDrop, w - prev); }
+      prev = w; p = Model.step(p, s, 0);
+    }
+  });
+  push("average survival never falls from one generation to the next", ok13,
+       "worst step down over 1200 generations " + worstDrop.toExponential(2));
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
