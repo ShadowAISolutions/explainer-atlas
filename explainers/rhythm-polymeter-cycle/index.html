@@ -1,0 +1,667 @@
+<!doctype html>
+<!--
+  Interactive Explainer Atlas — page skeleton.
+  Start EVERY new explainer from this file. Never copy a previous page.
+  Replace every {{PLACEHOLDER}}. Delete the demo model and write your own.
+  Contract: FOUNDATION.md. Rules: CLAUDE.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Three Against Four Takes Twelve Beats &#8212; Explainer Atlas</title>
+<meta name="description" content="Two rhythms of different lengths drift apart and snap back only at their least common multiple. Scrub through the combined cycle and watch the downbeats miss each other.">
+<style>
+/* ---- tokens: restate these per page to vary the collection's feel ------- */
+:root{
+  --bg:#fbf6ec; --panel:#fffdf8; --ink:#1f1811; --muted:#6b5c4a; --line:#e7dcc9;
+  --accent:#8c3a2b; --accent-soft:#f6e8e2; --alt:#3f6b5e; --warn:#9a6a10;
+  --quiet:#d3c7b2; --radius:12px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.55rem,1.1rem + 2vw,2.3rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.06rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#14100b; --panel:#1d1811; --ink:#f0e7d9; --muted:#a8998a; --line:#332b1f;
+    --accent:#e08a72; --accent-soft:#2a1d17; --alt:#79b7a3; --warn:#d6a748;
+    --quiet:#4a3f2e;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.15; margin:0 0 .4em; letter-spacing:-.01em}
+.kicker{margin:0 0 .35em; color:var(--accent); font:600 .78rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.09em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas, figure.stage svg{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.86rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.83rem}
+.pat{font:600 .95rem/1.5 var(--font-mono); letter-spacing:.12em; word-break:break-all}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .7em; min-height:40px}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.06em}
+.readout dd{margin:.18em 0 0; font:600 1.05rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.16rem; margin:1.8em 0 .45em; letter-spacing:-.005em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); background:var(--accent-soft); padding:.7em .85em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">music theory</p>
+  <h1>Three Against Four Takes Twelve Beats</h1>
+  <p class="standfirst">Put a three-beat pattern against a four-beat one and they agree on the first
+  beat, then spend eleven beats disagreeing before they agree again. Scrub through the cycle and watch
+  the two wheels turn at their own speeds.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="700" role="img"
+            aria-label="Two concentric wheels, each divided into as many segments as its pattern has beats, with the struck beats filled in. A hand on each wheel points at the beat currently sounding, and the two hands turn at different speeds. In the middle is the number of beats before the whole thing repeats. Beneath the wheels a strip shows one entire combined cycle, with a mark wherever the two patterns strike together."></canvas>
+    <figcaption>Each wheel is one pattern, turning one segment per beat. The outer wheel finishes its
+    revolution sooner, so the hands separate and only line up again at the end of the strip below.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row">
+        <label for="lenA">Outer wheel length</label>
+        <output id="lenAout" for="lenA">3 beats</output>
+      </div>
+      <input type="range" id="lenA" min="2" max="16" step="1" value="3">
+      <p class="hint">How many beats before the outer pattern starts again. Arrow keys step; Home and
+      End jump to the ends.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="lenB">Inner wheel length</label>
+        <output id="lenBout" for="lenB">4 beats</output>
+      </div>
+      <input type="range" id="lenB" min="2" max="16" step="1" value="4">
+      <p class="hint">The same for the inner pattern. Two lengths with no common factor take the
+      longest to come back together.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="hitsA">Strikes on the outer wheel</label>
+        <output id="hitsAout" for="hitsA">1</output>
+      </div>
+      <input type="range" id="hitsA" min="1" max="16" step="1" value="1">
+      <p class="hint">One strike is the bare downbeat. More than one, and they are spread as evenly as
+      the wheel allows, which is how most drum patterns in the world are built.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="hitsB">Strikes on the inner wheel</label>
+        <output id="hitsBout" for="hitsB">1</output>
+      </div>
+      <input type="range" id="hitsB" min="1" max="16" step="1" value="1">
+      <p class="hint">The same for the inner pattern.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="scrub">Beat</label>
+        <output id="scrubout" for="scrub">0 of 12</output>
+      </div>
+      <input type="range" id="scrub" min="0" max="600" step="1" value="0">
+      <p class="hint">Drag this to move through one whole cycle. Watch the two hands separate, pass
+      each other, and finally meet at the far end.</p>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Repeats after</dt><dd id="oPeriod">&#8212;</dd></div>
+      <div><dt>They strike together</dt><dd id="oTogether">&#8212;</dd></div>
+      <div><dt>Next agreement</dt><dd id="oNext">&#8212;</dd></div>
+      <div><dt>Common factor</dt><dd id="oGcd">&#8212;</dd></div>
+    </dl>
+
+    <p class="pat" id="patA">&#8212;</p>
+    <p class="pat" id="patB">&#8212;</p>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>A polymeter is two patterns of different lengths sharing one pulse. Nothing is speeding up or
+  slowing down; both wheels advance exactly one segment per beat. They simply run out of segments at
+  different moments, and that is enough to make a pattern that seems to wander for a long time before
+  resolving.</p>
+
+  <p>The length of the wander is the least common multiple. Three and four have no factor in common,
+  so the pattern takes all twelve beats to come round. Four and six share a factor of two, so they
+  agree every twelve &#8212; not every twenty-four. Six and eight, which look further apart, share a
+  factor of two as well and also repeat in twenty-four rather than forty-eight. Pick two lengths with
+  no common factor and you get the longest possible answer, their product.</p>
+
+  <p class="math">repeat length = lcm(a, b) = a &#215; b / gcd(a, b)</p>
+
+  <h2>Why the downbeats meet exactly once</h2>
+
+  <p>If each wheel strikes only its own first beat, the outer one sounds at beats 0, a, 2a, and so on,
+  and the inner one at 0, b, 2b. A beat that belongs to both lists is a common multiple of the two
+  lengths, and inside a single cycle the only one is the beginning. That is the whole feeling of a
+  polymeter: one moment of agreement, then a long stretch of near misses. A common claim is that the
+  two downbeats meet gcd(a, b) times per cycle. They meet once, always. The claim happens to be right
+  for the 312 coprime pairs up to twenty-four, where the common factor is one, and wrong for the other
+  217, which the page asserts directly.</p>
+
+  <h2>More than one strike per wheel</h2>
+
+  <p>Turn the strike sliders up and the wheels fill in. The page spaces the strikes as evenly as the
+  number of segments allows, which is what a Euclidean rhythm is: five strikes in eight segments comes
+  out as the Cuban cinquillo, three in eight as the tresillo, and the same recipe produces patterns
+  from West Africa, Bulgaria and Brazil depending on the numbers you feed it. The gap between
+  consecutive strikes then only ever takes two values, differing by one, and the page checks that for
+  every combination up to thirty-two segments.</p>
+
+  <p>With several strikes per wheel, agreements become common, and how many there are is decided by
+  the common factor after all: two strikes coincide somewhere in the cycle exactly when their
+  positions differ by a multiple of gcd(a, b). That rule, counted over every pair of strikes, matches
+  a beat-by-beat simulation across all 8,464 combinations the page tries.</p>
+
+  <h2>What to try</h2>
+
+  <p>Start at three against four and drag the beat slider slowly. Now set both wheels to strike once
+  and make them four and eight: the agreement is every eight beats and the whole thing feels like one
+  metre, not two. Change eight to nine and the cycle jumps to thirty-six. Finally set fifteen and
+  sixteen, the longest pair available here, and count two hundred and forty beats before anything
+  repeats.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG. Never use bare Math.random(). ------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+
+/* ---- MODEL: pure functions of the parameters. No DOM in here. ----------- */
+const Model = {
+  gcd(x, y){ x = Math.abs(x); y = Math.abs(y); while (y){ const t = x % y; x = y; y = t; } return x; },
+  lcm(x, y){ return x / Model.gcd(x, y) * y; },
+
+  /* k strikes spread as evenly as n segments allow. Positions floor(i n / k)
+     give the maximally even set; it is a rotation of Bjorklund's answer.    */
+  pattern(k, n){
+    const out = new Array(n).fill(false);
+    const kk = Math.max(0, Math.min(k, n));
+    for (let i = 0; i < kk; i++) out[Math.floor(i * n / kk) % n] = true;
+    return out;
+  },
+
+  gaps(p){
+    const on = [];
+    for (let i = 0; i < p.length; i++) if (p[i]) on.push(i);
+    if (!on.length) return [];
+    const g = [];
+    for (let i = 0; i < on.length; i++){
+      const d = (on[(i + 1) % on.length] - on[i] + p.length) % p.length;
+      g.push(d === 0 ? p.length : d);
+    }
+    return g;
+  },
+
+  /* the combined sequence over one full cycle: 0 nothing, 1 outer, 2 inner,
+     3 both.                                                                 */
+  combined(a, b, ka, kb){
+    const A = Model.pattern(ka, a), B = Model.pattern(kb, b), L = Model.lcm(a, b);
+    const out = new Array(L);
+    for (let t = 0; t < L; t++) out[t] = (A[t % a] ? 1 : 0) | (B[t % b] ? 2 : 0);
+    return out;
+  },
+
+  /* the true minimal period of that sequence, found by trying every divisor */
+  truePeriod(seq){
+    const L = seq.length;
+    for (let p = 1; p <= L; p++){
+      if (L % p) continue;
+      let ok = true;
+      for (let i = 0; i < L && ok; i++) if (seq[i] !== seq[i % p]) ok = false;
+      if (ok) return p;
+    }
+    return L;
+  },
+
+  /* how many beats in one cycle carry both patterns, counted directly */
+  coincidences(a, b, ka, kb){
+    const seq = Model.combined(a, b, ka, kb);
+    let n = 0;
+    for (let i = 0; i < seq.length; i++) if (seq[i] === 3) n++;
+    return n;
+  },
+
+  /* and the same number from the remainder rule, without simulating a beat:
+     a strike at p on one wheel and q on the other ever land together exactly
+     when p and q differ by a multiple of the two lengths' common factor.    */
+  coincidencesByRule(a, b, ka, kb){
+    const A = Model.pattern(ka, a), B = Model.pattern(kb, b), g = Model.gcd(a, b);
+    let n = 0;
+    for (let p = 0; p < a; p++) if (A[p])
+      for (let q = 0; q < b; q++) if (B[q])
+        if ((((p - q) % g) + g) % g === 0) n++;
+    return n;
+  },
+
+  nextTogether(a, b, ka, kb, from){
+    const seq = Model.combined(a, b, ka, kb), L = seq.length;
+    for (let d = 1; d <= L; d++) if (seq[(from + d) % L] === 3) return d;
+    return -1;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { lenA: 3, lenB: 4, hitsA: 1, hitsB: 1, scrub: 0 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+const SS = 2;
+let CW = 900, CH = 700, NARROW = false, FS = 13, G_ = null;
+function wid(t){ return ctx.measureText(t).width; }
+function pick(sets, room){
+  for (let i = 0; i < sets.length; i++) if (wid(sets[i]) <= room) return sets[i];
+  return sets[sets.length - 1];
+}
+function patString(p){ return p.map((x) => x ? "x" : ".").join(""); }
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 20) : 900);
+  NARROW = avail < 470;
+  CW = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+  const pad = NARROW ? 10 : 14;
+  const wheelTop = Math.round(pad + FS + 12);
+  const wheel = Math.round(Math.min(CW - 2 * pad, CW * (NARROW ? 0.88 : 0.62)));
+  const wheelBot = wheelTop + wheel;
+  const stripTitle = Math.round(wheelBot + FS + 18);
+  const stripTop = stripTitle + 8;
+  const stripH = NARROW ? 40 : 52;
+  const stripBot = stripTop + stripH;
+  const stripLab = stripBot + FS + 9;
+  CH = stripLab + 8;
+  G_ = { pad: pad, wheelTop: wheelTop, wheel: wheel, wheelBot: wheelBot,
+         stripTitle: stripTitle, stripTop: stripTop, stripH: stripH,
+         stripBot: stripBot, stripLab: stripLab };
+  if (cv.width !== CW * SS || cv.height !== CH * SS){ cv.width = CW * SS; cv.height = CH * SS; }
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function ring(cx, cy, rOut, rIn, n, pat, onCol, offCol, lineCol){
+  for (let i = 0; i < n; i++){
+    const a0 = -Math.PI / 2 + 2 * Math.PI * i / n;
+    const a1 = -Math.PI / 2 + 2 * Math.PI * (i + 1) / n;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rOut, a0, a1);
+    ctx.arc(cx, cy, rIn, a1, a0, true);
+    ctx.closePath();
+    ctx.fillStyle = pat[i] ? onCol : offCol;
+    ctx.fill();
+    if (n <= 24){ ctx.strokeStyle = lineCol; ctx.lineWidth = 1; ctx.stroke(); }
+  }
+}
+
+function render(){
+  fitCanvas();
+  const G = G_;
+  const a = state.lenA, b = state.lenB;
+  const ka = Math.min(state.hitsA, a), kb = Math.min(state.hitsB, b);
+  const A = Model.pattern(ka, a), B = Model.pattern(kb, b);
+  const L = Model.lcm(a, b), g = Model.gcd(a, b);
+  const seq = Model.combined(a, b, ka, kb);
+  const tf = state.scrub / 600 * L;            /* continuous position       */
+  const ti = Math.min(L - 1, Math.floor(tf));  /* the beat now sounding     */
+
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line"),
+        accent = css("--accent"), alt = css("--alt"), quiet = css("--quiet"),
+        soft = css("--accent-soft"), panel = css("--panel"), warn = css("--warn");
+
+  ctx.clearRect(0, 0, CW, CH);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, CW, CH);
+  ctx.textBaseline = "alphabetic";
+
+  /* title row, with the state of this beat on the right */
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  const both = seq[ti] === 3;
+  const slab = both ? "both strike now"
+             : seq[ti] === 1 ? "outer strikes now"
+             : seq[ti] === 2 ? "inner strikes now" : "silence on this beat";
+  const sw = wid(slab) + 16;
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(pick([a + " beats against " + b + ", repeating every " + L,
+                     a + " against " + b + ", every " + L,
+                     a + " against " + b, ""], CW - 2 * G.pad - sw),
+               G.pad, G.wheelTop - 10);
+  ctx.textAlign = "right"; ctx.fillStyle = both ? warn : muted;
+  ctx.fillText(slab, CW - G.pad, G.wheelTop - 10);
+
+  /* ---------------- the two wheels -------------------------------------- */
+  const cx = CW / 2, cy = G.wheelTop + G.wheel / 2;
+  const RO = G.wheel / 2 - 2;
+  ring(cx, cy, RO, RO * 0.78, a, A, accent, soft, line);
+  ring(cx, cy, RO * 0.62, RO * 0.40, b, B, alt, soft, line);
+
+  /* a hand for each wheel, at its own angle */
+  function hand(r0, r1, n){
+    const ang = -Math.PI / 2 + 2 * Math.PI * ((tf % n) / n);
+    const x0 = cx + r0 * Math.cos(ang), y0 = cy + r0 * Math.sin(ang);
+    const x1 = cx + r1 * Math.cos(ang), y1 = cy + r1 * Math.sin(ang);
+    ctx.strokeStyle = panel; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+    ctx.strokeStyle = ink; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+    ctx.fillStyle = panel;
+    ctx.beginPath(); ctx.arc(x1, y1, 6, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = ink;
+    ctx.beginPath(); ctx.arc(x1, y1, 4, 0, 6.2832); ctx.fill();
+  }
+  hand(RO * 0.74, RO * 1.02, a);
+  hand(RO * 0.36, RO * 0.66, b);
+
+  /* the number in the middle, where nothing else can reach */
+  ctx.textAlign = "center";
+  ctx.fillStyle = ink;
+  const big = Math.round(RO * 0.26);
+  ctx.font = "600 " + big + "px " + css("--font-mono");
+  ctx.fillText(String(L), cx, cy + big * 0.22);
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.fillStyle = muted;
+  ctx.fillText(pick(["beats to repeat", "beats", ""], RO * 0.74), cx, cy + big * 0.22 + FS + 6);
+
+  /* ---------------- the strip: one whole cycle -------------------------- */
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  const tog = Model.coincidences(a, b, ka, kb);
+  const tlab = tog === 1 ? "they agree once" : "they agree " + tog + " times";
+  const tw = wid(tlab) + 16;
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["One whole cycle, beat by beat", "One whole cycle", ""],
+                    CW - 2 * G.pad - tw),
+               G.pad, G.stripTitle);
+  ctx.textAlign = "right"; ctx.fillStyle = warn;
+  ctx.fillText(tlab, CW - G.pad, G.stripTitle);
+
+  const SL = G.pad, SR = CW - G.pad, SW = SR - SL;
+  const cell = SW / L;
+  const half = G.stripH / 2;
+  ctx.fillStyle = soft; ctx.fillRect(SL, G.stripTop, SW, G.stripH);
+
+  for (let t = 0; t < L; t++){
+    const x = SL + cell * t, w = Math.max(1, cell - (cell > 4 ? 1 : 0));
+    if (seq[t] & 1){ ctx.fillStyle = accent; ctx.fillRect(x, G.stripTop + 3, w, half - 5); }
+    if (seq[t] & 2){ ctx.fillStyle = alt; ctx.fillRect(x, G.stripTop + half + 2, w, half - 5); }
+    if (seq[t] === 3){
+      ctx.fillStyle = warn;
+      ctx.fillRect(x, G.stripTop + half - 2, w, 4);
+    }
+  }
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.strokeRect(SL + 0.5, G.stripTop + 0.5, SW - 1, G.stripH - 1);
+
+  /* the playhead */
+  const px = SL + cell * tf;
+  ctx.strokeStyle = ink; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(px, G.stripTop - 5); ctx.lineTo(px, G.stripBot + 5);
+  ctx.stroke();
+
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.fillStyle = muted; ctx.textAlign = "left";
+  const nxt = Model.nextTogether(a, b, ka, kb, ti);
+  ctx.fillText(pick(["beat " + (ti + 1) + " of " + L + "; the next agreement is "
+                     + nxt + " beat" + (nxt === 1 ? "" : "s") + " away",
+                     "beat " + (ti + 1) + " of " + L + ", next in " + nxt,
+                     (ti + 1) + "/" + L], SW),
+               SL, G.stripLab);
+
+  /* ---------------- the numbers ----------------------------------------- */
+  el("lenAout").textContent = a + " beats";
+  el("lenBout").textContent = b + " beats";
+  el("hitsAout").textContent = String(ka);
+  el("hitsBout").textContent = String(kb);
+  el("scrubout").textContent = (ti + 1) + " of " + L;
+  el("oPeriod").textContent = L + " beats";
+  el("oTogether").textContent = tog + (tog === 1 ? " beat" : " beats");
+  el("oNext").textContent = nxt + (nxt === 1 ? " beat" : " beats");
+  el("oGcd").textContent = g === 1 ? "none" : String(g);
+  el("patA").textContent = "outer  " + patString(A);
+  el("patB").textContent = "inner  " + patString(B);
+}
+
+function readState(){
+  ["lenA", "lenB", "hitsA", "hitsB", "scrub"].forEach((k) => {
+    state[k] = parseInt(el(k).value, 10);
+  });
+}
+["lenA", "lenB", "hitsA", "hitsB", "scrub"].forEach((id) => {
+  el(id).addEventListener("input", () => { readState(); render(); });
+});
+el("reset").addEventListener("click", () => {
+  Object.keys(defaults).forEach((k) => { el(k).value = String(defaults[k]); });
+  readState(); render();
+});
+
+let rt = null;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 90); });
+const dark = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+if (dark && dark.addEventListener) dark.addEventListener("change", render);
+
+render();
+
+/* ---- SELFTEST: minimum 5 numeric assertions against known values. ------- */
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1. the period of the generated sequence really is the least common
+        multiple, found by testing every divisor rather than assuming it   */
+  let bad1 = 0, checked1 = 0;
+  for (let a = 2; a <= 24; a++)
+    for (let b = 2; b <= 24; b++){
+      checked1++;
+      const seq = Model.combined(a, b, 1, 1);
+      if (Model.truePeriod(seq) !== Model.lcm(a, b)) bad1++;
+    }
+  push("the combined pattern's period is exactly lcm(a, b)", bad1 === 0,
+       "checked all " + checked1 + " pairs of lengths up to 24 by searching every divisor "
+       + "of the sequence for a shorter repeat; none was found");
+
+  /* 2. coprime lengths take the full product */
+  let cop = 0, bad2 = 0;
+  for (let a = 2; a <= 24; a++)
+    for (let b = 2; b <= 24; b++)
+      if (Model.gcd(a, b) === 1){
+        cop++;
+        if (Model.truePeriod(Model.combined(a, b, 1, 1)) !== a * b) bad2++;
+      }
+  push("coprime lengths give a period equal to their product", bad2 === 0 && cop === 312,
+       "all " + cop + " coprime pairs up to 24, from 2 against 3 to 23 against 24");
+
+  /* 3. the downbeats meet exactly once, never gcd(a, b) times. The task
+        file asked for gcd; it is right only where gcd happens to be 1.   */
+  let notOne = 0, eqGcd = 0, tot = 0;
+  for (let a = 2; a <= 24; a++)
+    for (let b = 2; b <= 24; b++){
+      tot++;
+      const c = Model.coincidences(a, b, 1, 1);
+      if (c !== 1) notOne++;
+      if (c === Model.gcd(a, b)) eqGcd++;
+    }
+  push("two bare downbeats agree exactly once per cycle",
+       notOne === 0 && eqGcd === 312,
+       "true for all " + tot + " pairs up to 24. The task file asked for gcd(a, b) "
+       + "agreements; that matches in " + eqGcd + " of " + tot + " pairs, which are precisely "
+       + "the coprime ones where gcd is 1, and fails for the other " + (tot - eqGcd));
+
+  /* 4. the remainder rule against a beat-by-beat count, with real patterns */
+  let bad4 = 0, checked4 = 0;
+  for (let a = 2; a <= 24; a++)
+    for (let b = 2; b <= 24; b++)
+      for (const ka of [1, 2, Math.max(1, a - 1), a])
+        for (const kb of [1, 2, Math.max(1, b - 1), b]){
+          if (ka > a || kb > b) continue;
+          checked4++;
+          if (Model.coincidences(a, b, ka, kb) !== Model.coincidencesByRule(a, b, ka, kb)) bad4++;
+        }
+  push("counting agreements by remainders matches counting them beat by beat",
+       bad4 === 0 && checked4 > 8000,
+       checked4.toLocaleString("en-GB") + " combinations of lengths and strike counts; "
+       + "the rule is that two strikes at p and q meet somewhere exactly when p and q "
+       + "differ by a multiple of gcd(a, b)");
+
+  /* 5. the sequence repeats after a full period and at no earlier offset */
+  let bad5 = 0;
+  for (let a = 2; a <= 16; a++)
+    for (let b = 2; b <= 16; b++){
+      const seq = Model.combined(a, b, 1, 1), L = seq.length;
+      for (let off = 1; off < L; off++){
+        let same = true;
+        for (let i = 0; i < L && same; i++) if (seq[i] !== seq[(i + off) % L]) same = false;
+        if (same){ bad5++; break; }
+      }
+    }
+  push("no rotation shorter than a full cycle reproduces the pattern", bad5 === 0,
+       "every offset from 1 to L-1 was compared against the sequence, for all 225 pairs "
+       + "of lengths up to 16");
+
+  /* 6. every strike pattern has as many strikes as asked for */
+  let bad6 = 0;
+  for (let n = 1; n <= 32; n++)
+    for (let k = 1; k <= n; k++){
+      const p = Model.pattern(k, n);
+      let c = 0;
+      for (let i = 0; i < n; i++) if (p[i]) c++;
+      if (c !== k) bad6++;
+    }
+  push("k strikes in n segments produces exactly k strikes", bad6 === 0,
+       "528 combinations up to 32 segments");
+
+  /* 7. and they are as evenly spread as arithmetic allows */
+  let worst7 = 0, arg7 = "";
+  for (let n = 2; n <= 32; n++)
+    for (let k = 2; k <= n; k++){
+      const gp = Model.gaps(Model.pattern(k, n));
+      const d = Math.max.apply(null, gp) - Math.min.apply(null, gp);
+      if (d > worst7){ worst7 = d; arg7 = k + " in " + n; }
+    }
+  push("consecutive gaps never differ by more than one step", worst7 <= 1,
+       "the largest spread found was " + worst7 + (arg7 ? " at " + arg7 : "")
+       + ", across every k and n up to 32 segments");
+
+  /* 8. two named rhythms, by their gap patterns */
+  const g38 = Model.gaps(Model.pattern(3, 8)).slice().sort().join(",");
+  const g58 = Model.gaps(Model.pattern(5, 8)).slice().sort().join(",");
+  push("three in eight is the tresillo and five in eight the cinquillo",
+       g38 === "2,3,3" && g58 === "1,1,2,2,2",
+       "three in eight gives gaps of 2, 3 and 3, the tresillo; five in eight gives "
+       + "1, 1, 2, 2, 2, the cinquillo. Both come out rotated from the usual notation, "
+       + "which does not change the rhythm");
+
+  /* 9. the identity that makes all of this work */
+  let bad9 = 0;
+  for (let a = 1; a <= 60; a++)
+    for (let b = 1; b <= 60; b++)
+      if (Model.lcm(a, b) * Model.gcd(a, b) !== a * b) bad9++;
+  push("length times length equals period times common factor", bad9 === 0,
+       "3,600 pairs up to 60");
+
+  /* 10. the pair of positions visits every combination exactly once */
+  let bad10 = 0;
+  for (let a = 2; a <= 20; a++)
+    for (let b = 2; b <= 20; b++){
+      const L = Model.lcm(a, b), seen = new Set();
+      for (let t = 0; t < L; t++) seen.add((t % a) + ":" + (t % b));
+      if (seen.size !== L) bad10++;
+      if (((L % a) + (L % b)) !== 0) bad10++;
+    }
+  push("the two wheel positions take L distinct combinations and no more",
+       bad10 === 0,
+       "over 361 pairs of lengths; the pair returns to the start only at the end, which "
+       + "is the Chinese remainder theorem seen from the drum stool");
+
+  /* 11. one extra beat can multiply the cycle */
+  push("four against eight repeats in eight, four against nine in thirty-six",
+       Model.lcm(4, 8) === 8 && Model.lcm(4, 9) === 36 && Model.lcm(3, 4) === 12
+       && Model.lcm(6, 8) === 24 && Model.lcm(15, 16) === 240,
+       "adding a single beat to the second wheel takes the repeat from 8 to 36; the "
+       + "longest pair on the sliders, 15 against 16, runs 240 beats");
+
+  /* 12. the longest cycle available on this page */
+  let best = 0, ba = 0, bb = 0;
+  for (let a = 2; a <= 16; a++)
+    for (let b = 2; b <= 16; b++){
+      const L = Model.lcm(a, b);
+      if (L > best){ best = L; ba = a; bb = b; }
+    }
+  push("no pair on the sliders beats 240 beats", best === 240 && ba === 15 && bb === 16,
+       "the maximum over every pair of lengths the page offers is " + best
+       + " beats, at " + ba + " against " + bb);
+
+  /* 13. the same settings always give the same pattern */
+  const one = Model.combined(7, 12, 3, 5).join(""), two = Model.combined(7, 12, 3, 5).join("");
+  push("the pattern is fully determined by the four numbers",
+       one === two && one.length === 84,
+       "seven against twelve with three and five strikes gives the same 84-beat sequence "
+       + "every time it is generated");
+
+  return t;
+};
+
+/* exposed for the verifier's control sweep */
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
