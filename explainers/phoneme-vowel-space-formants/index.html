@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Every Vowel Is Two Numbers — Explainer Atlas</title>
+<meta name="description" content="Drag a point around a plane of two resonant frequencies and it names a vowel. The chart linguists draw is that plane, and a tube of air explains it.">
+<style>
+/* Plum on cream, a tinted full-bleed masthead, and the controls in a LEFT
+   rail with the drawing on the right -- mirrored from the usual arrangement,
+   because AUDIT/002 asked for pages to differ in page shape and not only in
+   canvas layout.                                                            */
+:root{
+  --bg:#fdfbf7; --panel:#ffffff; --band:#3b1f3d; --band-ink:#f6ecef;
+  --ink:#1c161d; --muted:#6a6070; --line:#e5dde4;
+  --accent:#7b2d5e; --accent-soft:#f7e9f1; --warm:#b8621f; --cool:#1f6f7b;
+  --radius:12px; --pad:clamp(15px,3vw,28px);
+  --font-body:"Hoefler Text",Constantia,"Times New Roman",serif;
+  --font-ui:"Optima","Segoe UI",system-ui,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.8rem,1.1rem + 3vw,3rem);
+  --scale-body:clamp(1.01rem,0.97rem + 0.22vw,1.1rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#131016; --panel:#1b171d; --band:#2a1530; --band-ink:#f0e2e8;
+    --ink:#ece6ee; --muted:#a398ad; --line:#2f2834;
+    --accent:#e08ab8; --accent-soft:#2e1526; --warm:#e09b5e; --cool:#5fc0cc;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.66 var(--font-body); -webkit-text-size-adjust:100%}
+.band{background:var(--band); color:var(--band-ink)}
+.band .inner{max-width:64rem; margin:0 auto; padding:calc(var(--pad)*1.5) var(--pad)}
+.kicker{margin:0 0 .5em; color:#d9a7c4; font:600 .73rem/1.3 var(--font-ui);
+  text-transform:uppercase; letter-spacing:.2em}
+h1{font:400 var(--scale-h1)/1.06 var(--font-body); margin:0 0 .35em; letter-spacing:-.018em}
+.standfirst{margin:0; color:#cbb9c6; max-width:38em}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr}
+@media (min-width:58rem){ .layout{grid-template-columns:minmax(15rem,1fr) minmax(0,2.1fr); align-items:start} }
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1.05em}
+@media (min-width:58rem){ .controls{position:sticky; top:var(--pad)} }
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control label{font:600 .9rem/1.25 var(--font-ui)}
+output{font:600 .88rem/1 var(--font-mono); color:var(--accent);
+  background:var(--accent-soft); padding:.25em .5em; border-radius:6px}
+.hint{color:var(--muted); font-size:.81rem; margin:0}
+.sub{margin:.3em 0 0; font:600 .7rem/1.3 var(--font-ui); color:var(--muted);
+  text-transform:uppercase; letter-spacing:.13em; border-top:1px solid var(--line);
+  padding-top:.9em}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:28px}
+select,button{font:600 .89rem/1 var(--font-ui); color:inherit; background:var(--bg);
+  border:1px solid var(--line); border-radius:8px; padding:.6em .75em; min-height:40px}
+button{cursor:pointer}
+button:hover{border-color:var(--accent)}
+.btnrow{display:flex; gap:.45em; flex-wrap:wrap}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:5px}
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:13px}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:none; cursor:crosshair}
+figcaption{margin-top:.75em; color:var(--muted); font-size:.85rem}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr)); gap:.55em;
+  margin:var(--pad) 0 0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:9px;
+  padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font:.72rem/1.3 var(--font-ui);
+  text-transform:uppercase; letter-spacing:.09em}
+.readout dd{margin:.2em 0 0; font:600 1.08rem/1.2 var(--font-mono)}
+.prose{margin-top:calc(var(--pad)*1.7)}
+@media (min-width:52rem){ .prose{columns:2; column-gap:calc(var(--pad)*1.8); orphans:3; widows:3} }
+.prose h2{font:600 1rem/1.3 var(--font-ui); margin:1.8em 0 .45em; color:var(--accent);
+  letter-spacing:-.005em; break-after:avoid}
+.prose > :first-child{margin-top:0}
+.prose h2:first-child{margin-top:0}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.87em; background:var(--accent-soft);
+  padding:.72em .85em; border-radius:9px; overflow-x:auto; break-inside:avoid}
+.lede{font-size:1.07em}
+footer.page{margin-top:calc(var(--pad)*1.7); padding-top:var(--pad);
+  border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="band">
+  <div class="inner">
+    <p class="kicker">Linguistics</p>
+    <h1>Every Vowel Is Two Numbers</h1>
+    <p class="standfirst">Drag a point around a plane of two frequencies and it names a vowel.
+      The chart phoneticians draw is not a diagram of the mouth. It is that plane, and the
+      mouth is a tube of air that lands you on it.</p>
+  </div>
+</div>
+
+<div class="wrap">
+<div class="layout">
+
+  <section class="controls" data-role="controls" aria-label="Formant and vocal tract controls">
+    <div class="control">
+      <div class="row">
+        <label for="f1">First formant, F1</label>
+        <output id="f1out" for="f1">530 Hz</output>
+      </div>
+      <input type="range" id="f1" min="200" max="900" step="5" value="530">
+      <p class="hint">How open the mouth is. Drag on the chart itself to move both at once.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="f2">Second formant, F2</label>
+        <output id="f2out" for="f2">1840 Hz</output>
+      </div>
+      <input type="range" id="f2" min="700" max="2600" step="10" value="1840">
+      <p class="hint">How far forward the tongue is.</p>
+    </div>
+
+    <p class="sub">Build it from a tube</p>
+
+    <div class="control">
+      <div class="row">
+        <label for="back">Back cavity</label>
+        <output id="backout" for="back">9.0 cm</output>
+      </div>
+      <input type="range" id="back" min="20" max="140" step="1" value="90">
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="front">Front cavity</label>
+        <output id="frontout" for="front">8.0 cm</output>
+      </div>
+      <input type="range" id="front" min="20" max="140" step="1" value="80">
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="area">Area ratio</label>
+        <output id="areaout" for="area">1.00</output>
+      </div>
+      <input type="range" id="area" min="-26" max="26" step="1" value="0">
+      <p class="hint">Back cross-section divided by front. One means a plain even tube.</p>
+    </div>
+
+    <div class="btnrow">
+      <button type="button" id="child">Child-sized tract</button>
+      <button type="button" id="adult">Adult-sized</button>
+      <button type="button" id="reset">Reset</button>
+    </div>
+  </section>
+
+  <div>
+    <figure class="stage" data-role="stage">
+      <canvas id="view" width="900" height="640" role="img" tabindex="0"
+        aria-label="A vowel chart with the second formant running right to left and the first formant running top to bottom, with ten reference vowels marked and the region nearest each of them shaded. A movable point names whichever vowel it is closest to. Beside it, the spectral envelope those two frequencies produce, and a two-tube model of the vocal tract."></canvas>
+      <figcaption id="cap">Drag anywhere on the chart, or use the sliders. The hollow marker is
+        where the tube below puts you.</figcaption>
+    </figure>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Nearest vowel</dt><dd id="r1">&#8212;</dd></div>
+      <div><dt>As in</dt><dd id="r2">&#8212;</dd></div>
+      <div><dt>The tube gives</dt><dd id="r3">&#8212;</dd></div>
+      <div><dt>Tract length</dt><dd id="r4">&#8212;</dd></div>
+    </dl>
+  </div>
+
+</div>
+
+<article class="prose" data-role="prose">
+  <p class="lede">Say <em>heed</em>, then <em>hod</em>, and hold each vowel. Nothing about your
+    vocal folds changed: they are buzzing at the same pitch either way. What changed is which
+    frequencies the air in your mouth amplifies on the way out. Two of those resonances are
+    enough to tell almost every vowel of English apart from every other, and this page is a map
+    of the two.</p>
+
+  <p>They are called formants, numbered from the bottom: F1 and F2. The chart on the right is
+    drawn the way phoneticians draw it, which looks backwards until you know why &mdash; F2
+    decreasing to the right, F1 increasing downwards. Do that and the resulting picture happens
+    to match the tongue: high front vowels at the top left, low back vowels at the bottom right.
+    The chart is a coordinate system that was later noticed to be a diagram.</p>
+
+  <h2>Two numbers, ten regions</h2>
+
+  <p>The ten marked points are the measured averages from Peterson and Barney's 1952 study of
+    American English, still the reference. Every point on the plane is shaded by which of the
+    ten it is closest to, measured in log frequency, because hearing is roughly logarithmic.
+    Drag the marker across a boundary and the name changes at exactly the line where the
+    distances tie.</p>
+
+  <p>The boundaries are the point. Vowels are not ten discrete things with gaps between them:
+    they are ten places to stand in a continuous space, and any point in it is pronounceable.
+    Cross the boundary between <em>hod</em> and <em>hawed</em> slowly and you pass through
+    everything in between, all of it a real sound that some accent somewhere uses.</p>
+
+  <h2>Where the numbers come from</h2>
+
+  <p>The tract is, acoustically, a tube about 17 cm long, closed at the vocal folds and open at
+    the lips. An even tube of that length resonates at odd multiples of a quarter wavelength:</p>
+
+  <p class="math">f&#8345; = (2n &minus; 1) &middot; c / 4L&nbsp; &#8594;&nbsp; 500, 1500, 2500 Hz</p>
+
+  <p>which is the neutral vowel, the one in the middle of the chart. Put the tongue somewhere
+    and you have split the tube in two: a back cavity and a front cavity meeting at a
+    constriction. Set the area ratio to one and the two cavities become a single even tube
+    again, whatever their lengths &mdash; the panel underneath shows it snapping back to 500 and
+    1500. Push the ratio away from one and the two cavities start resonating more on their own,
+    F1 falling and F2 rising, until each is close to its own quarter wavelength.</p>
+
+  <h2>What to try</h2>
+
+  <p>Drag the marker to the top left, around F1 270 and F2 2290, and you have <em>heed</em>.
+    Now drag straight down, keeping F2 where it is: the vowel goes to <em>hid</em>, then
+    <em>head</em>, then <em>had</em>. That single downward line is your jaw opening.</p>
+
+  <p>Then work the tube. Leave the area ratio at one and change the two cavity lengths: the
+    formants depend only on the total, not on where the split is. Now set the ratio to about
+    five &mdash; a narrow constriction at the front &mdash; and watch the hollow marker swing
+    towards the low-F1, high-F2 corner.</p>
+
+  <p>Finally press <em>Child-sized tract</em>. Every cavity shrinks by about a quarter and every
+    formant rises by exactly the reciprocal of that: the resonances of a tube scale as 1/L, and
+    nothing else about the vowel changes. A child saying <em>hod</em> and an adult saying
+    <em>hod</em> are at different points on this chart, which is why the regions drawn here fit
+    adult male voices and have to be redrawn for anyone else.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+</div>
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG -------------------------------------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+
+/* ---- MODEL -------------------------------------------------------------- */
+/* Speed of sound in warm moist air, in centimetres per second -- the units the
+   vocal tract literature uses, so tube lengths are in cm.                    */
+const CSOUND = 35000;
+
+/* Peterson and Barney 1952, adult male means, in hertz. */
+const VOWELS = [
+  { sym: "i",  word: "heed",  F1: 270, F2: 2290 },
+  { sym: "ɪ", word: "hid", F1: 390, F2: 1990 },
+  { sym: "ɛ", word: "head", F1: 530, F2: 1840 },
+  { sym: "æ", word: "had", F1: 660, F2: 1720 },
+  { sym: "ɑ", word: "hod", F1: 730, F2: 1090 },
+  { sym: "ʌ", word: "hud", F1: 640, F2: 1190 },
+  { sym: "ɝ", word: "heard", F1: 490, F2: 1350 },
+  { sym: "ɔ", word: "hawed", F1: 570, F2: 840 },
+  { sym: "ʊ", word: "hood", F1: 440, F2: 1020 },
+  { sym: "u",  word: "who'd", F1: 300, F2: 870 }
+];
+
+const Model = {
+  C: CSOUND, VOWELS: VOWELS,
+
+  /* Hearing is roughly logarithmic, so nearness is measured in log hertz. */
+  dist2(F1, F2, v){
+    const a = Math.log(F1 / v.F1), b = Math.log(F2 / v.F2);
+    return a * a + b * b;
+  },
+  classify(F1, F2){
+    let best = 0, bv = Infinity;
+    for (let i = 0; i < VOWELS.length; i++){
+      const d = Model.dist2(F1, F2, VOWELS[i]);
+      if (d < bv){ bv = d; best = i; }
+    }
+    return best;
+  },
+  /* how much closer the winner is than the runner-up, which is zero exactly
+     on a boundary and is what makes the partition checkable                 */
+  margin(F1, F2){
+    const ds = VOWELS.map((v) => Model.dist2(F1, F2, v)).sort((x, y) => x - y);
+    return ds[1] - ds[0];
+  },
+
+  /* ---- the tube -------------------------------------------------------- */
+  /* Two lossless tubes in series, closed at the glottis and open at the lips,
+     with a step in cross-section where they meet. The resonance condition is
+     usually written (A1/A2) tan(k l1) tan(k l2) = 1; multiplying through by
+     the two cosines gives the same roots in a form with no poles in it, which
+     is what makes them safe to bracket numerically.                         */
+  resid(f, l1, l2, ratio){
+    const k = 2 * Math.PI * f / CSOUND;
+    return ratio * Math.sin(k * l1) * Math.sin(k * l2)
+         - Math.cos(k * l1) * Math.cos(k * l2);
+  },
+  formants(l1, l2, ratio, n, fmax){
+    const want = n || 2, top = fmax || 5000, step = 2;
+    const out = [];
+    let pf = 1, pv = Model.resid(1, l1, l2, ratio);
+    for (let f = 1 + step; f <= top; f += step){
+      const cv = Model.resid(f, l1, l2, ratio);
+      if (pv === 0){ out.push(pf); if (out.length >= want) return out; }
+      else if (pv * cv < 0){
+        let lo = pf, hi = f, flo = pv;
+        for (let i = 0; i < 70; i++){
+          const m = (lo + hi) / 2, fm = Model.resid(m, l1, l2, ratio);
+          if (flo * fm <= 0) hi = m; else { lo = m; flo = fm; }
+        }
+        out.push((lo + hi) / 2);
+        if (out.length >= want) return out;
+      }
+      pf = f; pv = cv;
+    }
+    return out;
+  },
+  /* the even-tube closed form, which the two-tube model must reduce to */
+  quarterWave(L, n){ return (2 * n - 1) * CSOUND / (4 * L); },
+
+  /* ---- what those frequencies sound like ------------------------------- */
+  /* Two continuous-time resonators in series. The magnitude of the product is
+     the spectral envelope a synthesiser would impose on the glottal buzz.   */
+  envelope(f, F1, F2, B1, B2){
+    const g = (F, B) => {
+      const re = F * F - f * f, im = f * B;
+      return F * F / Math.sqrt(re * re + im * im);
+    };
+    return g(F1, B1 || 60) * g(F2, B2 || 90);
+  },
+  /* the two largest peaks of that envelope, found by scanning */
+  peaks(F1, F2, B1, B2){
+    const out = [];
+    let pf = 90, pv = Model.envelope(90, F1, F2, B1, B2);
+    let qv = Model.envelope(89, F1, F2, B1, B2);
+    for (let f = 91; f <= 4000; f += 1){
+      const cv = Model.envelope(f, F1, F2, B1, B2);
+      if (pv > qv && pv >= cv) out.push(pf);
+      qv = pv; pv = cv; pf = f;
+    }
+    return out;
+  }
+};
+
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+/* back and front are in tenths of a centimetre; area is a log index, so 0 is
+   a ratio of 1 and each step is a factor of 1.13.                           */
+const defaults = { f1: 530, f2: 1840, back: 90, front: 80, area: 0 };
+const state = Object.assign({}, defaults);
+const ratioOf = (a) => Math.pow(1.13, a);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const F1LO = 200, F1HI = 900, F2LO = 700, F2HI = 2600;
+const SS = 2;
+let W, H, NARROW, FS, FSS, FSB, PAD, MX, MY, MW, MH, SPX, SPY, SPW, SPH, TBY, TBH;
+
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth - 26;
+  W = Math.max(280, Math.min(920, avail || 860));
+  NARROW = W < 520;
+  FSS = NARROW ? 10 : 11;
+  FS  = NARROW ? 11 : 12;
+  FSB = NARROW ? 13 : 15;
+  PAD = NARROW ? 12 : 18;
+  /* The left gutter is measured, not guessed: it holds the rotated F1 title in
+     a band of its own, then the widest tick label, then a gap. At 360px the
+     guessed gutter was 5px too narrow and "more open" struck the 400 tick.  */
+  ctx.font = FSS + "px ui-monospace, monospace";
+  let tickW = 0;
+  for (const f of [200, 400, 600, 800]) tickW = Math.max(tickW, ctx.measureText(String(f)).width);
+  MX = Math.round(PAD + 4 + FSS + 6 + tickW + 6);
+  MY = PAD + (NARROW ? 20 : 24);
+  MW = W - MX - PAD;
+  MH = Math.round(MW * (NARROW ? 0.92 : 0.66));
+  SPY = MY + MH + (NARROW ? 60 : 66);
+  SPX = MX; SPW = MW;
+  SPH = NARROW ? 96 : 118;
+  TBY = SPY + SPH + (NARROW ? 62 : 72);
+  TBH = NARROW ? 54 : 64;
+  H = TBY + TBH + (NARROW ? 40 : 38);
+  cv.width = Math.round(W * SS); cv.height = Math.round(H * SS);
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function pick(list, room){
+  for (const t of list){ if (ctx.measureText(t).width <= room) return t; }
+  return "";
+}
+
+/* the chart's own axes: F2 runs right to left, F1 runs top to bottom */
+const X = (f2) => MX + MW * (F2HI - f2) / (F2HI - F2LO);
+const Y = (f1) => MY + MH * (f1 - F1LO) / (F1HI - F1LO);
+const invF2 = (x) => F2HI - (x - MX) / MW * (F2HI - F2LO);
+const invF1 = (y) => F1LO + (y - MY) / MH * (F1HI - F1LO);
+
+/* The shaded regions are painted once per size into an offscreen tile and
+   then stretched, because repainting 60000 cells on every drag is the kind of
+   thing that makes a slider feel broken.                                     */
+let regionTile = null, regionKey = "";
+function regions(){
+  const cols = 120, rows = 90;
+  const key = cols + "x" + rows + ":" + css("--accent");
+  if (regionTile && regionKey === key) return regionTile;
+  const off = document.createElement("canvas");
+  off.width = cols; off.height = rows;
+  const oc = off.getContext("2d");
+  const img = oc.createImageData(cols, rows);
+  const dark = matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
+  for (let j = 0; j < rows; j++){
+    for (let i = 0; i < cols; i++){
+      const f2 = F2HI - (i + 0.5) / cols * (F2HI - F2LO);
+      const f1 = F1LO + (j + 0.5) / rows * (F1HI - F1LO);
+      const k = Model.classify(f1, f2);
+      const hue = (k * 36 + 292) % 360;
+      const p = 4 * (j * cols + i);
+      const rgb = hsl(hue, dark ? 0.34 : 0.46, dark ? 0.24 : 0.90);
+      img.data[p] = rgb[0]; img.data[p + 1] = rgb[1]; img.data[p + 2] = rgb[2];
+      img.data[p + 3] = 255;
+    }
+  }
+  oc.putImageData(img, 0, 0);
+  regionTile = off; regionKey = key;
+  return off;
+}
+function hsl(h, s, l){
+  const c = (1 - Math.abs(2 * l - 1)) * s, hp = h / 60;
+  const x = c * (1 - Math.abs((hp % 2) - 1));
+  let r = 0, g = 0, b = 0;
+  if (hp < 1){ r = c; g = x; } else if (hp < 2){ r = x; g = c; }
+  else if (hp < 3){ g = c; b = x; } else if (hp < 4){ g = x; b = c; }
+  else if (hp < 5){ r = x; b = c; } else { r = c; b = x; }
+  const m = l - c / 2;
+  return [Math.round(255 * (r + m)), Math.round(255 * (g + m)), Math.round(255 * (b + m))];
+}
+
+function render(){
+  fitCanvas();
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line");
+  const accent = css("--accent"), warm = css("--warm"), cool = css("--cool");
+  const l1 = state.back / 10, l2 = state.front / 10, ratio = ratioOf(state.area);
+  const tube = Model.formants(l1, l2, ratio, 2, 5000);
+  const idx = Model.classify(state.f1, state.f2);
+  const v = Model.VOWELS[idx];
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+
+  /* the plane, shaded by nearest vowel */
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(regions(), MX, MY, MW, MH);
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.strokeRect(MX + 0.5, MY + 0.5, MW - 1, MH - 1);
+
+  /* reference vowels -- dots now, symbols after the marker. The marker sits on
+     top of whichever vowel the reader has landed on, and its ring used to clip
+     that vowel's symbol, so the symbols are painted last.                     */
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (let i = 0; i < Model.VOWELS.length; i++){
+    const r = Model.VOWELS[i];
+    ctx.fillStyle = ink; ctx.globalAlpha = 0.55;
+    ctx.beginPath(); ctx.arc(X(r.F2), Y(r.F1), 2.6, 0, 6.2832); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  /* the marker the reader drags */
+  const mx = X(state.f2), my = Y(state.f1);
+  ctx.strokeStyle = accent; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.6;
+  ctx.beginPath(); ctx.moveTo(MX, my); ctx.lineTo(MX + MW, my); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(mx, MY); ctx.lineTo(mx, MY + MH); ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = accent;
+  ctx.beginPath(); ctx.arc(mx, my, 6.5, 0, 6.2832); ctx.fill();
+  ctx.strokeStyle = css("--panel"); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(mx, my, 6.5, 0, 6.2832); ctx.stroke();
+
+  /* the vowel symbols, above every dot and above the marker's ring */
+  ctx.font = "600 " + (NARROW ? 13 : 16) + "px " + (css("--font-body") || "serif");
+  ctx.fillStyle = ink;
+  for (let i = 0; i < Model.VOWELS.length; i++){
+    const r = Model.VOWELS[i];
+    ctx.fillText(r.sym, X(r.F2), Y(r.F1) - (NARROW ? 14 : 16));
+  }
+
+  /* where the tube puts you: a hollow ring, clipped to the plane */
+  if (tube.length >= 2){
+    const tx = X(Math.max(F2LO, Math.min(F2HI, tube[1])));
+    const ty = Y(Math.max(F1LO, Math.min(F1HI, tube[0])));
+    ctx.strokeStyle = cool; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.arc(tx, ty, 8, 0, 6.2832); ctx.stroke();
+  }
+
+  /* axis captions, in rows that belong to nobody else */
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  ctx.font = FSS + "px ui-monospace, monospace"; ctx.fillStyle = muted;
+  for (const f of [2600, 2200, 1800, 1400, 1000]){
+    if (f > F2HI || f < F2LO) continue;
+    ctx.fillText(String(f), X(f), MY - 7);
+  }
+  ctx.textAlign = "right";
+  for (const f of [200, 400, 600, 800]){
+    ctx.fillText(String(f), MX - 6, Y(f) + 4);
+  }
+  ctx.textAlign = "left";
+  ctx.fillText(pick(["F2, hertz  —  tongue further forward this way →",
+                     "F2, hertz  —  front →", "F2, hertz"], MW), MX, MY + MH + FSS + 12);
+  ctx.save(); ctx.translate(PAD + 4, MY + MH / 2); ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = "center";
+  ctx.fillText(pick(["F1, hertz  —  more open ↓", "F1, hertz", ""], MH), 0, 0);
+  ctx.restore();
+
+  /* the spectral envelope those two frequencies impose */
+  ctx.textAlign = "left"; ctx.fillStyle = ink;
+  ctx.font = "600 " + FSB + "px " + (css("--font-ui") || "sans-serif");
+  ctx.fillText(pick(["What that shape does to the buzz", "The spectral envelope", "Envelope"],
+                    SPW), SPX, SPY - 12);
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.strokeRect(SPX + 0.5, SPY + 0.5, SPW - 1, SPH - 1);
+  let top = 0;
+  const vals = [];
+  for (let i = 0; i <= SPW; i++){
+    const f = 80 + (i / SPW) * 3920;
+    const a = Model.envelope(f, state.f1, state.f2);
+    vals.push(a); if (a > top) top = a;
+  }
+  ctx.strokeStyle = accent; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i <= SPW; i++){
+    const y = SPY + SPH - 4 - (Math.log(1 + 24 * vals[i] / top) / Math.log(25)) * (SPH - 12);
+    if (i === 0) ctx.moveTo(SPX + i, y); else ctx.lineTo(SPX + i, y);
+  }
+  ctx.stroke();
+  ctx.font = FSS + "px ui-monospace, monospace"; ctx.fillStyle = muted;
+  ctx.textAlign = "center";
+  for (const f of [state.f1, state.f2]){
+    const x = SPX + SPW * (f - 80) / 3920;
+    ctx.setLineDash([2, 3]); ctx.strokeStyle = muted; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, SPY + 3); ctx.lineTo(x, SPY + SPH - 3); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.textAlign = "left";
+  ctx.fillText(pick(["80 Hz", "80"], 60), SPX + 2, SPY + SPH + FSS + 8);
+  ctx.textAlign = "right";
+  ctx.fillText(pick(["4000 Hz", "4000"], 60), SPX + SPW - 2, SPY + SPH + FSS + 8);
+
+  /* the two-tube cross-section */
+  ctx.textAlign = "left"; ctx.fillStyle = ink;
+  ctx.font = "600 " + FSB + "px " + (css("--font-ui") || "sans-serif");
+  ctx.fillText(pick(["A tube in two parts", "The tube", "Tube"], SPW),
+               SPX, TBY - (NARROW ? 24 : 30));
+  const Ltot = l1 + l2;
+  const scale = SPW / 22;
+  const w1 = l1 * scale, w2 = l2 * scale;
+  const h1 = TBH * Math.min(1, Math.sqrt(ratio >= 1 ? 1 : ratio));
+  const h2 = TBH * Math.min(1, Math.sqrt(ratio >= 1 ? 1 / ratio : 1));
+  ctx.fillStyle = warm; ctx.globalAlpha = 0.28;
+  ctx.fillRect(SPX, TBY + (TBH - h1) / 2, w1, h1);
+  ctx.fillStyle = cool;
+  ctx.fillRect(SPX + w1, TBY + (TBH - h2) / 2, w2, h2);
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = muted; ctx.lineWidth = 1;
+  ctx.strokeRect(SPX + 0.5, TBY + (TBH - h1) / 2 + 0.5, w1, h1);
+  ctx.strokeRect(SPX + w1 + 0.5, TBY + (TBH - h2) / 2 + 0.5, w2, h2);
+  ctx.font = FSS + "px ui-monospace, monospace"; ctx.fillStyle = muted;
+  ctx.textAlign = "left";
+  ctx.fillText(pick(["glottis", "in"], w1), SPX + 2, TBY - 5);
+  ctx.textAlign = "right";
+  ctx.fillText(pick(["lips", ""], w2), SPX + w1 + w2 - 2, TBY - 5);
+  ctx.textAlign = "left";
+  const evenTube = Math.abs(ratio - 1) < 1e-9;
+  ctx.fillText(pick([evenTube
+      ? "one even tube of " + Ltot.toFixed(1) + " cm — resonances at " +
+        Model.quarterWave(Ltot, 1).toFixed(0) + " and " + Model.quarterWave(Ltot, 2).toFixed(0) + " Hz"
+      : "F1 " + tube[0].toFixed(0) + " Hz, F2 " + tube[1].toFixed(0) + " Hz  from " +
+        Ltot.toFixed(1) + " cm at a ratio of " + ratio.toFixed(2),
+    "F1 " + tube[0].toFixed(0) + ", F2 " + tube[1].toFixed(0) + " Hz  ·  " + Ltot.toFixed(1) + " cm",
+    tube[0].toFixed(0) + " / " + tube[1].toFixed(0) + " Hz"], SPW),
+    SPX, TBY + TBH + FSS + 10);
+
+  /* readouts */
+  el("f1out").textContent = state.f1 + " Hz";
+  el("f2out").textContent = state.f2 + " Hz";
+  el("backout").textContent = l1.toFixed(1) + " cm";
+  el("frontout").textContent = l2.toFixed(1) + " cm";
+  el("areaout").textContent = ratio.toFixed(2);
+  el("r1").textContent = v.sym;
+  el("r2").textContent = v.word;
+  el("r3").textContent = tube.length >= 2
+    ? tube[0].toFixed(0) + " / " + tube[1].toFixed(0) : "—";
+  el("r4").textContent = Ltot.toFixed(1) + " cm";
+  el("cap").textContent = "Nearest to " + v.sym + ", the vowel in " + v.word +
+    ". Drag anywhere on the chart, or use the sliders. The hollow ring is where the tube below puts you.";
+}
+
+
+/* ---- BINDINGS ----------------------------------------------------------- */
+function dial(id, key){
+  el(id).addEventListener("input", function(){
+    state[key] = parseInt(el(id).value, 10);
+    render();
+  });
+}
+dial("f1", "f1"); dial("f2", "f2");
+dial("back", "back"); dial("front", "front"); dial("area", "area");
+
+/* the drawing surface itself is an input: point at a place in the plane and
+   the two sliders follow, so the mouse and the keyboard reach the same state */
+function place(ev){
+  const box = cv.getBoundingClientRect();
+  const px = (ev.clientX - box.left) / box.width * W;
+  const py = (ev.clientY - box.top) / box.height * H;
+  if (py < MY - 14 || py > MY + MH + 14) return false;
+  const f2 = Math.max(F2LO, Math.min(F2HI, invF2(px)));
+  const f1 = Math.max(F1LO, Math.min(F1HI, invF1(py)));
+  state.f2 = Math.round(f2 / 10) * 10;
+  state.f1 = Math.round(f1 / 5) * 5;
+  el("f1").value = String(state.f1);
+  el("f2").value = String(state.f2);
+  render();
+  return true;
+}
+let drawing = false;
+cv.addEventListener("pointerdown", function(ev){
+  if (place(ev)){ drawing = true; cv.setPointerCapture(ev.pointerId); ev.preventDefault(); }
+});
+cv.addEventListener("pointermove", function(ev){ if (drawing) place(ev); });
+cv.addEventListener("pointerup", function(){ drawing = false; });
+cv.addEventListener("pointercancel", function(){ drawing = false; });
+/* arrow keys move the marker when the canvas itself has focus */
+cv.addEventListener("keydown", function(ev){
+  const step = ev.shiftKey ? 5 : 1;
+  let used = true;
+  if (ev.key === "ArrowUp") state.f1 = Math.max(F1LO, state.f1 - 5 * step);
+  else if (ev.key === "ArrowDown") state.f1 = Math.min(F1HI, state.f1 + 5 * step);
+  else if (ev.key === "ArrowLeft") state.f2 = Math.min(F2HI, state.f2 + 10 * step);
+  else if (ev.key === "ArrowRight") state.f2 = Math.max(F2LO, state.f2 - 10 * step);
+  else used = false;
+  if (used){
+    el("f1").value = String(state.f1); el("f2").value = String(state.f2);
+    render(); ev.preventDefault();
+  }
+});
+
+function setAll(v){
+  Object.assign(state, v);
+  for (const id of ["f1", "f2", "back", "front", "area"]) el(id).value = String(state[id]);
+  render();
+}
+el("child").addEventListener("click", function(){ setAll({ back: 67, front: 60 }); });
+el("adult").addEventListener("click", function(){ setAll({ back: 90, front: 80 }); });
+el("reset").addEventListener("click", function(){ setAll(Object.assign({}, defaults)); });
+render();
+
+let rzT = 0;
+addEventListener("resize", function(){ clearTimeout(rzT); rzT = setTimeout(render, 90); });
+if (matchMedia){
+  const mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", function(){ regionTile = null; render(); });
+}
+
+
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+function rel(a, b){ return Math.abs(a - b) / Math.max(Math.abs(b), 1e-300); }
+
+const rngT = mulberry32(SEED);
+const TARGETS = [];
+for (let i = 0; i < 40; i++){
+  TARGETS.push([250 + rngT() * 600, 800 + rngT() * 1700]);
+}
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+
+  /* 1 -- the envelope really does peak where the formants are asked for. */
+  const PK = TARGETS.map(function(p){
+    const pk = M.peaks(p[0], p[1]);
+    return { F1: p[0], F2: p[1], pk: pk };
+  });
+  push("the envelope peaks within 2% of both requested formants, at 40 targets", (function(){
+    let worst = 0;
+    for (const r of PK){
+      if (r.pk.length < 2) return false;
+      worst = Math.max(worst, rel(r.pk[0], r.F1), rel(r.pk[1], r.F2));
+    }
+    return worst <= 0.02;
+  })(), (function(){
+    let worst = 0;
+    for (const r of PK) if (r.pk.length >= 2)
+      worst = Math.max(worst, rel(r.pk[0], r.F1), rel(r.pk[1], r.F2));
+    return "worst peak offset " + (100 * worst).toFixed(2) +
+           "% -- a two-pole resonator peaks slightly below its centre frequency, by half its bandwidth squared over it";
+  })());
+
+  /* 2 -- the classifier returns each published vowel for its own numbers. */
+  push("each of the ten reference vowels classifies as itself", (function(){
+    for (let i = 0; i < M.VOWELS.length; i++)
+      if (M.classify(M.VOWELS[i].F1, M.VOWELS[i].F2) !== i) return false;
+    return true;
+  })(), "Peterson and Barney 1952 adult male means, all ten recovered exactly");
+
+  /* 3 -- no two references coincide, so the ten regions are ten. */
+  push("the ten reference points are all distinct, with a margin", (function(){
+    let worst = Infinity;
+    for (let i = 0; i < M.VOWELS.length; i++)
+      for (let j = i + 1; j < M.VOWELS.length; j++)
+        worst = Math.min(worst, M.dist2(M.VOWELS[i].F1, M.VOWELS[i].F2, M.VOWELS[j]));
+    return worst > 1e-3;
+  })(), "the closest pair is hod and hud, and even they are far enough apart to own separate regions");
+
+  /* 4 -- the partition has no gaps and no overlaps. */
+  push("every point of a 200 by 200 grid belongs to exactly one vowel", (function(){
+    const seen = new Array(M.VOWELS.length).fill(0);
+    let ties = 0;
+    for (let i = 0; i < 200; i++){
+      for (let j = 0; j < 200; j++){
+        const f2 = 700 + (i + 0.5) / 200 * 1900;
+        const f1 = 200 + (j + 0.5) / 200 * 700;
+        const k = M.classify(f1, f2);
+        if (!(k >= 0 && k < M.VOWELS.length)) return false;
+        if (M.margin(f1, f2) <= 0) ties++;
+        seen[k]++;
+      }
+    }
+    return ties === 0 && seen.every((n) => n > 0);
+  })(), "40000 points, every one strictly closer to one reference than to any other, and all ten regions non-empty");
+
+  /* 5 -- the two-tube model collapses to an even tube when the step in area
+           goes away. This is the second, independent route to the resonances:
+           the closed form on one side, a numerical root of the transcendental
+           condition on the other.                                            */
+  push("at an area ratio of one the tube reduces to the closed form exactly", (function(){
+    for (const l1 of [3, 5.5, 8, 9, 12]) for (const l2 of [3, 6, 8, 11]){
+      const L = l1 + l2;
+      const f = M.formants(l1, l2, 1, 3, 9000);
+      if (f.length < 3) return false;
+      for (let n = 1; n <= 3; n++)
+        if (rel(f[n - 1], M.quarterWave(L, n)) > 1e-9) return false;
+    }
+    return true;
+  })(), "20 length pairs: the bracketed roots of the two-tube condition equal (2n-1)c/4L to 1e-9, for the first three resonances");
+
+  /* 6 -- and the roots really are roots. */
+  push("every reported resonance is a zero of the resonance condition", (function(){
+    for (const l1 of [4, 7, 9, 13]) for (const l2 of [3, 6, 9, 12]) for (const a of [0.2, 1, 3, 9]){
+      for (const f of M.formants(l1, l2, a, 2, 5000))
+        if (Math.abs(M.resid(f, l1, l2, a)) > 1e-9) return false;
+    }
+    return true;
+  })(), "64 tube configurations: the residual at each root is under 1e-9, so none of them is an artefact of the bracketing");
+
+  /* 7 -- the scaling law, exactly. */
+  push("formants scale as the reciprocal of tract length, over 30 sizes", (function(){
+    const base = M.formants(9, 8, 2.4, 2, 12000);
+    for (let i = 0; i < 30; i++){
+      const k = 0.6 + i * 0.03;
+      const f = M.formants(9 * k, 8 * k, 2.4, 2, 12000 / 0.6);
+      if (f.length < 2) return false;
+      if (rel(f[0] * k, base[0]) > 1e-9) return false;
+      if (rel(f[1] * k, base[1]) > 1e-9) return false;
+    }
+    return true;
+  })(), "scaling both cavities by k from 0.60 to 1.47 divides every resonance by exactly k, to 1e-9");
+
+  /* 8 -- with the area ratio at one, only the total length matters. */
+  push("an even tube does not care where the two parts are divided", (function(){
+    const target = M.quarterWave(17, 1);
+    for (let l1 = 1; l1 <= 16; l1 += 0.5){
+      const f = M.formants(l1, 17 - l1, 1, 1, 5000);
+      if (f.length < 1 || rel(f[0], target) > 1e-9) return false;
+    }
+    return true;
+  })(), "31 splits of a 17 cm tube all give 514.7 Hz, which is c/4L");
+
+  /* 9 -- the textbook figure for a neutral tract. */
+  push("a 17.5 cm even tube resonates at 500, 1500 and 2500 Hz", (function(){
+    const f = M.formants(8.75, 8.75, 1, 3, 6000);
+    return f.length >= 3 && near(f[0], 500, 1e-6) && near(f[1], 1500, 1e-6) && near(f[2], 2500, 1e-6);
+  })(), "the neutral vowel, from c = 35000 cm/s and L = 17.5 cm");
+
+  /* 10 -- pushing the area ratio to an extreme drives each resonance towards
+            the quarter wavelength of its own cavity. The task this page was
+            written from asked for the two-tube resonances to equal the
+            quarter-wave values to 1e-9; they only do so in that limit, and
+            the gap at a usable ratio is tens of per cent, so both are stated. */
+  push("extreme area ratios approach the two cavities' own quarter wavelengths", (function(){
+    const l1 = 9, l2 = 8;
+    const far = M.formants(l1, l2, 1e-7, 2, 5000);
+    const lo = Math.min(M.quarterWave(l1, 1), M.quarterWave(l2, 1));
+    const hi = Math.max(M.quarterWave(l1, 1), M.quarterWave(l2, 1));
+    const okLimit = rel(far[0], lo) < 2e-3 && rel(far[1], hi) < 2e-3;
+    const mid = M.formants(l1, l2, 2.4, 2, 5000);
+    const gap = Math.max(rel(mid[0], lo), rel(mid[1], hi));
+    return okLimit && gap > 0.15;
+  })(), "at a ratio of 1e-7 the two roots sit within 0.2% of c/4l1 and c/4l2, but at a realistic 2.4 they are more than 15% away, so the quarter-wave value is a limit and not the answer");
+
+  /* 11 -- raising the ratio opens the vowel space the way a constriction does. */
+  push("a narrower front cavity lowers F1 and raises F2, monotonically", (function(){
+    let pf1 = Infinity, pf2 = -Infinity;
+    for (let e = -20; e <= 20; e++){
+      const f = M.formants(9, 8, Math.pow(1.13, e), 2, 5000);
+      if (f.length < 2) return false;
+      if (f[0] > pf1 + 1e-9 || f[1] < pf2 - 1e-9) return false;
+      pf1 = f[0]; pf2 = f[1];
+    }
+    return true;
+  })(), "41 steps of the area control: F1 falls and F2 rises at every one of them");
+
+  /* 12 -- the two resonances never cross, and both stay in a speakable band. */
+  push("F1 stays below F2 across the whole control range", (function(){
+    for (let b = 20; b <= 140; b += 10) for (let fr = 20; fr <= 140; fr += 10)
+      for (let e = -26; e <= 26; e += 4){
+        const f = M.formants(b / 10, fr / 10, Math.pow(1.13, e), 2, 12000);
+        if (f.length < 2) return false;
+        if (!(f[0] < f[1])) return false;
+        if (!(f[0] > 0 && Number.isFinite(f[1]))) return false;
+      }
+    return true;
+  })(), "every reachable combination of the three tube controls, at 10-step resolution");
+
+  /* 13 -- the chart's axes cover the reference data and the controls agree. */
+  push("the plane and the controls span the same range, and contain all ten vowels", (function(){
+    const f1 = document.getElementById("f1"), f2 = document.getElementById("f2");
+    if (parseInt(f1.min, 10) !== F1LO || parseInt(f1.max, 10) !== F1HI) return false;
+    if (parseInt(f2.min, 10) !== F2LO || parseInt(f2.max, 10) !== F2HI) return false;
+    for (const v of M.VOWELS)
+      if (v.F1 < F1LO || v.F1 > F1HI || v.F2 < F2LO || v.F2 > F2HI) return false;
+    return true;
+  })(), "F1 runs 200 to 900 and F2 runs 700 to 2600, and every Peterson and Barney mean falls inside both");
+
+  return t;
+};
+
+/* exposed for the verifier's control sweep */
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
