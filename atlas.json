@@ -1,6 +1,6 @@
 {
   "generated_at": "2026-09-19",
-  "count": 56,
+  "count": 60,
   "domains": {
     "biology": [
       "enzyme-michaelis-menten",
@@ -17,6 +17,7 @@
     ],
     "computer-science": [
       "big-o-crossover",
+      "bloom-filter-false-positives",
       "dijkstra-vs-astar",
       "floating-point-precision",
       "hash-collisions-birthday",
@@ -31,6 +32,7 @@
     ],
     "economics": [
       "auction-formats-revenue",
+      "comparative-advantage-ppf",
       "compound-interest-doubling",
       "supply-demand-tax-incidence"
     ],
@@ -47,6 +49,7 @@
     ],
     "information-theory": [
       "arithmetic-coding-interval",
+      "checksum-vs-crc-collisions",
       "hamming-code",
       "huffman-coding",
       "shannon-channel-capacity"
@@ -54,6 +57,7 @@
     "linguistics": [
       "levenshtein-distance",
       "markov-text-order",
+      "phoneme-vowel-space-formants",
       "sound-change-chain-shift"
     ],
     "mathematics": [
@@ -87,15 +91,15 @@
   },
   "interaction_patterns": {
     "build-from-parts": 6,
-    "compare-side-by-side": 4,
+    "compare-side-by-side": 5,
     "drag-parameter": 5,
-    "draw-input": 4,
+    "draw-input": 5,
     "guess-then-reveal": 5,
     "live-code": 3,
     "perturb-and-observe": 6,
-    "race-two-methods": 4,
+    "race-two-methods": 5,
     "spatial-explore": 5,
-    "step-through": 4,
+    "step-through": 5,
     "time-scrubber": 5,
     "tune-to-match": 5
   },
@@ -296,6 +300,37 @@
       "assertions_count": 13
     },
     {
+      "slug": "bloom-filter-false-positives",
+      "title": "Yes, Probably. No, Definitely.",
+      "domain": "computer-science",
+      "difficulty": 3,
+      "summary": "A Bloom filter is certain when it says no and guessing when it says yes. Step through one key at a time and watch the maybes appear.",
+      "prerequisites": [],
+      "tags": [
+        "probabilistic-data-structures",
+        "hashing",
+        "space-time-tradeoff",
+        "false-positives"
+      ],
+      "interaction_pattern": "step-through",
+      "sources": [
+        {
+          "title": "Burton H. Bloom, Space/Time Trade-offs in Hash Coding with Allowable Errors (CACM, 1970)",
+          "url": "https://dl.acm.org/doi/10.1145/362686.362692"
+        },
+        {
+          "title": "Broder and Mitzenmacher, Network Applications of Bloom Filters: A Survey",
+          "url": "https://www.eecs.harvard.edu/~michaelm/postscripts/im2005b.pdf"
+        },
+        {
+          "title": "Bose et al., On the false-positive rate of Bloom filters",
+          "url": "https://doi.org/10.1016/j.ipl.2008.05.018"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
       "slug": "central-limit-theorem",
       "title": "Draw Any Population You Like",
       "domain": "statistics",
@@ -322,6 +357,65 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 9
+    },
+    {
+      "slug": "checksum-vs-crc-collisions",
+      "title": "The Error Your Checksum Can't See",
+      "domain": "information-theory",
+      "difficulty": 3,
+      "summary": "Corrupt a message four different ways and watch a checksum and a CRC of the same width disagree about whether anything happened.",
+      "prerequisites": [],
+      "tags": [
+        "error-detection",
+        "crc",
+        "checksum",
+        "polynomials",
+        "coding-theory"
+      ],
+      "interaction_pattern": "race-two-methods",
+      "sources": [
+        {
+          "title": "Peterson and Brown, Cyclic Codes for Error Detection (Proc. IRE, 1961)",
+          "url": "https://doi.org/10.1109/JRPROC.1961.287814"
+        },
+        {
+          "title": "RFC 1071, Computing the Internet Checksum",
+          "url": "https://www.rfc-editor.org/rfc/rfc1071"
+        },
+        {
+          "title": "Koopman and Chakravarty, CRC Polynomial Selection for Embedded Networks (DSN, 2004)",
+          "url": "https://doi.org/10.1109/DSN.2004.1311885"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
+      "slug": "comparative-advantage-ppf",
+      "title": "Worse At Everything, Still Worth Trading With",
+      "domain": "economics",
+      "difficulty": 2,
+      "summary": "Two workshops, two goods, one joint frontier with a kink in it. The gain from trade comes from the ratio of costs, never from who is faster.",
+      "prerequisites": [],
+      "tags": [
+        "comparative-advantage",
+        "opportunity-cost",
+        "production-frontier",
+        "gains-from-trade"
+      ],
+      "interaction_pattern": "compare-side-by-side",
+      "sources": [
+        {
+          "title": "David Ricardo, On the Principles of Political Economy and Taxation (1817), ch. 7",
+          "url": "https://www.econlib.org/library/Ricardo/ricP.html"
+        },
+        {
+          "title": "Paul Samuelson on comparative advantage as economics' one non-obvious true proposition",
+          "url": "https://doi.org/10.1257/jep.23.3.221"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
     },
     {
       "slug": "compound-interest-doubling",
@@ -1202,6 +1296,38 @@
       "sources": [],
       "created_at": "2026-09-19",
       "assertions_count": 12
+    },
+    {
+      "slug": "phoneme-vowel-space-formants",
+      "title": "Every Vowel Is Two Numbers",
+      "domain": "linguistics",
+      "difficulty": 3,
+      "summary": "Drag a point around a plane of two resonant frequencies and it names a vowel. The chart phoneticians draw is that plane, and a tube of air explains it.",
+      "prerequisites": [],
+      "tags": [
+        "phonetics",
+        "formants",
+        "acoustics",
+        "vowel-space",
+        "resonance"
+      ],
+      "interaction_pattern": "draw-input",
+      "sources": [
+        {
+          "title": "Peterson and Barney, Control Methods Used in a Study of the Vowels (JASA, 1952)",
+          "url": "https://doi.org/10.1121/1.1906875"
+        },
+        {
+          "title": "Gunnar Fant, Acoustic Theory of Speech Production (1960)",
+          "url": "https://doi.org/10.1515/9783110873429"
+        },
+        {
+          "title": "Kenneth Stevens, Acoustic Phonetics (1998) — two-tube models",
+          "url": "https://mitpress.mit.edu/9780262692502/acoustic-phonetics/"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
     },
     {
       "slug": "pid-controller",
