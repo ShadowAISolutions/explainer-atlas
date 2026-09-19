@@ -1,0 +1,19 @@
+{
+  "slug": "predator-prey-cycles",
+  "title": "Kill Both Sides, Help the Pest",
+  "domain": "biology",
+  "difficulty": 3,
+  "summary": "Explore the Lotka-Volterra phase plane, find that every orbit averages to the equilibrium it never sits at, and see why culling predator and prey together makes the prey more common.",
+  "prerequisites": [],
+  "tags": [
+    "lotka-volterra",
+    "phase-plane",
+    "conserved-quantity",
+    "ecology",
+    "oscillation"
+  ],
+  "interaction_pattern": "spatial-explore",
+  "sources": [],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}

@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kill Both Sides, Help the Pest — Explainer Atlas</title>
+<meta name="description" content="Predator and prey cycle forever around a point they never sit at. The average of the cycle is that point, which is why spraying for a pest can make the pest more common.">
+<style>
+:root{
+  --bg:#f7f5ef; --panel:#fffefb; --ink:#1d1c17; --muted:#5f5c50; --line:#ddd9cb;
+  --field:#fbfaf4; --grid:#e6e2d4;
+  --prey:#3f7d3f; --pred:#a8442a; --orbit:#6b4f9e; --eq:#b8871f;
+  --accent:#6b4f9e; --accent-soft:#efe9f7;
+  --radius:6px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Hoefler Text","Iowan Old Style",Palatino,Georgia,serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --font-display:"Hoefler Text",Palatino,Georgia,serif;
+  --scale-h1:clamp(1.7rem,1.1rem + 2.7vw,2.6rem);
+  --scale-body:clamp(1rem,0.96rem + 0.22vw,1.08rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#12110d; --panel:#1a1914; --ink:#ece9de; --muted:#9d9a8b; --line:#2b2921;
+    --field:#15140f; --grid:#282519;
+    --prey:#77c477; --pred:#e08063; --orbit:#b49ae8; --eq:#e0b45c;
+    --accent:#b49ae8; --accent-soft:#221a31;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.65 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:63rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:var(--pad); border-bottom:1px solid var(--line)}
+.kicker{margin:0 0 .45em; color:var(--prey); font:600 .72rem/1 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.22em}
+h1{font:600 var(--scale-h1)/1.1 var(--font-display); margin:0 0 .35em; letter-spacing:-.018em}
+.standfirst{margin:0; color:var(--muted); max-width:40em; font-size:1.05em}
+figure.stage{margin:var(--pad) 0 0; background:var(--field); border:1px solid var(--line);
+  border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; background:var(--field);
+  touch-action:pan-y; cursor:crosshair}
+figcaption{margin:.7em 2px 0; color:var(--muted); font-size:.84rem; max-width:46em}
+/* four-column control bar under the stage */
+.bar{margin-top:14px; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.2em; grid-template-columns:1fr}
+@media (min-width:38rem){ .bar{grid-template-columns:1fr 1fr} }
+@media (min-width:60rem){ .bar{grid-template-columns:repeat(4,1fr); gap:1.5em; align-items:start} }
+.control{display:grid; gap:.32em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control label{font:600 .92rem/1.2 var(--font-body)}
+output{font:600 .9rem/1 var(--font-mono); color:var(--accent);
+  background:var(--accent-soft); padding:.28em .5em; border-radius:4px}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:28px}
+select,button{font:inherit; font-size:.92rem; color:inherit; background:var(--bg);
+  border:1px solid var(--line); border-radius:4px; padding:.55em .7em; min-height:40px; width:100%}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+.hint{margin:0; color:var(--muted); font-size:.81rem}
+:where(a,button,input,select):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:.55em; margin:14px 0 0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:.6em .75em}
+.readout dt{margin:0; color:var(--muted); font:.71rem/1.3 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.11em}
+.readout dd{margin:.2em 0 0; font:600 1.1rem/1.15 var(--font-mono)}
+.prose{max-width:38em; margin-top:calc(var(--pad)*1.5)}
+.prose h2{font:600 1.15rem/1.3 var(--font-display); margin:1.9em 0 .45em; color:var(--orbit)}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.85em; background:var(--accent-soft);
+  padding:.8em .9em; border-radius:var(--radius); border-left:3px solid var(--orbit);
+  overflow-x:auto; white-space:pre; line-height:1.75; margin:0 0 1.05em}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad);
+  border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Biology</p>
+  <h1>Kill Both Sides, Help the Pest</h1>
+  <p class="standfirst">Predators and prey chase each other round a loop forever, never settling at
+    the balance point in the middle. But the average of the loop <em>is</em> that point — and that
+    fact has a consequence nobody expects.</p>
+</header>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="920" height="480" role="img"
+    aria-label="On the left, a phase plane with prey on the horizontal axis and predators on the vertical, showing a closed loop orbit around an equilibrium point, with the flow direction marked. On the right, the same orbit drawn as two population curves against time, one for prey and one for predators, with their time-averages marked as horizontal lines."></canvas>
+  <figcaption>Click anywhere in the phase plane on the left to start the populations somewhere new.
+    Every starting point gives a different closed loop, and none of them spiral in or out. The
+    dashed lines on the right are the time-averages over one full cycle.</figcaption>
+</figure>
+
+<section class="bar" data-role="controls" aria-label="Ecosystem controls">
+  <div class="control">
+    <div class="row">
+      <label for="x0">Starting prey</label>
+      <output id="x0out" for="x0">10.0</output>
+    </div>
+    <input type="range" id="x0" min="0.5" max="16" step="0.1" value="10">
+    <p class="hint">Or click the phase plane directly.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="y0">Starting predators</label>
+      <output id="y0out" for="y0">5.0</output>
+    </div>
+    <input type="range" id="y0" min="0.3" max="9" step="0.1" value="5">
+    <p class="hint">Sets which loop you are on, and nothing else.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="harvest">Culling both species</label>
+      <output id="harvestout" for="harvest">0.00</output>
+    </div>
+    <input type="range" id="harvest" min="0" max="0.6" step="0.005" value="0">
+    <p class="hint">A pesticide, or a net. It removes the same fraction of both.</p>
+  </div>
+
+  <div class="control">
+    <label for="preset">Ecosystem</label>
+    <select id="preset">
+      <option value="hare" selected>Hare and lynx</option>
+      <option value="slow">Slow breeders</option>
+      <option value="fast">Fast turnover</option>
+    </select>
+    <p class="hint">Changes the four rate constants.</p>
+    <button type="button" id="reset">Reset</button>
+  </div>
+</section>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Cycle length</dt><dd id="r1">—</dd></div>
+  <div><dt>Average prey</dt><dd id="r2">—</dd></div>
+  <div><dt>Average predators</dt><dd id="r3">—</dd></div>
+  <div><dt>Prey range</dt><dd id="r4">—</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>Two species, four rules. Prey breed on their own and get eaten. Predators starve on their own
+    and breed in proportion to how much they catch. Write that down and you get the oldest model in
+    mathematical ecology:</p>
+
+  <p class="math">prey'      =  α·prey  −  β·prey·pred
+pred'      =  δ·prey·pred  −  γ·pred</p>
+
+  <p>Every term is the obvious one. There is no carrying capacity, no age structure, no season, no
+    space. And yet the behaviour it produces is not obvious at all.</p>
+
+  <h2>The loops never close in</h2>
+
+  <p>Click anywhere in the phase plane. The trajectory is a closed loop, and it returns exactly to
+    where you started — not approximately, not eventually, but on every single circuit. Click
+    somewhere else and you get a different loop nested inside or outside the first. There is no
+    attractor. The system has no preferred cycle; it just keeps whatever cycle you gave it.</p>
+
+  <p>That is because the model conserves a quantity, the way a frictionless pendulum conserves
+    energy:</p>
+
+  <p class="math">V  =  δ·prey − γ·ln(prey)  +  β·pred − α·ln(pred)</p>
+
+  <p>V is constant along every trajectory, and its level sets are the loops you see. The equilibrium
+    in the middle, marked with a cross, is where V is smallest. Start exactly there and nothing ever
+    happens. Start one step away and you orbit it forever at a fixed distance, which is what
+    physicists call neutral stability: not attracting, not repelling. It is also the model's biggest
+    weakness, because real populations do settle down, and the fix — adding a carrying capacity —
+    turns the loops into inward spirals.</p>
+
+  <h2>The average is the equilibrium</h2>
+
+  <p>Here is the part worth the price of admission. Take any loop, however wild, and average the
+    prey population over one full cycle. You do not get something in the middle of the swing. You
+    get exactly γ/δ — the equilibrium value — and the predator average is exactly α/β. The dashed
+    lines on the time-series panel are those averages, and they do not move when you change which
+    loop you are on. A population that spends most of its time near the bottom and briefly explodes
+    has the same mean as one that barely wobbles.</p>
+
+  <p>Notice what the averages are made of. The mean prey population depends only on γ and δ — the
+    <em>predator's</em> death rate and hunting efficiency. Nothing about how fast prey breed appears
+    in it at all. Symmetrically, the mean predator population depends only on the prey's parameters.
+    Each species' long-run abundance is set entirely by the other one's biology.</p>
+
+  <h2>Why spraying backfires</h2>
+
+  <p>Now pull the culling slider. It adds the same extra death rate to both species — an insecticide
+    that kills the pest and its natural enemy alike, or a net that catches both fish. The prey
+    equation loses some α and the predator equation gains some γ, so the averages move to</p>
+
+  <p class="math">average prey  =  (γ + h) / δ        average predator  =  (α − h) / β</p>
+
+  <p>The average pest population goes <em>up</em>. Not transiently — in the long-run mean. You have
+    removed the thing that was holding it down faster than you removed the pest itself, and the
+    conserved structure converts that into a permanently higher average. Vito Volterra derived this
+    in the 1920s to explain why fishing in the Adriatic had <em>fallen</em> during the First World
+    War and predatory fish had become more common: less fishing meant more sharks, and more sharks
+    meant fewer of the fish anyone wanted. The same argument, run forwards, is the standard
+    cautionary tale about broad-spectrum pesticides.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set the culling slider to 0.3 and watch the average-prey readout climb from 4 to 7 while the
+    predators fall from 2.75 to 2. At the top of the slider, 0.6, the prey average has reached 10 —
+    two and a half times where it started — and the predators are down to 1.25. Push culling past
+    α itself and the predator average would hit zero: the enemy is wiped out, the model stops
+    meaning anything, and that is the honest boundary of the argument.</p>
+
+  <p>And click far out in the top-right of the phase plane. The loop that comes back is enormous:
+    prey crash to a fraction of one and recover to dozens. The averages are unchanged.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL ------------------------------------------------------------- */
+/* Lotka-Volterra with an optional cull h applied equally to both species.  */
+/* Parameters {a, b, d, g, h}: prey growth, predation, conversion, predator */
+/* death, cull. Everything below is a pure function of those.               */
+const Model = {
+  deriv(s, p){
+    return {
+      x: (p.a - p.h) * s.x - p.b * s.x * s.y,
+      y: p.d * s.x * s.y - (p.g + p.h) * s.y
+    };
+  },
+
+  rk4(s, p, dt){
+    const k1 = this.deriv(s, p);
+    const k2 = this.deriv({ x: s.x + dt / 2 * k1.x, y: s.y + dt / 2 * k1.y }, p);
+    const k3 = this.deriv({ x: s.x + dt / 2 * k2.x, y: s.y + dt / 2 * k2.y }, p);
+    const k4 = this.deriv({ x: s.x + dt * k3.x, y: s.y + dt * k3.y }, p);
+    return {
+      x: s.x + dt / 6 * (k1.x + 2 * k2.x + 2 * k3.x + k4.x),
+      y: s.y + dt / 6 * (k1.y + 2 * k2.y + 2 * k3.y + k4.y)
+    };
+  },
+
+  /* The coexistence equilibrium, which is also the time-average of every orbit. */
+  equilibrium(p){ return { x: (p.g + p.h) / p.d, y: (p.a - p.h) / p.b }; },
+
+  /* The conserved quantity. Constant along any trajectory. */
+  conserved(s, p){
+    return p.d * s.x - (p.g + p.h) * Math.log(s.x)
+         + p.b * s.y - (p.a - p.h) * Math.log(s.y);
+  },
+
+  /* Angle about the equilibrium in log coordinates. In those coordinates the
+     flow provably rotates one way, so unwrapping this gives the period for
+     any starting point, on either side of the equilibrium.                  */
+  angle(s, p){
+    const e = this.equilibrium(p);
+    return Math.atan2(Math.log(s.y / e.y), Math.log(s.x / e.x));
+  },
+
+  /* Integrate one full turn of 2*pi. Returns the period, the closing state,
+     the sampled trajectory, and the time-averages by trapezoid.             */
+  orbit(s0, p, dt, keep){
+    let s = { x: s0.x, y: s0.y };
+    let th = this.angle(s, p), turned = 0, sx = 0, sy = 0;
+    const pts = [[s.x, s.y, 0]];
+    let minX = s.x, maxX = s.x, minY = s.y, maxY = s.y, backwards = false;
+    for (let i = 1; i <= 200000; i++){
+      const n = this.rk4(s, p, dt);
+      const t2 = this.angle(n, p);
+      let d = t2 - th;
+      if (d < -Math.PI) d += 2 * Math.PI;
+      if (d > Math.PI) d -= 2 * Math.PI;
+      if (d < -1e-12) backwards = true;
+      if (turned + d >= 2 * Math.PI){
+        const f = d === 0 ? 0 : (2 * Math.PI - turned) / d;
+        const cx = s.x + f * (n.x - s.x), cy = s.y + f * (n.y - s.y);
+        sx += (s.x + cx) / 2 * f * dt; sy += (s.y + cy) / 2 * f * dt;
+        const T = (i - 1 + f) * dt;
+        return {
+          period: T, close: { x: cx, y: cy }, points: pts, backwards: backwards,
+          meanX: sx / T, meanY: sy / T,
+          minX: minX, maxX: maxX, minY: minY, maxY: maxY
+        };
+      }
+      sx += (s.x + n.x) / 2 * dt; sy += (s.y + n.y) / 2 * dt;
+      turned += d; th = t2; s = n;
+      if (s.x < minX) minX = s.x; if (s.x > maxX) maxX = s.x;
+      if (s.y < minY) minY = s.y; if (s.y > maxY) maxY = s.y;
+      if (keep && i % keep === 0) pts.push([s.x, s.y, i * dt]);
+    }
+    return null;
+  },
+
+  /* Linearisation at the equilibrium: trace zero, determinant (a-h)(g+h),
+     so the eigenvalues are purely imaginary and the small-oscillation
+     angular frequency is the square root of that determinant.              */
+  jacobian(p){
+    const e = this.equilibrium(p);
+    return { a11: 0, a12: -p.b * e.x, a21: p.d * e.y, a22: 0 };
+  },
+  smallPeriod(p){ return 2 * Math.PI / Math.sqrt((p.a - p.h) * (p.g + p.h)); }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------ */
+const PRESETS = {
+  hare: { a: 1.1, b: 0.4, d: 0.1, g: 0.4 },
+  slow: { a: 0.8, b: 0.3, d: 0.15, g: 0.5 },
+  fast: { a: 1.5, b: 0.6, d: 0.2, g: 0.9 }
+};
+const defaults = { x0: 10, y0: 5, harvest: 0, preset: "hare" };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const W = cv.width, H = cv.height;
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const PX0 = 62, PY0 = 26, PWID = 400, PHGT = 400;      /* phase plane box */
+const TX0 = 540, TY0 = 26, TWID = 348, THGT = 400;     /* time series box */
+const XMAX = 18, YMAX = 10;
+const px = (x) => PX0 + PWID * Math.min(x, XMAX) / XMAX;
+const py = (y) => PY0 + PHGT * (1 - Math.min(y, YMAX) / YMAX);
+
+function params(){ return Object.assign({}, PRESETS[state.preset], { h: state.harvest }); }
+
+let cache = null;
+function orbitNow(){
+  const p = params();
+  const key = [state.x0, state.y0, state.harvest, state.preset].join("|");
+  if (!cache || cache.key !== key)
+    cache = { key: key, o: Model.orbit({ x: state.x0, y: state.y0 }, p, 0.004, 3), p: p };
+  return cache;
+}
+
+function render(){
+  const { o, p } = orbitNow();
+  const eq = Model.equilibrium(p);
+  const ink = css("--ink"), muted = css("--muted"), grid = css("--grid");
+  const prey = css("--prey"), pred = css("--pred"), orbitC = css("--orbit"), eqC = css("--eq");
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--field"); ctx.fillRect(0, 0, W, H);
+
+  /* ---- phase plane ---- */
+  ctx.strokeStyle = grid; ctx.lineWidth = 1;
+  ctx.fillStyle = muted; ctx.font = "11px ui-monospace, monospace";
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let y = 0; y <= YMAX; y += 2){
+    ctx.beginPath(); ctx.moveTo(PX0, py(y)); ctx.lineTo(PX0 + PWID, py(y)); ctx.stroke();
+    ctx.fillText(String(y), PX0 - 8, py(y));
+  }
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  for (let x = 0; x <= XMAX; x += 3){
+    ctx.beginPath(); ctx.moveTo(px(x), PY0); ctx.lineTo(px(x), PY0 + PHGT); ctx.stroke();
+    ctx.fillText(String(x), px(x), PY0 + PHGT + 18);
+  }
+  ctx.fillText("prey", PX0 + PWID / 2, PY0 + PHGT + 38);
+  ctx.save(); ctx.translate(20, PY0 + PHGT / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText("predators", 0, 0); ctx.restore();
+
+  /* nullclines */
+  ctx.setLineDash([3, 4]); ctx.strokeStyle = prey; ctx.globalAlpha = 0.55;
+  ctx.beginPath(); ctx.moveTo(PX0, py(eq.y)); ctx.lineTo(PX0 + PWID, py(eq.y)); ctx.stroke();
+  ctx.strokeStyle = pred;
+  ctx.beginPath(); ctx.moveTo(px(eq.x), PY0); ctx.lineTo(px(eq.x), PY0 + PHGT); ctx.stroke();
+  ctx.globalAlpha = 1; ctx.setLineDash([]);
+
+  /* the orbit */
+  if (o){
+    ctx.strokeStyle = orbitC; ctx.lineWidth = 2.2; ctx.beginPath();
+    for (let i = 0; i < o.points.length; i++){
+      const q = o.points[i];
+      if (i === 0) ctx.moveTo(px(q[0]), py(q[1])); else ctx.lineTo(px(q[0]), py(q[1]));
+    }
+    ctx.closePath(); ctx.stroke();
+
+    /* direction arrow a quarter of the way round */
+    const q = o.points[Math.floor(o.points.length / 4)] || o.points[0];
+    const r = o.points[Math.floor(o.points.length / 4) + 2] || q;
+    const ang = Math.atan2(py(r[1]) - py(q[1]), px(r[0]) - px(q[0]));
+    ctx.save(); ctx.translate(px(q[0]), py(q[1])); ctx.rotate(ang);
+    ctx.fillStyle = orbitC; ctx.beginPath();
+    ctx.moveTo(9, 0); ctx.lineTo(-5, 5); ctx.lineTo(-5, -5); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  /* start point and equilibrium */
+  ctx.fillStyle = orbitC;
+  ctx.beginPath(); ctx.arc(px(state.x0), py(state.y0), 5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = eqC; ctx.lineWidth = 2.4;
+  const ex = px(eq.x), ey = py(eq.y);
+  ctx.beginPath(); ctx.moveTo(ex - 7, ey); ctx.lineTo(ex + 7, ey);
+  ctx.moveTo(ex, ey - 7); ctx.lineTo(ex, ey + 7); ctx.stroke();
+  ctx.fillStyle = eqC; ctx.font = "11px ui-monospace, monospace"; ctx.textAlign = "left";
+  ctx.fillText("equilibrium", ex + 11, ey - 8);
+
+  /* ---- time series ---- */
+  ctx.strokeStyle = grid; ctx.lineWidth = 1;
+  ctx.strokeRect(TX0, TY0, TWID, THGT);
+  const vmax = o ? Math.max(o.maxX, o.maxY) * 1.08 : 20;
+  const ty = (v) => TY0 + THGT * (1 - v / vmax);
+  if (o){
+    const draw = (idx, colour) => {
+      ctx.strokeStyle = colour; ctx.lineWidth = 2; ctx.beginPath();
+      for (let i = 0; i < o.points.length; i++){
+        const q = o.points[i];
+        const x = TX0 + TWID * q[2] / o.period;
+        if (i === 0) ctx.moveTo(x, ty(q[idx])); else ctx.lineTo(x, ty(q[idx]));
+      }
+      ctx.stroke();
+    };
+    draw(0, prey); draw(1, pred);
+    /* the time-averages */
+    ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5;
+    ctx.strokeStyle = prey;
+    ctx.beginPath(); ctx.moveTo(TX0, ty(o.meanX)); ctx.lineTo(TX0 + TWID, ty(o.meanX)); ctx.stroke();
+    ctx.strokeStyle = pred;
+    ctx.beginPath(); ctx.moveTo(TX0, ty(o.meanY)); ctx.lineTo(TX0 + TWID, ty(o.meanY)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = "11px ui-monospace, monospace"; ctx.textAlign = "right";
+    ctx.fillStyle = prey; ctx.fillText("mean prey " + o.meanX.toFixed(2), TX0 + TWID - 6, ty(o.meanX) - 6);
+    ctx.fillStyle = pred; ctx.fillText("mean predators " + o.meanY.toFixed(2), TX0 + TWID - 6, ty(o.meanY) + 14);
+  }
+  ctx.fillStyle = muted; ctx.font = "11px ui-monospace, monospace"; ctx.textAlign = "center";
+  ctx.fillText("one full cycle", TX0 + TWID / 2, TY0 + THGT + 18);
+  ctx.textAlign = "left";
+  ctx.fillStyle = prey; ctx.fillText("prey", TX0 + 8, TY0 + 16);
+  ctx.fillStyle = pred; ctx.fillText("predators", TX0 + 8, TY0 + 32);
+
+  /* readouts */
+  el("x0out").textContent = state.x0.toFixed(1);
+  el("y0out").textContent = state.y0.toFixed(1);
+  el("harvestout").textContent = state.harvest.toFixed(2);
+  el("r1").textContent = o ? o.period.toFixed(3) : "—";
+  el("r2").textContent = o ? o.meanX.toFixed(3) : "—";
+  el("r3").textContent = o ? o.meanY.toFixed(3) : "—";
+  el("r4").textContent = o ? o.minX.toFixed(2) + " to " + o.maxX.toFixed(2) : "—";
+}
+
+/* ---- controls ---------------------------------------------------------- */
+function bind(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", function(){ state[key] = parse(input.value); render(); });
+}
+bind("x0", "x0", parseFloat);
+bind("y0", "y0", parseFloat);
+bind("harvest", "harvest", parseFloat);
+el("preset").addEventListener("change", function(){
+  state.preset = el("preset").value; render();
+});
+cv.addEventListener("click", function(ev){
+  const r = cv.getBoundingClientRect();
+  const cx = (ev.clientX - r.left) * (W / r.width);
+  const cy = (ev.clientY - r.top) * (H / r.height);
+  if (cx < PX0 || cx > PX0 + PWID || cy < PY0 || cy > PY0 + PHGT) return;
+  const x = XMAX * (cx - PX0) / PWID, y = YMAX * (1 - (cy - PY0) / PHGT);
+  state.x0 = Math.min(16, Math.max(0.5, Math.round(x * 10) / 10));
+  state.y0 = Math.min(9, Math.max(0.3, Math.round(y * 10) / 10));
+  el("x0").value = String(state.x0); el("y0").value = String(state.y0);
+  render();
+});
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults);
+  el("x0").value = String(defaults.x0); el("y0").value = String(defaults.y0);
+  el("harvest").value = String(defaults.harvest); el("preset").value = defaults.preset;
+  render();
+});
+render();
+
+/* ---- SELFTEST ---------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+function rel(a, b){ return Math.abs(a - b) / Math.max(Math.abs(b), 1e-300); }
+const P1 = { a: 1.1, b: 0.4, d: 0.1, g: 0.4, h: 0 };
+const P2 = { a: 0.8, b: 0.3, d: 0.15, g: 0.5, h: 0 };
+const P3 = { a: 1.5, b: 0.6, d: 0.2, g: 0.9, h: 0.2 };
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+
+  push("the equilibrium is where both derivatives vanish", (function(){
+    for (const p of [P1, P2, P3]){
+      const e = M.equilibrium(p);
+      if (rel(e.x, (p.g + p.h) / p.d) > 1e-15) return false;
+      if (rel(e.y, (p.a - p.h) / p.b) > 1e-15) return false;
+      const d = M.deriv(e, p);
+      if (Math.abs(d.x) > 1e-14 || Math.abs(d.y) > 1e-14) return false;
+      /* and staying there is a fixed point of the integrator too */
+      const n = M.rk4(e, p, 0.01);
+      if (Math.abs(n.x - e.x) > 1e-14 || Math.abs(n.y - e.y) > 1e-14) return false;
+    }
+    return true;
+  })(), "((g+h)/d, (a-h)/b) kills both derivatives and is fixed under one RK4 step");
+
+  push("the conserved quantity does not drift along a trajectory", (function(){
+    for (const p of [P1, P3]){
+      let s = { x: 10, y: 5 };
+      const V0 = M.conserved(s, p);
+      for (let i = 0; i < 3000; i++){
+        s = M.rk4(s, p, 0.004);
+        if (Math.abs(M.conserved(s, p) - V0) > 1e-9) return false;
+      }
+    }
+    return true;
+  })(), "V holds to 1e-9 over 12 time units of RK4 at dt = 0.004, two parameter sets");
+
+  push("orbits are closed", (function(){
+    for (const p of [P1, P2])
+      for (const s0 of [{ x: 10, y: 5 }, { x: 3, y: 1.5 }, { x: 2, y: 6 }]){
+        const o = M.orbit(s0, p, 0.004, 0);
+        if (!o) return false;
+        if (Math.hypot(o.close.x - s0.x, o.close.y - s0.y) > 1e-4) return false;
+      }
+    return true;
+  })(), "after one full turn the state returns within 1e-4, from six starting points including two below the equilibrium");
+
+  push("the time-average of every orbit is the equilibrium", (function(){
+    for (const p of [P1, P3])
+      for (const s0 of [{ x: 10, y: 5 }, { x: 5, y: 2 }, { x: 2, y: 6 }]){
+        const o = M.orbit(s0, p, 0.002, 0), e = M.equilibrium(p);
+        if (!o) return false;
+        if (rel(o.meanX, e.x) > 2e-4) return false;
+        if (rel(o.meanY, e.y) > 2e-4) return false;
+      }
+    return true;
+  })(), "mean prey = (g+h)/d and mean predators = (a-h)/b to 2e-4 relative, whatever loop you are on");
+
+  push("the averages do not depend on which orbit you take", (function(){
+    const p = P1;
+    const a = M.orbit({ x: 10, y: 5 }, p, 0.002, 0);
+    const b = M.orbit({ x: 4.6, y: 2.9 }, p, 0.002, 0);
+    if (!a || !b) return false;
+    /* wildly different loops */
+    if (!(a.maxX / a.minX > 8 && b.maxX / b.minX < 1.5)) return false;
+    return rel(a.meanX, b.meanX) < 5e-4 && rel(a.meanY, b.meanY) < 5e-4;
+  })(), "a loop swinging more than eightfold and one barely wobbling share the same mean to 5e-4");
+
+  push("culling both species raises the average prey and lowers the average predator", (function(){
+    const base = Object.assign({}, P1, { h: 0 });
+    let prevX = -Infinity, prevY = Infinity;
+    for (let h = 0; h <= 0.6; h += 0.05){
+      const p = Object.assign({}, base, { h: h });
+      const e = M.equilibrium(p);
+      if (!(e.x > prevX) || !(e.y < prevY)) return false;
+      prevX = e.x; prevY = e.y;
+    }
+    const e0 = M.equilibrium(base), e6 = M.equilibrium(Object.assign({}, base, { h: 0.6 }));
+    return near(e0.x, 4, 1e-12) && near(e6.x, 10, 1e-12)
+        && near(e0.y, 2.75, 1e-12) && near(e6.y, 1.25, 1e-12);
+  })(), "Volterra's principle: mean prey climbs 4 to 10 and mean predators fall 2.75 to 1.25 as the cull goes 0 to 0.6");
+
+  push("the equilibrium is neutrally stable, not attracting", (function(){
+    for (const p of [P1, P2, P3]){
+      const J = M.jacobian(p);
+      const trace = J.a11 + J.a22, det = J.a11 * J.a22 - J.a12 * J.a21;
+      if (Math.abs(trace) > 1e-15) return false;                 /* purely imaginary */
+      if (rel(det, (p.a - p.h) * (p.g + p.h)) > 1e-14) return false;
+      if (!(det > 0)) return false;
+    }
+    return true;
+  })(), "the Jacobian has zero trace and determinant (a-h)(g+h), so the eigenvalues are +-i sqrt of that");
+
+  push("small orbits have the period the linearisation predicts", (function(){
+    for (const p of [P1, P2, P3]){
+      const e = M.equilibrium(p);
+      const o = M.orbit({ x: e.x * 1.01, y: e.y * 1.01 }, p, 0.002, 0);
+      if (!o) return false;
+      if (rel(o.period, M.smallPeriod(p)) > 1e-3) return false;
+    }
+    return true;
+  })(), "a one-percent perturbation orbits in 2*pi/sqrt((a-h)(g+h)) to 0.1 percent");
+
+  push("large orbits take longer than small ones", (function(){
+    const p = P1, e = M.equilibrium(p);
+    let prev = 0;
+    for (const k of [1.01, 1.3, 1.8, 2.4]){
+      const o = M.orbit({ x: e.x * k, y: e.y * k }, p, 0.004, 0);
+      if (!o || !(o.period > prev)) return false;
+      prev = o.period;
+    }
+    return prev > M.smallPeriod(p);
+  })(), "period grows monotonically away from the equilibrium, so the cycle is anharmonic");
+
+  push("the flow never reverses direction", (function(){
+    for (const p of [P1, P2, P3])
+      for (const s0 of [{ x: 10, y: 5 }, { x: 2, y: 6 }, { x: 3, y: 1.2 }]){
+        const o = M.orbit(s0, p, 0.004, 0);
+        if (!o || o.backwards) return false;
+      }
+    return true;
+  })(), "the angle about the equilibrium increases at every step, nine trajectories");
+
+  push("both populations stay strictly positive", (function(){
+    for (const p of [P1, P2, P3])
+      for (const s0 of [{ x: 14, y: 8 }, { x: 0.6, y: 0.4 }, { x: 1, y: 7 }]){
+        let s = { x: s0.x, y: s0.y };
+        for (let i = 0; i < 4000; i++){
+          s = M.rk4(s, p, 0.004);
+          if (!(s.x > 0) || !(s.y > 0)) return false;
+          if (!Number.isFinite(s.x) || !Number.isFinite(s.y)) return false;
+        }
+      }
+    return true;
+  })(), "extinction is unreachable in this model: 16 time units from nine starts, including near-zero ones");
+
+  push("the integrator is fourth order", (function(){
+    const p = P1;
+    const drift = (dt) => {
+      let s = { x: 10, y: 5 };
+      const V0 = M.conserved(s, p);
+      let worst = 0;
+      const n = Math.round(8 / dt);
+      for (let i = 0; i < n; i++){
+        s = M.rk4(s, p, dt);
+        worst = Math.max(worst, Math.abs(M.conserved(s, p) - V0));
+      }
+      return worst;
+    };
+    const coarse = drift(0.04), fine = drift(0.02);
+    /* halving the step should cut the error by roughly sixteen */
+    return fine > 0 && coarse / fine > 8 && coarse / fine < 40;
+  })(), "halving dt reduces the drift in V by a factor between 8 and 40, consistent with O(dt^4)");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
