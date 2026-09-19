@@ -1,10 +1,11 @@
 {
   "generated_at": "2026-09-19",
-  "count": 52,
+  "count": 56,
   "domains": {
     "biology": [
       "enzyme-michaelis-menten",
       "epidemic-r0-herd-immunity",
+      "hardy-weinberg",
       "population-logistic-chaos",
       "predator-prey-cycles"
     ],
@@ -23,6 +24,7 @@
       "regex-backtracking-blowup"
     ],
     "earth-science": [
+      "earthquake-magnitude-energy",
       "greenhouse-energy-balance",
       "plate-tectonics-seafloor-age",
       "radiometric-dating"
@@ -33,6 +35,7 @@
       "supply-demand-tax-incidence"
     ],
     "engineering": [
+      "beam-bending-moment",
       "gear-train-ratio",
       "pid-controller"
     ],
@@ -54,6 +57,7 @@
       "sound-change-chain-shift"
     ],
     "mathematics": [
+      "eulers-identity-rotation",
       "fourier-series-square-wave",
       "map-projection-distortion",
       "matrix-determinant-area",
@@ -82,18 +86,18 @@
     ]
   },
   "interaction_patterns": {
-    "build-from-parts": 5,
+    "build-from-parts": 6,
     "compare-side-by-side": 4,
     "drag-parameter": 5,
     "draw-input": 4,
-    "guess-then-reveal": 4,
+    "guess-then-reveal": 5,
     "live-code": 3,
-    "perturb-and-observe": 5,
+    "perturb-and-observe": 6,
     "race-two-methods": 4,
     "spatial-explore": 5,
     "step-through": 4,
     "time-scrubber": 5,
-    "tune-to-match": 4
+    "tune-to-match": 5
   },
   "explainers": [
     {
@@ -190,6 +194,34 @@
         {
           "title": "US Preventive Services Task Force, Screening for Breast Cancer: recommendation statement",
           "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/breast-cancer-screening"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
+      "slug": "beam-bending-moment",
+      "title": "Depth Beats Width, Cubically",
+      "domain": "engineering",
+      "difficulty": 2,
+      "summary": "Tune a beam's section until it meets the span/360 sag limit. Depth is cubed in the answer and width appears once, which is why joists are tall and thin and why a plank laid flat is useless.",
+      "prerequisites": [],
+      "tags": [
+        "beam-deflection",
+        "second-moment-of-area",
+        "bending",
+        "structural-design",
+        "serviceability"
+      ],
+      "interaction_pattern": "tune-to-match",
+      "sources": [
+        {
+          "title": "Wikipedia, Deflection (engineering)",
+          "url": "https://en.wikipedia.org/wiki/Deflection_(engineering)"
+        },
+        {
+          "title": "Wikipedia, Second moment of area",
+          "url": "https://en.wikipedia.org/wiki/Second_moment_of_area"
         }
       ],
       "created_at": "2026-09-19",
@@ -449,6 +481,34 @@
       "assertions_count": 12
     },
     {
+      "slug": "earthquake-magnitude-energy",
+      "title": "Guess How Many Sixes Make An Eight",
+      "domain": "earth-science",
+      "difficulty": 2,
+      "summary": "Commit to a guess for how many small earthquakes carry the energy of one large one, then reveal it. One magnitude step is 31.6 times the energy and two are exactly a thousand.",
+      "prerequisites": [],
+      "tags": [
+        "earthquakes",
+        "logarithmic-scales",
+        "gutenberg-richter",
+        "energy",
+        "seismology"
+      ],
+      "interaction_pattern": "guess-then-reveal",
+      "sources": [
+        {
+          "title": "Wikipedia, Richter magnitude scale",
+          "url": "https://en.wikipedia.org/wiki/Richter_magnitude_scale"
+        },
+        {
+          "title": "Wikipedia, Gutenberg-Richter law",
+          "url": "https://en.wikipedia.org/wiki/Gutenberg%E2%80%93Richter_law"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
       "slug": "electrochemical-cell-potential",
       "title": "A Flat Battery Is Not Empty",
       "domain": "chemistry",
@@ -576,6 +636,34 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 11
+    },
+    {
+      "slug": "eulers-identity-rotation",
+      "title": "Nothing Mystical Happens At Pi",
+      "domain": "mathematics",
+      "difficulty": 3,
+      "summary": "Multiplying by a number of length one is a turn. Build the turn out of many tiny multiplications and watch the polygon close onto the circle, with the Taylor series arriving at the same point by another road.",
+      "prerequisites": [],
+      "tags": [
+        "complex-numbers",
+        "eulers-identity",
+        "taylor-series",
+        "limits",
+        "rotation"
+      ],
+      "interaction_pattern": "build-from-parts",
+      "sources": [
+        {
+          "title": "NIST Digital Library of Mathematical Functions, 4.2 Exponential Function",
+          "url": "https://dlmf.nist.gov/4.2"
+        },
+        {
+          "title": "NIST Digital Library of Mathematical Functions, 4.21 Identities (de Moivre)",
+          "url": "https://dlmf.nist.gov/4.21"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
     },
     {
       "slug": "floating-point-precision",
@@ -718,6 +806,34 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 12
+    },
+    {
+      "slug": "hardy-weinberg",
+      "title": "The Null Model Every Population Fails",
+      "domain": "biology",
+      "difficulty": 2,
+      "summary": "Hardy-Weinberg drawn on a de Finetti triangle. Switch selection and mutation on and watch a population leave the curve and be dragged back onto it, and see how slowly a recessive can be removed.",
+      "prerequisites": [],
+      "tags": [
+        "population-genetics",
+        "hardy-weinberg",
+        "selection",
+        "mutation",
+        "de-finetti-diagram"
+      ],
+      "interaction_pattern": "perturb-and-observe",
+      "sources": [
+        {
+          "title": "Nature Education, Hardy-Weinberg Equilibrium",
+          "url": "https://www.nature.com/scitable/definition/hardy-weinberg-equilibrium-122/"
+        },
+        {
+          "title": "NCBI Bookshelf, An Introduction to Genetic Analysis: Genetic Variation",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK21766/"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 13
     },
     {
       "slug": "harmonic-series-timbre",
