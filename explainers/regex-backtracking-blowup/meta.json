@@ -1,0 +1,17 @@
+{
+  "slug": "regex-backtracking-blowup",
+  "title": "The Pattern Is Fine. The Engine Is Not.",
+  "domain": "computer-science",
+  "difficulty": 3,
+  "summary": "Write a regular expression and watch a backtracking engine take exponential time on an input that a finite automaton finishes in a straight line.",
+  "prerequisites": [],
+  "tags": ["regular-expressions", "automata", "backtracking", "complexity", "redos", "glushkov"],
+  "interaction_pattern": "live-code",
+  "sources": [
+    { "title": "Russ Cox — Regular Expression Matching Can Be Simple And Fast", "url": "https://swtch.com/~rsc/regexp/regexp1.html" },
+    { "title": "OWASP — Regular expression Denial of Service (ReDoS)", "url": "https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS" },
+    { "title": "Glushkov's construction (position automaton)", "url": "https://en.wikipedia.org/wiki/Glushkov%27s_construction_algorithm" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}
