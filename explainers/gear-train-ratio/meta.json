@@ -1,0 +1,16 @@
+{
+  "slug": "gear-train-ratio",
+  "title": "The Gear in the Middle Does Nothing",
+  "domain": "engineering",
+  "difficulty": 2,
+  "summary": "Build a gear train one wheel at a time and watch an idler flip the direction without touching the ratio, while two wheels bolted to one shaft change everything.",
+  "prerequisites": [],
+  "tags": ["gear-train", "gear-ratio", "idler", "compound-gear", "mechanism", "torque"],
+  "interaction_pattern": "build-from-parts",
+  "sources": [
+    { "title": "Shigley's Mechanical Engineering Design, chapter on gear trains", "url": "https://archive.org/details/shigleysmechanic0000budy" },
+    { "title": "Reuleaux, The Kinematics of Machinery (1876)", "url": "https://archive.org/details/kinematicsofmach00reuluoft" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}
