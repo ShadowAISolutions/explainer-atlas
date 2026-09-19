@@ -1,0 +1,686 @@
+<!doctype html>
+<!--
+  Interactive Explainer Atlas — page skeleton.
+  Start EVERY new explainer from this file. Never copy a previous page.
+  Replace every {{PLACEHOLDER}}. Delete the demo model and write your own.
+  Contract: FOUNDATION.md. Rules: CLAUDE.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sensitivity Is The Least Important Number &#8212; Explainer Atlas</title>
+<meta name="description" content="Tune a test until a positive result actually means something. The number that moves the answer is almost never the one printed on the box.">
+<style>
+/* ---- tokens: restate these per page to vary the collection's feel ------- */
+:root{
+  --bg:#f6f8fa; --panel:#ffffff; --ink:#131a21; --muted:#5b6b78; --line:#dde5ea;
+  --accent:#2b5f8f; --accent-soft:#e6eef5; --warn:#c2552f; --alt:#c2552f;
+  --quiet:#aebdc7; --radius:10px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.5rem,1.08rem + 1.95vw,2.25rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.06rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0e1419; --panel:#151d24; --ink:#e3ecf2; --muted:#93a5b2; --line:#233039;
+    --accent:#6aa9dc; --accent-soft:#132330; --warn:#e8865c; --alt:#e8865c;
+    --quiet:#3c4c57;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.15; margin:0 0 .4em; letter-spacing:-.01em}
+.kicker{margin:0 0 .35em; color:var(--accent); font:600 .78rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.09em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas, figure.stage svg{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.86rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.83rem}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+textarea{font:inherit}
+.goal{background:var(--accent-soft); border:1px solid var(--line); border-radius:8px; padding:.6em .75em; font-size:.9rem}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .7em; min-height:40px}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.06em}
+.readout dd{margin:.18em 0 0; font:600 1.05rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.16rem; margin:1.8em 0 .45em; letter-spacing:-.005em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); background:var(--accent-soft); padding:.7em .85em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">statistics</p>
+  <h1>Sensitivity Is The Least Important Number</h1>
+  <p class="standfirst">A test that catches ninety-nine per cent of cases can still be wrong five
+  times out of six when it says yes. Set a target for what a positive result should mean, then find
+  out which of the three dials actually gets you there.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="600" role="img"
+            aria-label="Above, a rectangle representing ten thousand people, split left to right into those who have the condition and those who do not, and each of those split top to bottom into those the test calls positive and those it calls negative. Below, a single bar holding only the people who tested positive, split into the true positives and the false positives, with a marker showing the target you are aiming for."></canvas>
+    <figcaption>Above: ten thousand people. The left column has the condition, the right column does
+    not; the shaded band across the top is everyone the test calls positive. Below: only those
+    positives, rescaled. The line is your target.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <p class="goal" id="goal">Aim: make a positive result mean a <strong id="goaltarget">90%</strong>
+    chance. You are at <strong id="goalnow">&#8212;</strong>.</p>
+
+    <div class="control">
+      <div class="row">
+        <label for="prev">How common it is</label>
+        <output id="prevout" for="prev">1 in 100</output>
+      </div>
+      <input type="range" id="prev" min="0" max="13" step="1" value="6">
+      <p class="hint">The base rate, from one in ten thousand to one in two. Arrow keys step; Home
+      and End jump to the ends.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="sens">Sensitivity</label>
+        <output id="sensout" for="sens">99.0%</output>
+      </div>
+      <input type="range" id="sens" min="50" max="100" step="0.5" value="99">
+      <p class="hint">Of the people who have it, the share the test catches. This is the number on
+      the box.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="spec">Specificity</label>
+        <output id="specout" for="spec">95.0%</output>
+      </div>
+      <input type="range" id="spec" min="80" max="99.9" step="0.1" value="95">
+      <p class="hint">Of the people who do not have it, the share the test correctly clears. One
+      minus this is the false alarm rate.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="target">Target</label>
+      </div>
+      <select id="target">
+        <option value="50">a coin flip, 50%</option>
+        <option value="90" selected>worth acting on, 90%</option>
+        <option value="99">near certainty, 99%</option>
+      </select>
+      <p class="hint">What you want a positive result to actually mean before you treat someone.</p>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>A positive means</dt><dd id="oPost">&#8212;</dd></div>
+      <div><dt>Gap to target</dt><dd id="oGap">&#8212;</dd></div>
+      <div><dt>False alarms each</dt><dd id="oRatio">&#8212;</dd></div>
+      <div><dt>A negative clears</dt><dd id="oNpv">&#8212;</dd></div>
+      <div><dt>Positives per 10,000</dt><dd id="oPos">&#8212;</dd></div>
+      <div><dt>Missed cases</dt><dd id="oFn">&#8212;</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Start over</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Start where the page starts: one person in a hundred has the condition, the test catches
+  ninety-nine per cent of them, and it clears ninety-five per cent of everyone else. Those are
+  respectable numbers. A positive result means a one-in-six chance of having the condition. Five out
+  of every six people who get the bad news do not have it.</p>
+
+  <p>The picture above is why. Of ten thousand people, a hundred have it and ninety-nine of those
+  test positive. The other nine thousand nine hundred do not have it, and five per cent of them
+  &#8212; four hundred and ninety-five people &#8212; test positive anyway. The positive pile holds
+  ninety-nine real cases and four hundred and ninety-five false alarms, because the pool of healthy
+  people is so much larger that even a small slice of it swamps the whole diseased column.</p>
+
+  <h2>The dial that does nothing</h2>
+
+  <p>Now try to reach the ninety per cent target. Push sensitivity to one hundred: the answer moves
+  from 16.67 per cent to 16.81. That is the entire available effect of the number printed on the
+  box, because sensitivity can only ever range from about a half to one, so it can at most double
+  your odds. Every other lever on the page is unbounded.</p>
+
+  <p class="math">posterior odds = prior odds &#215; sensitivity / (1 &#8722; specificity)</p>
+
+  <p>Written as odds rather than probabilities, the whole thing is one multiplication, and it shows
+  which factors have room to move. Sensitivity sits in the numerator with a range of two. The false
+  alarm rate sits in the denominator and can go from one in five to one in a thousand, a range of
+  two hundred. And the prior odds &#8212; the base rate &#8212; span whatever the world hands you.
+  This is why the page is built as a target to hit: the tuning teaches the asymmetry faster than the
+  formula states it.</p>
+
+  <h2>Two levers, one effect</h2>
+
+  <p>Because the odds form is a product, doubling the prior odds and halving the false alarm rate do
+  exactly the same thing to the answer. Not approximately: identically. Testing a group twice as
+  likely to be affected is worth precisely as much as building a test that raises a false alarm half
+  as often, and the second is usually far more expensive than the first. That is the argument for
+  testing people who have a reason to be tested, rather than everybody, and it is also why the same
+  test can be excellent in a clinic and useless as a screen.</p>
+
+  <h2>What a second test buys you</h2>
+
+  <p>The multiplication also tells you what to do when you cannot change any of the three numbers:
+  test again. A second independent positive multiplies the odds by the same factor a second time, so
+  the one-in-six becomes very nearly four in five. This is exactly how confirmatory testing works,
+  and it is why a screening programme that never confirms a positive is doing harm rather than good.
+  The catch is the word independent &#8212; two runs of the same test on the same sample usually
+  fail together, and then the second result multiplies nothing.</p>
+
+  <h2>What to try</h2>
+
+  <p>Leave the base rate at one in a hundred and try to reach ninety per cent using sensitivity
+  alone: you cannot, at any setting. Then drag specificity from 95 to 99.9 and watch the answer
+  cross the line on its own. Finally set specificity back to 95 and drag the base rate instead
+  &#8212; one in five gets you there too. Two very different interventions, the same arithmetic,
+  and the number on the box was never involved in either.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG. Never use bare Math.random(). ------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+
+/* ---- MODEL: pure functions of the parameters. No DOM in here. ----------- */
+/* Two independent routes to the posterior, plus a third that counts people.
+     Route A  Bayes' theorem in probability form.
+     Route B  the odds form: posterior odds = prior odds x sensitivity over
+              one minus specificity, converted back at the end. Different
+              arithmetic, different rounding, same answer.
+     Route C  a seeded simulation of individual people, which is what the
+              other two are predictions about.                              */
+const POP = 10000;
+const RATES = [10000, 5000, 2000, 1000, 500, 200, 100, 50, 20, 10, 5, 4, 3, 2];
+
+const Model = {
+  prevalence(i){ return 1 / RATES[Math.max(0, Math.min(RATES.length - 1, i))]; },
+
+  /* ROUTE A */
+  posterior(p, se, sp){
+    const tp = p * se, fp = (1 - p) * (1 - sp);
+    return tp + fp > 0 ? tp / (tp + fp) : 0;
+  },
+  /* ROUTE B */
+  posteriorOdds(p, se, sp){
+    const o = (p / (1 - p)) * (se / (1 - sp));
+    return Number.isFinite(o) ? o / (1 + o) : 1;
+  },
+  priorOdds(p){ return p / (1 - p); },
+  lrPos(se, sp){ return se / (1 - sp); },
+  lrNeg(se, sp){ return (1 - se) / sp; },
+  fromOdds(o){ return o / (1 + o); },
+
+  npv(p, se, sp){
+    const tn = (1 - p) * sp, fn = p * (1 - se);
+    return tn + fn > 0 ? tn / (tn + fn) : 1;
+  },
+  /* the four cells of the box, as counts out of POP */
+  counts(p, se, sp){
+    const dis = POP * p, well = POP * (1 - p);
+    return { tp: dis * se, fn: dis * (1 - se), fp: well * (1 - sp), tn: well * sp,
+             dis: dis, well: well };
+  },
+  /* false alarms for every real case found */
+  falsePerTrue(p, se, sp){
+    const c = Model.counts(p, se, sp);
+    return c.tp > 0 ? c.fp / c.tp : Infinity;
+  },
+  /* the posterior after k independent positives, by repeated multiplication */
+  afterK(p, se, sp, k){
+    return Model.fromOdds(Model.priorOdds(p) * Math.pow(Model.lrPos(se, sp), k));
+  },
+
+  /* ROUTE C */
+  simulate(p, se, sp, n, seed){
+    const rng = mulberry32(seed);
+    let tp = 0, fp = 0, fn = 0, tn = 0;
+    for (let i = 0; i < n; i++){
+      const ill = rng() < p;
+      const pos = ill ? rng() < se : rng() < 1 - sp;
+      if (ill){ if (pos) tp++; else fn++; } else { if (pos) fp++; else tn++; }
+    }
+    return { tp: tp, fp: fp, fn: fn, tn: tn,
+             ppv: tp + fp > 0 ? tp / (tp + fp) : 0, n: n };
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { rate: 6, sens: 99, spec: 95, target: 90 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+const SS = 2;
+let CW = 900, CH = 600, NARROW = false, FS = 13, G_ = null;
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 20) : 900);
+  NARROW = avail < 470;
+  CW = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+
+  const pad = NARROW ? 10 : 14;
+  const L = pad, R = CW - pad;
+  const boxTop = Math.round(pad + FS + 12);
+  const boxH = Math.round(CW * (NARROW ? 0.52 : 0.32));
+  const boxBot = boxTop + boxH;
+  const boxCap = boxBot + FS + 8;           /* the "has it / does not" row  */
+  const leadY = boxCap + FS + 6;            /* room for a sliver's callout  */
+  const barTitle = Math.round(leadY + 14 + FS);
+  const barTop = barTitle + 10;
+  const barH = Math.round(CW * (NARROW ? 0.16 : 0.10));
+  const barBot = barTop + barH;
+  const barLab = barBot + FS + 6;
+  const cap2Y = barBot + 2 * FS + 12;
+  CH = cap2Y + 6;
+
+  G_ = { pad: pad, L: L, R: R, boxTop: boxTop, boxBot: boxBot, boxCap: boxCap,
+         leadY: leadY, barTitle: barTitle, barTop: barTop, barBot: barBot,
+         barLab: barLab, cap2Y: cap2Y };
+
+  if (cv.width !== CW * SS || cv.height !== CH * SS){ cv.width = CW * SS; cv.height = CH * SS; }
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function wid(s){ return ctx.measureText(s).width; }
+function pick(sets, room){
+  for (let i = 0; i < sets.length; i++) if (wid(sets[i]) <= room) return sets[i];
+  return sets[sets.length - 1];
+}
+function num(v){
+  if (v >= 1000) return Math.round(v).toLocaleString("en-GB");
+  if (v >= 10) return String(Math.round(v));
+  if (v >= 1) return v.toFixed(1);
+  return v.toFixed(2);
+}
+function pct(v){ return (v * 100).toFixed(v < 0.01 ? 2 : 1) + "%"; }
+
+function render(){
+  fitCanvas();
+  const G = G_;
+  const p = Model.prevalence(state.rate), se = state.sens / 100, sp = state.spec / 100;
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line");
+  const accent = css("--accent"), warn = css("--warn"), panel = css("--panel"),
+        soft = css("--accent-soft"), quiet = css("--quiet");
+
+  ctx.clearRect(0, 0, CW, CH);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, CW, CH);
+  ctx.textBaseline = "alphabetic";
+
+  const c = Model.counts(p, se, sp);
+  const post = Model.posterior(p, se, sp);
+  const target = state.target / 100;
+
+  /* ---------------- upper pane: the box of ten thousand people --------- */
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["Ten thousand people, and what the test says about them",
+                     "Ten thousand people", "10,000 people"], G.R - G.L), G.L, G.pad + FS);
+
+  const W = G.R - G.L, H = G.boxBot - G.boxTop;
+  const split = Math.round(G.L + W * p);
+  /* the healthy column */
+  ctx.fillStyle = quiet;
+  ctx.fillRect(split, G.boxTop, G.R - split, H);
+  ctx.fillStyle = warn;
+  ctx.fillRect(split, G.boxTop, G.R - split, H * (1 - sp));
+  /* the diseased column */
+  const dw = Math.max(0, split - G.L);
+  ctx.fillStyle = soft;
+  ctx.fillRect(G.L, G.boxTop, dw, H);
+  ctx.fillStyle = accent;
+  ctx.fillRect(G.L, G.boxTop, dw, H * se);
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.strokeRect(G.L + 0.5, G.boxTop + 0.5, W - 1, H - 1);
+  ctx.beginPath(); ctx.moveTo(split + 0.5, G.boxTop); ctx.lineTo(split + 0.5, G.boxBot); ctx.stroke();
+
+  ctx.font = FS + "px " + css("--font-body");
+  /* the healthy column can always carry its own labels */
+  const rw = G.R - split;
+  ctx.textAlign = "center";
+  if (H * (1 - sp) > FS + 6 && rw > 70){
+    ctx.fillStyle = panel;
+    ctx.fillText(num(c.fp) + " false alarms", split + rw / 2, G.boxTop + H * (1 - sp) / 2 + FS * 0.35);
+  }
+  if (H * sp > FS + 6 && rw > 70){
+    ctx.fillStyle = muted;
+    ctx.fillText(num(c.tn) + " correctly cleared", split + rw / 2,
+                 G.boxTop + H * (1 - sp) + (H * sp) / 2 + FS * 0.35);
+  }
+  /* the diseased column is usually a sliver, which is the point, so it gets
+     a leader line out to a label under the box instead of text inside it. */
+  ctx.fillStyle = muted; ctx.textAlign = "left";
+  const slug = num(c.tp) + " found, " + num(c.fn) + " missed";
+  if (dw > wid(slug) + 12){
+    ctx.fillStyle = panel; ctx.textAlign = "center";
+    ctx.fillText(slug, G.L + dw / 2, G.boxTop + H / 2 + FS * 0.35);
+  } else {
+    ctx.strokeStyle = accent; ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(G.L + dw / 2, G.boxBot);
+    ctx.lineTo(G.L + dw / 2, G.leadY - FS + 2);
+    ctx.lineTo(G.L + dw / 2 + 10, G.leadY - FS + 2);
+    ctx.stroke();
+    ctx.fillStyle = accent; ctx.textAlign = "left";
+    ctx.fillText(pick([num(c.dis) + " have it: " + slug, num(c.dis) + " have it", slug],
+                      G.R - G.L - dw / 2 - 16),
+                 G.L + dw / 2 + 14, G.leadY);
+  }
+  ctx.fillStyle = muted; ctx.textAlign = "left";
+  ctx.fillText(pick(["1 in " + RATES[state.rate] + " have it", "1 in " + RATES[state.rate]],
+                    W * 0.5), G.L, G.boxCap);
+  ctx.textAlign = "right";
+  ctx.fillText(pick([num(c.well) + " do not have it", num(c.well) + " do not", "do not"],
+                    W * 0.5), G.R, G.boxCap);
+
+  /* ---------------- lower pane: only the positives --------------------- */
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  const posN = c.tp + c.fp;
+
+  /* the target's label shares the title row, so measure its band first and
+     shorten the title to whatever is left of it.                           */
+  const txL = Math.round(G.L + W * target) + 0.5;
+  const tlab = pick(["target " + state.target + "%", state.target + "%"], W * 0.4);
+  const tRight = txL + wid(tlab) + 8 > G.R;
+  const labLeft = tRight ? txL - 6 - wid(tlab) : txL + 6;
+
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["Everyone the test called positive, rescaled to the full width",
+                     "Everyone called positive, rescaled", "The positives", ""],
+                    Math.max(0, labLeft - G.L - 12)),
+               G.L, G.barTitle);
+
+  const bh = G.barBot - G.barTop;
+  const cut = G.L + W * (posN > 0 ? post : 0);
+  ctx.fillStyle = accent; ctx.fillRect(G.L, G.barTop, cut - G.L, bh);
+  ctx.fillStyle = warn; ctx.fillRect(cut, G.barTop, G.R - cut, bh);
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.strokeRect(G.L + 0.5, G.barTop + 0.5, W - 1, bh - 1);
+
+  /* the target */
+  ctx.strokeStyle = ink; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(txL, G.barTop - 7); ctx.lineTo(txL, G.barBot + 7); ctx.stroke();
+  ctx.font = "600 " + FS + "px " + css("--font-body");
+  ctx.textAlign = tRight ? "right" : "left";
+  ctx.fillStyle = ink;
+  ctx.fillText(tlab, tRight ? txL - 6 : txL + 6, G.barTitle);
+
+  ctx.font = FS + "px " + css("--font-body");
+  ctx.fillStyle = accent; ctx.textAlign = "left";
+  ctx.fillText(pick([num(c.tp) + " really have it", num(c.tp) + " real", num(c.tp)], W * 0.45),
+               G.L, G.barLab);
+  ctx.fillStyle = warn; ctx.textAlign = "right";
+  ctx.fillText(pick([num(c.fp) + " do not", num(c.fp) + " false", num(c.fp)], W * 0.45),
+               G.R, G.barLab);
+  ctx.fillStyle = muted; ctx.textAlign = "center";
+  ctx.fillText(pick(["a positive result means a " + pct(post) + " chance of having it",
+                     "a positive means " + pct(post), pct(post)], W),
+               (G.L + G.R) / 2, G.cap2Y);
+
+  /* ---------------- readouts ------------------------------------------- */
+  const gap = post - target;
+  el("prevout").textContent = "1 in " + RATES[state.rate].toLocaleString("en-GB");
+  el("sensout").textContent = state.sens.toFixed(1) + "%";
+  el("specout").textContent = state.spec.toFixed(1) + "%";
+  el("goalnow").textContent = pct(post);
+  el("goal").firstChild.nodeValue = "Aim: make a positive result mean a ";
+  el("goaltarget").textContent = state.target + "%";
+  el("oPost").textContent = pct(post);
+  el("oGap").textContent = gap >= 0 ? "reached" : (-gap * 100).toFixed(1) + " points short";
+  el("oRatio").textContent = c.tp > 0 ? Model.falsePerTrue(p, se, sp).toFixed(1) : "no cases found";
+  el("oNpv").textContent = pct(Model.npv(p, se, sp));
+  el("oPos").textContent = num(posN);
+  el("oFn").textContent = num(c.fn);
+}
+
+el("prev").addEventListener("input", () => { state.rate = parseInt(el("prev").value, 10); render(); });
+el("sens").addEventListener("input", () => { state.sens = parseFloat(el("sens").value); render(); });
+el("spec").addEventListener("input", () => { state.spec = parseFloat(el("spec").value); render(); });
+el("target").addEventListener("change", () => { state.target = parseInt(el("target").value, 10); render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("prev").value = defaults.rate; el("sens").value = defaults.sens;
+  el("spec").value = defaults.spec; el("target").value = String(defaults.target);
+  render();
+});
+
+let rid = null;
+addEventListener("resize", () => { clearTimeout(rid); rid = setTimeout(render, 90); });
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
+render();
+
+/* ---- SELFTEST: minimum 5 numeric assertions against known values. ------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1. the textbook case, which happens to be exactly one sixth. */
+  const classic = Model.posterior(0.01, 0.99, 0.95);
+  push("the textbook case comes out at exactly one sixth",
+       near(classic, 1 / 6, 1e-15),
+       "one per cent prevalence, 99 per cent sensitivity, 95 per cent specificity gives "
+       + classic.toFixed(10) + ", against 1/6 = 0.1666666667: five of every six positives are wrong");
+
+  /* 2. probability form and odds form agree everywhere. */
+  let w2 = 0;
+  for (let i = 0; i < RATES.length; i++)
+    for (let s = 50; s <= 100; s += 2.5)
+      for (let q = 80; q <= 99.9; q += 1.9){
+        const p = Model.prevalence(i);
+        w2 = Math.max(w2, Math.abs(Model.posterior(p, s / 100, q / 100)
+                                 - Model.posteriorOdds(p, s / 100, q / 100)));
+      }
+  push("two independent routes to the posterior agree across the whole grid", w2 < 1e-12,
+       "Bayes' theorem written as probabilities and written as odds differ by at most "
+       + w2.toExponential(2) + " over all 14 base rates, 21 sensitivities and 11 specificities");
+
+  /* 3. and both agree with counting individual people. */
+  let ok3 = true, s3 = [];
+  for (const cfg of [[0.01, 0.99, 0.95], [0.1, 0.9, 0.9], [0.002, 0.95, 0.98]]){
+    const sim = Model.simulate(cfg[0], cfg[1], cfg[2], 400000, 9991);
+    const exact = Model.posterior(cfg[0], cfg[1], cfg[2]);
+    const se3 = Math.sqrt(exact * (1 - exact) / (sim.tp + sim.fp));
+    if (!(Math.abs(sim.ppv - exact) < 4 * se3)) ok3 = false;
+    s3.push(sim.ppv.toFixed(4) + " against " + exact.toFixed(4));
+  }
+  push("and simulating 400,000 individual people agrees with both", ok3,
+       s3.join(", ") + "; every run is inside four standard errors of the closed form");
+
+  /* 4. a test that is no better than a coin leaves the base rate untouched. */
+  let w4 = 0;
+  for (let i = 0; i < RATES.length; i++)
+    for (let q = 51; q <= 99; q += 3){
+      const p = Model.prevalence(i), sp = q / 100;
+      w4 = Math.max(w4, Math.abs(Model.posterior(p, 1 - sp, sp) - p));
+    }
+  push("a test whose sensitivity equals its false alarm rate tells you nothing", w4 < 1e-12,
+       "when sensitivity equals one minus specificity the posterior equals the prevalence to "
+       + w4.toExponential(2) + ", at every base rate on the slider");
+
+  /* 5. the posterior rises with the base rate, always. */
+  let ok5 = true;
+  for (let s = 55; s <= 100; s += 5)
+    for (let q = 80; q <= 99; q += 3){
+      let prev = -1;
+      for (let i = 0; i < RATES.length; i++){
+        const v = Model.posterior(Model.prevalence(i), s / 100, q / 100);
+        if (!(v > prev)) ok5 = false;
+        prev = v;
+      }
+    }
+  push("the posterior climbs with the base rate at every setting of the test", ok5,
+       "strictly increasing across all 14 base rates for each of 10 sensitivities and 7 "
+       + "specificities, with no ties");
+
+  /* 6. the four cells account for everybody. */
+  let w6 = 0;
+  for (let i = 0; i < RATES.length; i++)
+    for (let s = 50; s <= 100; s += 10)
+      for (let q = 80; q <= 99; q += 4){
+        const p = Model.prevalence(i), c = Model.counts(p, s / 100, q / 100);
+        w6 = Math.max(w6, Math.abs(c.tp + c.fn - c.dis), Math.abs(c.fp + c.tn - c.well),
+                      Math.abs(c.tp + c.fn + c.fp + c.tn - POP));
+      }
+  push("found plus missed equals the number who have it, exactly", w6 < 1e-9,
+       "the two columns and the whole box of " + POP.toLocaleString("en-GB")
+       + " people balance to " + w6.toExponential(2) + " across the grid");
+
+  /* 7. THE headline. Sensitivity has almost nothing left to give. */
+  let worst7 = Infinity, s7 = "";
+  for (const i of [0, 2, 4, 6, 8]){
+    const p = Model.prevalence(i);
+    const base = Model.posterior(p, 0.99, 0.95);
+    const perfect = Model.posterior(p, 1.0, 0.95);
+    const doubled = Model.posterior(2 * p / (1 + p), 0.99, 0.95);   /* doubled odds */
+    const ratio = (doubled - base) / Math.max(1e-18, perfect - base);
+    if (ratio < worst7) worst7 = ratio;
+    if (i === 6) s7 = "at one in a hundred, perfecting sensitivity moves it from "
+                    + base.toFixed(4) + " to " + perfect.toFixed(4)
+                    + " while doubling the prior odds moves it to " + doubled.toFixed(4);
+  }
+  push("doubling the base rate beats perfecting sensitivity, by a factor of at least fifty",
+       worst7 > 50, s7 + "; the smallest advantage over five base rates is "
+       + worst7.toFixed(0) + " times");
+
+  /* 8. because sensitivity's whole range is a factor of two. */
+  const seSpan = 1 / 0.5, spSpan = (1 / (1 - 0.999)) / (1 / (1 - 0.8));
+  push("sensitivity spans a factor of two and the false alarm rate a factor of two hundred",
+       near(seSpan, 2, 1e-12) && near(spSpan, 200, 1e-9),
+       "over its slider sensitivity multiplies the odds by between 0.5 and 1, a range of "
+       + seSpan + "; one minus specificity divides them by between 0.2 and 0.001, a range of "
+       + spSpan.toFixed(0));
+
+  /* 9. doubling the prior odds and halving the false alarm rate are the same
+        operation, because the odds form is a product. */
+  let w9 = 0;
+  for (let i = 0; i < RATES.length; i++)
+    for (let s = 50; s <= 100; s += 10)
+      for (let q = 80; q <= 99; q += 4){
+        const p = Model.prevalence(i), se = s / 100, fpr = 1 - q / 100;
+        const a = Model.fromOdds(2 * Model.priorOdds(p) * se / fpr);
+        const b = Model.fromOdds(Model.priorOdds(p) * se / (fpr / 2));
+        w9 = Math.max(w9, Math.abs(a - b));
+      }
+  push("doubling the base rate and halving the false alarm rate are the same move", w9 < 1e-15,
+       "identical to " + w9.toExponential(2)
+       + " across the grid, because the odds form is a single product");
+
+  /* 10. a second independent positive multiplies the odds again. */
+  let w10 = 0, s10 = "";
+  for (let i = 0; i < RATES.length; i++)
+    for (let q = 80; q <= 99; q += 4){
+      const p = Model.prevalence(i), se = 0.99, sp = q / 100;
+      const once = Model.posterior(p, se, sp);
+      const twice = Model.posterior(once, se, sp);
+      w10 = Math.max(w10, Math.abs(twice - Model.afterK(p, se, sp, 2)));
+      if (i === 6 && q === 96) s10 = "from one in a hundred, one positive gives "
+                                   + once.toFixed(4) + " and a second gives " + twice.toFixed(4);
+    }
+  push("feeding a positive back in as the new prior is the same as multiplying twice", w10 < 1e-12,
+       s10 + "; the two ways of chaining agree to " + w10.toExponential(2));
+
+  /* 11. the perfect-specificity corner, where a positive is a certainty. */
+  let ok11 = true;
+  for (let i = 0; i < RATES.length; i++)
+    for (let s = 50; s <= 100; s += 10)
+      if (!near(Model.posterior(Model.prevalence(i), s / 100, 1), 1, 1e-12)) ok11 = false;
+  push("with no false alarms at all, a positive is a certainty", ok11,
+       "at 100 per cent specificity the posterior is exactly 1 at every base rate and every "
+       + "sensitivity, which is the corner the whole page is failing to reach");
+
+  /* 12. the false alarms per real case have a closed form of their own. */
+  let w12 = 0;
+  for (let i = 0; i < RATES.length; i++)
+    for (let s = 60; s <= 100; s += 8)
+      for (let q = 80; q <= 99; q += 4){
+        const p = Model.prevalence(i), se = s / 100, sp = q / 100;
+        w12 = Math.max(w12, Math.abs(Model.falsePerTrue(p, se, sp)
+                                   - (1 - p) * (1 - sp) / (p * se)));
+      }
+  push("the number of false alarms per real case matches its closed form", w12 < 1e-9,
+       "counting people out of " + POP.toLocaleString("en-GB")
+       + " and evaluating (1-p)(1-specificity) over p times sensitivity agree to "
+       + w12.toExponential(2));
+
+  /* 13. nothing the controls can reach is outside zero and one. */
+  let ok13 = true;
+  for (let i = 0; i < RATES.length; i++)
+    for (let s = 50; s <= 100; s += 0.5)
+      for (let q = 80; q <= 99.9; q += 1.9){
+        const v = Model.posterior(Model.prevalence(i), s / 100, q / 100);
+        const nv = Model.npv(Model.prevalence(i), s / 100, q / 100);
+        if (!(Number.isFinite(v) && v >= 0 && v <= 1)) ok13 = false;
+        if (!(Number.isFinite(nv) && nv >= 0 && nv <= 1)) ok13 = false;
+      }
+  push("every reachable setting gives a real probability", ok13,
+       "all 14 base rates, 101 sensitivities and 11 specificities give a posterior and a "
+       + "negative predictive value inside zero and one");
+
+  return t;
+};
+
+/* exposed for the verifier's control sweep */
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
