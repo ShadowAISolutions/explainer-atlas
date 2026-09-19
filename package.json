@@ -1,0 +1,17 @@
+{
+  "name": "explainer-atlas",
+  "version": "0.0.0",
+  "description": "A growing collection of self-contained interactive explainers.",
+  "scripts": {
+    "verify": "node tools/verify.mjs",
+    "index": "node tools/build_index.mjs"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "playwright": "^1.63.0"
+  },
+  "private": true,
+  "type": "module"
+}

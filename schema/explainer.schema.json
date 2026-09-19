@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://shadowaisolutions.com/atlas/schema/explainer.schema.json",
+  "title": "Explainer metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "slug", "title", "domain", "difficulty", "summary", "prerequisites",
+    "tags", "interaction_pattern", "sources", "created_at", "assertions_count"
+  ],
+  "properties": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "minLength": 3,
+      "maxLength": 64,
+      "description": "Directory name under explainers/. Lowercase kebab-case."
+    },
+    "title": { "type": "string", "minLength": 3, "maxLength": 80 },
+    "domain": {
+      "type": "string",
+      "enum": [
+        "mathematics", "physics", "computer-science", "biology", "economics",
+        "statistics", "chemistry", "music-theory", "engineering", "linguistics",
+        "earth-science", "information-theory", "game-theory"
+      ]
+    },
+    "difficulty": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "summary": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 240,
+      "description": "One sentence. What the reader will be able to do afterward."
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+      "uniqueItems": true,
+      "description": "Slugs of explainers that should be read first. Must resolve."
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+      "minItems": 1,
+      "maxItems": 12,
+      "uniqueItems": true
+    },
+    "interaction_pattern": {
+      "type": "string",
+      "enum": [
+        "drag-parameter", "step-through", "draw-input", "compare-side-by-side",
+        "time-scrubber", "build-from-parts", "guess-then-reveal", "live-code",
+        "spatial-explore", "tune-to-match", "perturb-and-observe", "race-two-methods"
+      ]
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "url"],
+        "properties": {
+          "title": { "type": "string", "minLength": 3 },
+          "url": { "type": "string", "format": "uri", "pattern": "^https?://" }
+        }
+      },
+      "description": "One entry per factual claim that is not derived on the page."
+    },
+    "created_at": { "type": "string", "format": "date" },
+    "assertions_count": {
+      "type": "integer",
+      "minimum": 5,
+      "description": "Number of assertions window.__SELFTEST() returns. Verifier cross-checks this."
+    }
+  }
+}
