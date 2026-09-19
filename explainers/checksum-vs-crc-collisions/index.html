@@ -1,0 +1,1056 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Error Your Checksum Can't See — Explainer Atlas</title>
+<meta name="description" content="Corrupt a message four different ways and watch a checksum and a CRC of the same width disagree about whether anything happened.">
+<style>
+/* Ink on a cold pale paper, ruled rather than boxed, with the controls in a
+   bar ACROSS THE TOP and the evidence full-width underneath -- a third page
+   shape again, per AUDIT/002's ask that pages differ in layout and not just
+   in what the canvas draws.                                                 */
+:root{
+  --bg:#f2f4f6; --panel:#ffffff; --ink:#10141a; --muted:#5c6673; --line:#d3d9df;
+  --rule:#10141a; --accent:#1d4ed8; --accent-soft:#e3e9fb;
+  --caught:#15803d; --caught-soft:#dcf0e3; --missed:#b91c1c; --missed-soft:#f8dedd;
+  --radius:4px; --pad:clamp(14px,2.6vw,24px);
+  --font-body:"Iowan Old Style","Charter",Georgia,serif;
+  --font-mono:ui-monospace,SFMono-Regular,"Cascadia Mono",Menlo,monospace;
+  --scale-h1:clamp(1.6rem,1.1rem + 2.4vw,2.5rem);
+  --scale-body:clamp(1rem,0.96rem + 0.2vw,1.08rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0c1014; --panel:#141a21; --ink:#e7ecf1; --muted:#95a1af; --line:#28313b;
+    --rule:#e7ecf1; --accent:#7ba2ff; --accent-soft:#16213a;
+    --caught:#5fd08b; --caught-soft:#123021; --missed:#ff8b84; --missed-soft:#351719;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.64 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:62rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:3px double var(--rule); padding-bottom:.8em}
+.kicker{margin:0 0 .3em; color:var(--muted); font:600 .72rem/1.3 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.17em}
+h1{font:600 var(--scale-h1)/1.1 var(--font-body); margin:0 0 .3em; letter-spacing:-.015em}
+.standfirst{margin:0; color:var(--muted); max-width:44em}
+
+/* the control bar: a horizontal strip above the evidence */
+.bar{margin:var(--pad) 0 0; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:var(--pad);
+  display:grid; gap:1em 1.4em; grid-template-columns:1fr}
+@media (min-width:36rem){ .bar{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (min-width:58rem){ .bar{grid-template-columns:repeat(3,minmax(0,1fr))} }
+.control{display:grid; gap:.28em; align-content:start}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control label{font:600 .84rem/1.25 var(--font-mono); text-transform:uppercase;
+  letter-spacing:.07em}
+output{font:600 .86rem/1 var(--font-mono); color:var(--accent);
+  background:var(--accent-soft); padding:.22em .45em; border-radius:3px}
+.hint{color:var(--muted); font-size:.79rem; margin:0}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:28px}
+select,button{font:600 .88rem/1 var(--font-mono); color:inherit; background:var(--bg);
+  border:1px solid var(--line); border-radius:3px; padding:.62em .6em; min-height:40px;
+  width:100%}
+button{cursor:pointer}
+button:hover{border-color:var(--accent)}
+.btnrow{display:flex; gap:.5em; align-items:end}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent);
+  outline-offset:2px; border-radius:3px}
+
+figure.stage{margin:var(--pad) 0 0; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:12px}
+figure.stage canvas{display:block; width:100%; height:auto}
+figcaption{margin-top:.7em; color:var(--muted); font-size:.85rem}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:.5em;
+  margin:.75em 0 0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:3px;
+  padding:.5em .65em}
+.readout dt{margin:0; color:var(--muted); font:.71rem/1.3 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.08em}
+.readout dd{margin:.18em 0 0; font:600 1rem/1.2 var(--font-mono)}
+
+.prose{margin-top:calc(var(--pad)*1.6); max-width:41em}
+.prose h2{font:600 .8rem/1.4 var(--font-mono); margin:2em 0 .5em; color:var(--accent);
+  text-transform:uppercase; letter-spacing:.13em; border-top:1px solid var(--line);
+  padding-top:.9em}
+.prose > :first-child{margin-top:0}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.86em; background:var(--accent-soft);
+  padding:.75em .85em; border-radius:3px; overflow-x:auto}
+.lede{font-size:1.06em}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad);
+  border-top:3px double var(--rule); color:var(--muted); font-size:.85rem}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Information theory</p>
+  <h1>The Error Your Checksum Can&rsquo;t See</h1>
+  <p class="standfirst">A checksum and a CRC of the same width both turn a message into a
+    short tag. Break the message four different ways and they stop agreeing about whether
+    anything happened at all.</p>
+</header>
+
+<section class="bar" data-role="controls" aria-label="Corruption and code controls">
+  <div class="control">
+    <div class="row">
+      <label for="kind">What goes wrong</label>
+    </div>
+    <select id="kind">
+      <option value="burst">A burst of noise</option>
+      <option value="swap" selected>Two words swapped</option>
+      <option value="comp">A compensating edit</option>
+      <option value="rand">Bits flipped at random</option>
+    </select>
+    <p class="hint">Noise on a wire arrives in bursts. The other three are what a program does to its own data.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="len">Bits affected</label>
+      <output id="lenout" for="len">9</output>
+    </div>
+    <input type="range" id="len" min="1" max="24" step="1" value="9">
+    <p class="hint">The span of the burst, or how many bits get flipped. Ignored by the middle two.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="where">Which case</label>
+      <output id="whereout" for="where">0</output>
+    </div>
+    <input type="range" id="where" min="0" max="95" step="1" value="0">
+    <p class="hint">Where the damage lands, or which pair of words is involved.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="sum">Checksum</label>
+    </div>
+    <select id="sum">
+      <option value="inet" selected>Internet checksum, 16 bit</option>
+      <option value="fletcher">Fletcher-16</option>
+    </select>
+    <p class="hint">Both add the message up. They differ in what they add.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="gen">Generator</label>
+    </div>
+    <select id="gen">
+      <option value="8">CRC-8, degree 8</option>
+      <option value="16" selected>CRC-16-CCITT, degree 16</option>
+    </select>
+    <p class="hint">Polynomial division instead of addition. Degree is the whole story.</p>
+  </div>
+
+  <div class="control btnrow">
+    <button type="button" id="next">Next case</button>
+    <button type="button" id="reset">Reset</button>
+  </div>
+</section>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="900" height="620" role="img"
+          aria-label="The message as a grid of bits with the damaged bits marked, the two codes before and after with a caught or missed verdict, a record of how often each method catches each kind of corruption, and a strip showing the burst lengths the CRC is guaranteed to catch."></canvas>
+  <figcaption id="cap">Six sixteen-bit words. Damaged bits are filled; the verdict strip says whether each
+    method noticed. The record underneath is measured over every case of each kind.</figcaption>
+</figure>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Checksum</dt><dd id="rsum">&mdash;</dd></div>
+  <div><dt>CRC</dt><dd id="rcrc">&mdash;</dd></div>
+  <div><dt>Bursts guaranteed</dt><dd id="rburst">&mdash;</dd></div>
+  <div><dt>Two-bit reach</dt><dd id="rgap">&mdash;</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p class="lede">The message on screen is twelve characters, which is six sixteen-bit
+    words, which is ninety-six bits. Two short tags travel with it. One is a checksum:
+    add the words up and send the total. One is a CRC: divide the message, treated as a
+    polynomial, and send the remainder. Both are sixteen bits wide, so both cost the same
+    to carry. The page opens on two of the words swapped, which is where they part
+    company.</p>
+
+  <h2>Addition forgets the order</h2>
+  <p>The Internet checksum is the ones-complement sum of the sixteen-bit words, the scheme
+    every IP, UDP and TCP header has used since 1981. Addition is commutative, so the sum
+    of the words does not depend on the order of the words. Swap any two of them and the
+    checksum is bit-for-bit identical. There are fifteen ways to swap two of these six
+    words; one of them is invisible to everything because the message happens to repeat a
+    word, and of the fourteen that genuinely change the message, the Internet checksum
+    catches <strong>none</strong>.</p>
+  <p>The second blind spot is quieter. Clear a bit in one word and set the same bit in
+    another, and you have subtracted 2<sup>k</sup> and added it straight back. The total is
+    unchanged, so the checksum is unchanged. Seventy-one such pairs exist in this message
+    and the Internet checksum misses all seventy-one. Fletcher-16 plugs both holes by
+    keeping a second running total of the running total, which makes position matter &mdash;
+    and it still misses one of the fourteen swaps.</p>
+
+  <h2>Division does not</h2>
+  <p>A CRC treats the message as a polynomial over the field with two elements, multiplies
+    it by x<sup>n</sup>, divides by a fixed generator of degree n, and sends the remainder.
+    An error is itself a polynomial, E, added to the message; the receiver sees a
+    difference only if the generator fails to divide E. So the question &ldquo;which errors
+    are missed&rdquo; has an exact answer: <em>the multiples of the generator</em>.</p>
+  <p class="math">E(x) undetected  &lt;=&gt;  G(x) divides E(x)</p>
+  <p>A burst of length L is a run of L bits somewhere in the message with the first and
+    last flipped. As a polynomial it is x<sup>p</sup>&middot;B(x) with B of degree less than
+    L. The generator has a non-zero constant term, so it shares no factor with
+    x<sup>p</sup>, and if L is at most n then B has lower degree than G and cannot be a
+    multiple of it. Every burst up to the degree of the generator is caught, with no
+    statistics involved. Push the length one past the degree and the guarantee becomes a
+    proportion, and an exactly computable one: a fraction 2<sup>&minus;(n&minus;1)</sup> of
+    those bursts slip through, and beyond that length the fraction settles at
+    2<sup>&minus;n</sup>. On the strip at the bottom of the figure that shows up as a hard
+    edge exactly where the generator&rsquo;s degree is.</p>
+
+  <h2>Degree is not the whole story</h2>
+  <p>Two-bit errors expose the one thing degree does not decide. Bits flipped at positions
+    i and j make the polynomial x<sup>i</sup>(1 + x<sup>d</sup>), so such an error is missed
+    exactly when G divides 1 + x<sup>d</sup> &mdash; that is, when d is a multiple of the
+    order of x modulo G. For CRC-16-CCITT that order is 32767, so no two-bit error inside
+    four kilobytes is ever missed. For the degree-8 generator x<sup>8</sup> + x<sup>2</sup>
+    + x + 1 it is only 127: flip two bits exactly 127 apart and the CRC reports a clean
+    message. Halving the width cost you a factor of 258 in reach, which is why real
+    standards pick their polynomials rather than picking any polynomial of the right size.</p>
+
+  <h2>What to try</h2>
+  <p>Leave the generator on CRC-16 and drag <em>Bits affected</em> from 1 to 24. The burst
+    row of the record stays at a flat 100% until 17, and the strip below turns at exactly
+    16. Switch to CRC-8 and the edge jumps to 8. Now set the damage to <em>A compensating
+    edit</em>: the CRC catches all seventy-one, the Internet checksum catches zero, and the
+    bit grid shows why &mdash; two marks, in the same column, one word apart.</p>
+  <p>Finally set the damage to <em>Bits flipped at random</em> and widen the count. This is
+    the case neither method was designed for and both do the same thing: a random error
+    passes a code of n bits with probability 2<sup>&minus;n</sup>, whatever the code. The
+    difference between a checksum and a CRC is never the random case. It is the structured
+    one, and structured damage is the kind software actually produces.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG -------------------------------------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+const TEXT   = "burst errors";     /* 12 ASCII bytes = 6 sixteen-bit words */
+const NBYTE  = 12, NWORD = 6, NBIT = 96;
+const POLY   = { 8: 0x107, 16: 0x11021 };   /* including the leading term   */
+const PNAME  = { 8: "x8+x2+x+1", 16: "x16+x12+x5+1" };
+
+/* ---- MODEL: pure, total, no DOM ---------------------------------------- */
+const Model = {
+  NBYTE: NBYTE, NWORD: NWORD, NBIT: NBIT, POLY: POLY, PNAME: PNAME,
+
+  message(){
+    const b = new Uint8Array(NBYTE);
+    for (let i = 0; i < NBYTE; i++) b[i] = TEXT.charCodeAt(i) & 0xFF;
+    return b;
+  },
+  bitsOf(bytes){
+    const out = new Uint8Array(bytes.length * 8);
+    for (let i = 0; i < bytes.length; i++)
+      for (let j = 0; j < 8; j++) out[i * 8 + j] = (bytes[i] >>> (7 - j)) & 1;
+    return out;
+  },
+  wordsOf(bytes){
+    const w = [];
+    for (let i = 0; i < bytes.length; i += 2) w.push(((bytes[i] << 8) | bytes[i + 1]) >>> 0);
+    return w;
+  },
+
+  /* --- route 1: the bit-at-a-time shift register, on the augmented message */
+  crcBitwise(bytes, n){
+    const mask = (1 << n) - 1, poly = POLY[n] & mask;
+    let r = 0;
+    const step = (bit) => {
+      const top = (r >>> (n - 1)) & 1;
+      r = ((r << 1) | bit) & mask;
+      if (top) r ^= poly;
+    };
+    for (let i = 0; i < bytes.length; i++)
+      for (let j = 7; j >= 0; j--) step((bytes[i] >>> j) & 1);
+    for (let i = 0; i < n; i++) step(0);
+    return r >>> 0;
+  },
+  /* --- route 2: the byte-at-a-time table, which must agree exactly ------- */
+  _tab: {},
+  table(n){
+    if (Model._tab[n]) return Model._tab[n];
+    const mask = (1 << n) - 1, poly = POLY[n] & mask, top = 1 << (n - 1);
+    const t = new Int32Array(256);
+    for (let i = 0; i < 256; i++){
+      let r = (i << (n - 8)) & mask;
+      for (let k = 0; k < 8; k++) r = (r & top) ? (((r << 1) ^ poly) & mask) : ((r << 1) & mask);
+      t[i] = r;
+    }
+    Model._tab[n] = t;
+    return t;
+  },
+  crc(bytes, n){
+    const t = Model.table(n), mask = (1 << n) - 1, sh = n - 8;
+    let r = 0;
+    for (let i = 0; i < bytes.length; i++)
+      r = (((r << 8) & mask) ^ t[((r >>> sh) ^ bytes[i]) & 0xFF]) & mask;
+    return r >>> 0;
+  },
+  /* --- route 3: schoolbook long division over GF(2), on a bit array ------ */
+  longDiv(bits, n){
+    const b = Uint8Array.from(bits);
+    const g = new Uint8Array(n + 1);
+    for (let i = 0; i <= n; i++) g[i] = (POLY[n] >>> (n - i)) & 1;
+    for (let i = 0; i + n < b.length; i++)
+      if (b[i]) for (let j = 0; j <= n; j++) b[i + j] ^= g[j];
+    let r = 0;
+    for (let i = b.length - n; i < b.length; i++) r = r * 2 + b[i];
+    return r >>> 0;
+  },
+  /* remainder of a bare polynomial given as an integer bit pattern -------- */
+  remOf(value, n){
+    const mask = (1 << n) - 1, poly = POLY[n] & mask;
+    let hi = 31;
+    while (hi > 0 && !((value >>> hi) & 1)) hi--;
+    let r = 0;
+    for (let i = hi; i >= 0; i--){
+      const top = (r >>> (n - 1)) & 1;
+      r = ((r << 1) | ((value >>> i) & 1)) & mask;
+      if (top) r ^= poly;
+    }
+    return r >>> 0;
+  },
+  /* the order of x modulo G: the smallest d with G dividing x^d + 1 ------- */
+  _ord: {},
+  orderOfX(n){
+    if (Model._ord[n]) return Model._ord[n];
+    const mask = (1 << n) - 1, poly = POLY[n] & mask;
+    let r = 1;
+    for (let d = 1; d <= 200000; d++){
+      const top = (r >>> (n - 1)) & 1;
+      r = (r << 1) & mask;
+      if (top) r ^= poly;
+      if (r === 1){ Model._ord[n] = d; return d; }
+    }
+    return -1;
+  },
+
+  /* ---- the two checksums ----------------------------------------------- */
+  inet(bytes){                     /* RFC 1071, ones-complement, 16 bit     */
+    let s = 0;
+    for (let i = 0; i < bytes.length; i += 2){
+      s += ((bytes[i] << 8) | bytes[i + 1]) >>> 0;
+      s = (s & 0xFFFF) + (s >>> 16);
+    }
+    return (~s) & 0xFFFF;
+  },
+  fletcher(bytes){
+    let a = 0, b = 0;
+    for (let i = 0; i < bytes.length; i++){ a = (a + bytes[i]) % 255; b = (b + a) % 255; }
+    return ((b << 8) | a) >>> 0;
+  },
+  sumOf(bytes, kind){ return kind === "fletcher" ? Model.fletcher(bytes) : Model.inet(bytes); },
+
+  apply(bytes, err){
+    const out = new Uint8Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) out[i] = bytes[i] ^ err[i];
+    return out;
+  },
+  flip(err, bit){ err[bit >> 3] ^= 1 << (7 - (bit & 7)); },
+  weight(err){
+    let c = 0;
+    for (let i = 0; i < err.length; i++){ let v = err[i]; while (v){ c += v & 1; v >>= 1; } }
+    return c;
+  }
+};
+
+/* ---- the four kinds of damage, as error masks --------------------------- */
+const Damage = {
+  /* a burst of span L: first and last bit flipped, the inside seeded ------ */
+  burst(len, pos, seed){
+    const L = Math.max(1, Math.min(NBIT, len));
+    const p = Math.max(0, Math.min(NBIT - L, pos));
+    const e = new Uint8Array(NBYTE);
+    Model.flip(e, p);
+    if (L > 1) Model.flip(e, p + L - 1);
+    const rng = mulberry32(seed >>> 0);
+    for (let i = 1; i < L - 1; i++) if (rng() < 0.5) Model.flip(e, p + i);
+    return e;
+  },
+  /* every unordered pair of words ---------------------------------------- */
+  swapCases(){
+    const out = [];
+    for (let i = 0; i < NWORD; i++) for (let j = i + 1; j < NWORD; j++) out.push([i, j]);
+    return out;
+  },
+  swap(i, j){
+    const w = Model.wordsOf(Model.message());
+    const d = (w[i] ^ w[j]) >>> 0;
+    const e = new Uint8Array(NBYTE);
+    e[i * 2] ^= (d >>> 8) & 0xFF; e[i * 2 + 1] ^= d & 0xFF;
+    e[j * 2] ^= (d >>> 8) & 0xFF; e[j * 2 + 1] ^= d & 0xFF;
+    return e;
+  },
+  /* clear bit k of one word, set bit k of another: the sum does not move -- */
+  compCases(){
+    const w = Model.wordsOf(Model.message()), out = [];
+    for (let k = 15; k >= 0; k--)
+      for (let i = 0; i < NWORD; i++) for (let j = 0; j < NWORD; j++){
+        if (i === j) continue;
+        if (((w[i] >>> k) & 1) === 1 && ((w[j] >>> k) & 1) === 0) out.push([k, i, j]);
+      }
+    return out;
+  },
+  comp(k, i, j){
+    const e = new Uint8Array(NBYTE);
+    Model.flip(e, i * 16 + (15 - k));
+    Model.flip(e, j * 16 + (15 - k));
+    return e;
+  },
+  /* n bits flipped at distinct random positions --------------------------- */
+  rand(count, seed){
+    const c = Math.max(1, Math.min(NBIT, count));
+    const rng = mulberry32(seed >>> 0);
+    const e = new Uint8Array(NBYTE);
+    let placed = 0, guard = 0;
+    while (placed < c && guard++ < 4000){
+      const b = Math.floor(rng() * NBIT);
+      if (((e[b >> 3] >>> (7 - (b & 7))) & 1) === 0){ Model.flip(e, b); placed++; }
+    }
+    return e;
+  },
+  /* the error mask for the current controls ------------------------------- */
+  current(st){
+    if (st.kind === "swap"){
+      const cs = Damage.swapCases();
+      const c = cs[st.where % cs.length];
+      return { err: Damage.swap(c[0], c[1]), note: "words " + (c[0] + 1) + " and " + (c[1] + 1) + " exchanged" };
+    }
+    if (st.kind === "comp"){
+      const cs = Damage.compCases();
+      const c = cs[st.where % cs.length];
+      return { err: Damage.comp(c[0], c[1], c[2]),
+               note: "bit " + c[0] + " cleared in word " + (c[1] + 1) + ", set in word " + (c[2] + 1) };
+    }
+    if (st.kind === "rand")
+      return { err: Damage.rand(st.len, SEED + st.where * 7919), note: st.len + (st.len === 1 ? " bit flipped" : " bits flipped") };
+    const p = Math.max(0, Math.min(NBIT - st.len, st.where));
+    return { err: Damage.burst(st.len, p, SEED + st.where * 104729),
+             note: "a burst " + st.len + " bits wide starting at bit " + p };
+  }
+};
+
+/* ---- the record: how often each method notices each kind ---------------- */
+const CAP = 20000;
+const Sweep = {
+  _cache: {},
+  /* runs a generator of error masks past both methods ---------------------- */
+  run(gen, sumKind, n){
+    const base = Model.message();
+    const s0 = Model.sumOf(base, sumKind), c0 = Model.crc(base, n);
+    let total = 0, sumHit = 0, crcHit = 0;
+    for (const err of gen()){
+      if (Model.weight(err) === 0) continue;       /* nothing changed at all */
+      const bad = Model.apply(base, err);
+      total++;
+      if (Model.sumOf(bad, sumKind) !== s0) sumHit++;
+      if (Model.crc(bad, n) !== c0) crcHit++;
+    }
+    return { total: total, sum: total ? sumHit / total : 1, crc: total ? crcHit / total : 1,
+             sumHit: sumHit, crcHit: crcHit };
+  },
+  bursts(len){
+    const L = Math.max(1, Math.min(24, len));
+    const positions = NBIT - L + 1;
+    const patterns = L <= 2 ? 1 : Math.pow(2, L - 2);
+    return function*(){
+      if (positions * patterns <= CAP){
+        for (let p = 0; p < positions; p++) for (let q = 0; q < patterns; q++){
+          const e = new Uint8Array(NBYTE);
+          Model.flip(e, p); if (L > 1) Model.flip(e, p + L - 1);
+          for (let i = 1; i < L - 1; i++) if ((q >>> (i - 1)) & 1) Model.flip(e, p + i);
+          yield e;
+        }
+      } else {
+        const rng = mulberry32(SEED + L);
+        for (let k = 0; k < CAP; k++){
+          const p = Math.floor(rng() * positions);
+          const e = new Uint8Array(NBYTE);
+          Model.flip(e, p); if (L > 1) Model.flip(e, p + L - 1);
+          for (let i = 1; i < L - 1; i++) if (rng() < 0.5) Model.flip(e, p + i);
+          yield e;
+        }
+      }
+    };
+  },
+  swaps(){ return function*(){ for (const c of Damage.swapCases()) yield Damage.swap(c[0], c[1]); }; },
+  comps(){ return function*(){ for (const c of Damage.compCases()) yield Damage.comp(c[0], c[1], c[2]); }; },
+  rands(count){
+    return function*(){ for (let k = 0; k < CAP; k++) yield Damage.rand(count, SEED + k * 2654435761); };
+  },
+  /* uniformly random error patterns: the benchmark neither code beats ----- */
+  uniform(n, sumKind, trials, seed){
+    const base = Model.message();
+    const s0 = Model.sumOf(base, sumKind), c0 = Model.crc(base, n);
+    const rng = mulberry32(seed >>> 0);
+    const e = new Uint8Array(NBYTE);
+    let miss = 0, sumMiss = 0, t = 0;
+    while (t < trials){
+      let any = 0;
+      for (let i = 0; i < NBYTE; i++){ e[i] = Math.floor(rng() * 256) & 0xFF; any |= e[i]; }
+      if (!any) continue;
+      t++;
+      const bad = Model.apply(base, e);
+      if (Model.crc(bad, n) === c0) miss++;
+      if (Model.sumOf(bad, sumKind) === s0) sumMiss++;
+    }
+    return { trials: t, crcMiss: miss, sumMiss: sumMiss, crcRate: miss / t, sumRate: sumMiss / t };
+  },
+  record(st){
+    const key = [st.kind, st.len, st.sum, st.gen].join("|");
+    if (Sweep._cache[key]) return Sweep._cache[key];
+    const n = st.gen;
+    const r = {
+      burst: Sweep.run(Sweep.bursts(st.len), st.sum, n),
+      swap:  Sweep.run(Sweep.swaps(), st.sum, n),
+      comp:  Sweep.run(Sweep.comps(), st.sum, n),
+      rand:  Sweep.run(Sweep.rands(st.len), st.sum, n)
+    };
+    Sweep._cache[key] = r;
+    return r;
+  },
+  /* the exact burst curve, from the algebra rather than from positions.
+     A burst of span L is x^p*B with deg B = L-1 and B(0)=1; the generator
+     shares no factor with x^p, so the position drops out entirely and the
+     whole question is which B of that shape the generator divides.         */
+  _curve: {},
+  curve(n, maxL){
+    const key = n + "|" + maxL;
+    if (Sweep._curve[key]) return Sweep._curve[key];
+    const out = [];
+    for (let L = 1; L <= maxL; L++){
+      const total = L === 1 ? 1 : Math.pow(2, L - 2);
+      let missed = 0;
+      for (let q = 0; q < total; q++){
+        const B = (L === 1 ? 1 : ((1 << (L - 1)) | (q << 1) | 1)) >>> 0;
+        if (Model.remOf(B, n) === 0) missed++;
+      }
+      out.push({ L: L, missed: missed, total: total });
+    }
+    Sweep._curve[key] = out;
+    return out;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { kind: "swap", len: 9, where: 0, sum: "inet", gen: 16 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2, MAXL = 20;
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function pick(list, room){ for (const t of list){ if (ctx.measureText(t).width <= room) return t; } return ""; }
+function hex(v, digits){ const h = v.toString(16).toUpperCase(); return "0x" + "0".repeat(Math.max(0, digits - h.length)) + h; }
+/* a rate of 0.99995 must not print as "100.00%" beside a bar that is not full,
+   so anything short of exact gets enough digits to look short of exact */
+function pct(x){
+  if (x === 1) return "100%";
+  if (x === 0) return "0%";
+  const p = x * 100;
+  return (p > 99.99 ? p.toFixed(4) : p.toFixed(2)) + "%";
+}
+
+let W, H, NARROW, FS, FSS, FSB, PAD, GUT, RGT, CW, CH, GY, VY, VH, RY, RROW, SY;
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth - 26;
+  W = Math.max(280, Math.min(920, avail || 860));
+  NARROW = W < 560;
+  FSS = NARROW ? 10 : 11;
+  FS  = NARROW ? 11 : 12;
+  FSB = NARROW ? 12 : 14;
+  PAD = NARROW ? 10 : 16;
+  ctx.font = FSS + "px " + mono();
+  GUT = Math.round(ctx.measureText("word 6").width + 10);
+  RGT = Math.round(ctx.measureText(" 0xFFFF").width + 6);
+  CW  = Math.floor((W - PAD * 2 - GUT - RGT - 15 * 2) / 16);
+  CW  = Math.max(9, Math.min(NARROW ? 15 : 24, CW));
+  CH  = Math.round(CW * (NARROW ? 1.05 : 1));
+  GY  = PAD + (NARROW ? 44 : 48);                   /* top of the bit grid   */
+  VY  = GY + NWORD * (CH + 3) + (NARROW ? 40 : 44); /* the verdict strip     */
+  VH  = NARROW ? 90 : 46;
+  RY  = VY + VH + (NARROW ? 64 : 56);               /* the record            */
+  RROW = NARROW ? 30 : 26;
+  SY  = RY + 4 * RROW + (NARROW ? 62 : 66);         /* the burst-length strip*/
+  H   = SY + (NARROW ? 62 : 66) + PAD;
+  cv.width = Math.round(W * SS); cv.height = Math.round(H * SS);
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+function mono(){ return css("--font-mono") || "monospace"; }
+function serif(){ return css("--font-body") || "serif"; }
+
+function heading(text, alts, x, y, room){
+  ctx.font = "600 " + FSB + "px " + serif();
+  ctx.textAlign = "left"; ctx.fillStyle = css("--ink");
+  ctx.fillText(pick([text].concat(alts || []), room), x, y);
+}
+
+function render(){
+  fitCanvas();
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line"),
+        panel = css("--panel"), accent = css("--accent"),
+        caught = css("--caught"), cSoft = css("--caught-soft"),
+        missed = css("--missed"), mSoft = css("--missed-soft");
+
+  const base = Model.message();
+  const cur = Damage.current(state);
+  const bad = Model.apply(base, cur.err);
+  const n = state.gen;
+  const s0 = Model.sumOf(base, state.sum), s1 = Model.sumOf(bad, state.sum);
+  const c0 = Model.crc(base, n), c1 = Model.crc(bad, n);
+  const sumCaught = s0 !== s1, crcCaught = c0 !== c1;
+  const changed = Model.weight(cur.err) > 0;
+  const bits0 = Model.bitsOf(base), bitsE = Model.bitsOf(cur.err);
+
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "alphabetic";
+
+  /* ---- panel 1: the message, with the damage marked --------------------- */
+  heading("The message, and what happened to it", ["The message", "Message"],
+          PAD, PAD + (NARROW ? 12 : 14), W - PAD * 2);
+  ctx.font = FSS + "px " + mono(); ctx.fillStyle = muted; ctx.textAlign = "left";
+  ctx.fillText(pick([cur.note, cur.note.split(" starting")[0], ""], W - PAD * 2),
+               PAD, GY - (NARROW ? 10 : 11));
+
+  const gx = PAD + GUT;
+  for (let w = 0; w < NWORD; w++){
+    const y = GY + w * (CH + 3);
+    ctx.font = FSS + "px " + mono(); ctx.textAlign = "left"; ctx.fillStyle = muted;
+    ctx.fillText(pick(["word " + (w + 1), String(w + 1)], GUT - 8), PAD, y + CH / 2 + FSS * 0.36);
+    for (let b = 0; b < 16; b++){
+      const idx = w * 16 + b;
+      const x = gx + b * (CW + 2);
+      const hit = bitsE[idx] === 1;
+      ctx.fillStyle = hit ? mSoft : css("--bg");
+      ctx.fillRect(x, y, CW, CH);
+      ctx.strokeStyle = hit ? missed : line; ctx.lineWidth = hit ? 1.4 : 1;
+      ctx.strokeRect(x + 0.5, y + 0.5, CW - 1, CH - 1);
+      if (CW >= 12){
+        ctx.font = (hit ? "600 " : "") + (CW >= 16 ? 11 : 10) + "px " + mono();
+        ctx.fillStyle = hit ? missed : muted; ctx.textAlign = "center";
+        ctx.fillText(String(bitsE[idx] ? (1 - bits0[idx]) : bits0[idx]),
+                     x + CW / 2, y + CH / 2 + 3.5);
+      } else if (bitsE[idx] ? (1 - bits0[idx]) : bits0[idx]){
+        /* too narrow for a digit: a set bit becomes a filled square */
+        ctx.fillStyle = hit ? missed : muted;
+        ctx.fillRect(x + 2.5, y + 2.5, CW - 5, CH - 5);
+      }
+    }
+    ctx.font = FSS + "px " + mono(); ctx.textAlign = "right"; ctx.fillStyle = muted;
+    const wv = Model.wordsOf(bad)[w];
+    ctx.fillText(pick([hex(wv, 4), ""], RGT), W - PAD, y + CH / 2 + FSS * 0.36);
+  }
+
+  /* ---- panel 2: the two verdicts ---------------------------------------- */
+  heading("Did either one notice?", ["The verdict", "Verdict"],
+          PAD, VY - (NARROW ? 12 : 14), W - PAD * 2);
+  const chipW = NARROW ? W - PAD * 2 : Math.floor((W - PAD * 2 - 10) / 2);
+  const chipH = NARROW ? 42 : VH;
+  const chips = [
+    { label: state.sum === "fletcher" ? "Fletcher-16" : "Internet checksum",
+      before: s0, after: s1, ok: sumCaught, digits: 4 },
+    { label: "CRC-" + n + ", " + PNAME[n], before: c0, after: c1, ok: crcCaught,
+      digits: n / 4 }
+  ];
+  for (let i = 0; i < 2; i++){
+    const c = chips[i];
+    const x = NARROW ? PAD : PAD + i * (chipW + 10);
+    const y = NARROW ? VY + i * (chipH + 6) : VY;
+    const good = !changed ? null : c.ok;
+    ctx.fillStyle = good === null ? css("--bg") : (good ? cSoft : mSoft);
+    ctx.fillRect(x, y, chipW, chipH);
+    ctx.strokeStyle = good === null ? line : (good ? caught : missed); ctx.lineWidth = 1.4;
+    ctx.strokeRect(x + 0.5, y + 0.5, chipW - 1, chipH - 1);
+    ctx.font = "600 " + FSS + "px " + mono(); ctx.textAlign = "left"; ctx.fillStyle = muted;
+    ctx.fillText(pick([c.label, c.label.split(",")[0], "code"], chipW - 90), x + 9, y + FSS + 9);
+    ctx.font = FS + "px " + mono(); ctx.fillStyle = ink;
+    const arrow = hex(c.before, c.digits) + "  " + (c.before === c.after ? "=" : "->") + "  " + hex(c.after, c.digits);
+    ctx.fillText(pick([arrow, hex(c.after, c.digits), ""], chipW - 86), x + 9, y + chipH - 10);
+    ctx.font = "600 " + (NARROW ? 12 : 14) + "px " + mono(); ctx.textAlign = "right";
+    ctx.fillStyle = good === null ? muted : (good ? caught : missed);
+    ctx.fillText(good === null ? "NO CHANGE" : (good ? "CAUGHT" : "MISSED"),
+                 x + chipW - 9, y + chipH / 2 + 5);
+  }
+
+  /* ---- panel 3: the record over every case of each kind ------------------ */
+  const rec = Sweep.record(state);
+  heading("Over every case of each kind", ["The record", "Record"],
+          PAD, RY - (NARROW ? 30 : 26), W - PAD * 2);
+  const rows = [
+    ["burst", "a burst " + state.len + " wide", rec.burst],
+    ["swap",  "two words swapped", rec.swap],
+    ["comp",  "a compensating edit", rec.comp],
+    ["rand",  state.len + (state.len === 1 ? " bit flipped" : " bits flipped at random"), rec.rand]
+  ];
+  ctx.font = FSS + "px " + mono();
+  let labW = 0;
+  for (const r of rows) labW = Math.max(labW, ctx.measureText(r[1]).width);
+  labW = Math.min(labW + 10, Math.round(W * 0.42));
+  const numW = Math.round(ctx.measureText("99.9950%").width + 6);
+  const halfW = Math.max(24, Math.floor((W - PAD * 2 - labW - numW * 2 - 10) / 2));
+  const colX = (k) => PAD + labW + k * (halfW + numW + 10);
+  ctx.textAlign = "center"; ctx.fillStyle = muted; ctx.font = FSS + "px " + mono();
+  ctx.fillText(pick(["checksum", "sum"], halfW), colX(0) + halfW / 2, RY - 6);
+  ctx.fillText(pick(["CRC-" + n, "CRC"], halfW), colX(1) + halfW / 2, RY - 6);
+  for (let i = 0; i < rows.length; i++){
+    const r = rows[i], y = RY + i * RROW;
+    ctx.font = FSS + "px " + mono(); ctx.textAlign = "left"; ctx.fillStyle = muted;
+    ctx.fillText(pick([r[1], r[1].split(" at ")[0], ""], labW - 8), PAD, y + RROW / 2 + 3);
+    const vals = [r[2].sum, r[2].crc];
+    for (let k = 0; k < 2; k++){
+      const bx = colX(k), bh = Math.max(9, RROW - 13);
+      const by = y + (RROW - bh) / 2 - 1;
+      ctx.fillStyle = css("--bg"); ctx.fillRect(bx, by, halfW, bh);
+      ctx.fillStyle = vals[k] === 1 ? caught : (vals[k] === 0 ? missed : accent);
+      ctx.globalAlpha = vals[k] === 1 || vals[k] === 0 ? 0.85 : 0.6;
+      ctx.fillRect(bx, by, Math.max(0, halfW * vals[k]), bh);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = line; ctx.lineWidth = 1; ctx.strokeRect(bx + 0.5, by + 0.5, halfW - 1, bh - 1);
+      ctx.font = FSS + "px " + mono(); ctx.textAlign = "left";
+      ctx.fillStyle = vals[k] === 1 ? caught : (vals[k] === 0 ? missed : ink);
+      ctx.fillText(pct(vals[k]), bx + halfW + 4, y + RROW / 2 + 3);
+    }
+  }
+  ctx.textAlign = "left"; ctx.font = FSS + "px " + mono(); ctx.fillStyle = muted;
+  ctx.fillText(pick(["caught, out of " + rec.swap.total + " swaps, " + rec.comp.total +
+                     " compensating edits and " + rec.burst.total + " bursts",
+                     rec.burst.total + " bursts, " + rec.comp.total + " edits", ""],
+                    W - PAD * 2), PAD, RY + 4 * RROW + (NARROW ? 16 : 17));
+
+  /* ---- panel 4: the exact burst curve, and where it turns ---------------- */
+  const curve = Sweep.curve(n, MAXL);
+  heading("Bursts the generator cannot miss", ["Bursts it cannot miss", "Bursts"],
+          PAD, SY - (NARROW ? 12 : 14), W - PAD * 2);
+  const stepW = (W - PAD * 2) / MAXL;
+  const sw = Math.min(stepW - 2, NARROW ? 14 : 22), sh = NARROW ? 24 : 26;
+  for (let i = 0; i < MAXL; i++){
+    const c = curve[i], x = PAD + i * stepW + (stepW - sw) / 2;
+    const safe = c.missed === 0;
+    ctx.fillStyle = safe ? cSoft : mSoft;
+    ctx.fillRect(x, SY, sw, sh);
+    ctx.strokeStyle = safe ? caught : missed; ctx.lineWidth = 1;
+    ctx.strokeRect(x + 0.5, SY + 0.5, sw - 1, sh - 1);
+    if (!safe){
+      const frac = c.missed / c.total;
+      const hgt = Math.max(2, Math.min(sh - 4, sh * Math.pow(frac, 0.25)));
+      ctx.fillStyle = missed;
+      ctx.fillRect(x + 2, SY + sh - 2 - hgt, sw - 4, hgt);
+    }
+    if (sw >= 12){
+      ctx.font = "600 " + (NARROW ? 9 : 10) + "px " + mono(); ctx.textAlign = "center";
+      ctx.fillStyle = safe ? caught : muted;
+      ctx.fillText(String(c.L), x + sw / 2, SY + sh + (NARROW ? 12 : 13));
+    }
+  }
+  const edge = curve.filter((c) => c.missed === 0).length;
+  ctx.font = FSS + "px " + mono(); ctx.textAlign = "left"; ctx.fillStyle = muted;
+  ctx.fillText(pick(["green to " + edge + " bits wide, then a fixed 1 in " +
+                       Math.round(curve[Math.min(MAXL, n + 2) - 1].total / Math.max(1, curve[Math.min(MAXL, n + 2) - 1].missed)) +
+                       " slips through",
+                     "guaranteed to " + edge + " bits wide", ""],
+                    W - PAD * 2), PAD, SY + sh + (NARROW ? 28 : 30));
+
+  /* ---- the DOM readouts -------------------------------------------------- */
+  el("lenout").textContent = String(state.len);
+  el("whereout").textContent = String(state.where);
+  el("rsum").textContent = !changed ? "no change" : (sumCaught ? "caught" : "missed");
+  el("rcrc").textContent = !changed ? "no change" : (crcCaught ? "caught" : "missed");
+  el("rburst").textContent = "to " + n + " bits";
+  el("rgap").textContent = Model.orderOfX(n) + " bits";
+  el("cap").textContent = cur.note.charAt(0).toUpperCase() + cur.note.slice(1) +
+    ". " + (state.sum === "fletcher" ? "Fletcher-16" : "The Internet checksum") + " " +
+    (!changed ? "has nothing to notice" : (sumCaught ? "noticed" : "did not notice")) +
+    "; CRC-" + n + " " + (!changed ? "has nothing to notice" : (crcCaught ? "noticed" : "did not notice")) +
+    ". The record underneath sweeps every case of each kind.";
+}
+
+/* ---- bindings ----------------------------------------------------------- */
+function whereMax(){
+  if (state.kind === "swap") return Damage.swapCases().length - 1;
+  if (state.kind === "comp") return Damage.compCases().length - 1;
+  if (state.kind === "rand") return 63;
+  return Math.max(0, NBIT - state.len);
+}
+function syncWhere(){
+  const m = whereMax();
+  const w = el("where");
+  w.max = String(m);
+  if (state.where > m){ state.where = m; }
+  w.value = String(state.where);
+}
+function bindSelect(id, key, parse){
+  el(id).addEventListener("change", () => {
+    state[key] = parse ? parse(el(id).value) : el(id).value;
+    syncWhere(); render();
+  });
+}
+function bindRange(id, key){
+  el(id).addEventListener("input", () => {
+    state[key] = parseInt(el(id).value, 10);
+    if (key === "len") syncWhere();
+    render();
+  });
+}
+bindSelect("kind", "kind");
+bindSelect("sum", "sum");
+bindSelect("gen", "gen", (v) => parseInt(v, 10));
+bindRange("len", "len");
+bindRange("where", "where");
+el("next").addEventListener("click", () => {
+  state.where = (state.where + 1) % (whereMax() + 1);
+  el("where").value = String(state.where);
+  render();
+});
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("kind").value = defaults.kind; el("sum").value = defaults.sum;
+  el("gen").value = String(defaults.gen);
+  el("len").value = String(defaults.len); el("where").value = String(defaults.where);
+  syncWhere(); render();
+});
+
+let raf = 0;
+addEventListener("resize", () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(render); });
+const mq = matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+syncWhere();
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+  const base = Model.message();
+
+  /* 1 -- the fast route and the slow route must be the same function. */
+  push("the byte table and the bit-at-a-time register agree", (function(){
+    const rng = mulberry32(4242);
+    for (let k = 0; k < 200; k++){
+      const m = new Uint8Array(4 + Math.floor(rng() * 28));
+      for (let i = 0; i < m.length; i++) m[i] = Math.floor(rng() * 256);
+      for (const n of [8, 16]) if (Model.crc(m, n) !== Model.crcBitwise(m, n)) return false;
+    }
+    return true;
+  })(), "200 seeded messages of 4 to 31 bytes, both generators, exact equality");
+
+  /* 2 -- and both must be polynomial long division, done the schoolbook way. */
+  push("and both equal the remainder from schoolbook long division", (function(){
+    const rng = mulberry32(99991);
+    for (let k = 0; k < 120; k++){
+      const m = new Uint8Array(3 + Math.floor(rng() * 20));
+      for (let i = 0; i < m.length; i++) m[i] = Math.floor(rng() * 256);
+      for (const n of [8, 16]){
+        const bits = Array.from(Model.bitsOf(m)).concat(new Array(n).fill(0));
+        if (Model.longDiv(bits, n) !== Model.crc(m, n)) return false;
+      }
+    }
+    return true;
+  })(), "120 seeded messages divided bit by bit against the augmented message, both generators");
+
+  /* 3 -- the guarantee, exhaustively: no burst of span <= n is a multiple. */
+  push("no burst as wide as the generator's degree is ever missed", (function(){
+    for (const n of [8, 16]){
+      const c = Sweep.curve(n, MAXL);
+      for (let L = 1; L <= n; L++) if (c[L - 1].missed !== 0) return false;
+    }
+    return true;
+  })(), "every burst polynomial of span 1 to 8 and 1 to 16 tested, 32768 in all, none divisible by its generator");
+
+  /* 4 -- and immediately past it, the theory's exact fractions. */
+  push("one past the degree the miss rate is exactly 2^-(n-1), then exactly 2^-n", (function(){
+    for (const n of [8, 16]){
+      const c = Sweep.curve(n, MAXL);
+      if (c[n].missed !== 1) return false;                       /* L = n+1 */
+      if (c[n].total !== Math.pow(2, n - 1)) return false;
+      for (let L = n + 2; L <= Math.min(MAXL, n + 4); L++){
+        const r = c[L - 1];
+        if (r.missed !== Math.pow(2, L - n - 2)) return false;    /* = 2^-n  */
+      }
+    }
+    return true;
+  })(), "CRC-8: 1 in 128 at width 9 then 1 in 256; CRC-16: 1 in 32768 at width 17 then 1 in 65536");
+
+  /* 5 -- single-bit errors, exhaustively, well past the message length. */
+  push("every single-bit error is caught, over 1000 bit positions", (function(){
+    const m = new Uint8Array(125);
+    for (let i = 0; i < 125; i++) m[i] = (i * 37 + 11) & 0xFF;
+    for (const n of [8, 16]){
+      const c0 = Model.crc(m, n);
+      for (let b = 0; b < 1000; b++){
+        const bad = Uint8Array.from(m); bad[b >> 3] ^= 1 << (7 - (b & 7));
+        if (Model.crc(bad, n) === c0) return false;
+      }
+    }
+    return true;
+  })(), "1000 positions in a 125-byte message, both generators, no collision");
+
+  /* 6 -- two-bit reach is the order of x, and the two generators differ. */
+  push("two-bit errors are caught up to the order of x, which the degree does not fix", (function(){
+    const o16 = Model.orderOfX(16), o8 = Model.orderOfX(8);
+    if (o16 !== 32767 || o8 !== 127) return false;
+    /* the gap the degree-8 generator genuinely cannot see, exhibited */
+    const m = new Uint8Array(40);
+    for (let i = 0; i < 40; i++) m[i] = (i * 53 + 7) & 0xFF;
+    const twoBit = (gap) => { const b = Uint8Array.from(m); b[0] ^= 0x80; b[gap >> 3] ^= 1 << (7 - (gap & 7)); return b; };
+    if (Model.crc(twoBit(127), 8) !== Model.crc(m, 8)) return false;      /* missed */
+    if (Model.crc(twoBit(127), 16) === Model.crc(m, 16)) return false;    /* caught */
+    for (let d = 1; d < 127; d++) if (Model.crc(twoBit(d), 8) === Model.crc(m, 8)) return false;
+    return true;
+  })(), "order of x is 32767 for CRC-16-CCITT and 127 for x8+x2+x+1; every gap below 127 is caught and the gap of exactly 127 is not");
+
+  /* 7 -- the transposition the task asked for, exhibited explicitly. */
+  push("the Internet checksum detects none of the fourteen word swaps", (function(){
+    const s0 = Model.inet(base);
+    let changed = 0, sumSaw = 0, crc8 = 0, crc16 = 0;
+    for (const c of Damage.swapCases()){
+      const e = Damage.swap(c[0], c[1]);
+      if (Model.weight(e) === 0) continue;
+      changed++;
+      const bad = Model.apply(base, e);
+      if (Model.inet(bad) !== s0) sumSaw++;
+      if (Model.crc(bad, 8) !== Model.crc(base, 8)) crc8++;
+      if (Model.crc(bad, 16) !== Model.crc(base, 16)) crc16++;
+    }
+    return changed === 14 && sumSaw === 0 && crc8 === 14 && crc16 === 14;
+  })(), "14 of the 15 word pairs change the message; the ones-complement sum sees 0 of them and both CRCs see all 14");
+
+  /* 8 -- and the compensating edit, which Fletcher does catch. */
+  push("nor any of the seventy-one compensating edits", (function(){
+    const cases = Damage.compCases();
+    const s0 = Model.inet(base), f0 = Model.fletcher(base), c0 = Model.crc(base, 16);
+    let sumSaw = 0, flSaw = 0, crcSaw = 0;
+    for (const c of cases){
+      const bad = Model.apply(base, Damage.comp(c[0], c[1], c[2]));
+      if (Model.inet(bad) !== s0) sumSaw++;
+      if (Model.fletcher(bad) !== f0) flSaw++;
+      if (Model.crc(bad, 16) !== c0) crcSaw++;
+    }
+    return cases.length === 71 && sumSaw === 0 && flSaw === 71 && crcSaw === 71;
+  })(), "71 such pairs exist; the ones-complement sum sees 0, Fletcher-16 and CRC-16 see all 71");
+
+  /* 9 -- the root cause: addition does not know about order. */
+  push("the ones-complement sum is identical under all 720 word orderings", (function(){
+    const w = Model.wordsOf(base), s0 = Model.inet(base), seen = [];
+    const perm = (arr, left) => {
+      if (!left.length){ seen.push(arr.slice()); return; }
+      for (let i = 0; i < left.length; i++)
+        perm(arr.concat([left[i]]), left.slice(0, i).concat(left.slice(i + 1)));
+    };
+    perm([], w);
+    if (seen.length !== 720) return false;
+    for (const order of seen){
+      const b = new Uint8Array(NBYTE);
+      for (let i = 0; i < NWORD; i++){ b[i * 2] = (order[i] >>> 8) & 0xFF; b[i * 2 + 1] = order[i] & 0xFF; }
+      if (Model.inet(b) !== s0) return false;
+    }
+    return true;
+  })(), "all 6! orderings of the six words give the same 16-bit sum");
+
+  /* 10 -- the CRC is not order-blind. */
+  push("the CRC is not: those orderings give hundreds of distinct remainders", (function(){
+    const w = Model.wordsOf(base), seen = {};
+    let count = 0;
+    const perm = (arr, left) => {
+      if (!left.length){
+        const b = new Uint8Array(NBYTE);
+        for (let i = 0; i < NWORD; i++){ b[i * 2] = (arr[i] >>> 8) & 0xFF; b[i * 2 + 1] = arr[i] & 0xFF; }
+        const k = Model.crc(b, 16);
+        if (!seen[k]){ seen[k] = 1; count++; }
+        return;
+      }
+      for (let i = 0; i < left.length; i++)
+        perm(arr.concat([left[i]]), left.slice(0, i).concat(left.slice(i + 1)));
+    };
+    perm([], w);
+    return count >= 300;
+  })(), "distinct CRC-16 values across the 720 orderings of the same six words");
+
+  /* 11 -- the codeword property the whole scheme rests on. */
+  push("appending the remainder makes the remainder zero", (function(){
+    const rng = mulberry32(31337);
+    for (let k = 0; k < 60; k++){
+      const m = new Uint8Array(6 + Math.floor(rng() * 10));
+      for (let i = 0; i < m.length; i++) m[i] = Math.floor(rng() * 256);
+      for (const n of [8, 16]){
+        const r = Model.crc(m, n);
+        const code = new Uint8Array(m.length + n / 8);
+        code.set(m, 0);
+        for (let i = 0; i < n / 8; i++) code[m.length + i] = (r >>> (n - 8 - i * 8)) & 0xFF;
+        if (Model.crc(code, n) !== 0) return false;
+      }
+    }
+    return true;
+  })(), "60 seeded messages: the CRC of message-plus-CRC is exactly zero, both generators");
+
+  /* 12 -- linearity over GF(2), which is why only the error matters. */
+  push("the code is linear, so only the error pattern decides", (function(){
+    const rng = mulberry32(777);
+    for (let k = 0; k < 80; k++){
+      const len = 8 + Math.floor(rng() * 8);
+      const a = new Uint8Array(len), b = new Uint8Array(len), x = new Uint8Array(len);
+      for (let i = 0; i < len; i++){
+        a[i] = Math.floor(rng() * 256); b[i] = Math.floor(rng() * 256); x[i] = a[i] ^ b[i];
+      }
+      for (const n of [8, 16])
+        if (Model.crc(x, n) !== (Model.crc(a, n) ^ Model.crc(b, n))) return false;
+    }
+    return true;
+  })(), "80 seeded pairs: crc(a xor b) equals crc(a) xor crc(b), both generators");
+
+  /* 13 -- and the measurement neither code can beat. */
+  push("against a random error pattern both codes sit at 2^-n, measured", (function(){
+    const r = Sweep.uniform(8, "inet", 120000, 20260919);
+    const want = 1 / 256;
+    if (!(r.trials === 120000)) return false;
+    window.__MEASURED = r;
+    return Math.abs(r.crcRate / want - 1) <= 0.20;
+  })(), "120000 seeded uniform error patterns past CRC-8: the undetected rate is within 20 percent of 1 in 256");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, Damage, Sweep, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

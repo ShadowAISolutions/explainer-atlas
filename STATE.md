@@ -33,6 +33,63 @@ files in `AUDIT/` before starting any batch.
 
 ## Batches
 
+### batch/013 — 2026-09-19
+- merged: bloom-filter-false-positives, comparative-advantage-ppf,
+  phoneme-vowel-space-formants, checksum-vs-crc-collisions, plus the legibility
+  repair of the last two pre-batch/004 pages (greenhouse-energy-balance,
+  special-relativity-time-dilation), which closes task 082
+- blocked: none
+- patterns: step-through, compare-side-by-side, draw-input, race-two-methods
+  (the repair carries no pattern of its own)
+- learned:
+  - **Task 082 is finished.** Every page merged before batch/004 has now been
+    through the canvas-legibility sweep: thirteen repaired, one
+    (newton-raphson-basins) checked and deliberately left alone. The recurring
+    shape of the defect, across all thirteen, was never "the fonts are small" —
+    it was **absolute pixel coordinates chosen against one canvas size**. Half
+    the defects (the greenhouse layer-down label included) were clipped or
+    colliding at *every* width and only became visible when the page was
+    examined at a phone width. If a future page computes a position as a
+    literal number rather than from the width, that is the bug, not the symptom.
+  - **Two more task files asserted something false, which makes eleven.** 078
+    wanted a checksum "letting burst errors through" as the headline; measured,
+    both the Internet checksum and Fletcher-16 catch essentially every burst at
+    every width from 1 to 48 on a 96-bit message, because a burst spans at most
+    two words and the resulting change to a 16-bit total is almost never zero.
+    The real gap is structural: the ones-complement sum catches 0 of the 14 word
+    swaps and 0 of the 71 compensating edits. 078 also asked to assert that a
+    CRC catches all double-bit errors up to 1000 bits — true of CRC-16-CCITT
+    (reach 32767) and false of the degree-8 generator (reach 127). Both
+    corrections are asserted, and both are in the prose.
+  - **Prefer the algebra to a position sweep when the position provably drops
+    out.** The checksum page's burst curve is computed over error polynomials
+    rather than over (position, pattern) pairs, because a burst is x^p·B and the
+    generator shares no factor with x^p. That turned an intractable exhaustive
+    sweep into 2^19 cheap remainders, made the strip exact instead of sampled,
+    and let assertions 3 and 4 check the theory's fractions
+    (1, then 2^-(n-1), then 2^-n) to the case rather than to a tolerance.
+  - **A textbook form can have poles the bracketer mistakes for roots.** The
+    vowel page's two-tube resonance condition is usually written
+    (A1/A2)·tan(k·l1)·tan(k·l2) = 1. Bracketing sign changes on that finds the
+    poles of tan as well as the zeros: at an area ratio of 0.001 it reported
+    968.81 and 972.22 Hz, the second being spurious. Multiplying through by both
+    cosines gives ratio·sin·sin − cos·cos, which is entire, has the same roots,
+    and returned the correct 968.81 / 1097.15. Assertion 6 exists to catch
+    exactly this: every reported root is checked against the condition itself.
+  - **A screenshot can expose a model error, not only a layout one.** On
+    comparative-advantage-ppf the two consumption bars summed to more than the
+    joint frontier allowed, because each producer converted at a fixed midpoint
+    price with nothing forcing the market to clear. No assertion covered it.
+    The fix replaced the demand-mix control with a terms-of-trade control and
+    added an assertion that the two consumptions sum to the specialised corner
+    at five rates on every seeded pair. Screenshot review has now found a real
+    defect on nearly every page for eight batches running; treat it as part of
+    building the page, not as a check afterwards.
+  - **When a reserved row is the fix, sweep the model first to prove the row is
+    reachable by nobody else.** Used again on the vowel page (the tube panel's
+    heading was striking the glottis and lips labels) and on the checksum page
+    (at 360px the record's heading sat on its own column labels).
+
 ### batch/012 — 2026-09-19
 - merged: eulers-identity-rotation, hardy-weinberg, beam-bending-moment,
   earthquake-magnitude-energy, plus a legibility repair of three batch/003

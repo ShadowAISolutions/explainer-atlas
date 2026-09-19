@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Worse At Everything, Still Worth Trading With — Explainer Atlas</title>
+<meta name="description" content="Two producers, two goods, and a joint frontier that kinks. The gain from trade comes from the ratio of costs, not from who is better.">
+<style>
+/* Two producers, two panels, so the page is built on a pair: a warm side and
+   a cool side, and every element that belongs to one of them is tinted. Wide
+   measure, generous leading, rounded corners -- deliberately unlike the last
+   few pages, which were square and monospaced.                              */
+:root{
+  --bg:#fcfbf9; --panel:#ffffff; --ink:#1b1a17; --muted:#6b6660; --line:#e6e1d8;
+  --a:#a8451f; --a-soft:#fbeadf; --b:#1f5d7a; --b-soft:#e2eef4;
+  --accent:#a8451f; --accent-soft:#fbeadf; --gain:#3f6212;
+  --radius:16px; --pad:clamp(15px,3vw,28px);
+  --font-body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --font-ui:"Avenir Next","Segoe UI",system-ui,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.7rem,1.1rem + 2.7vw,2.8rem);
+  --scale-body:clamp(1.01rem,0.97rem + 0.22vw,1.11rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#14130f; --panel:#1c1b17; --ink:#eae6dd; --muted:#9d9788; --line:#2e2c26;
+    --a:#e08a5f; --a-soft:#31201a; --b:#6ab5d6; --b-soft:#132833;
+    --accent:#e08a5f; --accent-soft:#31201a; --gain:#a3c05a;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.66 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:66rem; margin:0 auto; padding:var(--pad)}
+header.page{max-width:40em}
+.kicker{margin:0 0 .5em; color:var(--b); font:600 .74rem/1.3 var(--font-ui);
+  text-transform:uppercase; letter-spacing:.17em}
+h1{font:600 var(--scale-h1)/1.09 var(--font-ui); margin:0 0 .4em; letter-spacing:-.022em}
+.standfirst{margin:0; color:var(--muted)}
+figure.stage{margin:calc(var(--pad)*1.1) 0 0; background:var(--panel);
+  border:1px solid var(--line); border-radius:var(--radius); padding:14px}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.8em; color:var(--muted); font-size:.86rem; max-width:46em}
+.controls{margin-top:var(--pad); display:grid; gap:var(--pad)}
+.pair{display:grid; gap:var(--pad); grid-template-columns:1fr}
+@media (min-width:44rem){ .pair{grid-template-columns:1fr 1fr} }
+.card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:.95em}
+.card.a{border-top:4px solid var(--a)}
+.card.b{border-top:4px solid var(--b)}
+.card h2{margin:0; font:600 1rem/1.25 var(--font-ui); letter-spacing:-.01em}
+.card.a h2{color:var(--a)} .card.b h2{color:var(--b)}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control label{font:600 .92rem/1.25 var(--font-ui)}
+output{font:600 .9rem/1 var(--font-mono); background:var(--accent-soft);
+  color:var(--accent); padding:.26em .52em; border-radius:7px}
+.card.b output{background:var(--b-soft); color:var(--b)}
+.hint{color:var(--muted); font-size:.82rem; margin:0}
+input[type=range]{width:100%; min-height:28px}
+.card.a input[type=range]{accent-color:var(--a)}
+.card.b input[type=range]{accent-color:var(--b)}
+.wide input[type=range]{accent-color:var(--gain)}
+.wide{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1em}
+.wide output{background:#e8f0d8; color:#3f6212}
+@media (prefers-color-scheme:dark){ .wide output{background:#22290f; color:#a3c05a} }
+button{font:600 .92rem/1 var(--font-ui); color:inherit; background:var(--bg);
+  border:1px solid var(--line); border-radius:9px; padding:.65em .85em; min-height:42px;
+  cursor:pointer}
+button:hover{border-color:var(--ink)}
+.btnrow{display:flex; gap:.55em; flex-wrap:wrap}
+:where(a,button,input,select):focus-visible{outline:2.5px solid var(--b); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:.6em;
+  margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:10px;
+  padding:.6em .75em}
+.readout dt{margin:0; color:var(--muted); font:.73rem/1.3 var(--font-ui);
+  text-transform:uppercase; letter-spacing:.08em}
+.readout dd{margin:.2em 0 0; font:600 1.1rem/1.2 var(--font-mono)}
+.prose{margin-top:calc(var(--pad)*1.6); max-width:40em}
+.prose h2{font:600 1.1rem/1.3 var(--font-ui); margin:1.9em 0 .45em; letter-spacing:-.01em}
+.prose > :first-child{margin-top:0}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.88em; background:var(--b-soft);
+  padding:.75em .9em; border-radius:10px; overflow-x:auto}
+.prose table{border-collapse:collapse; font:.9rem/1.4 var(--font-mono); margin:0 0 1.05em}
+.prose th,.prose td{border:1px solid var(--line); padding:.4em .7em; text-align:right}
+.prose th:first-child,.prose td:first-child{text-align:left}
+.lede{font-size:1.07em}
+footer.page{margin-top:calc(var(--pad)*1.7); padding-top:var(--pad);
+  border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+footer.page a{color:var(--b)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="page">
+  <p class="kicker">Economics</p>
+  <h1>Worse At Everything, Still Worth Trading With</h1>
+  <p class="standfirst">Two workshops, a hundred days each, cloth and wine. One of them is
+    faster at both goods. They still both come out ahead by specialising and trading &mdash;
+    and the reason has nothing to do with who is faster.</p>
+</header>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="1000" height="620" role="img"
+    aria-label="Two production possibility frontiers side by side, one for each workshop, each showing what it can make alone and what it produces and consumes once the two specialise and trade. Below them, bars comparing total cloth and total wine with and without trade."></canvas>
+  <figcaption id="cap">Each panel is one workshop's own limit. The dot inside is what it makes
+    on its own; the dot on the axis is what it makes when it specialises, and the open ring is
+    what it ends up consuming after trading at the going rate.</figcaption>
+</figure>
+
+<section class="controls" data-role="controls" aria-label="Workshop productivities and demand">
+  <div class="pair">
+    <div class="card a">
+      <h2>North workshop</h2>
+      <div class="control">
+        <div class="row">
+          <label for="ac">Cloth per day</label>
+          <output id="acout" for="ac">10</output>
+        </div>
+        <input type="range" id="ac" min="1" max="12" step="1" value="10">
+      </div>
+      <div class="control">
+        <div class="row">
+          <label for="aw">Wine per day</label>
+          <output id="awout" for="aw">8</output>
+        </div>
+        <input type="range" id="aw" min="1" max="12" step="1" value="8">
+        <p class="hint">A hundred days to split between the two.</p>
+      </div>
+    </div>
+
+    <div class="card b">
+      <h2>South workshop</h2>
+      <div class="control">
+        <div class="row">
+          <label for="bc">Cloth per day</label>
+          <output id="bcout" for="bc">3</output>
+        </div>
+        <input type="range" id="bc" min="1" max="12" step="1" value="3">
+      </div>
+      <div class="control">
+        <div class="row">
+          <label for="bw">Wine per day</label>
+          <output id="bwout" for="bw">4</output>
+        </div>
+        <input type="range" id="bw" min="1" max="12" step="1" value="4">
+        <p class="hint">Slower at both, in the default setting.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="wide">
+    <div class="control">
+      <div class="row">
+        <label for="terms">Terms of trade</label>
+        <output id="termsout" for="terms">1.07 wine a bolt</output>
+      </div>
+      <input type="range" id="terms" min="0" max="100" step="1" value="50">
+      <p class="hint">The exchange rate the two settle on, anywhere between North's cost of a
+        bolt and South's. At either end one of them gains nothing; in between they split it.</p>
+    </div>
+
+    <div class="btnrow">
+      <button type="button" id="equal">Make the costs equal</button>
+      <button type="button" id="dominate">Make North better at both</button>
+      <button type="button" id="flip">Flip who is cheaper at cloth</button>
+      <button type="button" id="reset">Reset</button>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>North's cost of cloth</dt><dd id="r1">&#8212;</dd></div>
+      <div><dt>South's cost of cloth</dt><dd id="r2">&#8212;</dd></div>
+      <div><dt>World gain</dt><dd id="r3">&#8212;</dd></div>
+      <div><dt>North / South share</dt><dd id="r4">&#8212;</dd></div>
+    </dl>
+  </div>
+</section>
+
+<article class="prose" data-role="prose">
+  <p class="lede">The North workshop makes ten bolts of cloth a day, or eight barrels of wine.
+    The South makes three bolts, or four barrels. North is faster at both, by a wide margin,
+    and there is no reading of the numbers in which South is the better producer. Trade between
+    them still leaves both with more than either can make alone.</p>
+
+  <p>The quantity that decides this is not output per day. It is what each workshop gives up to
+    make one more bolt of cloth. North spends a tenth of a day on a bolt, and a tenth of a day
+    would have made 0.8 barrels. South spends a third of a day, which would have made 1.33
+    barrels. Cloth is cheaper in North &mdash; not in days, in wine.</p>
+
+  <table>
+    <tr><th></th><th>Cloth/day</th><th>Wine/day</th><th>Cost of a bolt</th></tr>
+    <tr><td>North</td><td>10</td><td>8</td><td>0.80 wine</td></tr>
+    <tr><td>South</td><td>3</td><td>4</td><td>1.33 wine</td></tr>
+  </table>
+
+  <h2>Where the gain comes from</h2>
+
+  <p>Read the table the other way and South's advantage appears. A barrel costs North 1.25
+    bolts and costs South 0.75. Whoever is cheaper at cloth is dearer at wine, necessarily,
+    because the two costs are reciprocals of each other. So there is always something each
+    producer is comparatively cheap at &mdash; unless the two ratios happen to be identical, in
+    which case there is nothing to gain and the joint frontier is a straight line.</p>
+
+  <p class="math">cost of cloth, in wine = (wine per day) / (cloth per day)</p>
+
+  <p>Send every North day to cloth and every South day to wine and the world makes 1000 bolts
+    and 400 barrels. Take that as the bundle the world wants &mdash; five bolts to two barrels
+    &mdash; and ask what the two could manage without each other. North alone, making that same
+    shape, gets 667 bolts and 267 barrels. South alone gets 231 and 92. Together that is 897
+    bolts and 359 barrels, against the 1000 and 400 they make by specialising. Trade is worth
+    11.43 per cent more of both, from the same days and the same skills.</p>
+
+  <h2>The kink</h2>
+
+  <p>The joint frontier &mdash; everything the two can make between them &mdash; is not one
+    straight line. It runs out along the cheap producer's slope first, then bends to the dear
+    one's. The bend sits exactly where the cheap producer runs out of days. That bend is the
+    gain: a straight line through the same endpoints would lie strictly inside it everywhere in
+    between, and a straight line is what you get when the two costs coincide.</p>
+
+  <p>The 11.43 per cent is the size of the prize; the exchange rate decides who gets it. Any
+    rate strictly between the two costs &mdash; between 0.80 and 1.33 barrels a bolt &mdash;
+    leaves both workshops better off than producing for themselves. At 0.80 exactly, North is
+    selling cloth for precisely what cloth costs it, so North gains nothing and South takes the
+    whole 44 per cent. At 1.33 it is the other way about. Halfway, at 1.07, North is 9.1 per
+    cent better off and South 18.2. Push the rate outside the window and one of them walks
+    away.</p>
+
+  <p>One assumption is doing work here: that the world wants the bundle full specialisation
+    happens to produce. If it wants some other mix, one of the two has to keep a foot in both
+    goods, and then its own cost is the only rate the market can clear at &mdash; which means
+    it captures none of the gain at all. The window of rates exists precisely because demand
+    lands on the corner.</p>
+
+  <h2>What to try</h2>
+
+  <p>Press <em>Make the costs equal</em>. Both panels keep their shapes, North stays visibly
+    larger, and the gain drops to exactly zero: the joint frontier straightens and the
+    consumption rings land back on the production dots. Absolute advantage is untouched and
+    worth nothing.</p>
+
+  <p>From there, drag South's wine per day up by one, to five. The ratios separate again and
+    the gain comes back, at 18.2 per cent. Then try a pure change of scale: set North to five
+    and four, South to three and four, note the gain, and double all four numbers to ten, eight,
+    six and eight. Both frontiers grow, every absolute advantage grows with them, and the gain
+    lands on exactly the same 14.29 per cent, because not one opportunity cost moved.</p>
+
+  <p>Finally, drag <em>terms of trade</em> from one end to the other and watch the two green
+    figures under the panels trade places. The world's 11.43 per cent never changes as you do
+    it. The rate does not create the gain; it only says whose it is.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+</div>
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG -------------------------------------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+
+/* ---- MODEL -------------------------------------------------------------- */
+/* Two producers, two goods, linear technology. A producer is {c, w}: bolts of
+   cloth per day, or barrels of wine per day. Each has DAYS days to divide.
+   Everything below is a pure function of those four numbers and the demanded
+   mix t, the share of the consumed bundle that is cloth.                    */
+const DAYS = 100;
+
+const Model = {
+  DAYS: DAYS,
+
+  /* Wine given up per extra bolt. The reciprocal is the cost of a barrel, so
+     whoever is cheap at one good is necessarily dear at the other.          */
+  clothCost(p){ return p.w / p.c; },
+  wineCost(p){ return p.c / p.w; },
+
+  /* The producer's own frontier: a straight line between the two corners. */
+  maxCloth(p){ return DAYS * p.c; },
+  maxWine(p){ return DAYS * p.w; },
+
+  /* What one producer makes alone when it aims at the demanded mix. */
+  alone(p, t){
+    const r = (1 - t) / t;                       /* barrels wanted per bolt */
+    const C = DAYS / (1 / p.c + r / p.w);
+    return { C: C, W: r * C };
+  },
+
+  /* The joint frontier, by the greedy rule: give cloth to whoever gives up
+     the least wine for it, until that producer runs out of days.            */
+  order(A, B){
+    return Model.clothCost(A) <= Model.clothCost(B) ? [A, B] : [B, A];
+  },
+  jointWine(A, B, C){
+    const ord = Model.order(A, B);
+    let rem = C, W = 0;
+    for (const p of ord){
+      const take = Math.min(rem, Model.maxCloth(p));
+      rem -= take;
+      W += (DAYS - take / p.c) * p.w;
+    }
+    return rem > 1e-9 ? -Infinity : W;
+  },
+  /* the cloth output at which the frontier bends */
+  kinkCloth(A, B){ return Model.maxCloth(Model.order(A, B)[0]); },
+
+  /* The world's best bundle of a given shape, found by walking out along the
+     ray until the joint frontier stops it. Solved on the two segments
+     algebraically; a bisection in the selftest checks the algebra.          */
+  together(A, B, t){
+    const r = (1 - t) / t;
+    const ord = Model.order(A, B), first = ord[0], second = ord[1];
+    const kink = Model.maxCloth(first);
+    const w0 = Model.maxWine(first) + Model.maxWine(second);
+    const s1 = Model.clothCost(first);
+    let C = w0 / (r + s1);
+    if (C <= kink + 1e-9) return { C: C, W: r * C, segment: 1 };
+    const wk = Model.maxWine(second);
+    const s2 = Model.clothCost(second);
+    C = (wk + s2 * kink) / (r + s2);
+    return { C: C, W: r * C, segment: 2 };
+  },
+
+  /* What the two make when each goes entirely into the good it is
+     comparatively cheap at. This is the corner of the joint frontier, and the
+     page assumes the world wants exactly this shape -- which is what leaves a
+     RANGE of exchange rates open rather than pinning a single one. Off that
+     shape one producer has to keep a foot in both goods, its own cost becomes
+     the only rate the market can clear at, and it captures none of the gain.
+     The assumption is stated in the prose, not hidden.                      */
+  specialised(A, B){
+    const ord = Model.order(A, B);
+    return { C: Model.maxCloth(ord[0]), W: Model.maxWine(ord[1]),
+             cloth: ord[0], wine: ord[1] };
+  },
+  /* the shape of that bundle, as the cloth share the world then wants */
+  mixOf(A, B){
+    const sp = Model.specialised(A, B);
+    return sp.C / (sp.C + sp.W);
+  },
+
+  /* Both totals have the same shape, so one ratio describes the whole gain. */
+  gain(A, B){
+    const t = Model.mixOf(A, B);
+    const sp = Model.specialised(A, B);
+    const sum = Model.alone(A, t).C + Model.alone(B, t).C;
+    return sum <= 0 ? 0 : sp.C / sum - 1;
+  },
+
+  /* Any rate between the two costs leaves both at least as well off, and any
+     rate strictly between leaves both strictly better off.                  */
+  termsWindow(A, B){
+    const lo = Math.min(Model.clothCost(A), Model.clothCost(B));
+    const hi = Math.max(Model.clothCost(A), Model.clothCost(B));
+    return { lo: lo, hi: hi, mid: (lo + hi) / 2, open: hi > lo };
+  },
+  priceAt(A, B, f){
+    const win = Model.termsWindow(A, B);
+    return win.lo + f * (win.hi - win.lo);
+  },
+
+  /* One producer's plan: specialise, value the output at `price` barrels a
+     bolt, then buy back the world's own mix. The two consumptions add up to
+     the specialised world bundle exactly, at every price -- an identity the
+     selftest asserts, because a picture whose parts do not sum to its total
+     is a picture that lies.                                                 */
+  plan(p, other, price){
+    const A = p, B = other;
+    const t = Model.mixOf(A, B);
+    const r = (1 - t) / t;
+    const cheapCloth = Model.clothCost(A) < Model.clothCost(B);
+    const tie = Model.clothCost(A) === Model.clothCost(B);
+    const made = tie ? Model.alone(A, t)
+               : cheapCloth ? { C: Model.maxCloth(A), W: 0 }
+                            : { C: 0, W: Model.maxWine(A) };
+    const income = made.W + price * made.C;
+    const C = income / (price + r);
+    const al = Model.alone(A, t);
+    return { made: made, got: { C: C, W: r * C }, alone: al,
+             gain: al.C <= 0 ? 0 : C / al.C - 1,
+             specialises: tie ? "nothing" : (cheapCloth ? "cloth" : "wine") };
+  }
+};
+
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { ac: 10, aw: 8, bc: 3, bw: 4, terms: 50 };
+const state = Object.assign({}, defaults);
+const A = () => ({ c: state.ac, w: state.aw });
+const B = () => ({ c: state.bc, w: state.bw });
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const SS = 2;
+let W, H, NARROW, FS, FSS, FSB, PAD, PANW, PANH, PX = [], PY0, PSTRIDE, BARY, BARH;
+
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth - 28;
+  W = Math.max(280, Math.min(1000, avail || 950));
+  NARROW = W < 560;
+  FSS = NARROW ? 10 : 11;
+  FS  = NARROW ? 11 : 13;
+  FSB = NARROW ? 13 : 15;
+  PAD = NARROW ? 12 : 22;
+  if (NARROW){
+    PANW = W - 2 * PAD;
+    PANH = Math.round(PANW * 0.78);
+    PX = [PAD, PAD];
+    PY0 = 34;
+    /* stacked: each panel needs its own height plus the two caption rows at
+       +14 and +30, plus clearance for the next panel's title.               */
+    PSTRIDE = PANH + 76;
+    BARY = PY0 + 2 * PSTRIDE + 4;
+  } else {
+    PANW = Math.floor((W - 3 * PAD) / 2);
+    PANH = Math.round(PANW * 0.76);
+    PX = [PAD, PAD * 2 + PANW];
+    PY0 = 40;
+    PSTRIDE = 0;
+    /* the two caption rows under each panel sit at +16 and +32, so the bar
+       heading starts clear of them rather than on top of the second row.    */
+    BARY = PY0 + PANH + 86;
+  }
+  BARH = NARROW ? 96 : 104;
+  H = BARY + BARH + (NARROW ? 34 : 30);
+  cv.width = Math.round(W * SS); cv.height = Math.round(H * SS);
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function pick(list, room){
+  for (const t of list){ if (ctx.measureText(t).width <= room) return t; }
+  return "";
+}
+
+/* The two panels share one scale, so the size difference between the two
+   workshops is visible rather than normalised away. That is the point of the
+   page: North's frontier really is bigger, and it still does not decide
+   anything.                                                                 */
+function panel(i, p, other, label, colour, soft, scaleC, scaleW, price){
+  const x0 = PX[i];
+  const y0 = NARROW ? PY0 + i * PSTRIDE : PY0;
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line");
+  const X = (c) => x0 + 46 + (c / scaleC) * (PANW - 58);
+  const Y = (w) => y0 + PANH - 26 - (w / scaleW) * (PANH - 38);
+
+  ctx.font = "600 " + FSB + "px " + (css("--font-ui") || "sans-serif");
+  ctx.fillStyle = colour; ctx.textAlign = "left";
+  ctx.fillText(label, x0, y0 - 10);
+
+  /* axes */
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(X(0), Y(scaleW)); ctx.lineTo(X(0), Y(0)); ctx.lineTo(X(scaleC), Y(0));
+  ctx.stroke();
+
+  /* the frontier itself, and the area under it */
+  const cmax = Model.maxCloth(p), wmax = Model.maxWine(p);
+  ctx.fillStyle = soft;
+  ctx.beginPath();
+  ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(cmax), Y(0)); ctx.lineTo(X(0), Y(wmax)); ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = colour; ctx.lineWidth = 2.2;
+  ctx.beginPath(); ctx.moveTo(X(cmax), Y(0)); ctx.lineTo(X(0), Y(wmax)); ctx.stroke();
+
+  /* alone, specialised, and after trading */
+  const pl = Model.plan(p, other, price);
+  const al = pl.alone;
+  ctx.fillStyle = ink;
+  ctx.beginPath(); ctx.arc(X(al.C), Y(al.W), 5, 0, 6.2832); ctx.fill();
+  ctx.fillStyle = colour;
+  ctx.beginPath(); ctx.arc(X(pl.made.C), Y(pl.made.W), 5, 0, 6.2832); ctx.fill();
+  ctx.strokeStyle = css("--gain"); ctx.lineWidth = 2.4;
+  ctx.beginPath(); ctx.arc(X(pl.got.C), Y(pl.got.W), 7, 0, 6.2832); ctx.stroke();
+  /* the line the producer trades along */
+  ctx.setLineDash([3, 4]); ctx.strokeStyle = css("--gain"); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(X(pl.made.C), Y(pl.made.W)); ctx.lineTo(X(pl.got.C), Y(pl.got.W));
+  ctx.stroke(); ctx.setLineDash([]);
+
+  /* corner numbers, on the axes where nothing else runs */
+  ctx.font = FSS + "px ui-monospace, monospace"; ctx.fillStyle = muted;
+  ctx.textAlign = "center";
+  ctx.fillText(String(Math.round(cmax)), X(cmax), Y(0) + FSS + 7);
+  ctx.textAlign = "right";
+  ctx.fillText(String(Math.round(wmax)), X(0) - 9, Y(wmax) + 4);
+  ctx.textAlign = "left";
+  ctx.fillText(pick(["cloth", "cl."], PANW * 0.4), X(0) + 2, Y(0) + FSS + 7);
+  ctx.save(); ctx.translate(x0 + 10, Y(0) - 4); ctx.rotate(-Math.PI / 2);
+  ctx.fillText(pick(["wine", ""], PANH - 40), 0, 0); ctx.restore();
+
+  /* one caption row under the panel, which belongs to nobody else */
+  ctx.textAlign = "left"; ctx.fillStyle = muted;
+  ctx.font = FSS + "px ui-monospace, monospace";
+  const cost = Model.clothCost(p);
+  const gz = pl.gain < 5e-5;
+  ctx.fillText(pick(["a bolt costs " + cost.toFixed(2) + " wine  ·  specialises in " + pl.specialises,
+                     cost.toFixed(2) + " wine a bolt  ·  " + pl.specialises,
+                     cost.toFixed(2) + " wine/bolt"], PANW),
+               x0, y0 + PANH + (NARROW ? 14 : 16));
+  /* each panel's own gain goes in a second reserved row under the first, so
+     it can never collide with the frontier or the axis numbers.             */
+  ctx.fillStyle = gz ? muted : css("--gain");
+  ctx.fillText(pick([gz ? "no better off than going it alone"
+                        : "ends up " + (100 * pl.gain).toFixed(1) + "% better off than alone",
+                     gz ? "no better off alone" : "+" + (100 * pl.gain).toFixed(1) + "% vs alone",
+                     gz ? "no gain" : "+" + (100 * pl.gain).toFixed(0) + "%"], PANW),
+               x0, y0 + PANH + (NARROW ? 30 : 32));
+  return { al: al, pl: pl };
+}
+
+function render(){
+  fitCanvas();
+  const a = A(), b = B();
+  const tw = Model.termsWindow(a, b);
+  const price = Model.priceAt(a, b, state.terms / 100);
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line");
+  const ca = css("--a"), cb = css("--b"), sa = css("--a-soft"), sb = css("--b-soft");
+  const gain = css("--gain");
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+
+  /* one scale for both panels */
+  const scaleC = Math.max(Model.maxCloth(a), Model.maxCloth(b)) * 1.08;
+  const scaleW = Math.max(Model.maxWine(a), Model.maxWine(b)) * 1.12;
+
+  const pa = panel(0, a, b, "North", ca, sa, scaleC, scaleW, price);
+  const pb = panel(1, b, a, "South", cb, sb, scaleC, scaleW, price);
+
+  /* world totals, alone and traded. The traded pair is the sum of the two
+     consumption bundles, which is exactly the specialised corner.           */
+  const aloneC = pa.al.C + pb.al.C, aloneW = pa.al.W + pb.al.W;
+  const gotC = pa.pl.got.C + pb.pl.got.C, gotW = pa.pl.got.W + pb.pl.got.W;
+  const g = Model.gain(a, b);
+
+  ctx.textAlign = "left"; ctx.fillStyle = ink;
+  ctx.font = "600 " + FSB + "px " + (css("--font-ui") || "sans-serif");
+  ctx.fillText(pick(["What the two of them end up with",
+                     "What they end up with", "World total"], W - 2 * PAD), PAD, BARY - 12);
+
+  const rows = [
+    { name: "cloth", alone: aloneC, got: gotC },
+    { name: "wine",  alone: aloneW, got: gotW }
+  ];
+  const span = Math.max(1e-9, Math.max(aloneC, gotC, aloneW, gotW));
+  const lab = NARROW ? 44 : 62;
+  const barW = W - 2 * PAD - lab - (NARROW ? 62 : 86);
+  const bh = NARROW ? 13 : 15;
+  ctx.font = FSS + "px ui-monospace, monospace";
+  for (let i = 0; i < 2; i++){
+    const r = rows[i], y = BARY + i * (NARROW ? 44 : 46);
+    ctx.fillStyle = muted; ctx.textAlign = "left";
+    ctx.fillText(r.name, PAD, y + bh - 1);
+    ctx.fillStyle = line;
+    ctx.fillRect(PAD + lab, y, (r.alone / span) * barW, bh);
+    ctx.fillStyle = gain;
+    ctx.fillRect(PAD + lab, y + bh + 3, (r.got / span) * barW, bh);
+    ctx.fillStyle = muted; ctx.textAlign = "left";
+    ctx.fillText(String(Math.round(r.alone)), PAD + lab + (r.alone / span) * barW + 6, y + bh - 1);
+    ctx.fillStyle = gain;
+    ctx.fillText(String(Math.round(r.got)), PAD + lab + (r.got / span) * barW + 6, y + bh * 2 + 2);
+  }
+  ctx.fillStyle = muted; ctx.textAlign = "left";
+  ctx.fillText(pick(["grey = each making its own bundle   ·   green = specialise, then trade",
+                     "grey = alone   ·   green = specialise and trade",
+                     "grey alone, green traded"], W - 2 * PAD),
+               PAD, BARY + BARH - (NARROW ? 8 : 12));
+
+  /* readouts */
+  el("acout").textContent = String(state.ac);
+  el("awout").textContent = String(state.aw);
+  el("bcout").textContent = String(state.bc);
+  el("bwout").textContent = String(state.bw);
+  el("termsout").textContent = tw.open ? price.toFixed(2) + " wine a bolt" : "no window";
+  el("r1").textContent = Model.clothCost(a).toFixed(2) + " wine";
+  el("r2").textContent = Model.clothCost(b).toFixed(2) + " wine";
+  el("r3").textContent = (g < 5e-5 ? "0.00" : (100 * g).toFixed(2)) + "%";
+  el("r4").textContent = g < 5e-5 ? "nothing to split"
+    : (100 * pa.pl.gain).toFixed(1) + "% / " + (100 * pb.pl.gain).toFixed(1) + "%";
+  el("cap").textContent = g < 5e-5
+    ? "The two costs are identical, so there is no window of exchange rates that helps either side. The rings sit on the dots: specialising changes nothing, however different the two frontiers look."
+    : "Each panel is one workshop's own limit, drawn to the same scale. The dark dot is what it makes on its own; the coloured dot is where it specialises, and the green ring is what it consumes after trading at " + price.toFixed(2) + " barrels a bolt.";
+}
+
+
+/* ---- BINDINGS ----------------------------------------------------------- */
+function dial(id, key){
+  el(id).addEventListener("input", function(){
+    state[key] = parseInt(el(id).value, 10);
+    render();
+  });
+}
+dial("ac", "ac"); dial("aw", "aw"); dial("bc", "bc"); dial("bw", "bw");
+dial("terms", "terms");
+
+function setAll(v){
+  Object.assign(state, v);
+  for (const id of ["ac", "aw", "bc", "bw", "terms"]) el(id).value = String(state[id]);
+  render();
+}
+/* South at 5 and 4 has the same 0.80 cost of cloth as North at 10 and 8, and
+   is still smaller at both goods -- absolute advantage untouched, gain zero. */
+el("equal").addEventListener("click", function(){ setAll({ ac: 10, aw: 8, bc: 5, bw: 4 }); });
+el("dominate").addEventListener("click", function(){ setAll({ ac: 12, aw: 12, bc: 3, bw: 4 }); });
+el("flip").addEventListener("click", function(){ setAll({ ac: 10, aw: 8, bc: 6, bw: 4 }); });
+el("reset").addEventListener("click", function(){ setAll(Object.assign({}, defaults)); });
+render();
+
+let rzT = 0;
+addEventListener("resize", function(){ clearTimeout(rzT); rzT = setTimeout(render, 90); });
+if (matchMedia){
+  const mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
+
+
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+function rel(a, b){ return Math.abs(a - b) / Math.max(Math.abs(b), 1e-300); }
+
+const rngT = mulberry32(SEED);
+const PAIRS = [];
+for (let i = 0; i < 60; i++){
+  PAIRS.push([
+    { c: 1 + Math.floor(rngT() * 12), w: 1 + Math.floor(rngT() * 12) },
+    { c: 1 + Math.floor(rngT() * 12), w: 1 + Math.floor(rngT() * 12) }
+  ]);
+}
+const MIXES = [0.05, 0.15, 0.3, 0.45, 0.6, 0.72, 0.85, 0.95];
+
+/* The joint frontier the hard way: scan A's days on cloth, give the rest of
+   the cloth order to B, and take the best wine that comes out. Wine is linear
+   in A's days, so the optimum is at one end of the feasible interval -- both
+   ends are scanned explicitly, which makes this an exact second route to the
+   frontier rather than a grid approximation of it.                          */
+function bruteWine(A, B, C, steps){
+  const n = steps || 400;
+  const lo = Math.max(0, (C - DAYS * B.c) / A.c);
+  const hi = Math.min(DAYS, C / A.c);
+  if (lo > hi + 1e-9) return -Infinity;
+  const tries = [lo, hi];
+  for (let i = 0; i <= n; i++) tries.push(lo + (i / n) * (hi - lo));
+  let best = -Infinity;
+  for (const dA of tries){
+    const dB = (C - dA * A.c) / B.c;
+    if (dB < -1e-9 || dB > DAYS + 1e-9) continue;
+    const w = (DAYS - dA) * A.w + (DAYS - Math.max(0, dB)) * B.w;
+    if (w > best) best = w;
+  }
+  return best;
+}
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+
+  /* 1 -- the greedy rule really is the frontier: nothing beats it. */
+  push("the joint frontier beats every day-split, at 200 cloth levels", (function(){
+    for (const pr of PAIRS.slice(0, 12)){
+      const A = pr[0], B = pr[1];
+      const top = M.maxCloth(A) + M.maxCloth(B);
+      for (let i = 0; i <= 200; i++){
+        const C = (i / 200) * top;
+        const g = M.jointWine(A, B, C), h = bruteWine(A, B, C, 200);
+        if (!Number.isFinite(g) || !Number.isFinite(h)) return false;
+        if (Math.abs(g - h) > 1e-6 * (1 + Math.abs(h))) return false;
+      }
+    }
+    return true;
+  })(), "greedy and an exhaustive scan over day allocations agree at every level, on 12 seeded productivity pairs");
+
+  /* 2 -- concavity, which is the shape of the gain. */
+  push("the joint frontier is concave, with one kink", (function(){
+    for (const pr of PAIRS){
+      const A = pr[0], B = pr[1];
+      const top = M.maxCloth(A) + M.maxCloth(B);
+      let prev = Infinity;
+      for (let i = 1; i <= 200; i++){
+        const c0 = ((i - 1) / 200) * top, c1 = (i / 200) * top;
+        const slope = (M.jointWine(A, B, c1) - M.jointWine(A, B, c0)) / (c1 - c0);
+        if (slope > prev + 1e-9) return false;
+        prev = slope;
+      }
+    }
+    return true;
+  })(), "the slope never increases over 200 steps, at 60 seeded pairs");
+
+  /* 3 -- the bend is where the cheap producer runs out of days. */
+  push("the kink sits at the cheap producer's full cloth output", (function(){
+    for (const pr of PAIRS){
+      const A = pr[0], B = pr[1];
+      if (M.clothCost(A) === M.clothCost(B)) continue;
+      const k = M.kinkCloth(A, B);
+      const s1 = (M.jointWine(A, B, k) - M.jointWine(A, B, k * 0.5)) / (k * 0.5);
+      const cheap = M.order(A, B)[0], dear = M.order(A, B)[1];
+      const top = k + M.maxCloth(dear);
+      const s2 = (M.jointWine(A, B, top) - M.jointWine(A, B, (k + top) / 2)) / ((top - k) / 2);
+      if (!near(-s1, M.clothCost(cheap), 1e-9)) return false;
+      if (!near(-s2, M.clothCost(dear), 1e-9)) return false;
+    }
+    return true;
+  })(), "the slope below the kink is the cheap producer's cost and above it is the dear one's, to 1e-9");
+
+  /* 4 -- the headline quantity, derived a second way. together() solves the
+         two segments algebraically; this bisects the same frontier.         */
+  push("the traded bundle from algebra matches a bisection of the frontier", (function(){
+    for (const pr of PAIRS) for (const mx of MIXES){
+      const A = pr[0], B = pr[1], r = (1 - mx) / mx;
+      let lo = 0, hi = M.maxCloth(A) + M.maxCloth(B);
+      for (let i = 0; i < 90; i++){
+        const m = (lo + hi) / 2;
+        if (M.jointWine(A, B, m) >= r * m) lo = m; else hi = m;
+      }
+      if (rel(M.together(A, B, mx).C, lo) > 1e-9) return false;
+    }
+    return true;
+  })(), "480 cases: closed form and bisection agree on the cloth output to 1e-9 relative");
+
+  /* 5 -- specialising by the lower opportunity cost lands exactly on the
+         frontier, rather than merely near it.                                */
+  push("specialisation by lower cost reaches the frontier exactly, at 60 pairs", (function(){
+    for (const pr of PAIRS){
+      const A = pr[0], B = pr[1];
+      if (M.clothCost(A) === M.clothCost(B)) continue;
+      const cheap = M.order(A, B)[0], dear = M.order(A, B)[1];
+      const C = M.maxCloth(cheap), Wv = M.maxWine(dear);
+      if (rel(M.jointWine(A, B, C), Wv) > 1e-9) return false;
+    }
+    return true;
+  })(), "the corner where each producer is fully in its comparative-advantage good is a point of the frontier");
+
+  /* 6 -- the whole claim of the page, at every seeded pair and mix. */
+  push("trade never loses and the gain is never negative", (function(){
+    for (const pr of PAIRS){
+      if (!(M.gain(pr[0], pr[1]) >= -1e-12)) return false;
+      for (const mx of MIXES){
+        const A = pr[0], B = pr[1];
+        const a = M.alone(A, mx), b = M.alone(B, mx);
+        if (M.together(A, B, mx).C < a.C + b.C - 1e-9) return false;
+      }
+    }
+    return true;
+  })(), "60 pairs at the specialised shape, and 480 pair-and-mix combinations against the joint frontier");
+
+  /* 7 -- and it is exactly zero, not merely small, when the costs coincide. */
+  push("the gain is exactly zero when the two costs are equal", (function(){
+    const same = [[{c:10,w:8},{c:5,w:4}], [{c:3,w:9},{c:4,w:12}], [{c:7,w:7},{c:2,w:2}],
+                  [{c:12,w:3},{c:8,w:2}], [{c:6,w:9},{c:2,w:3}]];
+    for (const pr of same){
+      if (Math.abs(M.gain(pr[0], pr[1])) > 1e-12) return false;
+      for (const mx of MIXES){
+        const A = pr[0], B = pr[1];
+        const a = M.alone(A, mx), b = M.alone(B, mx);
+        if (Math.abs(M.together(A, B, mx).C - (a.C + b.C)) > 1e-9) return false;
+      }
+    }
+    return true;
+  })(), "5 pairs with identical cost ratios and very different sizes: the joint frontier is exactly the sum of the two solo bundles at every mix, to 1e-9");
+
+  /* 8 -- being better at everything does not remove the gain. */
+  push("absolute advantage in both goods leaves the gain intact", (function(){
+    let found = 0;
+    for (const pr of PAIRS){
+      const A = pr[0], B = pr[1];
+      const dominates = (A.c > B.c && A.w > B.w) || (B.c > A.c && B.w > A.w);
+      if (!dominates) continue;
+      if (M.clothCost(A) === M.clothCost(B)) continue;
+      if (M.gain(A, B) > 1e-9) found++;
+    }
+    return found >= 10 && Math.abs(M.gain({c:10,w:8}, {c:3,w:4}) - 0.114285714285714) < 1e-12;
+  })(), "at least ten seeded pairs where one producer is faster at both still show a strict gain, and the page's default -- North faster at both goods -- gains 11.4286%");
+
+  /* 9 -- the gain is invariant to a pure change of scale. */
+  push("scaling both producers leaves the gain unchanged", (function(){
+    for (const pr of PAIRS.slice(0, 20)) for (const k of [2, 3, 7]) for (const mx of [0.3, 0.6, 0.85]){
+      const A = pr[0], B = pr[1];
+      const g1 = M.gain(A, B);
+      const g2 = M.gain({ c: A.c * k, w: A.w * k }, { c: B.c * k, w: B.w * k });
+      if (rel(g2, g1) > 1e-12 && Math.abs(g2 - g1) > 1e-12) return false;
+    }
+    return true;
+  })(), "180 cases: multiplying every productivity by 2, 3 or 7 moves the percentage gain by less than 1e-12");
+
+  /* 10 -- the two costs are reciprocals, so cheap at one is dear at the other. */
+  push("whoever is cheaper at cloth is dearer at wine, always", (function(){
+    for (const pr of PAIRS){
+      const A = pr[0], B = pr[1];
+      if (rel(M.clothCost(A) * M.wineCost(A), 1) > 1e-12) return false;
+      const dc = M.clothCost(A) - M.clothCost(B), dw = M.wineCost(A) - M.wineCost(B);
+      if (dc !== 0 && dc * dw >= 0) return false;
+    }
+    return true;
+  })(), "cost of cloth times cost of wine is 1 for every producer, and the two comparisons always point opposite ways");
+
+  /* 11 -- the terms of trade window: inside it both gain, outside one loses. */
+  push("both producers gain at any rate strictly inside the cost window", (function(){
+    for (const pr of PAIRS.slice(0, 25)){
+      const A = pr[0], B = pr[1];
+      const win = M.termsWindow(A, B);
+      if (win.lo === win.hi) continue;
+      for (const f of [0.1, 0.35, 0.5, 0.7, 0.9]){
+        const price = M.priceAt(A, B, f);
+        if (!(M.plan(A, B, price).gain > 1e-12)) return false;
+        if (!(M.plan(B, A, price).gain > 1e-12)) return false;
+      }
+      /* at each end of the window one of them gains exactly nothing */
+      for (const f of [0, 1]){
+        const price = M.priceAt(A, B, f);
+        const ga = M.plan(A, B, price).gain, gb = M.plan(B, A, price).gain;
+        if (!(Math.abs(ga) < 1e-9 || Math.abs(gb) < 1e-9)) return false;
+        if (ga < -1e-9 || gb < -1e-9) return false;
+      }
+      /* and beyond it, one of them is strictly worse off than going alone */
+      const outside = win.hi + 0.25 * (win.hi - win.lo);
+      if (!(M.plan(A, B, outside).gain < -1e-9 || M.plan(B, A, outside).gain < -1e-9)) return false;
+    }
+    return true;
+  })(), "25 pairs: strictly positive for both at 5 rates inside the window, exactly zero for one of them at each end, and strictly negative for one beyond it");
+
+  /* 12 -- the picture has to add up: whatever the exchange rate, the two
+           consumption bundles sum to exactly what the two of them produced.  */
+  push("the two consumptions sum to the specialised world bundle, at every rate", (function(){
+    for (const pr of PAIRS){
+      const A = pr[0], B = pr[1];
+      if (!M.termsWindow(A, B).open) continue;
+      const sp = M.specialised(A, B);
+      for (const f of [0, 0.2, 0.5, 0.77, 1]){
+        const price = M.priceAt(A, B, f);
+        const ga = M.plan(A, B, price).got, gb = M.plan(B, A, price).got;
+        if (rel(ga.C + gb.C, sp.C) > 1e-12) return false;
+        if (rel(ga.W + gb.W, sp.W) > 1e-12) return false;
+      }
+    }
+    return true;
+  })(), "the market clears at 5 rates on every seeded pair, to 1e-12 relative -- nothing is created or lost in the exchange");
+
+  /* 13 -- the controls and the model describe the same world. */
+  push("the productivity controls span the range the model is asserted over", (function(){
+    for (const id of ["ac", "aw", "bc", "bw"]){
+      const e = document.getElementById(id);
+      if (parseInt(e.min, 10) !== 1 || parseInt(e.max, 10) !== 12) return false;
+    }
+    const terms = document.getElementById("terms");
+    return parseInt(terms.min, 10) === 0 && parseInt(terms.max, 10) === 100 && DAYS === 100;
+  })(), "all four productivity sliders run 1 to 12, the terms control spans the whole window from end to end, and both workshops have 100 days");
+
+  return t;
+};
+
+/* exposed for the verifier's control sweep */
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

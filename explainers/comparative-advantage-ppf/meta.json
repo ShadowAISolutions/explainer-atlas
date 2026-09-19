@@ -1,0 +1,16 @@
+{
+  "slug": "comparative-advantage-ppf",
+  "title": "Worse At Everything, Still Worth Trading With",
+  "domain": "economics",
+  "difficulty": 2,
+  "summary": "Two workshops, two goods, one joint frontier with a kink in it. The gain from trade comes from the ratio of costs, never from who is faster.",
+  "prerequisites": [],
+  "tags": ["comparative-advantage", "opportunity-cost", "production-frontier", "gains-from-trade"],
+  "interaction_pattern": "compare-side-by-side",
+  "sources": [
+    { "title": "David Ricardo, On the Principles of Political Economy and Taxation (1817), ch. 7", "url": "https://www.econlib.org/library/Ricardo/ricP.html" },
+    { "title": "Paul Samuelson on comparative advantage as economics' one non-obvious true proposition", "url": "https://doi.org/10.1257/jep.23.3.221" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}
