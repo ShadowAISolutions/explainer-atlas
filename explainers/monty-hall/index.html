@@ -71,7 +71,7 @@ footer.page a{color:var(--accent)}
 </header>
 
 <figure class="stage" data-role="stage">
-  <canvas id="view" width="900" height="420" role="img"
+  <canvas id="view" width="1960" height="720" role="img"
           aria-label="A row of doors, one hiding a car and the rest goats, with a bar chart beneath comparing the measured win rate for switching against the win rate for staying, both against their exact theoretical values."></canvas>
   <div class="doors" id="doors" role="group" aria-label="Choose a door"></div>
   <p class="verdict" id="verdict">Pick a door to begin.</p>
@@ -306,13 +306,35 @@ function onDoor(i){
   }
 }
 
+/* the canvas tracks its container: one canvas unit is one CSS pixel, so the
+   door labels and the odds figures stay the size they were drawn at. */
+const SS = 2;
+let W = 900, H = 420, NARROW = false, DOOR_H = 170, PAD = 30, GAP = 8, BAR_L = 118, BAR_R = 66;
+const DOOR_TOP = 26;
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(240, cv.parentNode.clientWidth - 20) : 900);
+  NARROW = avail < 470;
+  W = Math.max(280, Math.min(980, Math.round(avail)));
+  DOOR_H = NARROW ? 124 : 170;
+  PAD = NARROW ? 14 : 30;
+  GAP = NARROW ? 4 : 8;
+  BAR_L = NARROW ? 58 : 118;
+  BAR_R = NARROW ? 50 : 66;
+  H = DOOR_TOP + DOOR_H + 42 + 86 + 32;
+  if (cv.width !== W*SS || cv.height !== H*SS){ cv.width = W*SS; cv.height = H*SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
 function render(){
-  const W = cv.width, H = cv.height, doorTop = 26, doorH = 170;
+  fitCanvas();
+  const doorTop = DOOR_TOP, doorH = DOOR_H;
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
 
   /* doors */
-  const pad = 30, gap = 8;
+  const pad = PAD, gap = GAP;
   const dw = (W - 2*pad - gap*(state.N - 1))/state.N;
   ctx.font = "700 13px " + css("--font-mono");
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -324,21 +346,26 @@ function render(){
     ctx.lineWidth = (i === state.pick) ? 3 : 1.5;
     ctx.strokeStyle = (i === state.pick) ? css("--accent") : css("--line");
     ctx.strokeRect(x, doorTop, dw, doorH);
+    /* with twelve doors on a phone a word will not fit, so the contents
+       become a colour block and the legend below says which is which */
+    const roomy = dw >= 36;
     if (open){
       ctx.fillStyle = (i === state.car) ? css("--win") : css("--muted");
-      ctx.fillText((i === state.car) ? "CAR" : "goat", x + dw/2, doorTop + doorH/2);
+      if (roomy) ctx.fillText((i === state.car) ? "CAR" : "goat", x + dw/2, doorTop + doorH/2);
+      else ctx.fillRect(x + dw/2 - Math.min(9, dw/3), doorTop + doorH/2 - 9,
+                        Math.min(18, dw*2/3), 18);
     } else {
       ctx.fillStyle = css("--muted");
-      ctx.fillText(String(i + 1), x + dw/2, doorTop + doorH/2);
+      if (dw >= 16) ctx.fillText(String(i + 1), x + dw/2, doorTop + doorH/2);
     }
   }
 
   /* odds bars */
   const ex = Model.exact(state.N, state.host === "knows");
   const sim = Model.simulate(state.N, state.host === "knows", state.trials, SEED);
-  const barTop = doorTop + doorH + 42, barH = 30, barL = 118, barW = W - barL - pad - 66;
+  const barTop = doorTop + doorH + 42, barH = 30, barL = BAR_L, barW = W - barL - pad - BAR_R;
   ctx.textAlign = "left";
-  ctx.font = "600 12px " + css("--font-ui");
+  ctx.font = "600 " + (NARROW ? 11 : 12) + "px " + css("--font-ui");
   const rows = [
     ["switch", ex.switchWin, sim.valid ? sim.sw/sim.valid : null, css("--win")],
     ["stay",   ex.stayWin,   sim.valid ? sim.st/sim.valid : null, css("--muted")]
@@ -354,12 +381,14 @@ function render(){
       ctx.strokeStyle = css("--ink"); ctx.lineWidth = 2.5;
       ctx.beginPath(); ctx.moveTo(barL + barW*simv, y - 5); ctx.lineTo(barL + barW*simv, y + barH + 5); ctx.stroke();
     }
-    ctx.fillStyle = css("--ink"); ctx.font = "700 13px " + css("--font-mono");
-    ctx.fillText(pct(exact), barL + barW + 10, y + barH/2);
-    ctx.font = "600 12px " + css("--font-ui");
+    ctx.fillStyle = css("--ink"); ctx.font = "700 " + (NARROW ? 12 : 13) + "px " + css("--font-mono");
+    ctx.fillText(pct(exact), barL + barW + 8, y + barH/2);
+    ctx.font = "600 " + (NARROW ? 11 : 12) + "px " + css("--font-ui");
   });
-  ctx.fillStyle = css("--muted"); ctx.font = "600 11px " + css("--font-ui");
-  ctx.fillText("bars: exact odds   |   vertical rule: " + sim.valid + " simulated rounds", pad, H - 14);
+  ctx.fillStyle = css("--muted"); ctx.font = "600 " + (NARROW ? 10 : 11) + "px " + css("--font-ui");
+  ctx.fillText(NARROW ? "bars: exact  |  rule: " + sim.valid + " rounds"
+                      : "bars: exact odds   |   vertical rule: " + sim.valid + " simulated rounds",
+               pad, H - 14);
 
   /* readouts */
   el("doorcountout").textContent = String(state.N);
@@ -375,6 +404,12 @@ function render(){
 el("doorcount").addEventListener("input", (e) => { state.N = parseInt(e.target.value, 10); newRound(); });
 el("host").addEventListener("change", (e) => { state.host = e.target.value; newRound(); });
 el("trials").addEventListener("input", (e) => { state.trials = parseInt(e.target.value, 10); render(); });
+
+let resizeTimer = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(render, 90);
+});
 el("reset").addEventListener("click", () => {
   state.N = defaults.N; state.host = defaults.host; state.trials = defaults.trials;
   state.you = { swWin: 0, swN: 0, stWin: 0, stN: 0 };

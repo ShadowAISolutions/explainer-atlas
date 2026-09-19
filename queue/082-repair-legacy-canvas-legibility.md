@@ -49,8 +49,16 @@ batch/003.
 - [x] `huffman-coding` — batch/006. Container-tracking `fitCanvas()` (the page
       already had a `layout()` for the tree, so the canvas sizer needed its own
       name), taller aspect below 470px, padding scaled to the width.
-- [ ] batch/001 pages — `central-limit-theorem`, `monty-hall`,
-      `fourier-series-square-wave`, `population-logistic-chaos`
+- [x] `central-limit-theorem` — batch/007. Container-tracking `fitCanvas()`,
+      13px pane titles, taller aspect below 470px so the two stacked panes each
+      get room, pointer mapping rewritten against the CSS-pixel space.
+- [x] `monty-hall` — batch/007. Container-tracking `fitCanvas()` with the
+      canvas height derived from its parts rather than fixed at 420. Below
+      470px the padding and the bar gutters shrink and the legend shortens;
+      when a door is narrower than 36px its contents become a colour block,
+      which is what makes the twelve-door case legible on a phone.
+- [ ] batch/001 remainder — `fourier-series-square-wave`,
+      `population-logistic-chaos`
       (`floating-point-precision` was repaired in batch/005 under task 081).
 - [ ] batch/002 pages
 - [ ] batch/003 pages

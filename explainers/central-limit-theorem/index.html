@@ -68,7 +68,7 @@ footer.page a{color:var(--accent)}
 
 <div class="layout">
   <figure class="stage" data-role="stage">
-    <canvas id="view" width="900" height="620" role="img"
+    <canvas id="view" width="1800" height="1240" role="img"
             aria-label="Upper panel: the population distribution as a bar chart, which can be redrawn by dragging. Lower panel: the exact distribution of the mean of n draws from it, with a normal curve of matching mean and variance overlaid."></canvas>
     <figcaption><strong>Drag on the upper panel to redraw the population.</strong> The lower panel is the exact distribution of the sample mean — computed by convolution, not simulated — with a matched normal curve over it.</figcaption>
   </figure>
@@ -264,12 +264,29 @@ const cv = el("view"), ctx = cv.getContext("2d");
 const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const num = (x, d) => Number.isFinite(x) ? x.toFixed(d) : "—";
 
+/* the canvas tracks its container: one canvas unit is one CSS pixel, so a
+   label written at 13px is 13px wherever the page is read. */
+const SS = 2;
+let W = 900, Hc = 620, NARROW = false, PAD = 40;
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(240, cv.parentNode.clientWidth - 20) : 900);
+  NARROW = avail < 470;
+  W = Math.max(280, Math.min(1000, Math.round(avail)));
+  Hc = Math.round(Math.max(300, Math.min(720, W * (NARROW ? 1.34 : 0.69))));
+  PAD = NARROW ? 26 : 40;
+  if (cv.width !== W*SS || cv.height !== Hc*SS){ cv.width = W*SS; cv.height = Hc*SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
 function render(){
-  const W = cv.width, Hc = cv.height, mid = Math.round(Hc*0.44);
+  fitCanvas();
+  const mid = Math.round(Hc*0.44);
   ctx.clearRect(0, 0, W, Hc);
   ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, Hc);
 
-  const pad = 40;
+  const pad = PAD, FS = NARROW ? 12 : 13;
   const pop = Model.popStats(state.pmf);
 
   /* ---- upper: the population ---- */
@@ -282,8 +299,8 @@ function render(){
   }
   ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pad, mid - 18); ctx.lineTo(W - pad, mid - 18); ctx.stroke();
-  ctx.fillStyle = css("--muted"); ctx.font = "600 12px " + css("--font-mono");
-  ctx.fillText("population — drag to redraw", pad, 22);
+  ctx.fillStyle = css("--muted"); ctx.font = "600 " + FS + "px " + css("--font-mono");
+  ctx.fillText(NARROW ? "population — drag it" : "population — drag to redraw", pad, 22);
 
   /* ---- lower: the exact distribution of the mean ---- */
   const d = Model.sumDist(state.pmf, state.n);
@@ -317,9 +334,9 @@ function render(){
     ctx.stroke();
   }
 
-  ctx.fillStyle = css("--muted"); ctx.font = "600 12px " + css("--font-mono");
-  ctx.fillText("distribution of the mean of n = " + state.n, pad, mid + 16);
-  ctx.fillText("0", pad - 6, base + 16); ctx.fillText("1", W - pad - 4, base + 16);
+  ctx.fillStyle = css("--muted"); ctx.font = "600 " + FS + "px " + css("--font-mono");
+  ctx.fillText((NARROW ? "mean of n = " : "distribution of the mean of n = ") + state.n, pad, mid + 16);
+  ctx.fillText("0", pad - 6, base + 17); ctx.fillText("1", W - pad - 4, base + 17);
 
   /* ---- readouts ---- */
   el("nout").textContent = String(state.n);
@@ -335,9 +352,10 @@ function render(){
 let drawing = false;
 function paint(ev){
   const r = cv.getBoundingClientRect();
-  const sx = cv.width/r.width, sy = cv.height/r.height;
-  const x = (ev.clientX - r.left)*sx, y = (ev.clientY - r.top)*sy;
-  const mid = Math.round(cv.height*0.44), pad = 40, bw = (cv.width - 2*pad)/K;
+  if (!(r.width > 0)) return;
+  const sc = W/r.width;
+  const x = (ev.clientX - r.left)*sc, y = (ev.clientY - r.top)*sc;
+  const mid = Math.round(Hc*0.44), pad = PAD, bw = (W - 2*pad)/K;
   if (y > mid - 18) return;
   const i = Math.floor((x - pad)/bw);
   if (i < 0 || i >= K) return;
@@ -363,6 +381,11 @@ el("reset").addEventListener("click", () => {
   state.pmf = Model.preset(defaults.shape);
   el("shape").value = defaults.shape; el("n").value = defaults.n; el("overlay").checked = true;
   render();
+});
+let resizeTimer = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(render, 90);
 });
 render();
 

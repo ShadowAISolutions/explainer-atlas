@@ -5,8 +5,14 @@ files in `AUDIT/` before starting any batch.
 
 ## Standing corrections
 
-*(Nothing yet. Anything written here must be read and applied before the next
-page is written — it is where a failing audit trend gets escalated.)*
+- **Never put a `\uXXXX` escape in a shell heredoc that writes a file, and never
+  search for one in a Python patch.** The heredoc decodes it, so the file holds
+  the real character while your pattern holds the six literal characters, and
+  the replacement silently matches nothing. This has now cost time in four
+  separate batches (004, 005, 006, 007). Build the character in code instead —
+  `const DEG = String.fromCharCode(0x00B0)` in a page, `DEG = chr(0x00B0)` in a
+  patch script — and concatenate it. If you must check a file, `cat -A` shows
+  what is really there.
 
 ## Decisions
 
@@ -26,6 +32,39 @@ page is written — it is where a failing audit trend gets escalated.)*
   functions of known inputs.
 
 ## Batches
+
+### batch/007 — 2026-09-19
+- merged: simpsons-paradox, map-projection-distortion, gear-train-ratio, beat-frequency-tuning, plus two more pages of the legacy canvas repair (central-limit-theorem, monty-hall)
+- blocked: none
+- patterns: compare-side-by-side, spatial-explore, build-from-parts, tune-to-match (the repair carries no pattern)
+- learned: Four things worth carrying forward.
+
+  **A patch script that asserts writes nothing at all.** A multi-part Python
+  edit asserted on its second replacement and aborted before the write, which
+  silently rolled back the first replacement too. Nothing printed an error for
+  part one, so I assumed it had landed and spent several rounds debugging a
+  fix that was not in the file. When a patch script fails, re-apply every part
+  and then verify the change is actually present rather than assuming.
+
+  **A colour scale must not branch on the sign of a floating-point residue.**
+  The map page tinted warm above area 1 and cool below. An equal-area
+  projection lands on a*b = 1 to within a part in 1e15, and the sign of that
+  last bit is arbitrary, so neighbouring rings of an exactly equal-area map came
+  out full-strength orange and full-strength blue. Put the magnitude in the
+  opacity and only the sign in the hue, so the branch fades to invisible where
+  it is meaningless.
+
+  **Set assertion tolerances from the arithmetic, not by taste.** Three
+  assertions on beat-frequency-tuning failed first time because the queue task
+  and I had both guessed round numbers. The sum-to-product identity cannot beat
+  a few ulps of its own phase argument, which at 3.4e4 radians is already
+  3.6e-12; the tolerance is now literally `4 * EPSILON * max phase`. And
+  comparing envelopes as squares rather than square roots avoids losing half
+  the digits at a null. A derived tolerance is a stronger claim than a picked
+  one, and it scales when the test does.
+
+  **The \uXXXX-in-heredoc trap recurred a fourth time.** Escalated to Standing
+  corrections; see above.
 
 ### batch/006 — 2026-09-19
 - merged: regex-backtracking-blowup, schelling-segregation-model, double-slit-interference, enzyme-michaelis-menten, plus the first three pages of the legacy canvas repair (numerical-integration-error, damped-harmonic-oscillator, huffman-coding)

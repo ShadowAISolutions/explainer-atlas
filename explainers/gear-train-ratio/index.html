@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Gear in the Middle Does Nothing — Explainer Atlas</title>
+<meta name="description" content="Build a gear train one wheel at a time and watch an idler flip the direction without touching the ratio, while a compound pair on one shaft changes everything.">
+<style>
+:root{
+  --bg:#f4f4f1; --panel:#fcfcfa; --ink:#1b1c1a; --muted:#61635d; --line:#dcdcd4;
+  --accent:#16556b; --accent-soft:#e0ebf0; --warn:#a4451f;
+  --blue:#12384f; --blueink:#e8f4f8; --blueline:#4e87a4; --bluedim:#2a5670;
+  --cw:#e8a13c; --ccw:#5fc2d6;
+  --radius:6px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.45rem,1rem + 2vw,2.15rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.06rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#111211; --panel:#191a18; --ink:#e7e8e4; --muted:#9a9c94; --line:#2b2c28;
+    --accent:#63b6d0; --accent-soft:#15303a; --warn:#dd8a5e;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:70rem; margin:0 auto; padding:var(--pad)}
+header.page{max-width:44rem}
+h1{font-size:var(--scale-h1); line-height:1.13; margin:0 0 .4em; letter-spacing:-.018em}
+.kicker{margin:0 0 .4em; color:var(--accent); font:600 .72rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.15em}
+.standfirst{margin:0; color:var(--muted); max-width:42em}
+.layout{display:grid; gap:calc(var(--pad)*0.8); margin-top:var(--pad)}
+figure.stage{margin:0; background:var(--blue); border:1px solid var(--bluedim); border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto}
+figcaption{margin-top:.6em; color:#a9c6d4; font-size:.83rem}
+.chips{display:flex; flex-wrap:wrap; gap:.4em; margin:0; padding:0; list-style:none}
+.chips li{font:600 .78rem/1 var(--font-mono); border:1px solid var(--line); background:var(--panel);
+  border-radius:20px; padding:.45em .7em; color:var(--muted)}
+.chips li.on{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
+.chips li b{color:var(--ink); font-weight:700}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:.55em; margin:0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:.5em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.7rem; text-transform:uppercase; letter-spacing:.07em}
+.readout dd{margin:.15em 0 0; font:700 1.05rem/1.2 var(--font-mono)}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1em var(--pad);
+  grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}
+.control{display:grid; gap:.3em; align-content:start}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control label{font-weight:600; font-size:.93rem}
+.control output{font:700 .86rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.26em .5em; border-radius:4px}
+.control .hint{color:var(--muted); font-size:.8rem; margin:0}
+.check{display:flex; align-items:center; gap:.55em; font-weight:600; font-size:.93rem; min-height:40px}
+.check input{width:20px; height:20px; accent-color:var(--accent)}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:5px; padding:.5em .6em; min-height:40px; width:100%}
+button{cursor:pointer; font-weight:600}
+button:hover,select:hover{border-color:var(--accent)}
+:where(a,button,input,select):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.prose{max-width:40em; margin-top:calc(var(--pad)*1.3)}
+.prose h2{font-size:1.02rem; margin:1.9em 0 .45em; color:var(--accent); letter-spacing:.02em}
+.prose p{margin:0 0 1em}
+.prose .math{font:.86rem/1.7 var(--font-mono); white-space:pre; background:var(--accent-soft);
+  padding:.75em .9em; border-radius:var(--radius); border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Engineering &middot; Machine elements</p>
+  <h1>The Gear in the Middle Does Nothing</h1>
+  <p class="standfirst">Drop a wheel between two gears and the output turns the other way at exactly the same speed as before. Its tooth count cancels itself out. Put two wheels on one shaft instead and nothing cancels, which is how a clock gets 12 to 1 out of parts that fit in a pocket.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1800" height="800" role="img"
+            aria-label="A gear train drawn in blueprint style: wheels laid along a shaft line with their tooth counts marked, an index spoke on each showing how far it has turned, arrows showing each wheel's direction, and brackets joining any two wheels that share a shaft."></canvas>
+    <figcaption>Each wheel carries an index spoke; turn the input shaft and watch how far each one moves. Wheels joined by a bracket share a shaft and therefore share a speed.</figcaption>
+  </figure>
+
+  <ul class="chips" id="chips" aria-label="The train, gear by gear"></ul>
+
+  <dl class="readout" aria-live="polite">
+    <div><dt>Ratio, out to in</dt><dd id="rratio">&mdash;</dd></div>
+    <div><dt>As a fraction</dt><dd id="rfrac">&mdash;</dd></div>
+    <div><dt>Output speed</dt><dd id="rrpm">&mdash;</dd></div>
+    <div><dt>Output torque</dt><dd id="rtorque">&mdash;</dd></div>
+    <div><dt>Meshes</dt><dd id="rmesh">&mdash;</dd></div>
+    <div><dt>Direction</dt><dd id="rdir">&mdash;</dd></div>
+  </dl>
+
+  <section class="controls" data-role="controls" aria-label="Build the train">
+    <div class="control">
+      <label for="preset">Start from</label>
+      <select id="preset">
+        <option value="idler" selected>A pair, plus an idler</option>
+        <option value="pair">A single pair, 12 into 36</option>
+        <option value="compound">Compound, two stages</option>
+        <option value="clock">Clockwork, 12 to 1</option>
+        <option value="over">Overdrive, 40 into 20</option>
+      </select>
+      <p class="hint">Editing anything below keeps your changes.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="count">Wheels in the train</label><output id="countout" for="count">3</output></div>
+      <input type="range" id="count" min="2" max="7" step="1" value="3">
+      <p class="hint">New wheels start at 24 teeth on their own shaft.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="sel">Editing wheel</label><output id="selout" for="sel">2</output></div>
+      <input type="range" id="sel" min="1" max="7" step="1" value="2">
+      <p class="hint">Counting from the input, which is wheel 1.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="teeth">Its tooth count</label><output id="teethout" for="teeth">20</output></div>
+      <input type="range" id="teeth" min="8" max="60" step="1" value="20">
+      <p class="hint">Pitch radius is proportional to teeth, so the drawing resizes with it.</p>
+    </div>
+
+    <div class="control">
+      <label class="check" for="compound">
+        <input type="checkbox" id="compound">
+        Fix it to the previous shaft
+      </label>
+      <p class="hint">A wheel on the same shaft as its neighbour does not mesh with it: they simply turn together. This is what stops the train telescoping.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="angle">Turn the input</label><output id="angleout" for="angle">0&deg;</output></div>
+      <input type="range" id="angle" min="0" max="720" step="5" value="0">
+      <p class="hint">Drag and watch the spokes. Small wheels sweep further.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="rpm">Input speed</label><output id="rpmout" for="rpm">100 rpm</output></div>
+      <input type="range" id="rpm" min="10" max="600" step="10" value="100">
+      <p class="hint">At 1 N&middot;m in. Ideal gears, so power out equals power in.</p>
+    </div>
+
+    <div class="control">
+      <label for="reset" class="sr-only">Reset</label>
+      <button type="button" id="reset">Reset to defaults</button>
+    </div>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>A mesh is a bargain between two tooth counts. Where two wheels touch,
+  their rims travel together, so a wheel with half the teeth has to turn twice
+  as fast. Everything a gear train does follows from applying that one
+  sentence along a line of wheels.</p>
+
+  <h2>Why the middle wheel cancels</h2>
+
+  <p>Follow three wheels in a row, each meshing the next. The first mesh
+  multiplies the speed by N1/N2, the second by N2/N3. Multiply them:</p>
+
+  <p class="math">out    N1   N2     N1
+  --- =  -- * --  =  --
+   in    N2   N3     N3</p>
+
+  <p>The middle count appears once above and once below and leaves. Add ten
+  more wheels between and the same thing happens ten more times: every
+  intermediate tooth count cancels against itself, and a simple train's ratio
+  is the first wheel over the last, no matter what is in between. Set the
+  train to a single pair, read the ratio, then raise the wheel count to three
+  and give the new middle wheel any tooth count you like. The ratio does not
+  move.</p>
+
+  <p>What does move is the direction. Meshed wheels turn opposite ways, so
+  each mesh flips the sign and the output direction is minus one raised to the
+  number of meshes. That is what an idler is actually for: it is a reversing
+  gear, and it is also how a designer bridges a gap between two shafts that
+  have to stay where they are.</p>
+
+  <h2>Two wheels on one shaft</h2>
+
+  <p>The cancellation had a hidden condition: each intermediate wheel had to be
+  both the driven wheel of one mesh and the driver of the next, so its count
+  appeared in both positions. Bolt a second wheel to the same shaft and that
+  stops being true. The pair shares a speed but not a tooth count, so the
+  ratio you divide by is not the ratio you then multiply by, and the stages
+  stay multiplied:</p>
+
+  <p class="math">out    N1   N3
+  --- =  -- * --
+   in    N2   N4
+
+  N2 and N3 share a shaft</p>
+
+  <p>Two modest stages of one to four and one to three give twelve to one in a
+  space a single pair could not manage without a wheel twelve times the size
+  of its partner. The clockwork preset is exactly that, and the fraction
+  readout shows it reduced by exact integer arithmetic rather than by
+  rounding.</p>
+
+  <h2>What you pay</h2>
+
+  <p>Ideal gears carry power straight through, so torque goes up by exactly
+  the factor speed goes down. A train that slows the output twelvefold
+  multiplies torque twelvefold, and the readouts show the product holding
+  constant to the last digit as you drag anything.</p>
+
+  <h2>What to try</h2>
+
+  <p>Start from the single pair and note the ratio and the direction. Add one
+  wheel and watch the direction flip while the ratio sits still; sweep that
+  wheel's teeth from 8 to 60 to confirm it truly does not matter. Then select
+  the third wheel, tick it onto the previous shaft, and watch the same three
+  wheels produce a completely different number.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+const TAU = Math.PI * 2;
+
+/* ---------------- MODEL ----------------
+   A train is a list of wheels, input first. A wheel is either MESHED with the
+   one before it (teeth touch, speeds trade by tooth count, direction flips) or
+   COMPOUNDED onto it (same shaft, same speed, same direction, no mesh).      */
+
+function gcdBig(a, b){
+  a = a < 0n ? -a : a; b = b < 0n ? -b : b;
+  while (b){ const t = a % b; a = b; b = t; }
+  return a;
+}
+
+const Model = {
+  /* route one: walk the train wheel by wheel */
+  solve(train){
+    const omega = [1], dir = [1];
+    let meshes = 0;
+    for (let i = 1; i < train.length; i++){
+      if (train[i].compound){ omega[i] = omega[i-1]; dir[i] = dir[i-1]; }
+      else {
+        omega[i] = omega[i-1] * (train[i-1].teeth / train[i].teeth);
+        dir[i] = -dir[i-1];
+        meshes++;
+      }
+    }
+    const last = train.length - 1;
+    return { omega: omega, dir: dir, meshes: meshes,
+             ratio: omega[last], direction: dir[last] };
+  },
+
+  /* route two: multiply the stage ratios */
+  ratioProduct(train){
+    let r = 1;
+    for (let i = 1; i < train.length; i++)
+      if (!train[i].compound) r *= train[i-1].teeth / train[i].teeth;
+    return r;
+  },
+
+  /* route three: exact integers, reduced */
+  exactRatio(train){
+    let n = 1n, d = 1n;
+    for (let i = 1; i < train.length; i++)
+      if (!train[i].compound){ n *= BigInt(train[i-1].teeth); d *= BigInt(train[i].teeth); }
+    const g = gcdBig(n, d);
+    return [n / g, d / g];
+  },
+
+  isSimple(train){
+    for (let i = 1; i < train.length; i++) if (train[i].compound) return false;
+    return true;
+  },
+
+  withIdler(train, at, teeth){
+    const t = train.slice();
+    t.splice(at, 0, { teeth: teeth, compound: false });
+    return t;
+  },
+
+  /* ideal gears: power straight through */
+  power(train, rpmIn, torqueIn){
+    const s = Model.solve(train);
+    const wIn = rpmIn * TAU / 60;
+    const wOut = Math.abs(s.ratio) * wIn;
+    const tOut = s.ratio === 0 ? 0 : torqueIn / Math.abs(s.ratio);
+    return { wIn: wIn, wOut: wOut, torqueOut: tOut,
+             powerIn: torqueIn * wIn, powerOut: tOut * wOut,
+             rpmOut: Math.abs(s.ratio) * rpmIn };
+  },
+
+  /* pitch radii in tooth units, and the centre of every wheel along the shaft
+     line. This is the geometry the picture is drawn from. */
+  geometry(train){
+    const r = train.map(function(g){ return g.teeth / 2; });
+    const x = [0];
+    for (let i = 1; i < train.length; i++)
+      x[i] = train[i].compound ? x[i-1] : x[i-1] + r[i-1] + r[i];
+    let minX = Infinity, maxX = -Infinity, maxR = 0;
+    for (let i = 0; i < train.length; i++){
+      minX = Math.min(minX, x[i] - r[i]); maxX = Math.max(maxX, x[i] + r[i]);
+      maxR = Math.max(maxR, r[i]);
+    }
+    return { r: r, x: x, minX: minX, maxX: maxX, maxR: maxR };
+  },
+
+  /* how far each wheel has turned when the input turns by angleIn radians */
+  angles(train, angleIn){
+    const s = Model.solve(train);
+    return s.omega.map(function(w, i){ return angleIn * w * s.dir[i]; });
+  }
+};
+
+const PRESETS = {
+  pair:     [{ teeth: 12 }, { teeth: 36 }],
+  idler:    [{ teeth: 12 }, { teeth: 20 }, { teeth: 36 }],
+  compound: [{ teeth: 12 }, { teeth: 36 }, { teeth: 12, compound: true }, { teeth: 36 }],
+  clock:    [{ teeth:  8 }, { teeth: 32 }, { teeth:  8, compound: true }, { teeth: 24 }],
+  over:     [{ teeth: 40 }, { teeth: 20 }]
+};
+function clone(p){ return p.map(function(g){ return { teeth: g.teeth, compound: !!g.compound }; }); }
+
+/* ---------------- STATE ---------------- */
+const state = { preset: "idler", train: clone(PRESETS.idler), sel: 2, angle: 0, rpm: 100 };
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+
+const SS = 2;
+let W = 900, H = 400, NARROW = false;
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(220, cv.parentNode.clientWidth - 20) : 900);
+  NARROW = avail < 470;
+  W = Math.max(280, Math.min(1120, Math.round(avail)));
+  H = Math.round(Math.max(200, Math.min(430, W * (NARROW ? 0.62 : 0.40))));
+  if (cv.width !== W * SS || cv.height !== H * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+/* one wheel, drawn as a rim of radial teeth plus an index spoke */
+function drawWheel(cx, cy, R, teeth, theta, spin, fs, MONO){
+  const rim = R * 0.88, hub = Math.max(3, R * 0.16);
+  ctx.strokeStyle = "#7fb4cc"; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.arc(cx, cy, rim, 0, TAU); ctx.stroke();
+
+  /* the teeth: one radial tick each, so the count is countable rather than
+     implied. They are ticks and not interlocking profiles on purpose. */
+  ctx.strokeStyle = "#cfe8f2"; ctx.lineWidth = Math.max(0.7, Math.min(1.6, R / 22));
+  for (let k = 0; k < teeth; k++){
+    const a = theta + k * TAU / teeth;
+    ctx.beginPath();
+    ctx.moveTo(cx + rim * Math.cos(a), cy + rim * Math.sin(a));
+    ctx.lineTo(cx + R * Math.cos(a), cy + R * Math.sin(a));
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = "#7fb4cc"; ctx.lineWidth = 0.8; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle = spin > 0 ? "#e8a13c" : "#5fc2d6";
+  ctx.lineWidth = Math.max(1.6, R / 14);
+  ctx.beginPath(); ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + rim * 0.92 * Math.cos(theta), cy + rim * 0.92 * Math.sin(theta));
+  ctx.stroke();
+
+  ctx.fillStyle = "#12384f"; ctx.strokeStyle = "#cfe8f2"; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.arc(cx, cy, hub, 0, TAU); ctx.fill(); ctx.stroke();
+
+  /* direction arc */
+  const ar = R * 0.42;
+  if (ar > 7){
+    ctx.strokeStyle = spin > 0 ? "#e8a13c" : "#5fc2d6"; ctx.lineWidth = 1.4;
+    const a0 = -0.9, a1 = 0.9;
+    ctx.beginPath(); ctx.arc(cx, cy, ar, a0, a1, spin < 0); ctx.stroke();
+    const tip = spin > 0 ? a1 : a0, dxn = spin > 0 ? 1 : -1;
+    const tx = cx + ar * Math.cos(tip), ty = cy + ar * Math.sin(tip);
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx - dxn * 5 * Math.sin(tip) - 4 * Math.cos(tip),
+               ty + dxn * 5 * Math.cos(tip) - 4 * Math.sin(tip));
+    ctx.lineTo(tx - dxn * 5 * Math.sin(tip) + 4 * Math.cos(tip),
+               ty + dxn * 5 * Math.cos(tip) + 4 * Math.sin(tip));
+    ctx.closePath(); ctx.fillStyle = spin > 0 ? "#e8a13c" : "#5fc2d6"; ctx.fill();
+  }
+}
+
+function render(){
+  fitCanvas();
+  const train = state.train;
+  const S = Model.solve(train);
+  const G = Model.geometry(train);
+  const TH = Model.angles(train, state.angle * Math.PI / 180);
+  const fs = (n) => (NARROW ? n - 1 : n);
+  const MONO = getComputedStyle(document.documentElement).getPropertyValue("--font-mono").trim();
+
+  ctx.fillStyle = "#12384f"; ctx.fillRect(0, 0, W, H);
+
+  /* blueprint grid */
+  ctx.strokeStyle = "rgba(255,255,255,0.055)"; ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 22){ ctx.beginPath(); ctx.moveTo(x + .5, 0); ctx.lineTo(x + .5, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 22){ ctx.beginPath(); ctx.moveTo(0, y + .5); ctx.lineTo(W, y + .5); ctx.stroke(); }
+
+  const padX = 14, padTop = NARROW ? 30 : 32, padBot = NARROW ? 40 : 46;
+  const availW = W - 2 * padX, availH = H - padTop - padBot;
+  const k = Math.min(availW / Math.max(1e-6, G.maxX - G.minX), availH / Math.max(1e-6, 2 * G.maxR));
+  const cy = padTop + availH / 2;
+  const ox = padX + (availW - k * (G.maxX - G.minX)) / 2 - k * G.minX;
+  const CX = (i) => ox + k * G.x[i];
+
+  /* shaft line */
+  ctx.strokeStyle = "rgba(207,232,242,0.3)"; ctx.lineWidth = 1; ctx.setLineDash([6, 5]);
+  ctx.beginPath(); ctx.moveTo(padX, cy); ctx.lineTo(W - padX, cy); ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* brackets under any pair sharing a shaft */
+  for (let i = 1; i < train.length; i++){
+    if (!train[i].compound) continue;
+    const x = CX(i), rr = k * Math.max(G.r[i], G.r[i-1]);
+    const yb = cy + rr + (NARROW ? 8 : 11);
+    ctx.strokeStyle = "#e8a13c"; ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(x - rr * 0.55, yb - 5); ctx.lineTo(x - rr * 0.55, yb);
+    ctx.lineTo(x + rr * 0.55, yb); ctx.lineTo(x + rr * 0.55, yb - 5);
+    ctx.stroke();
+    ctx.fillStyle = "#e8a13c"; ctx.font = "700 " + fs(9.5) + "px " + MONO;
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText("one shaft", x, yb + 3);
+  }
+
+  /* the wheels, larger first so a compound pair reads as two rings */
+  const order = train.map(function(_, i){ return i; })
+                     .sort(function(a, b){ return G.r[b] - G.r[a]; });
+  for (const i of order){
+    drawWheel(CX(i), cy, k * G.r[i], train[i].teeth, TH[i], S.dir[i], fs, MONO);
+  }
+
+  /* labels */
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  const placed = {};
+  for (let i = 0; i < train.length; i++){
+    const x = CX(i), rr = k * G.r[i];
+    const key = Math.round(x);
+    const lane = placed[key] || 0; placed[key] = lane + 1;
+    const y = cy + k * G.maxR + (NARROW ? 6 : 8) + lane * (NARROW ? 12 : 14);
+    ctx.fillStyle = (i === state.sel - 1) ? "#ffd79a" : "#cfe8f2";
+    ctx.font = (i === state.sel - 1 ? "700 " : "600 ") + fs(11) + "px " + MONO;
+    ctx.fillText((i + 1) + ": " + train[i].teeth + "t", x, y);
+  }
+
+  /* title strip */
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = "#a9c6d4"; ctx.font = "600 " + fs(11) + "px " + MONO;
+  ctx.fillText(Model.isSimple(train)
+    ? (NARROW ? "simple train" : "simple train — every middle wheel cancels")
+    : (NARROW ? "compound train" : "compound train — the stages multiply"), padX, 16);
+  ctx.textAlign = "right";
+  ctx.fillText(S.meshes + (S.meshes === 1 ? " mesh" : " meshes"), W - padX, 16);
+
+  paint(S);
+}
+
+/* ---------------- READOUTS ---------------- */
+function paint(S){
+  const train = state.train;
+  const frac = Model.exactRatio(train);
+  const P = Model.power(train, state.rpm, 1);
+
+  el("countout").textContent = String(train.length);
+  el("selout").textContent   = String(state.sel);
+  el("teethout").textContent = String(train[state.sel - 1].teeth);
+  el("angleout").textContent = state.angle + "°";
+  el("rpmout").textContent   = state.rpm + " rpm";
+
+  el("rratio").textContent  = S.ratio.toFixed(5);
+  el("rfrac").textContent   = frac[0] + " : " + frac[1];
+  el("rrpm").textContent    = P.rpmOut.toFixed(1) + " rpm";
+  el("rtorque").textContent = P.torqueOut.toFixed(3) + " N·m";
+  el("rmesh").textContent   = String(S.meshes);
+  el("rdir").textContent    = S.direction > 0 ? "same as input" : "reversed";
+
+  el("chips").innerHTML = train.map(function(g, i){
+    const on = (i === state.sel - 1) ? " class=\"on\"" : "";
+    const how = i === 0 ? "input" : (g.compound ? "same shaft" : "meshed");
+    return "<li" + on + "><b>" + g.teeth + "t</b> · " + how + "</li>";
+  }).join("");
+}
+
+/* ---------------- CONTROLS ---------------- */
+function syncInputs(){
+  el("count").value  = state.train.length;
+  el("sel").max      = state.train.length;
+  if (state.sel > state.train.length) state.sel = state.train.length;
+  el("sel").value    = state.sel;
+  el("teeth").value  = state.train[state.sel - 1].teeth;
+  el("compound").checked  = !!state.train[state.sel - 1].compound;
+  el("compound").disabled = (state.sel === 1);
+}
+
+el("preset").addEventListener("change", function(e){
+  state.preset = e.target.value;
+  state.train = clone(PRESETS[state.preset]);
+  state.sel = Math.min(state.sel, state.train.length);
+  syncInputs(); render();
+});
+
+el("count").addEventListener("input", function(e){
+  const want = parseInt(e.target.value, 10);
+  while (state.train.length > want) state.train.pop();
+  while (state.train.length < want) state.train.push({ teeth: 24, compound: false });
+  /* a wheel may not share a shaft with one that already shares a shaft */
+  for (let i = 1; i < state.train.length; i++)
+    if (state.train[i].compound && state.train[i-1].compound) state.train[i].compound = false;
+  syncInputs(); render();
+});
+
+el("sel").addEventListener("input", function(e){
+  state.sel = Math.max(1, Math.min(state.train.length, parseInt(e.target.value, 10)));
+  syncInputs(); render();
+});
+
+el("teeth").addEventListener("input", function(e){
+  state.train[state.sel - 1].teeth = parseInt(e.target.value, 10);
+  render();
+});
+
+el("compound").addEventListener("change", function(e){
+  const i = state.sel - 1;
+  if (i === 0){ e.target.checked = false; return; }
+  const want = e.target.checked;
+  if (want && state.train[i-1].compound){ e.target.checked = false; return; }
+  if (!want && state.train[i+1] && state.train[i+1].compound) state.train[i+1].compound = false;
+  state.train[i].compound = want;
+  syncInputs(); render();
+});
+
+el("angle").addEventListener("input", function(e){ state.angle = parseInt(e.target.value, 10); render(); });
+el("rpm").addEventListener("input", function(e){ state.rpm = parseInt(e.target.value, 10); render(); });
+
+el("reset").addEventListener("click", function(){
+  state.preset = "idler"; state.train = clone(PRESETS.idler);
+  state.sel = 2; state.angle = 0; state.rpm = 100;
+  el("preset").value = "idler"; el("angle").value = 0; el("rpm").value = 100;
+  syncInputs(); render();
+});
+
+let __rt = 0;
+window.addEventListener("resize", function(){ clearTimeout(__rt); __rt = setTimeout(render, 90); });
+syncInputs(); render();
+
+/* ---------------- SELFTEST ---------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+const near = (a, b, tol) => Number.isFinite(a) && Math.abs(a - b) <= tol;
+
+function seededTrains(n, seed){
+  const rnd = mulberry32(seed), out = [];
+  for (let k = 0; k < n; k++){
+    const len = 2 + Math.floor(rnd() * 6);
+    const t = [{ teeth: 8 + Math.floor(rnd() * 53), compound: false }];
+    for (let i = 1; i < len; i++)
+      t.push({ teeth: 8 + Math.floor(rnd() * 53),
+               compound: i > 1 && rnd() < 0.35 && !t[i-1].compound });
+    out.push(t);
+  }
+  return out;
+}
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const TRAINS = seededTrains(200, SEED);
+
+  /* 1. the presets, against arithmetic anyone can do on paper */
+  push("the five presets give the ratios they claim", (function(){
+    const want = { pair: [1, 3, -1], idler: [1, 3, 1], compound: [1, 9, 1],
+                   clock: [1, 12, 1], over: [2, 1, -1] };
+    for (const k of Object.keys(want)){
+      const S = Model.solve(PRESETS[k]), f = Model.exactRatio(PRESETS[k]);
+      if (f[0] !== BigInt(want[k][0]) || f[1] !== BigInt(want[k][1])) return false;
+      if (S.direction !== want[k][2]) return false;
+      if (!near(S.ratio, want[k][0] / want[k][1], 1e-12)) return false;
+    }
+    return true;
+  })(), "1:3, 1:3 reversed, 1:9, 1:12 and 2:1, each matching the exact reduced fraction");
+
+  /* 2. walking the train and multiplying the stages are the same number */
+  push("stepwise propagation equals the product of the stage ratios", (function(){
+    let worst = 0;
+    for (const tr of TRAINS) worst = Math.max(worst, Math.abs(Model.solve(tr).ratio - Model.ratioProduct(tr)));
+    return worst === 0;
+  })(), "200 seeded trains, the two routes agree bit for bit");
+
+  /* 3. and both equal the exact integer fraction */
+  push("the float ratio equals the reduced integer fraction", (function(){
+    let worst = 0;
+    for (const tr of TRAINS){
+      const f = Model.exactRatio(tr);
+      worst = Math.max(worst, Math.abs(Model.solve(tr).ratio - Number(f[0]) / Number(f[1])));
+    }
+    return worst <= 1e-12;
+  })(), "200 seeded trains against BigInt arithmetic, worst gap at most 1e-12");
+
+  /* 4. THE claim: an idler anywhere changes nothing but the direction */
+  push("an idler leaves the ratio alone and flips the direction", (function(){
+    let worst = 0, tried = 0;
+    for (const tr of TRAINS){
+      const base = Model.solve(tr);
+      for (let at = 1; at < tr.length; at++){
+        if (tr[at].compound) continue;
+        for (const teeth of [8, 17, 31, 60]){
+          const S = Model.solve(Model.withIdler(tr, at, teeth));
+          worst = Math.max(worst, Math.abs(S.ratio - base.ratio));
+          if (S.direction !== -base.direction) return false;
+          tried++;
+        }
+      }
+    }
+    return tried > 1500 && worst <= 1e-14;
+  })(), "every mesh in 200 trains, four idler sizes each: ratio moves by at most 1e-14, direction always flips");
+
+  /* 5. direction is exactly minus one to the number of meshes */
+  push("direction is minus one raised to the mesh count", (function(){
+    for (const tr of TRAINS){
+      const S = Model.solve(tr);
+      if (S.direction !== (S.meshes % 2 === 0 ? 1 : -1)) return false;
+      if (S.direction !== Math.pow(-1, S.meshes)) return false;
+    }
+    return true;
+  })(), "200 seeded trains, no exceptions");
+
+  /* 6. a simple train really does telescope to first over last */
+  push("a simple train's ratio is the first tooth count over the last", (function(){
+    let n = 0;
+    for (const tr of TRAINS){
+      if (!Model.isSimple(tr)) continue;
+      n++;
+      const f = Model.exactRatio(tr);
+      let a = BigInt(tr[0].teeth), b = BigInt(tr[tr.length - 1].teeth);
+      const g = gcdBig(a, b);
+      if (f[0] !== a / g || f[1] !== b / g) return false;
+    }
+    return n > 30;
+  })(), "every simple train among the 200 reduces exactly to N(first) : N(last)");
+
+  /* 7. and a compound train does not */
+  push("a compound train does not reduce to first over last", (function(){
+    for (const k of ["compound", "clock"]){
+      const tr = PRESETS[k], f = Model.exactRatio(tr);
+      const a = BigInt(tr[0].teeth), b = BigInt(tr[tr.length - 1].teeth);
+      const g = gcdBig(a, b);
+      if (f[0] === a / g && f[1] === b / g) return false;
+    }
+    const c = Model.exactRatio(PRESETS.compound);
+    return c[0] === 1n && c[1] === 9n;
+  })(), "the compound preset is 1:9 where first over last would say 12:36, which is 1:3");
+
+  /* 8. ideal gears conserve power */
+  push("torque times angular velocity is the same at both ends", (function(){
+    let worst = 0;
+    for (const tr of TRAINS) for (const rpm of [10, 100, 600]){
+      const P = Model.power(tr, rpm, 1);
+      worst = Math.max(worst, Math.abs(P.powerOut - P.powerIn) / P.powerIn);
+    }
+    return worst <= 1e-12;
+  })(), "600 cases, worst relative power residual at most 1e-12");
+
+  /* 9. torque is exactly the reciprocal of the speed ratio */
+  push("torque rises by exactly the factor speed falls", (function(){
+    let worst = 0;
+    for (const tr of TRAINS){
+      const P = Model.power(tr, 137, 1);
+      worst = Math.max(worst, Math.abs(P.torqueOut * Math.abs(Model.solve(tr).ratio) - 1));
+    }
+    return worst <= 1e-12;
+  })(), "200 seeded trains at 137 rpm and 1 N-m in");
+
+  /* 10. THE PICTURE: the drawing's rolling condition is the ratio law */
+  push("the drawn wheels roll without slipping at every mesh", (function(){
+    let worst = 0;
+    for (const tr of TRAINS) for (const deg of [37, 180, 540]){
+      const G = Model.geometry(tr), TH = Model.angles(tr, deg * Math.PI / 180);
+      for (let i = 1; i < tr.length; i++){
+        if (tr[i].compound){
+          if (Math.abs(TH[i] - TH[i-1]) > 1e-12) return false;
+          continue;
+        }
+        /* rim travel must match on both wheels, and they must turn opposite ways */
+        const s1 = G.r[i-1] * TH[i-1], s2 = G.r[i] * TH[i];
+        worst = Math.max(worst, Math.abs(Math.abs(s1) - Math.abs(s2)));
+        if (deg !== 0 && s1 * s2 > 0) return false;
+      }
+    }
+    return worst <= 1e-12;
+  })(), "radius times angle matches across every mesh and the signs are always opposite");
+
+  /* 11. the wheels the picture lays out actually touch */
+  push("meshing wheels are laid out exactly tangent", (function(){
+    let worst = 0;
+    for (const tr of TRAINS){
+      const G = Model.geometry(tr);
+      for (let i = 1; i < tr.length; i++){
+        const d = Math.abs(G.x[i] - G.x[i-1]);
+        const want = tr[i].compound ? 0 : G.r[i] + G.r[i-1];
+        worst = Math.max(worst, Math.abs(d - want));
+      }
+    }
+    return worst === 0;
+  })(), "centre distance is the sum of the pitch radii at a mesh, and zero on a shared shaft");
+
+  /* 12. nothing degenerates anywhere in the control ranges */
+  push("every speed stays finite across the whole control range", (function(){
+    for (let n = 2; n <= 7; n++){
+      for (const teeth of [8, 24, 60]){
+        const tr = [];
+        for (let i = 0; i < n; i++) tr.push({ teeth: teeth, compound: i > 1 && i % 2 === 0 });
+        const S = Model.solve(tr);
+        for (const w of S.omega) if (!Number.isFinite(w) || w <= 0) return false;
+        const P = Model.power(tr, 10, 1);
+        if (!Number.isFinite(P.torqueOut) || !Number.isFinite(P.rpmOut)) return false;
+        if (S.meshes + tr.filter(function(g, i){ return i > 0 && g.compound; }).length !== n - 1) return false;
+      }
+    }
+    return true;
+  })(), "2 to 7 wheels at the extremes of the tooth range: finite throughout, and meshes plus shared shafts is always one less than the wheel count");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, presets: PRESETS, seed: SEED };
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "slug": "beat-frequency-tuning",
+  "title": "Tuning by the Wobble",
+  "domain": "music-theory",
+  "difficulty": 2,
+  "summary": "Two close tones pulse at exactly their frequency difference. Slide the second string until the pulsing stops and you have tuned by ear, without ever knowing either pitch.",
+  "prerequisites": [],
+  "tags": ["beats", "acoustics", "superposition", "tuning", "trigonometric-identity", "cents"],
+  "interaction_pattern": "tune-to-match",
+  "sources": [
+    { "title": "Beat (acoustics)", "url": "https://en.wikipedia.org/wiki/Beat_(acoustics)" },
+    { "title": "Cent (music)", "url": "https://en.wikipedia.org/wiki/Cent_(music)" },
+    { "title": "Piano tuning: setting the temperament by beat rates", "url": "https://en.wikipedia.org/wiki/Piano_tuning" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}

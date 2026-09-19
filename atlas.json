@@ -1,6 +1,6 @@
 {
   "generated_at": "2026-09-19",
-  "count": 31,
+  "count": 35,
   "domains": {
     "biology": [
       "enzyme-michaelis-menten",
@@ -27,6 +27,7 @@
       "supply-demand-tax-incidence"
     ],
     "engineering": [
+      "gear-train-ratio",
       "pid-controller"
     ],
     "game-theory": [
@@ -43,11 +44,13 @@
     ],
     "mathematics": [
       "fourier-series-square-wave",
+      "map-projection-distortion",
       "matrix-determinant-area",
       "newton-raphson-basins",
       "numerical-integration-error"
     ],
     "music-theory": [
+      "beat-frequency-tuning",
       "equal-temperament",
       "harmonic-series-timbre"
     ],
@@ -57,22 +60,23 @@
       "special-relativity-time-dilation"
     ],
     "statistics": [
-      "central-limit-theorem"
+      "central-limit-theorem",
+      "simpsons-paradox"
     ]
   },
   "interaction_patterns": {
-    "build-from-parts": 4,
-    "compare-side-by-side": 2,
+    "build-from-parts": 5,
+    "compare-side-by-side": 3,
     "drag-parameter": 2,
     "draw-input": 3,
     "guess-then-reveal": 3,
     "live-code": 2,
     "perturb-and-observe": 3,
     "race-two-methods": 3,
-    "spatial-explore": 2,
+    "spatial-explore": 3,
     "step-through": 2,
     "time-scrubber": 3,
-    "tune-to-match": 2
+    "tune-to-match": 3
   },
   "explainers": [
     {
@@ -98,6 +102,39 @@
         {
           "title": "Myerson, Optimal Auction Design, Mathematics of Operations Research 6(1), 1981",
           "url": "https://pubsonline.informs.org/doi/10.1287/moor.6.1.58"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
+      "slug": "beat-frequency-tuning",
+      "title": "Tuning by the Wobble",
+      "domain": "music-theory",
+      "difficulty": 2,
+      "summary": "Two close tones pulse at exactly their frequency difference. Slide the second string until the pulsing stops and you have tuned by ear, without ever knowing either pitch.",
+      "prerequisites": [],
+      "tags": [
+        "beats",
+        "acoustics",
+        "superposition",
+        "tuning",
+        "trigonometric-identity",
+        "cents"
+      ],
+      "interaction_pattern": "tune-to-match",
+      "sources": [
+        {
+          "title": "Beat (acoustics)",
+          "url": "https://en.wikipedia.org/wiki/Beat_(acoustics)"
+        },
+        {
+          "title": "Cent (music)",
+          "url": "https://en.wikipedia.org/wiki/Cent_(music)"
+        },
+        {
+          "title": "Piano tuning: setting the temperament by beat rates",
+          "url": "https://en.wikipedia.org/wiki/Piano_tuning"
         }
       ],
       "created_at": "2026-09-19",
@@ -376,6 +413,35 @@
       "assertions_count": 11
     },
     {
+      "slug": "gear-train-ratio",
+      "title": "The Gear in the Middle Does Nothing",
+      "domain": "engineering",
+      "difficulty": 2,
+      "summary": "Build a gear train one wheel at a time and watch an idler flip the direction without touching the ratio, while two wheels bolted to one shaft change everything.",
+      "prerequisites": [],
+      "tags": [
+        "gear-train",
+        "gear-ratio",
+        "idler",
+        "compound-gear",
+        "mechanism",
+        "torque"
+      ],
+      "interaction_pattern": "build-from-parts",
+      "sources": [
+        {
+          "title": "Shigley's Mechanical Engineering Design, chapter on gear trains",
+          "url": "https://archive.org/details/shigleysmechanic0000budy"
+        },
+        {
+          "title": "Reuleaux, The Kinematics of Machinery (1876)",
+          "url": "https://archive.org/details/kinematicsofmach00reuluoft"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
       "slug": "greenhouse-energy-balance",
       "title": "Thirty-Three Degrees",
       "domain": "earth-science",
@@ -466,6 +532,39 @@
       ],
       "interaction_pattern": "step-through",
       "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
+      "slug": "map-projection-distortion",
+      "title": "Every Flat Map Is Wrong, and You Pick How",
+      "domain": "mathematics",
+      "difficulty": 3,
+      "summary": "Drag one circle around the globe across five projections and watch it stretch, shear or hold its area, with both principal scale factors read straight off the projection's derivatives.",
+      "prerequisites": [],
+      "tags": [
+        "map-projection",
+        "tissot-indicatrix",
+        "conformal",
+        "equal-area",
+        "differential-geometry",
+        "mercator"
+      ],
+      "interaction_pattern": "spatial-explore",
+      "sources": [
+        {
+          "title": "Snyder, Map Projections: A Working Manual, USGS Professional Paper 1395 (1987)",
+          "url": "https://pubs.usgs.gov/pp/1395/report.pdf"
+        },
+        {
+          "title": "Tissot, Memoire sur la representation des surfaces (1881)",
+          "url": "https://archive.org/details/mmoiresurlarep00tiss"
+        },
+        {
+          "title": "Gauss, Disquisitiones generales circa superficies curvas (1827), the Theorema Egregium",
+          "url": "https://archive.org/details/disquisitionesg00gausgoog"
+        }
+      ],
       "created_at": "2026-09-19",
       "assertions_count": 12
     },
@@ -847,6 +946,42 @@
       ],
       "interaction_pattern": "guess-then-reveal",
       "sources": [],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
+      "slug": "simpsons-paradox",
+      "title": "Every Group One Way, Everyone the Other",
+      "domain": "statistics",
+      "difficulty": 2,
+      "summary": "Build a table where one group is admitted at a higher rate in every programme and a lower rate overall, then split the pooled gap exactly into a treatment part and a placement part.",
+      "prerequisites": [],
+      "tags": [
+        "simpsons-paradox",
+        "confounding",
+        "weighted-average",
+        "berkeley-1973",
+        "aggregation"
+      ],
+      "interaction_pattern": "compare-side-by-side",
+      "sources": [
+        {
+          "title": "Bickel, Hammel & O'Connell, Sex Bias in Graduate Admissions: Data from Berkeley, Science 187 (1975) 398-404",
+          "url": "https://www.science.org/doi/10.1126/science.187.4175.398"
+        },
+        {
+          "title": "Charig, Webb, Payne & Wickham, Comparison of treatment of renal calculi, BMJ 292 (1986) 879-882",
+          "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1339981/"
+        },
+        {
+          "title": "Simpson, The Interpretation of Interaction in Contingency Tables, JRSS B 13 (1951) 238-241",
+          "url": "https://www.jstor.org/stable/2984065"
+        },
+        {
+          "title": "Blyth, On Simpson's Paradox and the Sure-Thing Principle, JASA 67 (1972) 364-366",
+          "url": "https://www.jstor.org/stable/2284382"
+        }
+      ],
       "created_at": "2026-09-19",
       "assertions_count": 12
     },

@@ -1,0 +1,18 @@
+{
+  "slug": "simpsons-paradox",
+  "title": "Every Group One Way, Everyone the Other",
+  "domain": "statistics",
+  "difficulty": 2,
+  "summary": "Build a table where one group is admitted at a higher rate in every programme and a lower rate overall, then split the pooled gap exactly into a treatment part and a placement part.",
+  "prerequisites": [],
+  "tags": ["simpsons-paradox", "confounding", "weighted-average", "berkeley-1973", "aggregation"],
+  "interaction_pattern": "compare-side-by-side",
+  "sources": [
+    { "title": "Bickel, Hammel & O'Connell, Sex Bias in Graduate Admissions: Data from Berkeley, Science 187 (1975) 398-404", "url": "https://www.science.org/doi/10.1126/science.187.4175.398" },
+    { "title": "Charig, Webb, Payne & Wickham, Comparison of treatment of renal calculi, BMJ 292 (1986) 879-882", "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1339981/" },
+    { "title": "Simpson, The Interpretation of Interaction in Contingency Tables, JRSS B 13 (1951) 238-241", "url": "https://www.jstor.org/stable/2984065" },
+    { "title": "Blyth, On Simpson's Paradox and the Sure-Thing Principle, JASA 67 (1972) 364-366", "url": "https://www.jstor.org/stable/2284382" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}

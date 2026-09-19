@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Every Flat Map Is Wrong, and You Pick How — Explainer Atlas</title>
+<meta name="description" content="Drag one circle around the globe across five projections and watch it stretch, shear or hold its area, with the two principal scale factors read off the projection's own derivatives.">
+<style>
+:root{
+  --bg:#eaefee; --panel:#f8fbfa; --ink:#14313c; --muted:#54717d; --line:#cfdcda;
+  --accent:#0c6274; --accent-soft:#dbeaed;
+  --grat:#9db6ba; --tissot:#bf5a2c; --sel:#a8203c; --ok:#1f7a5a;
+  --radius:12px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.45rem,1rem + 2vw,2.15rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.06rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0a1417; --panel:#0f1e22; --ink:#dde9e8; --muted:#8ba5ac; --line:#1d3036;
+    --accent:#4fb6c7; --accent-soft:#0e2b31;
+    --grat:#33505a; --tissot:#e08a5a; --sel:#e8657f; --ok:#5fc39c;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:72rem; margin:0 auto; padding:var(--pad)}
+header.page{max-width:44rem}
+h1{font-size:var(--scale-h1); line-height:1.14; margin:0 0 .4em; letter-spacing:-.015em}
+.kicker{margin:0 0 .4em; color:var(--accent); font:600 .72rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.16em}
+.standfirst{margin:0; color:var(--muted); max-width:42em}
+.layout{display:grid; gap:var(--pad); margin-top:var(--pad)}
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:none; cursor:crosshair; border-radius:6px}
+figure.stage canvas:focus-visible{outline:3px solid var(--sel); outline-offset:2px}
+figcaption{margin-top:.7em; color:var(--muted); font-size:.85rem}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:.55em; margin:.8em 0 0; padding:0}
+.readout div{background:var(--accent-soft); border-radius:8px; padding:.5em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.7rem; text-transform:uppercase; letter-spacing:.07em}
+.readout dd{margin:.15em 0 0; font:600 1.02rem/1.2 var(--font-mono); color:var(--ink)}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1em var(--pad);
+  grid-template-columns:repeat(auto-fit,minmax(13.5rem,1fr))}
+.control{display:grid; gap:.3em; align-content:start}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control label{font-weight:600; font-size:.93rem}
+.control output{font:600 .86rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.26em .5em; border-radius:5px}
+.control .hint{color:var(--muted); font-size:.8rem; margin:0}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:7px; padding:.5em .6em; min-height:40px; width:100%}
+button{cursor:pointer; font-weight:600}
+button:hover,select:hover{border-color:var(--accent)}
+:where(a,button,input,select,canvas):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.prose{max-width:40em; margin-top:calc(var(--pad)*1.3)}
+.prose h2{font-size:1.02rem; margin:1.9em 0 .45em; letter-spacing:.02em; color:var(--accent)}
+.prose p{margin:0 0 1em}
+.prose .math{font:.86rem/1.7 var(--font-mono); white-space:pre; background:var(--accent-soft);
+  padding:.75em .9em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto}
+.prose table{border-collapse:collapse; font:.84rem/1.5 var(--font-mono); width:100%; margin:0 0 1em}
+.prose th,.prose td{text-align:left; padding:.32em .45em; border-bottom:1px solid var(--line)}
+.prose th{color:var(--muted); font-size:.74rem; text-transform:uppercase; letter-spacing:.06em}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Mathematics &middot; Differential geometry</p>
+  <h1>Every Flat Map Is Wrong, and You Pick How</h1>
+  <p class="standfirst">Each orange ring below is the same circle on the globe. Drag the crimson one anywhere you like. Whatever it does to shape, area and angle, no projection can leave all three alone, and the reason is a theorem about curvature rather than a failure of ingenuity.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1720" height="1000" tabindex="0" role="img"
+            aria-label="A world projection showing the graticule, a lattice of circles of equal size on the globe drawn as they appear on the map, named cities, and one highlighted circle whose two principal scale factors, area scale and maximum angular distortion are read out below."></canvas>
+    <dl class="readout" aria-live="polite">
+      <div><dt>Long axis a</dt><dd id="ra">&mdash;</dd></div>
+      <div><dt>Short axis b</dt><dd id="rb">&mdash;</dd></div>
+      <div><dt>Area scale a&middot;b</dt><dd id="rarea">&mdash;</dd></div>
+      <div><dt>Max angle error</dt><dd id="romega">&mdash;</dd></div>
+    </dl>
+    <figcaption>Click or drag on the map to move the crimson circle; it stays the same size on the globe no matter where it lands. The faint rings are the same circle on a lattice, tinted by how much the map inflates area there.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Projection and sample point">
+    <div class="control">
+      <label for="proj">Projection</label>
+      <select id="proj">
+        <option value="mercator" selected>Mercator &mdash; angles true</option>
+        <option value="lambert">Lambert cylindrical &mdash; area true</option>
+        <option value="equirect">Equirectangular &mdash; meridians true</option>
+        <option value="sinusoidal">Sinusoidal &mdash; area true</option>
+        <option value="mollweide">Mollweide &mdash; area true</option>
+      </select>
+      <p class="hint">Three of these preserve area exactly. Only one preserves angle.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="lat">Latitude</label><output id="latout" for="lat">45.0&deg;</output></div>
+      <input type="range" id="lat" min="-85" max="85" step="0.5" value="45">
+      <p class="hint">Or drag on the map. Arrow keys step half a degree.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="lon">Longitude</label><output id="lonout" for="lon">30.0&deg;</output></div>
+      <input type="range" id="lon" min="-180" max="180" step="0.5" value="30">
+      <p class="hint">Matters for the pseudocylindricals, where meridians curve.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="rho">Circle radius</label><output id="rhoout" for="rho">8&deg;</output></div>
+      <input type="range" id="rho" min="2" max="25" step="1" value="8">
+      <p class="hint">Angular radius on the globe. 8&deg; is about 890 km.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="std">Standard parallel</label><output id="stdout" for="std">0&deg;</output></div>
+      <input type="range" id="std" min="0" max="75" step="1" value="0">
+      <p class="hint">The latitude the map gets right. Used by the two cylindricals; 45&deg; on Lambert is the Gall&ndash;Peters map.</p>
+    </div>
+
+    <div class="control">
+      <label for="grid">Lattice of rings</label>
+      <select id="grid">
+        <option value="coarse" selected>Coarse</option>
+        <option value="fine">Fine</option>
+        <option value="off">Off</option>
+      </select>
+      <p class="hint">The lattice is what turns a single measurement into a picture of the whole map.</p>
+    </div>
+
+    <div class="control">
+      <label for="reset" class="sr-only">Reset</label>
+      <button type="button" id="reset">Reset to defaults</button>
+    </div>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Put a small circle on a globe and project it. What lands on the paper is,
+  to first order, an ellipse. Its longer semi-axis <em>a</em> and shorter one
+  <em>b</em> are the two principal scale factors, and between them they say
+  everything about what the map did to that spot. If <em>a</em> equals
+  <em>b</em> the circle stays a circle and angles survive. If the product
+  <em>ab</em> equals one the ellipse has the area the circle had. If both hold
+  the map is perfect there, and a perfect map is exactly what you cannot have.</p>
+
+  <h2>Why not</h2>
+
+  <p>A sphere of radius one has Gaussian curvature one at every point. A sheet
+  of paper has zero. Gauss's <em>Theorema Egregium</em> says curvature survives
+  any bending that does not stretch, so a map that preserved every distance
+  would have to carry curvature one onto a surface with curvature zero. There
+  is no such map, and no amount of cleverness produces one. Every projection is
+  a choice about where to put the damage.</p>
+
+  <p>Two choices are so useful they have names. A <b>conformal</b> map sets
+  <em>a</em> = <em>b</em> everywhere, so shapes are right in the small and the
+  area scale is forced to be <em>a</em>&sup2;. An <b>equal-area</b> map sets
+  <em>ab</em> = 1 everywhere, so the ellipse always has the right area and
+  therefore must be the wrong shape wherever <em>a</em> is not 1. You cannot
+  have both without having neither problem, which is to say without an
+  isometry, which does not exist.</p>
+
+  <h2>Reading the numbers</h2>
+
+  <p class="math">area scale   = a * b
+angle error  = 2 * asin( (a-b) / (a+b) )
+
+Mercator     a = b = sec(lat)
+             so area = sec(lat)^2
+equal-area   a * b = 1 exactly</p>
+
+  <p>Mercator's area scale is the square of the secant, which is why it is the
+  projection people complain about. At 60 degrees every length doubles and
+  every area is four times too big; at 75 degrees areas are inflated about
+  fifteenfold. Nothing about this is a mistake. Mercator was drawn so that a
+  constant compass bearing is a straight line on the chart, and buying that
+  costs exactly this.</p>
+
+  <p>Set the projection to Lambert and the rings snap to a constant area and
+  turn into flattened lozenges near the poles: <em>a</em> = sec(lat), <em>b</em>
+  = cos(lat), product one. That is the same secant, moved out of the area
+  column and into the shape column.</p>
+
+  <h2>Where a map is honest</h2>
+
+  <p>Move the standard parallel and watch the undistorted band move with it.
+  Both cylindricals are exact along their standard parallel and nowhere else.
+  The sinusoidal is different: it is exact along the whole central meridian
+  and along the equator, and shears badly at the far corners, which is why
+  atlases cut it into lobes. Mollweide is equal-area everywhere and exact
+  nowhere at all &mdash; it spends its whole budget on keeping area right and
+  looking like a globe.</p>
+
+  <h2>What to try</h2>
+
+  <p>Put the circle on Reykjavik in Mercator and read the area scale, then
+  switch to Mollweide without moving it. Then take Mercator's standard
+  question: drag along the equator and watch every number sit still, because a
+  cylindrical projection's distortion depends only on latitude. Finally set
+  the sinusoidal and drag along the central meridian, where <em>a</em> and
+  <em>b</em> are both exactly one from pole to pole, then step sideways and
+  watch the ring shear.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+const D = Math.PI / 180, TAU = Math.PI * 2, R_EARTH = 6371.0088;
+
+/* ---------------- MODEL ----------------
+   Every projection supplies fwd(phi, lam, std) and the four partial
+   derivatives of (x, y) with respect to (phi, lam). The scale factors come
+   from the singular values of the map's derivative expressed in an
+   ORTHONORMAL frame on the sphere, which is why the longitude column is
+   divided by cos(phi).                                                     */
+
+const Moll = {
+  theta(phi){
+    if (Math.abs(Math.abs(phi) - Math.PI/2) < 1e-12) return Math.sign(phi) * Math.PI/2;
+    let t = phi;
+    for (let i = 0; i < 60; i++){
+      const f = 2*t + Math.sin(2*t) - Math.PI * Math.sin(phi);
+      const d = 2 + 2 * Math.cos(2*t);
+      if (Math.abs(d) < 1e-14) break;
+      const step = f / d;
+      t -= step;
+      if (Math.abs(step) < 1e-15) break;
+    }
+    return t;
+  }
+};
+
+const PROJ = {
+  mercator: {
+    label: "Mercator", usesStd: false, equalArea: false, conformal: true,
+    fwd(phi, lam){ return { x: lam, y: Math.log(Math.tan(Math.PI/4 + phi/2)) }; },
+    partials(phi){ return { xp: 0, xl: 1, yp: 1 / Math.cos(phi), yl: 0 }; },
+    latLimit: 78
+  },
+  lambert: {
+    label: "Lambert cylindrical", usesStd: true, equalArea: true, conformal: false,
+    fwd(phi, lam, s){ return { x: lam * Math.cos(s), y: Math.sin(phi) / Math.cos(s) }; },
+    partials(phi, lam, s){ return { xp: 0, xl: Math.cos(s), yp: Math.cos(phi)/Math.cos(s), yl: 0 }; },
+    latLimit: 90
+  },
+  equirect: {
+    label: "Equirectangular", usesStd: true, equalArea: false, conformal: false,
+    fwd(phi, lam, s){ return { x: lam * Math.cos(s), y: phi }; },
+    partials(phi, lam, s){ return { xp: 0, xl: Math.cos(s), yp: 1, yl: 0 }; },
+    latLimit: 90
+  },
+  sinusoidal: {
+    label: "Sinusoidal", usesStd: false, equalArea: true, conformal: false,
+    fwd(phi, lam){ return { x: lam * Math.cos(phi), y: phi }; },
+    partials(phi, lam){ return { xp: -lam * Math.sin(phi), xl: Math.cos(phi), yp: 1, yl: 0 }; },
+    latLimit: 90
+  },
+  mollweide: {
+    label: "Mollweide", usesStd: false, equalArea: true, conformal: false,
+    fwd(phi, lam){
+      const t = Moll.theta(phi);
+      return { x: (2 * Math.SQRT2 / Math.PI) * lam * Math.cos(t), y: Math.SQRT2 * Math.sin(t) };
+    },
+    partials(phi, lam){
+      const t = Moll.theta(phi), c = Math.cos(t);
+      const dtdp = Math.abs(c) < 1e-9 ? 0 : Math.PI * Math.cos(phi) / (4 * c * c);
+      return { xp: -(2 * Math.SQRT2 / Math.PI) * lam * Math.sin(t) * dtdp,
+               xl:  (2 * Math.SQRT2 / Math.PI) * c,
+               yp:  Math.SQRT2 * c * dtdp, yl: 0 };
+    },
+    latLimit: 89.5
+  }
+};
+
+const Model = {
+  proj(key){ return PROJ[key]; },
+
+  /* the derivative in an orthonormal frame, as a flat 2x2 */
+  frame(key, phi, lam, std){
+    const q = PROJ[key].partials(phi, lam, std), c = Math.cos(phi);
+    const inv = Math.abs(c) < 1e-12 ? 0 : 1 / c;
+    return { m11: q.xp, m12: q.xl * inv, m21: q.yp, m22: q.yl * inv };
+  },
+
+  /* principal scale factors: the singular values of that 2x2 */
+  tissot(key, phi, lam, std){
+    const M = Model.frame(key, phi, lam, std);
+    const E = M.m11*M.m11 + M.m21*M.m21;
+    const F = M.m11*M.m12 + M.m21*M.m22;
+    const G = M.m12*M.m12 + M.m22*M.m22;
+    const tr = E + G, disc = Math.sqrt(Math.max(0, (E - G)*(E - G) + 4*F*F));
+    const a = Math.sqrt(Math.max(0, (tr + disc) / 2));
+    const b = Math.sqrt(Math.max(0, (tr - disc) / 2));
+    const det = Math.abs(M.m11*M.m22 - M.m12*M.m21);
+    const omega = (a + b) > 1e-12 ? 2 * Math.asin(Math.min(1, (a - b) / (a + b))) : 0;
+    return { a: a, b: b, area: a * b, det: det, omega: omega };
+  },
+
+  /* the same thing from finite differences of fwd — an independent route */
+  tissotNumeric(key, phi, lam, std, h){
+    const P = PROJ[key], f = (p, l) => P.fwd(p, l, std);
+    const xp = (f(phi+h, lam).x - f(phi-h, lam).x) / (2*h);
+    const yp = (f(phi+h, lam).y - f(phi-h, lam).y) / (2*h);
+    const xl = (f(phi, lam+h).x - f(phi, lam-h).x) / (2*h);
+    const yl = (f(phi, lam+h).y - f(phi, lam-h).y) / (2*h);
+    const c = Math.cos(phi), inv = 1 / c;
+    const m11 = xp, m12 = xl*inv, m21 = yp, m22 = yl*inv;
+    const E = m11*m11 + m21*m21, F = m11*m12 + m21*m22, G = m12*m12 + m22*m22;
+    const tr = E + G, disc = Math.sqrt(Math.max(0, (E - G)*(E - G) + 4*F*F));
+    return { a: Math.sqrt(Math.max(0, (tr + disc)/2)), b: Math.sqrt(Math.max(0, (tr - disc)/2)) };
+  },
+
+  /* points of a true geodesic circle: centre (phi0, lam0), angular radius rho */
+  circle(phi0, lam0, rho, n){
+    const out = [], sp = Math.sin(phi0), cp = Math.cos(phi0),
+          sr = Math.sin(rho), cr = Math.cos(rho);
+    for (let i = 0; i < n; i++){
+      const th = TAU * i / n;
+      const phi = Math.asin(Math.max(-1, Math.min(1, sp*cr + cp*sr*Math.cos(th))));
+      const lam = lam0 + Math.atan2(Math.sin(th)*sr*cp, cr - sp*Math.sin(phi));
+      out.push([phi, lam]);
+    }
+    return out;
+  },
+
+  /* signed area of a closed polygon, by the shoelace formula */
+  polyArea(pts){
+    let a = 0;
+    for (let i = 0; i < pts.length; i++){
+      const q = pts[(i + 1) % pts.length];
+      a += pts[i][0]*q[1] - q[0]*pts[i][1];
+    }
+    return Math.abs(a) / 2;
+  },
+
+  /* that circle drawn on the map, as a polygon in map coordinates */
+  circleOnMap(key, phi0, lam0, rho, std, n){
+    const P = PROJ[key];
+    return Model.circle(phi0, lam0, rho, n).map(function(pl){
+      const q = P.fwd(pl[0], pl[1], std);
+      return [q.x, q.y];
+    });
+  },
+
+  /* great-circle distance in km, haversine */
+  haversine(a, b){
+    const p1 = a[0]*D, p2 = b[0]*D, dp = (b[0]-a[0])*D, dl = (b[1]-a[1])*D;
+    const h = Math.sin(dp/2)**2 + Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+    return 2 * R_EARTH * Math.asin(Math.min(1, Math.sqrt(h)));
+  },
+
+  /* and again from the dot product of the two unit vectors */
+  chordal(a, b){
+    const u = [Math.cos(a[0]*D)*Math.cos(a[1]*D), Math.cos(a[0]*D)*Math.sin(a[1]*D), Math.sin(a[0]*D)];
+    const v = [Math.cos(b[0]*D)*Math.cos(b[1]*D), Math.cos(b[0]*D)*Math.sin(b[1]*D), Math.sin(b[0]*D)];
+    const d = u[0]*v[0] + u[1]*v[1] + u[2]*v[2];
+    return R_EARTH * Math.acos(Math.max(-1, Math.min(1, d)));
+  }
+};
+
+const CITIES = [
+  { name: "Quito",     lat:  -0.1807, lon:  -78.4678 },
+  { name: "Nairobi",   lat:  -1.2921, lon:   36.8219 },
+  { name: "Singapore", lat:   1.3521, lon:  103.8198 },
+  { name: "Sydney",    lat: -33.8688, lon:  151.2093 },
+  { name: "Reykjavik", lat:  64.1466, lon:  -21.9426 },
+  { name: "Anchorage", lat:  61.2181, lon: -149.9003 }
+];
+
+/* ---------------- STATE ---------------- */
+const defaults = { proj: "mercator", lat: 45, lon: 30, rho: 8, std: 0, grid: "coarse" };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+/* ---------------- CANVAS LAYOUT ---------------- */
+const SS = 2;
+let W = 860, H = 500, NARROW = false, VIEW = null;
+
+/* Each projection has its own shape, so the canvas takes that shape rather
+   than letterboxing every map into one fixed rectangle.                    */
+function fitCanvas(key, std){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(220, cv.parentNode.clientWidth - 24) : 860);
+  NARROW = avail < 470;
+  W = Math.max(280, Math.min(1100, Math.round(avail)));
+  const E = extent(key, std);
+  const ratio = (E.maxY - E.minY) / Math.max(1e-9, E.maxX - E.minX);
+  const chrome = NARROW ? 34 : 42;
+  H = Math.round(Math.max(200, Math.min(W * 0.80, (W - 28) * ratio + chrome)));
+  if (cv.width !== W * SS || cv.height !== H * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+/* the projection's own bounding box in map units */
+function extent(key, std){
+  const P = PROJ[key], lim = P.latLimit * D;
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (let i = 0; i <= 120; i++){
+    const phi = -lim + 2 * lim * i / 120;
+    for (const lam of [-Math.PI, 0, Math.PI]){
+      const q = P.fwd(phi, lam, std);
+      if (!Number.isFinite(q.x) || !Number.isFinite(q.y)) continue;
+      minX = Math.min(minX, q.x); maxX = Math.max(maxX, q.x);
+      minY = Math.min(minY, q.y); maxY = Math.max(maxY, q.y);
+    }
+  }
+  return { minX: minX, maxX: maxX, minY: minY, maxY: maxY, lim: lim };
+}
+
+/* map coordinates -> canvas pixels, fitted to the projection's own extent */
+function makeView(key, std){
+  const E = extent(key, std), lim = E.lim;
+  const minX = E.minX, maxX = E.maxX, minY = E.minY, maxY = E.maxY;
+  const mL = NARROW ? 8 : 14, mT = NARROW ? 8 : 12, mB = NARROW ? 26 : 30;
+  const availW = W - 2 * mL, availH = H - mT - mB;
+  const sx = availW / (maxX - minX), sy = availH / (maxY - minY);
+  const k = Math.min(sx, sy);
+  const ox = mL + (availW - k * (maxX - minX)) / 2;
+  const oy = mT + (availH - k * (maxY - minY)) / 2;
+  return {
+    k: k, minX: minX, maxY: maxY, ox: ox, oy: oy, lim: lim,
+    px: (x) => ox + (x - minX) * k,
+    py: (y) => oy + (maxY - y) * k
+  };
+}
+
+function toPx(key, phi, lam, std, V){
+  const q = PROJ[key].fwd(phi, lam, std);
+  return [V.px(q.x), V.py(q.y)];
+}
+
+/* the map is only single-valued up to the antimeridian, so a polygon that
+   wraps must be broken rather than drawn straight across the sheet */
+function strokePolyline(pts, close){
+  const jump = W * 0.45;
+  let started = false;
+  ctx.beginPath();
+  for (let i = 0; i < pts.length; i++){
+    const p = pts[i];
+    if (!Number.isFinite(p[0]) || !Number.isFinite(p[1])){ started = false; continue; }
+    if (started && Math.abs(p[0] - pts[i-1][0]) > jump){ started = false; }
+    if (!started){ ctx.moveTo(p[0], p[1]); started = true; }
+    else ctx.lineTo(p[0], p[1]);
+  }
+  if (close) ctx.closePath();
+  ctx.stroke();
+}
+
+function fillPoly(pts){
+  const jump = W * 0.45;
+  for (let i = 1; i < pts.length; i++) if (Math.abs(pts[i][0] - pts[i-1][0]) > jump) return false;
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.closePath(); ctx.fill();
+  return true;
+}
+
+/* Warm where the map inflates area, cool where it shrinks it, and colourless
+   where area is right. The OPACITY carries the magnitude and the hue only the
+   sign, which matters more than it looks: an equal-area projection lands on
+   a*b = 1 to within a part in 1e15, and the sign of that last-bit residue is
+   arbitrary. A scale with a hard branch at 1 gave neighbouring rings of an
+   exactly equal-area map opposite hues at full strength. Fading the opacity to
+   zero as the distortion does makes the branch invisible. */
+function areaTint(area){
+  const t = Math.max(-1, Math.min(1, Math.log(Math.max(1e-6, area)) / Math.log(6)));
+  const hue = t >= 0 ? 28 : 200;
+  const light = t >= 0 ? (62 - 14 * t) : (58 + 10 * t);
+  return "hsl(" + hue + " 66% " + light + "% / " + (0.58 * Math.abs(t)).toFixed(4) + ")";
+}
+
+function render(){
+  const key = state.proj, P = PROJ[key];
+  const std = (P.usesStd ? state.std : 0) * D;
+  fitCanvas(key, std);
+  const V = makeView(key, std); VIEW = V;
+  const phi = state.lat * D, lam = state.lon * D, rho = state.rho * D;
+  const T = Model.tissot(key, phi, lam, std);
+
+  const PANEL = css("--panel"), INK = css("--ink"), MUT = css("--muted"),
+        GRAT = css("--grat"), TIS = css("--tissot"), SEL = css("--sel"),
+        ACC = css("--accent"), LINE = css("--line"), MONO = css("--font-mono");
+  const fs = (n) => (NARROW ? n - 1 : n);
+
+  ctx.fillStyle = PANEL; ctx.fillRect(0, 0, W, H);
+
+  /* ---- graticule ---- */
+  ctx.strokeStyle = GRAT; ctx.lineWidth = 0.8;
+  for (let d = -180; d <= 180; d += 30){
+    const pts = [];
+    for (let i = 0; i <= 90; i++){
+      const p = -V.lim + 2 * V.lim * i / 90;
+      pts.push(toPx(key, p, d * D, std, V));
+    }
+    ctx.globalAlpha = (d === 0) ? 1 : 0.6;
+    strokePolyline(pts, false);
+  }
+  for (let d = -75; d <= 75; d += 15){
+    if (Math.abs(d * D) > V.lim) continue;
+    const pts = [];
+    for (let i = 0; i <= 90; i++) pts.push(toPx(key, d * D, -Math.PI + TAU * i / 90, std, V));
+    ctx.globalAlpha = (d === 0) ? 1 : 0.45;
+    strokePolyline(pts, false);
+  }
+  ctx.globalAlpha = 1;
+
+  /* ---- outline ---- */
+  ctx.strokeStyle = LINE; ctx.lineWidth = 1.4;
+  const edge = [];
+  for (let i = 0; i <= 120; i++) edge.push(toPx(key,  V.lim - 2*V.lim*i/120,  Math.PI, std, V));
+  for (let i = 0; i <= 60;  i++) edge.push(toPx(key, -V.lim, Math.PI - TAU*i/60, std, V));
+  for (let i = 0; i <= 120; i++) edge.push(toPx(key, -V.lim + 2*V.lim*i/120, -Math.PI, std, V));
+  for (let i = 0; i <= 60;  i++) edge.push(toPx(key,  V.lim, -Math.PI + TAU*i/60, std, V));
+  ctx.beginPath();
+  ctx.moveTo(edge[0][0], edge[0][1]);
+  for (let i = 1; i < edge.length; i++) ctx.lineTo(edge[i][0], edge[i][1]);
+  ctx.closePath(); ctx.stroke();
+
+  /* ---- the lattice of equal circles ---- */
+  if (state.grid !== "off"){
+    const fine = state.grid === "fine";
+    const dLat = fine ? 15 : 30, dLon = fine ? 30 : 60;
+    /* the lattice uses a small fixed radius of its own: at the slider's radius
+       the high-latitude rings on Mercator merge into one another and the
+       picture stops being readable. */
+    const latRho = (fine ? 3.5 : 5) * D;
+    const lim = Math.min(60, P.latLimit - 10);
+    for (let la = -lim; la <= lim + 1e-9; la += dLat){
+      for (let lo = -180 + dLon/2; lo < 180; lo += dLon){
+        const t = Model.tissot(key, la*D, lo*D, std);
+        const pts = Model.circleOnMap(key, la*D, lo*D, latRho, std, 48).map(function(q){
+          return [V.px(q[0]), V.py(q[1])];
+        });
+        /* opaque backing first: the tint is translucent, and near the limb
+           the converging meridians would otherwise read through it and make
+           an equal-area ring look as though its area had shrunk. */
+        ctx.fillStyle = PANEL;
+        if (fillPoly(pts)){
+          ctx.fillStyle = areaTint(t.area); fillPoly(pts);
+          ctx.strokeStyle = TIS; ctx.lineWidth = 1; ctx.globalAlpha = 0.75;
+          strokePolyline(pts, true); ctx.globalAlpha = 1;
+        }
+      }
+    }
+  }
+
+  /* ---- cities ---- */
+  ctx.font = "600 " + fs(10.5) + "px " + MONO;
+  for (const c of CITIES){
+    if (Math.abs(c.lat * D) > V.lim) continue;
+    const q = toPx(key, c.lat * D, c.lon * D, std, V);
+    ctx.fillStyle = ACC;
+    ctx.beginPath(); ctx.arc(q[0], q[1], 2.6, 0, TAU); ctx.fill();
+    if (!NARROW){
+      ctx.fillStyle = MUT; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.fillText(c.name, q[0] + 5, q[1] - 7);
+    }
+  }
+
+  /* ---- the circle the reader is dragging ---- */
+  const selPts = Model.circleOnMap(key, phi, lam, rho, std, 160).map(function(q){
+    return [V.px(q[0]), V.py(q[1])];
+  });
+  ctx.fillStyle = SEL; ctx.globalAlpha = 0.18; fillPoly(selPts); ctx.globalAlpha = 1;
+  ctx.strokeStyle = SEL; ctx.lineWidth = 2.2; strokePolyline(selPts, true);
+  const cq = toPx(key, phi, lam, std, V);
+  ctx.strokeStyle = SEL; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(cq[0] - 6, cq[1]); ctx.lineTo(cq[0] + 6, cq[1]);
+  ctx.moveTo(cq[0], cq[1] - 6); ctx.lineTo(cq[0], cq[1] + 6); ctx.stroke();
+
+  /* ---- footer line ---- */
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = MUT; ctx.font = "600 " + fs(11) + "px " + MONO;
+  const note = P.equalArea ? "area exact everywhere"
+             : P.conformal ? "angles exact everywhere"
+             : "neither area nor angle is exact off the standard parallel";
+  if (NARROW){
+    /* the two footer notes collide below about 470px, so they become one */
+    ctx.textAlign = "center";
+    ctx.fillText(P.label + " · rings " + state.rho + "°", W / 2, H - 9);
+  } else {
+    ctx.fillText(P.label + " — " + note, 6, H - 10);
+    ctx.textAlign = "right";
+    ctx.fillText("ring radius " + state.rho + "° on the globe", W - 6, H - 10);
+  }
+
+  /* colour key: colourless means the area is right */
+  if (!NARROW){
+    const kw = 96, kx = (W - kw) / 2, ky = H - 17;
+    for (let i = 0; i < kw; i++){
+      ctx.fillStyle = PANEL; ctx.fillRect(kx + i, ky, 1, 9);
+      ctx.fillStyle = areaTint(Math.pow(6, (i / (kw - 1)) * 2 - 1));
+      ctx.fillRect(kx + i, ky, 1, 9);
+    }
+    ctx.strokeStyle = LINE; ctx.lineWidth = 1; ctx.strokeRect(kx + 0.5, ky + 0.5, kw - 1, 8);
+    ctx.fillStyle = MUT; ctx.font = "600 " + fs(9.5) + "px " + MONO;
+    ctx.textAlign = "right"; ctx.fillText("1/6×", kx - 6, H - 10);
+    ctx.textAlign = "left";  ctx.fillText("6×", kx + kw + 6, H - 10);
+  }
+
+  paint(T);
+}
+
+function paint(T){
+  el("latout").textContent  = state.lat.toFixed(1) + "°";
+  el("lonout").textContent  = state.lon.toFixed(1) + "°";
+  el("rhoout").textContent  = state.rho + "°";
+  el("stdout").textContent  = state.std + "°";
+  const big = (v) => (v > 999 ? "over 999" : v.toFixed(3));
+  el("ra").textContent    = big(T.a);
+  el("rb").textContent    = T.b.toFixed(3);
+  el("rarea").textContent = (T.area > 999 ? "over 999" : T.area.toFixed(3)) + "×";
+  el("romega").textContent = (T.omega / D).toFixed(1) + "°";
+}
+
+/* ---------------- POINTER: drag the circle around the globe ---------------- */
+/* Inverting a projection in closed form is projection-specific, so the point
+   under the pointer is found by a coarse-to-fine search on the sphere. It is
+   only ever used to move the marker, never by the selftest.                 */
+function pickLatLon(px, py){
+  const key = state.proj, P = PROJ[key];
+  const std = (P.usesStd ? state.std : 0) * D, V = VIEW;
+  if (!V) return null;
+  let bp = state.lat * D, bl = state.lon * D, best = Infinity;
+  let loP = -V.lim, hiP = V.lim, loL = -Math.PI, hiL = Math.PI;
+  for (let pass = 0; pass < 5; pass++){
+    const n = 24;
+    for (let i = 0; i <= n; i++) for (let j = 0; j <= n; j++){
+      const p = loP + (hiP - loP) * i / n, l = loL + (hiL - loL) * j / n;
+      const q = P.fwd(p, l, std);
+      if (!Number.isFinite(q.x) || !Number.isFinite(q.y)) continue;
+      const dx = V.px(q.x) - px, dy = V.py(q.y) - py;
+      const d = dx*dx + dy*dy;
+      if (d < best){ best = d; bp = p; bl = l; }
+    }
+    const sp = (hiP - loP) / n, sl = (hiL - loL) / n;
+    loP = Math.max(-V.lim, bp - sp); hiP = Math.min(V.lim, bp + sp);
+    loL = Math.max(-Math.PI, bl - sl); hiL = Math.min(Math.PI, bl + sl);
+  }
+  return [bp / D, bl / D];
+}
+
+function moveTo(ev){
+  const r = cv.getBoundingClientRect();
+  const hit = pickLatLon(ev.clientX - r.left, ev.clientY - r.top);
+  if (!hit) return;
+  state.lat = Math.max(-85, Math.min(85, Math.round(hit[0] * 2) / 2));
+  state.lon = Math.max(-180, Math.min(180, Math.round(hit[1] * 2) / 2));
+  el("lat").value = state.lat; el("lon").value = state.lon;
+  render();
+}
+
+let dragging = false;
+cv.addEventListener("pointerdown", function(e){
+  dragging = true; cv.setPointerCapture(e.pointerId); moveTo(e); e.preventDefault();
+});
+cv.addEventListener("pointermove", function(e){ if (dragging) moveTo(e); });
+cv.addEventListener("pointerup",     function(){ dragging = false; });
+cv.addEventListener("pointercancel", function(){ dragging = false; });
+cv.addEventListener("keydown", function(e){
+  const step = e.shiftKey ? 5 : 1;
+  let used = true;
+  if (e.key === "ArrowUp")         state.lat = Math.min(85, state.lat + step);
+  else if (e.key === "ArrowDown")  state.lat = Math.max(-85, state.lat - step);
+  else if (e.key === "ArrowRight") state.lon = Math.min(180, state.lon + step);
+  else if (e.key === "ArrowLeft")  state.lon = Math.max(-180, state.lon - step);
+  else used = false;
+  if (used){
+    el("lat").value = state.lat; el("lon").value = state.lon;
+    render(); e.preventDefault();
+  }
+});
+
+/* ---------------- CONTROLS ---------------- */
+function bindRange(id, key){
+  el(id).addEventListener("input", function(e){ state[key] = parseFloat(e.target.value); render(); });
+}
+bindRange("lat", "lat"); bindRange("lon", "lon");
+bindRange("rho", "rho"); bindRange("std", "std");
+el("proj").addEventListener("change", function(e){ state.proj = e.target.value; render(); });
+el("grid").addEventListener("change", function(e){ state.grid = e.target.value; render(); });
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults);
+  el("proj").value = defaults.proj; el("grid").value = defaults.grid;
+  el("lat").value = defaults.lat; el("lon").value = defaults.lon;
+  el("rho").value = defaults.rho; el("std").value = defaults.std;
+  render();
+});
+
+let __rt = 0;
+window.addEventListener("resize", function(){ clearTimeout(__rt); __rt = setTimeout(render, 90); });
+render();
+
+/* ---------------- SELFTEST ---------------- */
+const near = (a, b, tol) => Number.isFinite(a) && Math.abs(a - b) <= tol;
+const LATS = (function(){ const v = []; for (let i = 0; i < 200; i++) v.push((-84 + 168*i/199) * D); return v; })();
+const LONS = [-2.8, -1.1, 0, 0.7, 2.8];
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+
+  /* 1. Mercator is conformal: the two scale factors are the same number */
+  push("Mercator's two scale factors agree at 200 latitudes", (function(){
+    let worst = 0;
+    for (const p of LATS) for (const l of LONS){
+      const T = Model.tissot("mercator", p, l, 0);
+      worst = Math.max(worst, Math.abs(T.a - T.b));
+      if (!near(T.a, 1/Math.cos(p), 1e-12)) return false;
+    }
+    return worst <= 1e-12;
+  })(), "a = b = sec(lat) at every sampled point, worst difference at most 1e-12");
+
+  /* 2. three projections hold area to machine precision */
+  push("all three equal-area projections keep a*b at 1", (function(){
+    let worst = 0;
+    for (const key of ["lambert", "sinusoidal", "mollweide"]){
+      for (const p of LATS) for (const l of LONS){
+        const T = Model.tissot(key, p, l, 25 * D);
+        worst = Math.max(worst, Math.abs(T.area - 1), Math.abs(T.det - 1));
+      }
+    }
+    return worst <= 1e-9;
+  })(), "1000 points on each of Lambert, sinusoidal and Mollweide, worst error at most 1e-9");
+
+  /* 3. and the two that do not, do not */
+  push("Mercator and the equirectangular do not preserve area", (function(){
+    const m = Model.tissot("mercator", 55*D, 0.4, 0);
+    const e = Model.tissot("equirect", 55*D, 0.4, 0);
+    return m.area > 3.0 && e.area > 1.7 &&
+           near(e.area, 1/Math.cos(55*D), 1e-12);
+  })(), "at 55 degrees Mercator inflates area 3.04x and the equirectangular 1.74x, which is sec(55)");
+
+  /* 4. Mercator's headline numbers */
+  push("Mercator inflates area fourfold at 60 degrees", (function(){
+    const a60 = Model.tissot("mercator", 60*D, 0, 0).area;
+    const a75 = Model.tissot("mercator", 75*D, 0, 0).area;
+    return near(a60, 4, 1e-12) && near(a75, 1/Math.cos(75*D)**2, 1e-9) && near(a75, 14.928203, 1e-6);
+  })(), "sec(60)^2 = 4 and sec(75)^2 = 14.928203, both matched to at least 1e-9");
+
+  /* 5. Lambert trades the same secant from area into shape */
+  push("Lambert at 60 degrees is 2 by 0.5 with 73.7 degrees of angular error", (function(){
+    const T = Model.tissot("lambert", 60*D, 0.9, 0);
+    const omega = 2 * Math.asin((T.a - T.b) / (T.a + T.b));
+    return near(T.a, 2, 1e-12) && near(T.b, 0.5, 1e-12) && near(T.area, 1, 1e-12) &&
+           near(T.omega, omega, 1e-15) && near(T.omega / D, 73.7398, 1e-3);
+  })(), "a = sec(60) = 2, b = cos(60) = 0.5, and 2*asin(1.5/2.5) = 73.7398 degrees");
+
+  /* 6. SECOND ROUTE: finite differences of the projection itself */
+  push("finite differences of the projection reproduce the scale factors", (function(){
+    let worst = 0;
+    for (const key of Object.keys(PROJ)){
+      for (let i = 0; i <= 40; i++) for (const l of [-2.5, -1, 0.4, 2.5]){
+        const p = (-78 + 156*i/40) * D;
+        const A = Model.tissot(key, p, l, 25*D);
+        const N = Model.tissotNumeric(key, p, l, 25*D, 1e-5);
+        worst = Math.max(worst, Math.abs(A.a - N.a)/A.a, Math.abs(A.b - N.b)/Math.max(1e-9, A.b));
+      }
+    }
+    return worst <= 1e-8;
+  })(), "analytic derivatives against central differences on all five, worst relative gap at most 1e-8");
+
+  /* 7. the map picture agrees with the maths: a drawn circle has the cap's area */
+  push("a projected circle encloses the spherical cap's area on an equal-area map", (function(){
+    for (const key of ["lambert", "sinusoidal", "mollweide"]){
+      for (const rhoDeg of [5, 15, 30]){
+        const exact = TAU * (1 - Math.cos(rhoDeg * D));
+        const got = Model.polyArea(Model.circleOnMap(key, 35*D, 0.4, rhoDeg*D, 30*D, 1024));
+        if (Math.abs(got - exact) / exact > 2e-5) return false;
+      }
+    }
+    return true;
+  })(), "2pi(1-cos rho) recovered from the drawn polygon to better than 2e-5 relative");
+
+  /* 8. and that agreement is discretisation, not luck: the error is O(1/N^2) */
+  push("halving the polygon step quarters the area error", (function(){
+    const exact = TAU * (1 - Math.cos(15 * D));
+    const e = [512, 1024, 2048].map(function(n){
+      return Math.abs(Model.polyArea(Model.circleOnMap("mollweide", 35*D, 0.4, 15*D, 0, n)) - exact);
+    });
+    const r1 = e[0] / e[1], r2 = e[1] / e[2];
+    return r1 > 3.9 && r1 < 4.1 && r2 > 3.9 && r2 < 4.1;
+  })(), "successive error ratios both 4.00, the signature of second-order convergence");
+
+  /* 9. where each projection is exactly right, by dense search */
+  push("each projection's undistorted locus is where the theory says", (function(){
+    const found = {};
+    for (const key of Object.keys(PROJ)){
+      let n = 0, offEquator = 0, offMeridian = 0;
+      for (let i = 0; i <= 120; i++) for (let j = 0; j <= 120; j++){
+        const p = (-85 + 170*i/120) * D, l = (-175 + 350*j/120) * D;
+        const T = Model.tissot(key, p, l, 0);
+        if (Math.abs(T.a - 1) < 1e-9 && Math.abs(T.b - 1) < 1e-9){
+          n++;
+          if (Math.abs(p) > 1e-9) offEquator++;
+          if (Math.abs(l) > 1e-9) offMeridian++;
+        }
+      }
+      found[key] = [n, offEquator, offMeridian];
+    }
+    /* cylindricals: the equator only. sinusoidal: equator AND central meridian.
+       Mollweide: nowhere at all. */
+    return found.mercator[0] === 121 && found.mercator[1] === 0 &&
+           found.lambert[0]  === 121 && found.lambert[1]  === 0 &&
+           found.equirect[0] === 121 && found.equirect[1] === 0 &&
+           found.sinusoidal[0] === 241 && found.sinusoidal[1] === 120 &&
+           found.mollweide[0] === 0;
+  })(), "14641 points each: 121 on the three cylindricals, 241 on the sinusoidal, none on Mollweide");
+
+  /* 10. moving the standard parallel moves the honest band with it */
+  push("a cylindrical is exact at its standard parallel and nowhere else", (function(){
+    for (const s of [0, 15, 30, 45, 60]){
+      for (const key of ["lambert", "equirect"]){
+        const at = Model.tissot(key, s*D, 1.3, s*D);
+        if (!near(at.a, 1, 1e-12) || !near(at.b, 1, 1e-12)) return false;
+        for (const off of [5, 12, 25]){
+          if (s + off > 88) continue;
+          const away = Model.tissot(key, (s+off)*D, 1.3, s*D);
+          if (Math.abs(away.a - 1) < 1e-6 && Math.abs(away.b - 1) < 1e-6) return false;
+        }
+      }
+    }
+    return true;
+  })(), "five standard parallels, both cylindricals: exact on it, distorted 5, 12 and 25 degrees away");
+
+  /* 11. the sphere itself: two independent great-circle formulas */
+  push("haversine and the dot product agree on all fifteen city pairs", (function(){
+    let worst = 0;
+    for (let i = 0; i < CITIES.length; i++) for (let j = i+1; j < CITIES.length; j++){
+      const A = [CITIES[i].lat, CITIES[i].lon], B = [CITIES[j].lat, CITIES[j].lon];
+      worst = Math.max(worst, Math.abs(Model.haversine(A, B) - Model.chordal(A, B)));
+    }
+    const qn = Model.haversine([CITIES[0].lat, CITIES[0].lon], [CITIES[1].lat, CITIES[1].lon]);
+    return worst <= 1e-6 && near(qn, 12818.4, 0.1);
+  })(), "worst gap under a micrometre; Quito to Nairobi is 12818.4 km on a 6371.0088 km sphere");
+
+  /* 12. the whole sheet of an equal-area map is the area of the sphere */
+  push("each equal-area map's outline encloses exactly 4 pi", (function(){
+    for (const key of ["lambert", "sinusoidal", "mollweide"]){
+      const N = 2000, pts = [], lim = PROJ[key].latLimit * D;
+      for (let i = 0; i <= N; i++){
+        const q = PROJ[key].fwd(-Math.PI/2 + Math.PI*i/N, Math.PI, 30*D);
+        pts.push([q.x, q.y]);
+      }
+      for (let i = N; i >= 0; i--){
+        const q = PROJ[key].fwd(-Math.PI/2 + Math.PI*i/N, -Math.PI, 30*D);
+        pts.push([q.x, q.y]);
+      }
+      if (Math.abs(Model.polyArea(pts) - 4*Math.PI) / (4*Math.PI) > 1e-5) return false;
+    }
+    return true;
+  })(), "4 pi = 12.566371 recovered from each outline to better than 1e-5 relative");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, proj: PROJ, cities: CITIES, areaTint: areaTint };
+
+})();
+</script>
+</body>
+</html>
