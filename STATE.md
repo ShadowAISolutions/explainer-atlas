@@ -27,6 +27,25 @@ page is written — it is where a failing audit trend gets escalated.)*
 
 ## Batches
 
+### batch/001 — 2026-09-19
+- merged: central-limit-theorem, monty-hall, floating-point-precision, fourier-series-square-wave, population-logistic-chaos
+- blocked: none
+- patterns: draw-input, guess-then-reveal, perturb-and-observe, build-from-parts, time-scrubber
+- learned: Exact beats sampled every time — the CLT page convolves the drawn
+  population's distribution instead of simulating it, Monty Hall enumerates
+  every (car, pick, reveal) triple, and the logistic page finds its own
+  superstable cascade by sign-change search rather than hard-coding the
+  published values. Assertions built that way are proofs, not statistics.
+  Three practical notes for the next session. (1) Anything a selftest calls
+  inside a loop over the whole control range must be cheap: the verifier reruns
+  the suite at every position of every control, so precompute coefficient lists
+  outside the sample loop and sample a subset of parameter values for the
+  expensive checks. (2) A view that does not depend on any control — the
+  bifurcation chart here — should be computed once at load and cached, not
+  rebuilt per render. (3) Keep varying the frame, not just the palette: so far
+  the collection has controls right, controls left, controls below the stage
+  and controls above it, which is doing more for distinctiveness than colour.
+
 ### batch/000 — 2026-09-19 — Phase 0 bootstrap
 - merged: numerical-integration-error, damped-harmonic-oscillator, huffman-coding
 - blocked: none

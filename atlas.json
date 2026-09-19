@@ -1,23 +1,67 @@
 {
   "generated_at": "2026-09-19",
-  "count": 3,
+  "count": 8,
   "domains": {
+    "biology": [
+      "population-logistic-chaos"
+    ],
+    "computer-science": [
+      "floating-point-precision"
+    ],
+    "game-theory": [
+      "monty-hall"
+    ],
     "information-theory": [
       "huffman-coding"
     ],
     "mathematics": [
+      "fourier-series-square-wave",
       "numerical-integration-error"
     ],
     "physics": [
       "damped-harmonic-oscillator"
+    ],
+    "statistics": [
+      "central-limit-theorem"
     ]
   },
   "interaction_patterns": {
-    "build-from-parts": 1,
-    "perturb-and-observe": 1,
-    "race-two-methods": 1
+    "build-from-parts": 2,
+    "draw-input": 1,
+    "guess-then-reveal": 1,
+    "perturb-and-observe": 2,
+    "race-two-methods": 1,
+    "time-scrubber": 1
   },
   "explainers": [
+    {
+      "slug": "central-limit-theorem",
+      "title": "Draw Any Population You Like",
+      "domain": "statistics",
+      "difficulty": 2,
+      "summary": "Draw a population as lopsided as you can and watch the exact distribution of its sample mean become a bell curve anyway, at a rate you can read off the screen.",
+      "prerequisites": [],
+      "tags": [
+        "central-limit-theorem",
+        "sampling",
+        "convolution",
+        "normal-distribution",
+        "variance"
+      ],
+      "interaction_pattern": "draw-input",
+      "sources": [
+        {
+          "title": "Feller, An Introduction to Probability Theory and Its Applications, Vol. I, Ch. X",
+          "url": "https://archive.org/details/introductiontopr01fell"
+        },
+        {
+          "title": "NIST/SEMATECH e-Handbook of Statistical Methods, §1.3.6.6.1 Normal Distribution",
+          "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 9
+    },
     {
       "slug": "damped-harmonic-oscillator",
       "title": "One Number Decides How a Thing Stops Shaking",
@@ -47,6 +91,67 @@
       "assertions_count": 9
     },
     {
+      "slug": "floating-point-precision",
+      "title": "The Gaps Between Numbers Are Not All the Same Size",
+      "domain": "computer-science",
+      "difficulty": 3,
+      "summary": "Slide the magnitude up and watch the gap between neighbouring doubles double at every power of two, until whole integers start going missing.",
+      "prerequisites": [],
+      "tags": [
+        "floating-point",
+        "ieee-754",
+        "numerical-error",
+        "rounding",
+        "precision"
+      ],
+      "interaction_pattern": "perturb-and-observe",
+      "sources": [
+        {
+          "title": "Goldberg, What Every Computer Scientist Should Know About Floating-Point Arithmetic, ACM Computing Surveys 23(1), 1991",
+          "url": "https://dl.acm.org/doi/10.1145/103162.103163"
+        },
+        {
+          "title": "IEEE 754-2019 Standard for Floating-Point Arithmetic",
+          "url": "https://standards.ieee.org/ieee/754/6210/"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 10
+    },
+    {
+      "slug": "fourier-series-square-wave",
+      "title": "Building a Corner Out of Curves",
+      "domain": "mathematics",
+      "difficulty": 3,
+      "summary": "Stack sine waves one at a time into a square wave and watch the overshoot beside the jump narrow without ever getting shorter.",
+      "prerequisites": [],
+      "tags": [
+        "fourier-series",
+        "harmonics",
+        "gibbs-phenomenon",
+        "convergence",
+        "parseval",
+        "signals"
+      ],
+      "interaction_pattern": "build-from-parts",
+      "sources": [
+        {
+          "title": "Gibbs phenomenon — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Gibbs_phenomenon"
+        },
+        {
+          "title": "Fourier series — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Fourier_series"
+        },
+        {
+          "title": "Wilbraham–Gibbs constant — OEIS A036792",
+          "url": "https://oeis.org/A036792"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 11
+    },
+    {
       "slug": "huffman-coding",
       "title": "Building an Optimal Code, Two Symbols at a Time",
       "domain": "information-theory",
@@ -69,6 +174,34 @@
         {
           "title": "Cover & Thomas, Elements of Information Theory, Ch. 5 — Data Compression",
           "url": "https://onlinelibrary.wiley.com/doi/book/10.1002/047174882X"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 9
+    },
+    {
+      "slug": "monty-hall",
+      "title": "The Host Knows, and That Is the Whole Trick",
+      "domain": "game-theory",
+      "difficulty": 2,
+      "summary": "Play the doors, then take away the host's knowledge and watch the two-thirds advantage vanish, which is where the puzzle's real lesson lives.",
+      "prerequisites": [],
+      "tags": [
+        "probability",
+        "conditioning",
+        "bayes",
+        "paradox",
+        "monte-carlo"
+      ],
+      "interaction_pattern": "guess-then-reveal",
+      "sources": [
+        {
+          "title": "Selvin, A Problem in Probability, The American Statistician 29(1), 1975",
+          "url": "https://www.tandfonline.com/doi/abs/10.1080/00031305.1975.10479121"
+        },
+        {
+          "title": "Rosenhouse, The Monty Hall Problem, Oxford University Press, 2009",
+          "url": "https://global.oup.com/academic/product/the-monty-hall-problem-9780195367898"
         }
       ],
       "created_at": "2026-09-19",
@@ -101,6 +234,39 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 8
+    },
+    {
+      "slug": "population-logistic-chaos",
+      "title": "One Number Decides Whether a Population Settles",
+      "domain": "biology",
+      "difficulty": 3,
+      "summary": "Raise the growth rate of a one-line population model and watch it settle, split, split again, and then stop repeating altogether.",
+      "prerequisites": [],
+      "tags": [
+        "logistic-map",
+        "chaos",
+        "bifurcation",
+        "feigenbaum",
+        "population-dynamics",
+        "lyapunov-exponent"
+      ],
+      "interaction_pattern": "time-scrubber",
+      "sources": [
+        {
+          "title": "Logistic map — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Logistic_map"
+        },
+        {
+          "title": "May, R. M. (1976), Simple mathematical models with very complicated dynamics",
+          "url": "https://www.nature.com/articles/261459a0"
+        },
+        {
+          "title": "Feigenbaum constants — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Feigenbaum_constants"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 11
     }
   ]
 }

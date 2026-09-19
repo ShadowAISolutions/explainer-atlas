@@ -1,0 +1,16 @@
+{
+  "slug": "floating-point-precision",
+  "title": "The Gaps Between Numbers Are Not All the Same Size",
+  "domain": "computer-science",
+  "difficulty": 3,
+  "summary": "Slide the magnitude up and watch the gap between neighbouring doubles double at every power of two, until whole integers start going missing.",
+  "prerequisites": [],
+  "tags": ["floating-point", "ieee-754", "numerical-error", "rounding", "precision"],
+  "interaction_pattern": "perturb-and-observe",
+  "sources": [
+    { "title": "Goldberg, What Every Computer Scientist Should Know About Floating-Point Arithmetic, ACM Computing Surveys 23(1), 1991", "url": "https://dl.acm.org/doi/10.1145/103162.103163" },
+    { "title": "IEEE 754-2019 Standard for Floating-Point Arithmetic", "url": "https://standards.ieee.org/ieee/754/6210/" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 10
+}

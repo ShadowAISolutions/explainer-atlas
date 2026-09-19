@@ -36,9 +36,45 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
     <p class="lede">One concept per page. Each page teaches a single idea through a working
     simulation you can take apart — every model on this site is checked numerically against
     closed forms, conservation laws, or published reference values before it ships.</p>
-    <p class="count">3 explainers · 3 domains · 26 assertions</p>
+    <p class="count">8 explainers · 7 domains · 76 assertions</p>
   </header>
   <main>
+      <section aria-labelledby="d-biology">
+        <h2 id="d-biology">biology</h2>
+        <ul class="grid">
+        <li class="card">
+          <a href="explainers/population-logistic-chaos/index.html">
+            <h3>One Number Decides Whether a Population Settles</h3>
+            <p>Raise the growth rate of a one-line population model and watch it settle, split, split again, and then stop repeating altogether.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 3 of 5">●●●○○</span> <span>time-scrubber</span> <span>11 checks</span></p>
+        </li>
+        </ul>
+      </section>
+      <section aria-labelledby="d-computer-science">
+        <h2 id="d-computer-science">computer science</h2>
+        <ul class="grid">
+        <li class="card">
+          <a href="explainers/floating-point-precision/index.html">
+            <h3>The Gaps Between Numbers Are Not All the Same Size</h3>
+            <p>Slide the magnitude up and watch the gap between neighbouring doubles double at every power of two, until whole integers start going missing.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 3 of 5">●●●○○</span> <span>perturb-and-observe</span> <span>10 checks</span></p>
+        </li>
+        </ul>
+      </section>
+      <section aria-labelledby="d-game-theory">
+        <h2 id="d-game-theory">game theory</h2>
+        <ul class="grid">
+        <li class="card">
+          <a href="explainers/monty-hall/index.html">
+            <h3>The Host Knows, and That Is the Whole Trick</h3>
+            <p>Play the doors, then take away the host&#39;s knowledge and watch the two-thirds advantage vanish, which is where the puzzle&#39;s real lesson lives.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 2 of 5">●●○○○</span> <span>guess-then-reveal</span> <span>9 checks</span></p>
+        </li>
+        </ul>
+      </section>
       <section aria-labelledby="d-information-theory">
         <h2 id="d-information-theory">information theory</h2>
         <ul class="grid">
@@ -54,6 +90,13 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
       <section aria-labelledby="d-mathematics">
         <h2 id="d-mathematics">mathematics</h2>
         <ul class="grid">
+        <li class="card">
+          <a href="explainers/fourier-series-square-wave/index.html">
+            <h3>Building a Corner Out of Curves</h3>
+            <p>Stack sine waves one at a time into a square wave and watch the overshoot beside the jump narrow without ever getting shorter.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 3 of 5">●●●○○</span> <span>build-from-parts</span> <span>11 checks</span></p>
+        </li>
         <li class="card">
           <a href="explainers/numerical-integration-error/index.html">
             <h3>Why Simpson&#39;s Rule Beats the Trapezoid</h3>
@@ -72,6 +115,18 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
             <p>Move the damping ratio and find the boundary where a system stops ringing and starts creeping, and why more damping past that point makes things worse.</p>
           </a>
           <p class="meta"><span class="diff" aria-label="difficulty 2 of 5">●●○○○</span> <span>perturb-and-observe</span> <span>9 checks</span></p>
+        </li>
+        </ul>
+      </section>
+      <section aria-labelledby="d-statistics">
+        <h2 id="d-statistics">statistics</h2>
+        <ul class="grid">
+        <li class="card">
+          <a href="explainers/central-limit-theorem/index.html">
+            <h3>Draw Any Population You Like</h3>
+            <p>Draw a population as lopsided as you can and watch the exact distribution of its sample mean become a bell curve anyway, at a rate you can read off the screen.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 2 of 5">●●○○○</span> <span>draw-input</span> <span>9 checks</span></p>
         </li>
         </ul>
       </section>

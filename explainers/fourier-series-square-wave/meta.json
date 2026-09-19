@@ -1,0 +1,17 @@
+{
+  "slug": "fourier-series-square-wave",
+  "title": "Building a Corner Out of Curves",
+  "domain": "mathematics",
+  "difficulty": 3,
+  "summary": "Stack sine waves one at a time into a square wave and watch the overshoot beside the jump narrow without ever getting shorter.",
+  "prerequisites": [],
+  "tags": ["fourier-series", "harmonics", "gibbs-phenomenon", "convergence", "parseval", "signals"],
+  "interaction_pattern": "build-from-parts",
+  "sources": [
+    { "title": "Gibbs phenomenon — Wikipedia", "url": "https://en.wikipedia.org/wiki/Gibbs_phenomenon" },
+    { "title": "Fourier series — Wikipedia", "url": "https://en.wikipedia.org/wiki/Fourier_series" },
+    { "title": "Wilbraham–Gibbs constant — OEIS A036792", "url": "https://oeis.org/A036792" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 11
+}
