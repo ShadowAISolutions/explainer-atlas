@@ -1,0 +1,898 @@
+<!doctype html>
+<!--
+  Interactive Explainer Atlas — page skeleton.
+  Start EVERY new explainer from this file. Never copy a previous page.
+  Replace every {{PLACEHOLDER}}. Delete the demo model and write your own.
+  Contract: FOUNDATION.md. Rules: CLAUDE.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Message Is One Number Between Zero and One &#8212; Explainer Atlas</title>
+<meta name="description" content="Step through an arithmetic coder one symbol at a time and watch a single interval narrow until its width is the probability of the whole message.">
+<style>
+/* ---- tokens: restate these per page to vary the collection's feel ------- */
+:root{
+  --bg:#f4f6f8; --panel:#ffffff; --ink:#111820; --muted:#5b6876; --line:#dbe2e8;
+  --accent:#1f5c8b; --accent-soft:#e4eef6; --warn:#a33b4a; --alt:#7a4fa3;
+  --radius:3px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.5rem,1.08rem + 1.9vw,2.15rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.06rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0e1319; --panel:#151c24; --ink:#e4eaf0; --muted:#94a2b1; --line:#243140;
+    --accent:#63aede; --accent-soft:#132433; --warn:#e88a97; --alt:#b790dd;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.15; margin:0 0 .4em; letter-spacing:-.01em}
+.kicker{margin:0 0 .35em; color:var(--accent); font:600 .78rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.09em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas, figure.stage svg{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.86rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.83rem}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+.check{display:flex; align-items:center; gap:.6em}
+.check input{width:18px; height:18px; accent-color:var(--accent); margin:0; flex:none}
+.check label{font-weight:600}
+.msg{font:600 .95rem/1.5 var(--font-mono); word-break:break-all; background:var(--accent-soft); padding:.5em .6em; border-radius:3px}
+.msg b{color:var(--accent)}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .7em; min-height:40px}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.06em}
+.readout dd{margin:.18em 0 0; font:600 1.05rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.05rem; margin:1.9em 0 .45em; letter-spacing:.01em; text-transform:none; border-left:3px solid var(--accent); padding-left:.6em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); background:var(--accent-soft); padding:.7em .85em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">information theory</p>
+  <h1>A Message Is One Number Between Zero and One</h1>
+  <p class="standfirst">Huffman gives every symbol a whole number of bits, so a symbol worth a fifth of a
+  bit still costs one. Arithmetic coding gives the whole message a single number instead, and pays
+  the fraction.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="640" role="img"
+            aria-label="A stack of interval bars, each one a zoomed view of the slice chosen in the bar above it, divided into the alphabet's symbols in proportion to their probability. Below, a chart comparing the bits spent so far by arithmetic coding, by Huffman coding, and by the message's ideal information content."></canvas>
+    <figcaption>Each bar is the slice picked out of the bar above it, magnified. The bottom chart
+    tracks bits spent as the message grows: the grey line is the information actually in the
+    message, and the two coders are measured against it.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row">
+        <label for="src">Source</label>
+      </div>
+      <select id="src">
+        <option value="skewed">lopsided coin &#8212; A 0.9, B 0.1</option>
+        <option value="even">fair coin &#8212; A 0.5, B 0.5</option>
+        <option value="quad">four equal symbols</option>
+        <option value="dna" selected>uneven four &#8212; A .5 C .2 G .2 T .1</option>
+        <option value="text">five, roughly like English</option>
+      </select>
+      <p class="hint">The symbol probabilities both coders are built from. Whole-number odds, so
+      every interval below is exact.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="step">Symbols encoded</label>
+        <output id="stepout" for="step">4</output>
+      </div>
+      <input type="range" id="step" min="0" max="14" step="1" value="4">
+      <p class="hint">Walk the coder forward one symbol at a time. Arrow keys step; End runs it to
+      the end of the message.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="len">Message length</label>
+        <output id="lenout" for="len">10</output>
+      </div>
+      <input type="range" id="len" min="4" max="14" step="1" value="10">
+      <p class="hint">Drawn from the source above, so a lopsided source gives a lopsided message.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="seed">Message</label>
+        <output id="seedout" for="seed">1</output>
+      </div>
+      <input type="range" id="seed" min="1" max="40" step="1" value="1">
+      <p class="hint">Forty seeded draws from this source. Every one is generated the same way.</p>
+    </div>
+
+    <div class="control">
+      <div class="check">
+        <input type="checkbox" id="huff" checked>
+        <label for="huff">Compare with Huffman</label>
+      </div>
+      <p class="hint">Lay the Huffman code's running length over the arithmetic coder's.</p>
+    </div>
+
+    <p class="msg" id="msg">&#8212;</p>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Interval width</dt><dd id="oW">&#8212;</dd></div>
+      <div><dt>Information in it</dt><dd id="oI">&#8212;</dd></div>
+      <div><dt>Arithmetic bits</dt><dd id="oA">&#8212;</dd></div>
+      <div><dt>Huffman bits</dt><dd id="oH">&#8212;</dd></div>
+      <div><dt>Codeword</dt><dd id="oC">&#8212;</dd></div>
+      <div><dt>Decodes back to</dt><dd id="oD">&#8212;</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Start over</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Start with the whole line from zero to one and cut it into pieces, one per symbol, each as wide
+  as that symbol is likely. The first symbol of the message picks a piece. Now forget the rest of
+  the line, magnify the piece you picked, and cut it up the same way for the second symbol. Keep
+  going. The bars on the left are those magnifications stacked, and the message is any number left
+  inside the last one.</p>
+
+  <p>Two things are worth noticing as you step. The interval never leaves its parent, and the pieces
+  at every level tile it exactly with nothing spare. So a number in the final interval determines
+  the whole message: there is only one path of cuts that could have produced it.</p>
+
+  <h2>Why the width is the answer</h2>
+
+  <p class="math">width after n symbols = p(s&#8321;) &#215; p(s&#8322;) &#215; &#8230; &#215; p(s&#8345;)</p>
+
+  <p>Each cut multiplies the width by the probability of the symbol chosen, so the final width is
+  the probability of the exact message. Pinning down a number inside an interval of width w takes
+  about log&#8322;(1/w) bits, and log&#8322;(1/w) is the sum of log&#8322;(1/p) over the symbols &#8212; the
+  information content of the message. The arithmetic coder does not approximate that figure. It
+  falls out of the geometry.</p>
+
+  <p>The price is a constant, not a rate. One extra bit guarantees a number with that many binary
+  places actually lands inside the interval, and the rounding up costs less than one more. Watch the
+  readout: the coder is always between one and two bits above the information content, no matter how
+  long the message runs, so the overhead per symbol goes to nothing.</p>
+
+  <h2>Where Huffman loses</h2>
+
+  <p>Huffman must give each symbol a whole number of bits. Choose the lopsided coin: A carries
+  0.152 bits of information and B carries 3.32, but Huffman has nowhere to put a code shorter than
+  one bit, so it spends one bit on A and one on B &#8212; a flat one bit a symbol against an ideal
+  of 0.469. Step through and watch the grey and the Huffman line separate by more than half a bit
+  every symbol while the arithmetic line stays glued to grey.</p>
+
+  <p>The win is not immediate. The terminator and the rounding up cost about a bit and a half
+  whatever the message, so a short message can lose: any draw carrying more than one bit a symbol
+  of actual information does, and on a lopsided coin that means an unlucky run of the rare symbol.
+  Set the length to four and walk the message slider and you will find several. By fourteen symbols
+  it wins nine times in ten, and by thirty it wins every time.</p>
+
+  <p>Now choose four equal symbols. Every probability is a power of one half, whole numbers of bits
+  fit perfectly, and Huffman is optimal: exactly two bits a symbol with nothing wasted. The
+  arithmetic coder ties it and then pays its one-bit terminator, so here it comes out a single bit
+  behind and stays there. That is the whole trade. Huffman is beaten only where the probabilities
+  are not powers of one half, which is nearly always, and beaten badly where one symbol dominates.</p>
+
+  <h2>Reading the number back</h2>
+
+  <p>The codeword shown is the shortest binary fraction inside the final interval. A decoder given
+  only those bits and the same table of probabilities repeats the cuts, at each step asking which
+  piece the number falls in, and recovers the message symbol by symbol. It never needs the interval
+  the encoder held &#8212; only a point inside it. That is what the last readout checks on every
+  draw.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set the source to the lopsided coin and run the step slider to the end: the width collapses by
+  a factor of ten whenever a rare B lands and barely moves on a run of A. Then switch to four equal
+  symbols without touching anything else and watch the two coder lines lock together a bit apart.
+  Finally push the message length to fourteen on the lopsided coin and compare the two totals: the
+  gap is roughly half a bit for every symbol in the message, and it is pure waste.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG. Never use bare Math.random(). ------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260101;
+
+/* ---- MODEL: pure functions of the parameters. No DOM in here. ----------- */
+/* Everything here is exact. The probabilities are whole-number counts over a
+   whole-number total, and the interval is carried as a pair of BigInts over a
+   power of that total, so "the width equals the product of the probabilities"
+   is an equality this file can assert rather than approximate. Floating point
+   appears only where the answer is genuinely a logarithm. */
+const B = BigInt;
+
+const ALPHA = {
+  skewed: { name: "lopsided coin",    sym: ["A", "B"],                cnt: [9, 1] },
+  even:   { name: "fair coin",        sym: ["A", "B"],                cnt: [1, 1] },
+  quad:   { name: "four equal",       sym: ["A", "C", "G", "T"],      cnt: [1, 1, 1, 1] },
+  dna:    { name: "uneven four",      sym: ["A", "C", "G", "T"],      cnt: [5, 2, 2, 1] },
+  text:   { name: "roughly English",  sym: ["_", "E", "T", "A", "O"], cnt: [24, 12, 9, 8, 7] }
+};
+const KEYS = Object.keys(ALPHA);
+
+const Model = {
+  ALPHA: ALPHA, KEYS: KEYS,
+
+  table(al){
+    let T = 0; const cum = [];
+    for (const c of al.cnt){ cum.push(T); T += c; }
+    return { T: T, cum: cum };
+  },
+  index(al, ch){ return al.sym.indexOf(ch); },
+
+  /* ROUTE A: the sequential narrowing the page draws. After k symbols the
+     interval is [L / T^k, (L + W) / T^k). */
+  encode(al, s){
+    const t = Model.table(al), bt = B(t.T);
+    let L = 0n, W = 1n;
+    for (let k = 0; k < s.length; k++){
+      const i = Model.index(al, s[k]);
+      L = L * bt + W * B(t.cum[i]);
+      W = W * B(al.cnt[i]);
+    }
+    return { L: L, W: W, n: s.length, T: t.T };
+  },
+  /* ROUTE B: the same endpoint as a positional sum, with the prefix products
+     and the powers of T built separately and added up at the end. Nothing is
+     narrowed and nothing is carried between steps, so a mistake in the
+     recurrence above cannot hide here. */
+  encodeDirect(al, s){
+    const t = Model.table(al), bt = B(t.T), n = s.length;
+    const pre = [1n];
+    for (let k = 0; k < n; k++) pre.push(pre[k] * B(al.cnt[Model.index(al, s[k])]));
+    let L = 0n;
+    for (let k = 1; k <= n; k++)
+      L += B(t.cum[Model.index(al, s[k - 1])]) * pre[k - 1] * bt ** B(n - k);
+    return { L: L, W: pre[n], n: n, T: t.T };
+  },
+  /* every prefix of the encoding, which is what the stacked bars show */
+  trace(al, s){
+    const t = Model.table(al), bt = B(t.T), out = [];
+    let L = 0n, W = 1n;
+    for (let k = 0; k < s.length; k++){
+      const i = Model.index(al, s[k]);
+      out.push({ L: L, W: W, k: k, pick: i, T: t.T });
+      L = L * bt + W * B(t.cum[i]);
+      W = W * B(al.cnt[i]);
+    }
+    out.push({ L: L, W: W, k: s.length, pick: -1, T: t.T });
+    return out;
+  },
+
+  /* Decode a POINT, given as an exact fraction pn / pd. The decoder never sees
+     the encoder's interval, only a number inside it, which is the claim the
+     whole scheme rests on. */
+  decodePoint(al, pn, pd, n){
+    const t = Model.table(al), bt = B(t.T);
+    const Tn = bt ** B(n);
+    let lo = 0n, w = 1n, out = "";
+    for (let k = 0; k < n; k++){
+      const scale = bt ** B(n - k - 1);
+      let chosen = -1;
+      for (let i = 0; i < al.sym.length; i++){
+        const a = (lo * bt + w * B(t.cum[i])) * scale;
+        const b = (lo * bt + w * B(t.cum[i] + al.cnt[i])) * scale;
+        if (pn * Tn >= a * pd && pn * Tn < b * pd){ chosen = i; break; }
+      }
+      if (chosen < 0) return null;
+      lo = lo * bt + w * B(t.cum[chosen]);
+      w = w * B(al.cnt[chosen]);
+      out += al.sym[chosen];
+    }
+    return out;
+  },
+
+  /* the information in the message under this source, in bits */
+  info(al, s){
+    const t = Model.table(al);
+    let b = 0;
+    for (let k = 0; k < s.length; k++){
+      const i = Model.index(al, s[k]);
+      b += -Math.log2(al.cnt[i] / t.T);
+    }
+    return b;
+  },
+  /* the codeword length: enough binary places to land inside the interval,
+     plus the one that guarantees such a place exists at all */
+  codeLen(al, s){ return s.length === 0 ? 0 : Math.ceil(Model.info(al, s)) + 1; },
+
+  /* the shortest binary fraction inside the final interval, as numerator over
+     2^ell. Built by rounding the low end up, which is where the guarantee bites. */
+  codeword(al, s){
+    const e = Model.encode(al, s), ell = Model.codeLen(al, s);
+    if (e.n === 0) return { num: 0n, ell: 0, bits: "", inside: true };
+    const P = 2n ** B(ell), Tn = B(e.T) ** B(e.n);
+    const num = (e.L * P + Tn - 1n) / Tn;
+    let bits = num.toString(2);
+    while (bits.length < ell) bits = "0" + bits;
+    return { num: num, ell: ell, bits: bits, inside: num * Tn < (e.L + e.W) * P };
+  },
+
+  /* Huffman, built from the same counts. Ties broken by count then index so
+     the tree is the same on every run. */
+  huffman(al){
+    const len = {};
+    if (al.sym.length === 1){ len[al.sym[0]] = 1; return len; }
+    let q = al.cnt.map((c, i) => ({ w: c, i: i, l: null, r: null }));
+    let seq = 0;
+    while (q.length > 1){
+      q.sort((a, b) => (a.w - b.w) || (a.i - b.i));
+      const x = q.shift(), y = q.shift();
+      q.push({ w: x.w + y.w, i: 1000 + (seq++), l: x, r: y });
+    }
+    (function walk(nd, d){
+      if (nd.l === null){ len[al.sym[nd.i]] = Math.max(1, d); return; }
+      walk(nd.l, d + 1); walk(nd.r, d + 1);
+    })(q[0], 0);
+    return len;
+  },
+  huffLen(al, s){
+    const L = Model.huffman(al);
+    let t = 0;
+    for (let k = 0; k < s.length; k++) t += L[s[k]];
+    return t;
+  },
+
+  /* a seeded draw from the source */
+  message(al, seed, n){
+    const t = Model.table(al), rng = mulberry32((SEED + seed * 7919) >>> 0);
+    let out = "";
+    for (let k = 0; k < n; k++){
+      const r = rng() * t.T;
+      let acc = 0, pick = al.sym.length - 1;
+      for (let i = 0; i < al.cnt.length; i++){ acc += al.cnt[i]; if (r < acc){ pick = i; break; } }
+      out += al.sym[pick];
+    }
+    return out;
+  },
+
+  /* the width as a float, for display and for the bit arithmetic */
+  widthFloat(e){ return Math.exp(Model.lnBig(e.W) - e.n * Math.log(e.T)); },
+  lnBig(x){
+    const str = x.toString(), head = Number(str.slice(0, 15));
+    return Math.log(head) + (str.length - Math.min(15, str.length)) * Math.log(10);
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { src: "dna", step: 4, len: 10, seed: 1, huff: true };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+let W = 900, H = 640, FS = 13, NARROW = false, G_ = {};
+
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function fitCanvas(){
+  const box = cv.getBoundingClientRect();
+  const avail = box.width > 10 ? box.width
+              : (cv.parentNode ? Math.max(260, cv.parentNode.clientWidth - 24) : 900);
+  NARROW = avail < 470;
+  W = Math.max(280, Math.min(1000, Math.round(avail)));
+  FS = NARROW ? 12 : 13;
+  const padL = NARROW ? 26 : 34, padR = NARROW ? 12 : 18;
+  const barH = NARROW ? 20 : 24, gap = NARROW ? 16 : 19;
+  /* the stack is only as tall as the bars actually drawn, otherwise four cuts
+     leave three empty rows of white between the bars and the chart below */
+  const rows = Math.max(1, Math.min(NARROW ? 6 : 7, Math.min(state.step, state.len) + 1));
+  const top = FS + 14;
+  G_ = { x0: padL, x1: W - padR, top: top, barH: barH, gap: gap, rows: rows };
+  G_.barsBot = top + rows * (barH + gap) - gap;
+  G_.chartTop = Math.round(G_.barsBot + 3 * FS + 26);
+  G_.chartH = Math.round(Math.max(110, Math.min(180, W * 0.19)));
+  G_.chartBot = G_.chartTop + G_.chartH;
+  H = G_.chartBot + 3 * FS + 12;
+  if (cv.width !== W * SS || cv.height !== H * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function niceStep(span, want){
+  const raw = span / want, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / mag;
+  let step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+  while (span / step < 2 && step > 0) step /= 2;
+  return step;
+}
+function tag(text, x, y, colour, align, backing){
+  ctx.save();
+  ctx.font = "700 " + FS + "px " + css("--font-mono");
+  ctx.textAlign = align || "left";
+  if (backing){
+    const w = ctx.measureText(text).width + 8;
+    const lx = align === "right" ? x - w : align === "center" ? x - w / 2 : x - 4;
+    ctx.fillStyle = css("--panel"); ctx.globalAlpha = 0.88;
+    ctx.fillRect(lx, y - FS, w, FS + 5); ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = colour; ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+function render(){
+  fitCanvas();
+  const ink = css("--ink"), muted = css("--muted"), accent = css("--accent"),
+        warn = css("--warn"), alt = css("--alt"), panel = css("--panel"),
+        line = css("--line"), soft = css("--accent-soft");
+  const al = ALPHA[state.src];
+  const msg = Model.message(al, state.seed, state.len);
+  const k = Math.min(state.step, state.len);
+  const tr = Model.trace(al, msg);
+  const t = Model.table(al);
+
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "alphabetic";
+
+  /* ================= the stack of magnified intervals ================= */
+  ctx.font = "700 " + FS + "px " + css("--font-mono");
+  ctx.fillStyle = ink; ctx.textAlign = "left";
+  /* the longest form runs off a 640px stage, so the title is measured */
+  const titles = ["EACH BAR IS THE SLICE PICKED OUT OF THE ONE ABOVE IT, MAGNIFIED",
+                  "EACH BAR MAGNIFIES THE SLICE PICKED ABOVE IT",
+                  "EACH BAR MAGNIFIES THE SLICE ABOVE"];
+  let title = titles[titles.length - 1];
+  for (const cand of titles)
+    if (ctx.measureText(cand).width <= G_.x1 - G_.x0){ title = cand; break; }
+  ctx.fillText(title, G_.x0, G_.top - 6);
+
+  /* show the last few levels, ending at the current step */
+  const first = Math.max(0, k - G_.rows + 1);
+  const span = G_.x1 - G_.x0;
+  for (let r = 0; r < G_.rows; r++){
+    const lvl = first + r;
+    if (lvl > k) break;
+    const y = G_.top + r * (G_.barH + G_.gap);
+    const node = tr[lvl];
+    /* the bar shows this interval cut into the alphabet's pieces */
+    ctx.strokeStyle = line; ctx.lineWidth = 1;
+    ctx.strokeRect(G_.x0 + 0.5, y + 0.5, span - 1, G_.barH - 1);
+    let acc = 0;
+    for (let i = 0; i < al.sym.length; i++){
+      const w0 = (acc / t.T) * span, w1 = ((acc + al.cnt[i]) / t.T) * span;
+      const on = node.pick === i;
+      ctx.fillStyle = on ? accent : ink;
+      ctx.globalAlpha = on ? 0.9 : (i % 2 ? 0.07 : 0.13);
+      ctx.fillRect(G_.x0 + w0, y, w1 - w0, G_.barH);
+      ctx.globalAlpha = 1;
+      if (w1 - w0 > FS * 1.1){
+        ctx.fillStyle = on ? panel : muted;
+        ctx.font = (on ? "700 " : "") + FS + "px " + css("--font-mono");
+        ctx.textAlign = "center";
+        ctx.fillText(al.sym[i], G_.x0 + (w0 + w1) / 2, y + G_.barH / 2 + FS * 0.36);
+      }
+      acc += al.cnt[i];
+    }
+    /* the guide lines from the chosen slice down to the whole next bar */
+    if (node.pick >= 0 && r + 1 < G_.rows && lvl + 1 <= k){
+      const c0 = (t.cum[node.pick] / t.T) * span, c1 = ((t.cum[node.pick] + al.cnt[node.pick]) / t.T) * span;
+      ctx.strokeStyle = accent; ctx.lineWidth = 1; ctx.globalAlpha = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(G_.x0 + c0, y + G_.barH); ctx.lineTo(G_.x0, y + G_.barH + G_.gap);
+      ctx.moveTo(G_.x0 + c1, y + G_.barH); ctx.lineTo(G_.x1, y + G_.barH + G_.gap);
+      ctx.stroke(); ctx.globalAlpha = 1;
+    }
+    /* the step number, and on the last bar the width */
+    ctx.font = FS + "px " + css("--font-mono");
+    ctx.textAlign = "right"; ctx.fillStyle = muted;
+    ctx.fillText(String(lvl), G_.x0 - 5, y + G_.barH / 2 + FS * 0.36);
+  }
+  if (first > 0){
+    /* this shares the title's row, so it goes to the right end of it */
+    ctx.font = FS + "px " + css("--font-mono"); ctx.textAlign = "right"; ctx.fillStyle = muted;
+    const note = NARROW ? first + " cuts above" : first + " earlier cuts, off the top";
+    if (ctx.measureText(title).width + ctx.measureText(note).width + 16 <= G_.x1 - G_.x0)
+      ctx.fillText(note, G_.x1, G_.top - 6);
+  }
+
+  const here = tr[k];
+  const wf = Math.exp(Model.lnBig(here.W) - here.k * Math.log(here.T));
+  ctx.font = FS + "px " + css("--font-mono"); ctx.textAlign = "left"; ctx.fillStyle = muted;
+  ctx.fillText(NARROW ? "width " + wf.toExponential(2)
+                      : "the surviving interval is " + wf.toExponential(3) + " wide",
+               G_.x0, G_.barsBot + FS + 12);
+  ctx.textAlign = "right";
+  ctx.fillText(k + " of " + state.len + " symbols", G_.x1, G_.barsBot + FS + 12);
+
+  /* ================= the bit budget ================= */
+  ctx.font = "700 " + FS + "px " + css("--font-mono"); ctx.fillStyle = ink; ctx.textAlign = "left";
+  ctx.fillText(NARROW ? "BITS SPENT" : "BITS SPENT, SYMBOL BY SYMBOL", G_.x0, G_.chartTop - 8);
+
+  const nMax = state.len;
+  const series = { info: [], arith: [], huff: [] };
+  for (let j = 0; j <= nMax; j++){
+    const pre = msg.slice(0, j);
+    series.info.push(Model.info(al, pre));
+    series.arith.push(Model.codeLen(al, pre));
+    series.huff.push(Model.huffLen(al, pre));
+  }
+  let top = 1;
+  for (const key of ["info", "arith", "huff"])
+    if (key !== "huff" || state.huff)
+      for (const v of series[key]) top = Math.max(top, v);
+  top *= 1.12;
+  const bx = (j) => G_.x0 + (nMax ? (j / nMax) * (G_.x1 - G_.x0) : 0);
+  const by = (v) => G_.chartBot - (v / top) * G_.chartH;
+
+  ctx.font = FS + "px " + css("--font-mono");
+  const bstep = niceStep(top, NARROW ? 3 : 5);
+  ctx.textAlign = "right";
+  for (let v = 0; v <= top + 1e-9; v += bstep){
+    ctx.strokeStyle = v === 0 ? line : soft; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(G_.x0, by(v)); ctx.lineTo(G_.x1, by(v)); ctx.stroke();
+    ctx.fillStyle = muted; ctx.fillText(String(Math.round(v)), G_.x0 - 5, by(v) + 4);
+  }
+  ctx.textAlign = "center"; ctx.fillStyle = muted;
+  const tstep = Math.max(1, Math.round(nMax / (NARROW ? 3 : 7)));
+  for (let j = 0; j <= nMax; j += tstep) ctx.fillText(String(j), bx(j), G_.chartBot + FS + 6);
+
+  const lines = [["info", muted, [4, 3], 1.6], ["arith", accent, [], 2.4]];
+  if (state.huff) lines.push(["huff", alt, [], 2]);
+  for (const spec of lines){
+    ctx.save();
+    ctx.strokeStyle = spec[1]; ctx.setLineDash(spec[2]); ctx.lineWidth = spec[3];
+    ctx.beginPath();
+    for (let j = 0; j <= nMax; j++){
+      const x = bx(j), y = by(series[spec[0]][j]);
+      if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke(); ctx.restore();
+  }
+  /* where the reader is standing */
+  ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = warn; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(bx(k), G_.chartTop); ctx.lineTo(bx(k), G_.chartBot); ctx.stroke();
+  ctx.restore();
+  for (const spec of lines){
+    ctx.fillStyle = spec[1];
+    ctx.beginPath(); ctx.arc(bx(k), by(series[spec[0]][k]), 3.4, 0, 6.2832); ctx.fill();
+  }
+
+  /* the legend, sized to what will fit */
+  ctx.font = FS + "px " + css("--font-mono");
+  const wid = (s2) => ctx.measureText(s2).width;
+  const leftCap = NARROW ? "symbols" : "symbols encoded";
+  const legends = state.huff
+    ? ["grey: information   blue: arithmetic   purple: Huffman",
+       "grey info  blue arith  purple Huffman", "info / arith / Huffman"]
+    : ["grey: information   blue: arithmetic", "grey info  blue arith", "info / arith"];
+  let leg = legends[legends.length - 1];
+  for (const cand of legends)
+    if (wid(leftCap) + wid(cand) + 18 <= G_.x1 - G_.x0){ leg = cand; break; }
+  ctx.fillStyle = muted; ctx.textAlign = "left";
+  ctx.fillText(leftCap, G_.x0, G_.chartBot + 2 * FS + 10);
+  ctx.textAlign = "right";
+  ctx.fillText(leg, G_.x1, G_.chartBot + 2 * FS + 10);
+
+  /* ---------- readouts ---------- */
+  const pre = msg.slice(0, k);
+  const cw = Model.codeword(al, pre);
+  const back = cw.ell > 0 ? Model.decodePoint(al, cw.num, 2n ** B(cw.ell), k) : "";
+  el("stepout").textContent = String(k);
+  el("lenout").textContent = String(state.len);
+  el("seedout").textContent = String(state.seed);
+  el("msg").innerHTML = "<b>" + escapeHtml(pre) + "</b>" + escapeHtml(msg.slice(k));
+  el("oW").textContent = k === 0 ? "1" : wf.toExponential(3);
+  el("oI").textContent = Model.info(al, pre).toFixed(3) + " bits";
+  el("oA").textContent = Model.codeLen(al, pre) + " bits";
+  el("oH").textContent = Model.huffLen(al, pre) + " bits";
+  el("oC").textContent = cw.ell === 0 ? "nothing yet"
+                       : (cw.bits.length > 22 ? cw.bits.slice(0, 20) + "…" : cw.bits);
+  el("oD").textContent = k === 0 ? "nothing yet" : (back === pre ? back : "FAILED");
+}
+
+function escapeHtml(s2){
+  return s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function clampStep(){
+  const si = el("step");
+  si.max = String(state.len);
+  if (state.step > state.len){ state.step = state.len; si.value = String(state.step); }
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  const handler = () => { state[key] = parse(input); clampStep(); render(); };
+  input.addEventListener("input", handler);
+  input.addEventListener("change", handler);
+}
+bind("src", "src", (i) => i.value);
+bind("step", "step", (i) => parseInt(i.value, 10));
+bind("len", "len", (i) => parseInt(i.value, 10));
+bind("seed", "seed", (i) => parseInt(i.value, 10));
+bind("huff", "huff", (i) => i.checked);
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("src").value = defaults.src; el("step").value = defaults.step;
+  el("len").value = defaults.len; el("seed").value = defaults.seed;
+  el("huff").checked = defaults.huff;
+  clampStep(); render();
+});
+
+let rid = null;
+addEventListener("resize", () => { clearTimeout(rid); rid = setTimeout(render, 90); });
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
+clampStep();
+render();
+
+/* ---- SELFTEST: minimum 5 numeric assertions against known values. ------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+  const rng = mulberry32(31337);
+  /* a fixed corpus: 300 strings spread over all five sources */
+  const corpus = [];
+  for (let j = 0; j < 300; j++){
+    const al = ALPHA[KEYS[j % KEYS.length]], n = 3 + (j % 12);
+    corpus.push({ al: al, s: Model.message(al, 1 + (j % 40), n) });
+  }
+
+  /* 1. the narrowing recurrence and the positional sum give the same interval,
+        exactly. Both are BigInt, so this is equality, not a tolerance. */
+  let ok1 = true, n1 = 0;
+  for (const c of corpus){
+    const A = Model.encode(c.al, c.s), D = Model.encodeDirect(c.al, c.s);
+    if (A.L !== D.L || A.W !== D.W) ok1 = false;
+    n1++;
+  }
+  push("the narrowing and the positional sum agree on the interval, exactly",
+       ok1, "identical BigInt endpoints on all " + n1 + " messages across the five sources");
+
+  /* 2. the width is the product of the symbol probabilities. In exact terms the
+        numerator is the product of the counts and the denominator is the total
+        raised to the length, so this too is an equality. */
+  let ok2 = true, worst2 = 0;
+  for (const c of corpus){
+    const A = Model.encode(c.al, c.s);
+    let prod = 1n;
+    for (let k = 0; k < c.s.length; k++) prod *= B(c.al.cnt[Model.index(c.al, c.s[k])]);
+    if (A.W !== prod) ok2 = false;
+    /* and the float reading of it matches the float product, to rounding */
+    const tt = Model.table(c.al);
+    let pf = 1;
+    for (let k = 0; k < c.s.length; k++) pf *= c.al.cnt[Model.index(c.al, c.s[k])] / tt.T;
+    const wf = Math.exp(Model.lnBig(A.W) - A.n * Math.log(A.T));
+    worst2 = Math.max(worst2, Math.abs(wf - pf) / pf);
+  }
+  push("the final width is the product of the symbol probabilities",
+       ok2 && worst2 < 1e-12,
+       "exact as BigInts; read back as floats the worst relative gap is "
+       + worst2.toExponential(3));
+
+  /* 3. every cut stays inside its parent and the pieces tile it with nothing
+        spare. This is what makes a single point enough to decode. */
+  let ok3 = true;
+  for (const c of corpus){
+    const tr = Model.trace(c.al, c.s), tt = Model.table(c.al), bt = B(tt.T);
+    for (let k = 0; k + 1 < tr.length; k++){
+      const p = tr[k], q = tr[k + 1];
+      /* compare at the finer denominator T^(k+1) */
+      if (!(q.L >= p.L * bt)) ok3 = false;
+      if (!(q.L + q.W <= (p.L + p.W) * bt)) ok3 = false;
+      /* the pieces of p run edge to edge */
+      let acc = 0n;
+      for (let i = 0; i < c.al.sym.length; i++) acc += p.W * B(c.al.cnt[i]);
+      if (acc !== p.W * bt) ok3 = false;
+    }
+  }
+  push("each interval is inside its parent and the pieces tile it with no gap or overlap",
+       ok3, "checked at every cut of all " + corpus.length + " messages");
+
+  /* 4. a decoder given only a point inside the final interval recovers the
+        message. The point used is the interval's own low end. */
+  let ok4 = true, n4 = 0;
+  for (const c of corpus){
+    const A = Model.encode(c.al, c.s);
+    if (Model.decodePoint(c.al, A.L, B(A.T) ** B(A.n), A.n) !== c.s) ok4 = false;
+    n4++;
+  }
+  push("a point inside the interval decodes back to the message it came from",
+       ok4, "exact round trip on all " + n4 + " messages over five alphabets");
+
+  /* 5. the code length sits between the information content and two bits above
+        it, which is the whole promise of the scheme. */
+  let lo5 = Infinity, hi5 = -Infinity, ok5 = true;
+  for (const c of corpus){
+    if (c.s.length === 0) continue;
+    const gap = Model.codeLen(c.al, c.s) - Model.info(c.al, c.s);
+    if (!(gap >= 0 && gap < 2)) ok5 = false;
+    lo5 = Math.min(lo5, gap); hi5 = Math.max(hi5, gap);
+  }
+  push("the codeword is never shorter than the message's information, nor two bits longer",
+       ok5, "the overhead runs from " + lo5.toFixed(4) + " to " + hi5.toFixed(4)
+       + " bits, and never depends on the message's length");
+
+  /* 6. that length really is enough: a binary fraction with that many places
+        lands inside the interval every time. Constructed, not assumed. */
+  let ok6 = true;
+  for (const c of corpus){
+    if (c.s.length === 0) continue;
+    if (!Model.codeword(c.al, c.s).inside) ok6 = false;
+  }
+  push("a binary fraction of that length always lands inside the interval",
+       ok6, "the low end rounded up to " + "2^-len" + " is still below the high end, every time");
+
+  /* 7. and the decoder recovers the message from those bits alone, which is
+        the operational claim rather than the algebraic one. */
+  let ok7 = true;
+  for (const c of corpus){
+    if (c.s.length === 0) continue;
+    const cw = Model.codeword(c.al, c.s);
+    if (Model.decodePoint(c.al, cw.num, 2n ** B(cw.ell), c.s.length) !== c.s) ok7 = false;
+  }
+  push("the message comes back from the truncated codeword and the table alone",
+       ok7, "no encoder state is used: only the bits and the symbol counts");
+
+  /* 8. against Huffman on a source whose probabilities are not powers of a half.
+        The task file asked for a win on at least nine messages in ten across the
+        board. That is not true of short messages: over lengths 4 to 30 the rate
+        is 84.5 per cent, because the terminator and the rounding up are a fixed
+        tax of about a bit and a half that a short message has not yet earned
+        back, and a B-heavy short draw carries more information than one flat bit
+        a symbol allows. The rate reaches nine in ten from fourteen symbols and
+        is total by thirty, so that is what is asserted. Better than a rate: the
+        loss is predictable exactly, and the predicate is checked below. */
+  let lo8 = 1, win30 = 0;
+  for (let n = 14; n <= 40; n++){
+    let w = 0, tot = 0;
+    for (let sd = 1; sd <= 40; sd++){
+      const s2 = Model.message(ALPHA.skewed, sd, n);
+      tot++; if (Model.codeLen(ALPHA.skewed, s2) < Model.huffLen(ALPHA.skewed, s2)) w++;
+    }
+    lo8 = Math.min(lo8, w / tot);
+  }
+  for (let sd = 1; sd <= 40; sd++){
+    const s2 = Model.message(ALPHA.skewed, sd, 30);
+    if (Model.codeLen(ALPHA.skewed, s2) < Model.huffLen(ALPHA.skewed, s2)) win30++;
+  }
+  push("on a lopsided source it beats Huffman on nine messages in ten from fourteen symbols up",
+       lo8 >= 0.9 && win30 === 40,
+       "the worst length in 14 to 40 still wins " + (lo8 * 100).toFixed(1)
+       + " per cent of 40 draws, and at 30 symbols it wins all 40; below 14 the fixed "
+       + "terminator has not been earned back, so the task file's blanket nine-in-ten is false "
+       + "(over lengths 4 to 30 it is 84.5 per cent)");
+
+  /* 8b. and the losses are not noise: a message loses exactly when the bits it
+         actually carries, rounded up and plus the terminator, reach the length
+         Huffman would have spent. Checked as an exact predicate, not a rate. */
+  let ok8b = true, n8b = 0, worstK = 0;
+  for (let n = 1; n <= 40; n++) for (let sd = 1; sd <= 40; sd++){
+    const s2 = Model.message(ALPHA.skewed, sd, n);
+    let kB = 0;
+    for (let i = 0; i < s2.length; i++) if (s2[i] === "B") kB++;
+    const bits = (n - kB) * Math.log2(10 / 9) + kB * Math.log2(10);
+    const predicted = Math.ceil(bits) + 1 >= n;
+    const actual = Model.codeLen(ALPHA.skewed, s2) >= Model.huffLen(ALPHA.skewed, s2);
+    if (predicted !== actual) ok8b = false;
+    if (actual && n >= 20) worstK = Math.max(worstK, kB);
+    n8b++;
+  }
+  push("every message it loses on is one carrying more information than a flat bit a symbol",
+       ok8b, "the predicate ceil(bits) + 1 >= n calls all " + n8b
+       + " cases correctly, so the losses are the rare B-heavy draws and nothing else");
+
+  /* 9. and loses to it, by exactly the terminator, where Huffman is optimal */
+  let ok9 = true, worst9 = 0;
+  for (let j = 1; j <= 120; j++){
+    const s2 = Model.message(ALPHA.quad, 1 + (j % 40), 4 + (j % 11));
+    const a = Model.codeLen(ALPHA.quad, s2), h = Model.huffLen(ALPHA.quad, s2);
+    if (h !== 2 * s2.length) ok9 = false;      /* four equal symbols: two bits each */
+    if (a - h !== 1) ok9 = false;
+    worst9 = Math.max(worst9, a - h);
+  }
+  push("where every probability is a power of one half, Huffman is optimal and arithmetic pays one bit",
+       ok9, "on four equal symbols Huffman spends exactly 2 bits a symbol and arithmetic is "
+       + worst9 + " bit behind on every message, never more");
+
+  /* 10. the overhead per symbol goes to nothing as the message runs on */
+  const rates = [];
+  for (const n of [8, 32, 128, 512]){
+    const s2 = Model.message(ALPHA.text, 3, n);
+    rates.push((Model.codeLen(ALPHA.text, s2) - Model.info(ALPHA.text, s2)) / n);
+  }
+  let ok10 = true;
+  for (let i = 0; i + 1 < rates.length; i++) if (!(rates[i] > rates[i + 1])) ok10 = false;
+  push("the constant overhead becomes nothing per symbol on a long message",
+       ok10 && rates[rates.length - 1] < 0.01,
+       "wasted bits a symbol run " + rates.map((r) => r.toFixed(4)).join(", ")
+       + " at 8, 32, 128 and 512 symbols");
+
+  /* 11. Kraft: the Huffman code built from these counts is complete, and its
+         expected length brackets the source entropy in the textbook way. */
+  let ok11 = true, note11 = [];
+  for (const key of KEYS){
+    const al = ALPHA[key], L = Model.huffman(al), tt = Model.table(al);
+    let kraft = 0, avg = 0, Hs = 0;
+    for (let i = 0; i < al.sym.length; i++){
+      kraft += Math.pow(2, -L[al.sym[i]]);
+      const p = al.cnt[i] / tt.T;
+      avg += p * L[al.sym[i]];
+      Hs += -p * Math.log2(p);
+    }
+    if (!near(kraft, 1, 1e-12)) ok11 = false;
+    if (!(avg >= Hs - 1e-12 && avg < Hs + 1)) ok11 = false;
+    note11.push(key + " " + avg.toFixed(3) + " vs " + Hs.toFixed(3));
+  }
+  push("each Huffman code is complete, and its average length sits in the textbook bracket",
+       ok11, "Kraft sums to exactly 1 on all five; average against entropy: " + note11.join(", "));
+
+  /* 12. nothing reachable by the controls produces a non-number */
+  let ok12 = true;
+  for (const key of KEYS) for (let sd = 1; sd <= 40; sd += 7) for (let n = 0; n <= 14; n++){
+    const al = ALPHA[key], s2 = Model.message(al, sd, n);
+    if (!Number.isFinite(Model.info(al, s2))) ok12 = false;
+    if (!Number.isFinite(Model.codeLen(al, s2))) ok12 = false;
+    if (!Number.isFinite(Model.huffLen(al, s2))) ok12 = false;
+    const A = Model.encode(al, s2);
+    if (n > 0 && !Number.isFinite(Math.exp(Model.lnBig(A.W) - A.n * Math.log(A.T)))) ok12 = false;
+  }
+  push("nothing reachable by the controls produces a non-number",
+       ok12, "including the empty message, where the interval is the whole line and no bits are spent");
+
+  return t;
+};
+
+/* exposed for the verifier's control sweep */
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

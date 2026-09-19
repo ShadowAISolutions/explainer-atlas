@@ -1,0 +1,36 @@
+{
+  "slug": "arithmetic-coding-interval",
+  "title": "A Message Is One Number Between Zero and One",
+  "domain": "information-theory",
+  "difficulty": 3,
+  "summary": "Step an arithmetic coder forward one symbol at a time and watch a single interval narrow until its width is the probability of the whole message.",
+  "prerequisites": [],
+  "tags": [
+    "arithmetic-coding",
+    "huffman-coding",
+    "entropy",
+    "data-compression",
+    "information-content"
+  ],
+  "interaction_pattern": "step-through",
+  "sources": [
+    {
+      "title": "Arithmetic coding",
+      "url": "https://en.wikipedia.org/wiki/Arithmetic_coding"
+    },
+    {
+      "title": "Huffman coding",
+      "url": "https://en.wikipedia.org/wiki/Huffman_coding"
+    },
+    {
+      "title": "Shannon's source coding theorem",
+      "url": "https://en.wikipedia.org/wiki/Shannon%27s_source_coding_theorem"
+    },
+    {
+      "title": "Kraft\u2013McMillan inequality",
+      "url": "https://en.wikipedia.org/wiki/Kraft%E2%80%93McMillan_inequality"
+    }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 13
+}
