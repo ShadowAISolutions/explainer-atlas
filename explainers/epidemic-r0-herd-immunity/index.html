@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Herd Immunity Is Not Where It Stops — Explainer Atlas</title>
+<meta name="description" content="Guess how many people an unmitigated epidemic infects, then watch it sail past the herd immunity threshold and keep going.">
+<style>
+:root{
+  --bg:#fdf7f0; --panel:#ffffff; --ink:#1d1a17; --muted:#6b6259; --line:#e8ddd0;
+  --accent:#c2410c; --accent-soft:#fdeadb; --warn:#a16207;
+  --teal:#0f766e; --teal-soft:#dbf0ed; --deep:#7c2d12;
+  --radius:4px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --font-ui:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.7rem,1.1rem + 2.6vw,2.7rem);
+  --scale-body:clamp(1rem,0.95rem + 0.22vw,1.09rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#15110e; --panel:#1e1815; --ink:#f2e9df; --muted:#a2958a; --line:#332a24;
+    --accent:#fb923c; --accent-soft:#2c1a0e; --warn:#d9b45c;
+    --teal:#5eead4; --teal-soft:#0e2422; --deep:#fca5a5;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:70rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:calc(var(--pad)*0.8)}
+h1{font-size:var(--scale-h1); line-height:1.08; margin:0 0 .35em; letter-spacing:-.02em; font-weight:700}
+.kicker{margin:0 0 .5em; color:var(--accent); font:700 .72rem/1.3 var(--font-ui); text-transform:uppercase; letter-spacing:.16em}
+.standfirst{margin:0; color:var(--muted); max-width:40em; font-size:1.05em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:60rem){ .layout{grid-template-columns:minmax(15rem,0.82fr) minmax(0,2fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:10px; overflow:hidden; order:2}
+@media (min-width:60rem){ figure.stage{order:0} }
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.55em; color:var(--muted); font-size:.85rem; font-family:var(--font-ui); line-height:1.45}
+.controls{background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--accent);
+  border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.15em; font-family:var(--font-ui)}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:700; font-size:.94rem}
+.control output{font:700 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:3px}
+.control .hint{color:var(--muted); font-size:.8rem; line-height:1.4; margin:0}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+button{font:600 .92rem/1 var(--font-ui); color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:3px; padding:.7em .8em; min-height:40px; cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent); color:#fff; border-color:var(--accent)}
+button.primary:hover{filter:brightness(1.08)}
+.btnrow{display:grid; grid-template-columns:1fr 1fr; gap:.5em}
+.btnrow .wide{grid-column:1 / -1}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:3px}
+.verdict{grid-column:1 / -1; border:1px solid var(--line); border-top:4px solid var(--muted); background:var(--panel);
+  border-radius:var(--radius); padding:calc(var(--pad)*0.7) var(--pad); font-family:var(--font-ui); order:3}
+@media (min-width:60rem){ .verdict{order:0} }
+.verdict.hit{border-top-color:var(--teal); background:var(--teal-soft)}
+.verdict.miss{border-top-color:var(--accent); background:var(--accent-soft)}
+.verdict p{margin:0; font-size:.98rem; line-height:1.5}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:.55em; margin:.9em 0 0; padding:0}
+.readout div{border-left:2px solid var(--line); padding:.1em .7em}
+.readout dt{margin:0; color:var(--muted); font:600 .7rem/1.3 var(--font-ui); text-transform:uppercase; letter-spacing:.09em}
+.readout dd{margin:.15em 0 0; font:700 1.12rem/1.2 var(--font-mono)}
+.prose{max-width:38em; margin:calc(var(--pad)*1.5) auto 0}
+.prose h2{font:700 1.02rem/1.3 var(--font-ui); text-transform:uppercase; letter-spacing:.1em; color:var(--accent); margin:2.1em 0 .5em}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.92em; background:var(--accent-soft); padding:.75em .9em;
+  border-radius:3px; border-left:3px solid var(--accent); overflow-x:auto; white-space:pre}
+footer.page{margin-top:calc(var(--pad)*1.8); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem; font-family:var(--font-ui)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Biology</p>
+  <h1>Herd Immunity Is Not Where It Stops</h1>
+  <p class="standfirst">Every epidemic starts shrinking once enough people are immune. That is not the same as stopping, and the difference is measured in people.</p>
+</header>
+
+<div class="layout">
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row">
+        <label for="r0">Basic reproduction number R&#8320;</label>
+        <output id="r0out" for="r0">2.50</output>
+      </div>
+      <input type="range" id="r0" min="0.5" max="6" step="0.05" value="2.5">
+      <p class="hint">How many people one infectious person infects in a fully susceptible population. Measles sits near 15, seasonal flu near 1.3.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="vax">Immune before it starts</label>
+        <output id="vaxout" for="vax">0%</output>
+      </div>
+      <input type="range" id="vax" min="0" max="95" step="1" value="0">
+      <p class="hint">Vaccinated or already recovered on day zero. Moving this re-hides the answer.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="guess">Your guess: ever infected</label>
+        <output id="guessout" for="guess">50%</output>
+      </div>
+      <input type="range" id="guess" min="0" max="100" step="1" value="50">
+      <p class="hint">What fraction of everybody do you think catches it before the epidemic burns out?</p>
+    </div>
+
+    <div class="btnrow">
+      <button type="button" id="reveal" class="primary wide">Reveal the answer</button>
+      <button type="button" id="next">New R&#8320;</button>
+      <button type="button" id="reset">Reset</button>
+    </div>
+  </section>
+
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1020" height="600" role="img"
+            aria-label="Top: the epidemic over time, with the fraction ever infected rising past the dashed herd immunity threshold. Bottom: a bar comparing the threshold, the final attack rate and your guess."></canvas>
+    <figcaption>The dashed line is the herd immunity threshold, where each case stops producing more than one new case. The solid curve is everyone who has been infected. Notice which one is higher when the curve stops rising.</figcaption>
+  </figure>
+
+  <section class="verdict" id="verdict" aria-live="polite">
+    <p id="verdicttext">Set an R&#8320;, guess the final attack rate, then reveal.</p>
+    <dl class="readout">
+      <div><dt>Threshold 1 &#8722; 1/R&#8320;</dt><dd id="rThr">60.0%</dd></div>
+      <div><dt>Ever infected</dt><dd id="rFinal">hidden</dd></div>
+      <div><dt>Overshoot</dt><dd id="rOver">hidden</dd></div>
+      <div><dt>Peak at once</dt><dd id="rPeak">hidden</dd></div>
+      <div><dt>Guesses within 5 pts</dt><dd id="rScore">0 of 0</dd></div>
+    </dl>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Set R&#8320; to 2.5, guess, and reveal. The herd immunity threshold is 60 per cent, and the epidemic infects about 89 per cent. Almost everyone guesses something close to the threshold, because the threshold is the number everybody has heard, and it is the wrong number to expect. Nearly a third of the population is infected after the point at which the epidemic was already in decline.</p>
+
+  <h2>The threshold is a rate condition</h2>
+  <p>One infectious person meets enough people to infect R&#8320; of them, but only the susceptible ones actually catch it. So the number of new cases each case produces is R&#8320; multiplied by the susceptible fraction s, and the epidemic grows exactly while that product exceeds one:</p>
+  <p class="math">R_eff = R&#8320; &#183; s        growth stops when s = 1/R&#8320;</p>
+  <p>Immunity in the remaining fraction is 1 &#8722; 1/R&#8320;, and that is the whole derivation of the herd immunity threshold. It says one thing only: at that moment the number of people currently infectious begins to fall. It says nothing whatever about how many people are still infectious at that moment, and that is the entire problem.</p>
+
+  <h2>Why it sails past</h2>
+  <p>At the threshold the epidemic is at its peak. Every one of those people is still going to infect someone &#8212; fewer than one each on average, but not zero &#8212; and their contacts will infect someone too. The epidemic decays geometrically rather than stopping, and the sum of a decaying geometric series is not small. All those later infections land on top of a population that had already passed the threshold.</p>
+  <p>How far past is not a matter of opinion. Divide the equation for new infections by the equation for recoveries, integrate, and the time variable disappears, leaving a relation between where the epidemic starts and where it ends. Writing z for the fraction ever infected and s&#8320; for the fraction susceptible on day zero:</p>
+  <p class="math">z = s&#8320; &#183; ( 1 &#8722; exp(&#8722;R&#8320; &#183; z) )</p>
+  <p>This is the final size equation. It is transcendental &#8212; there is no closed form for z &#8212; but it has exactly one positive root whenever R&#8320;&#183;s&#8320; exceeds one, and a few steps of bisection find it to machine precision. It contains no time, no population size and no detail about how long anybody is infectious. Two epidemics with the same R&#8320; and wildly different durations infect the same fraction of people.</p>
+
+  <h2>The overshoot is not a rounding error</h2>
+  <p>At R&#8320; = 1.5 the threshold is 33 per cent and the attack rate is 58 &#8212; the epidemic infects three quarters again as many people as it strictly needed to. At R&#8320; = 3 the threshold is 67 per cent and the attack rate is 94. The gap is widest just past R&#8320; = 2, where it reaches 29.8 percentage points, and it narrows at high R&#8320; only because the attack rate is running out of room below one hundred per cent.</p>
+  <p>The way to avoid paying it is to arrive at the threshold without an epidemic. Push the second slider up: vaccinating a fraction v before day zero starts the system at s&#8320; = 1 &#8722; v, and the epidemic only takes off if R&#8320;&#183;s&#8320; is greater than one. Cross 1 &#8722; 1/R&#8320; and the outbreak dies out from the seed rather than burning through. That is what a vaccination campaign buys: the same final immunity, with the overshoot removed.</p>
+
+  <h2>What to try</h2>
+  <p>Put R&#8320; at 2 and guess. The threshold is 50 per cent and the answer is 80. Then raise the immune fraction slowly and watch the attack rate collapse far faster than the immunity rises &#8212; at 30 per cent immune the epidemic infects another 36 per cent, at 40 per cent immune only 19, and at 50 per cent immune essentially nobody. The last few percentage points of coverage do most of the work, which is the opposite of the intuition that each vaccination protects one person.</p>
+  <p>Then set R&#8320; just below 1 and try to make something happen. Nothing does, at any starting seed. The peak of the curve is not a place where the epidemic is dangerous and below it safe; it is the place where the arithmetic changes sign.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &#183; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+const rngRound = mulberry32(SEED);
+
+/* ---- MODEL: SIR with recovery rate 1, so time is in infectious periods --- */
+const Model = {
+  SEED_I: 1e-4,
+
+  threshold(R0){ return R0 > 1 ? 1 - 1 / R0 : 0; },
+
+  takesOff(R0, s0){ return R0 * s0 > 1; },
+
+  /* Final size: the unique positive root of z = s0*(1 - exp(-R0*z)).
+     Found by bisection, which needs no derivative and cannot overshoot. */
+  finalSize(R0, s0){
+    if (!this.takesOff(R0, s0)) return 0;
+    const f = (z) => s0 * (1 - Math.exp(-R0 * z)) - z;
+    let lo = 1e-13, hi = s0;
+    for (let k = 0; k < 90; k++){
+      const mid = 0.5 * (lo + hi);
+      if (f(mid) > 0) lo = mid; else hi = mid;
+    }
+    return 0.5 * (lo + hi);
+  },
+
+  finalSizeResidual(R0, s0, z){ return s0 * (1 - Math.exp(-R0 * z)) - z; },
+
+  /* Peak prevalence in closed form, from the conserved quantity
+     V = i + s - ln(s)/R0, evaluated where s = 1/R0. */
+  peakPrevalence(R0, s0, i0){
+    if (!this.takesOff(R0, s0)) return i0;
+    return i0 + s0 - 1 / R0 - Math.log(R0 * s0) / R0;
+  },
+
+  conserved(R0, s, i){ return i + s - Math.log(s) / R0; },
+
+  deriv(R0, s, i){ return [-R0 * s * i, R0 * s * i - i, i]; },
+
+  /* RK4 on all three compartments, so s+i+r is a result and not an identity. */
+  integrate(R0, s0, i0, tMax, steps){
+    const h = tMax / steps;
+    let s = s0, i = i0, r = 1 - s0 - i0;
+    const V0 = this.conserved(R0, s0, i0);
+    const keep = Math.max(1, Math.floor(steps / 480));
+    const out = { t: [0], s: [s0], i: [i0], c: [i0], h: h,
+                  peakI: i0, peakT: 0, peakS: s0, drift: 0, vdrift: 0, tEnd: tMax };
+    for (let n = 0; n < steps; n++){
+      const k1 = this.deriv(R0, s, i);
+      const k2 = this.deriv(R0, s + h * k1[0] / 2, i + h * k1[1] / 2);
+      const k3 = this.deriv(R0, s + h * k2[0] / 2, i + h * k2[1] / 2);
+      const k4 = this.deriv(R0, s + h * k3[0], i + h * k3[1]);
+      s += h * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) / 6;
+      i += h * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) / 6;
+      r += h * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]) / 6;
+      const t = (n + 1) * h;
+      if (i > out.peakI){ out.peakI = i; out.peakT = t; out.peakS = s; }
+      const d = Math.abs(s + i + r - 1);
+      if (d > out.drift) out.drift = d;
+      if (s > 1e-12){
+        const v = Math.abs(this.conserved(R0, s, i) - V0);
+        if (v > out.vdrift) out.vdrift = v;
+      }
+      if ((n + 1) % keep === 0 || n === steps - 1){
+        out.t.push(t); out.s.push(s); out.i.push(i); out.c.push(i0 + s0 - s);
+      }
+    }
+    out.finalC = i0 + s0 - s;
+    out.finalS = s;
+    return out;
+  },
+
+  /* Coarse pass to find how long the epidemic actually lasts, so the chart
+     window fits the curve instead of a fixed guess. */
+  span(R0, s0, i0){
+    const cap = 240, h = 0.05;
+    let s = s0, i = i0, t = 0, peaked = false, peak = i0;
+    while (t < cap){
+      const k1 = this.deriv(R0, s, i);
+      const k2 = this.deriv(R0, s + h * k1[0] / 2, i + h * k1[1] / 2);
+      const k3 = this.deriv(R0, s + h * k2[0] / 2, i + h * k2[1] / 2);
+      const k4 = this.deriv(R0, s + h * k3[0], i + h * k3[1]);
+      s += h * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) / 6;
+      i += h * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) / 6;
+      t += h;
+      if (i > peak){ peak = i; } else if (peak > 3 * i0) { peaked = true; }
+      if (peaked && i < peak * 1e-4) break;
+      if (!peaked && i < i0 * 1e-3) break;
+    }
+    return Math.min(cap, Math.max(6, t * 1.06));
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { r0: 2.5, vax: 0, guess: 50 };
+const state = Object.assign({}, defaults);
+let revealed = false, asked = 0, hits = 0;
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+let W = 780, H = 470, NARROW = false;
+
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888"; }
+const pct = (x) => (100 * x).toFixed(1) + "%";
+
+function layout(){
+  const avail = cv.parentNode ? (cv.parentNode.clientWidth || 780) : 780;
+  NARROW = avail < 560;
+  if (NARROW){ W = 350; H = 700; } else { W = 780; H = 500; }
+  if (cv.width !== W * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function panes(){
+  return NARROW
+    ? { a: { x: 0, y: 0, w: W, h: 430 }, b: { x: 0, y: 430, w: W, h: 270 } }
+    : { a: { x: 0, y: 0, w: W, h: 320 }, b: { x: 0, y: 320, w: W, h: 180 } };
+}
+
+const F = {
+  title(){ return (NARROW ? 15 : 15) + "px "; },
+  axis(){ return (NARROW ? 13 : 13) + "px "; },
+  note(){ return (NARROW ? 14 : 14) + "px "; },
+  big(){ return (NARROW ? 19 : 21) + "px "; }
+};
+const UI = '-apple-system,system-ui,"Segoe UI",Roboto,sans-serif';
+const MONO = 'ui-monospace,SFMono-Regular,Menlo,monospace';
+
+function drawCurve(p, run, s0, thr, fin){
+  const C = { ink: css("--ink"), muted: css("--muted"), line: css("--line"),
+              accent: css("--accent"), teal: css("--teal"), deep: css("--deep"),
+              soft: css("--accent-soft") };
+  const L = NARROW ? 48 : 60, R = NARROW ? 14 : 22, T = 34, B = 44;
+  const x0 = p.x + L, x1 = p.x + p.w - R, y0 = p.y + T, y1 = p.y + p.h - B;
+  const tEnd = run.t[run.t.length - 1] || 1;
+  const X = (t) => x0 + (x1 - x0) * (t / tEnd);
+  const Y = (v) => y1 - (y1 - y0) * v;
+
+  ctx.fillStyle = C.line;
+  for (let k = 0; k <= 4; k++){ ctx.fillRect(x0, Y(k / 4), x1 - x0, 1); }
+
+  if (state.vax > 0){
+    ctx.fillStyle = C.teal; ctx.globalAlpha = 0.14;
+    ctx.fillRect(x0, Y(1), x1 - x0, Y(s0) - Y(1));
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = C.teal; ctx.font = "600 " + F.axis() + UI;
+    ctx.textAlign = "right"; ctx.textBaseline = "top";
+    ctx.fillText("immune on day zero", x1 - 4, Y(1) + 4);
+  }
+
+  if (revealed && fin > thr && thr > 0){
+    ctx.fillStyle = C.accent; ctx.globalAlpha = 0.16;
+    ctx.fillRect(x0, Y(fin), x1 - x0, Y(thr) - Y(fin));
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.font = "" + F.axis() + MONO; ctx.fillStyle = C.muted;
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let k = 0; k <= 4; k++) ctx.fillText((25 * k) + "%", x0 - 8, Y(k / 4));
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  const ticks = 4;
+  for (let k = 0; k <= ticks; k++){
+    const t = tEnd * k / ticks;
+    ctx.fillText(t.toFixed(0), X(t), y1 + 8);
+  }
+  ctx.font = "" + F.axis() + UI;
+  ctx.fillText("time, in infectious periods", (x0 + x1) / 2, y1 + 26);
+
+  if (thr > 0){
+    ctx.fillStyle = C.ink; ctx.font = "700 " + F.axis() + UI;
+    ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+    ctx.fillText("threshold " + pct(thr), x0 + 6, Y(thr) - 9);
+    ctx.strokeStyle = C.ink; ctx.setLineDash([7, 5]); ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(x0, Y(thr)); ctx.lineTo(x1, Y(thr)); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  ctx.fillStyle = C.deep; ctx.globalAlpha = 0.45;
+  ctx.beginPath(); ctx.moveTo(X(0), Y(0));
+  for (let k = 0; k < run.t.length; k++) ctx.lineTo(X(run.t[k]), Y(run.i[k]));
+  ctx.lineTo(X(run.t[run.t.length - 1]), Y(0)); ctx.closePath(); ctx.fill();
+  ctx.globalAlpha = 1;
+
+  if (revealed){
+    ctx.strokeStyle = C.accent; ctx.lineWidth = 2.6; ctx.beginPath();
+    for (let k = 0; k < run.t.length; k++){
+      const px = X(run.t[k]), py = Y(run.c[k]);
+      if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.fillStyle = C.accent; ctx.font = "700 " + F.note() + UI;
+    ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+    ctx.fillText("ever infected " + pct(fin), x1 - 4, Y(fin) - 7);
+  } else {
+    ctx.fillStyle = C.muted; ctx.globalAlpha = 0.1;
+    ctx.fillRect(x0, y0, x1 - x0, y1 - y0); ctx.globalAlpha = 1;
+    ctx.fillStyle = C.muted; ctx.font = "600 " + F.note() + UI;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const mid = (x0 + x1) / 2, cy = y0 + (y1 - y0) * 0.66;
+    if (NARROW){
+      ctx.fillText("the answer is hidden", mid, cy - 10);
+      ctx.fillText("until you reveal it", mid, cy + 10);
+    } else {
+      ctx.fillText("the answer is hidden until you reveal it", mid, cy);
+    }
+  }
+
+  ctx.fillStyle = C.deep; ctx.font = "700 " + F.axis() + UI;
+  ctx.textBaseline = "bottom";
+  const lx = X(run.peakT), late = lx > (x0 + x1) / 2;
+  ctx.textAlign = late ? "right" : "left";
+  ctx.fillText("infectious right now", lx + (late ? -10 : 10), Y(run.peakI) - 6);
+
+  ctx.fillStyle = C.ink; ctx.font = "700 " + F.title() + UI;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("One epidemic, start to burnout", p.x + 8, p.y + 8);
+}
+
+function drawBar(p, s0, thr, fin){
+  const C = { ink: css("--ink"), muted: css("--muted"), line: css("--line"),
+              accent: css("--accent"), teal: css("--teal"), panel: css("--panel") };
+  const L = NARROW ? 20 : 34, R = NARROW ? 20 : 34;
+  const x0 = p.x + L, x1 = p.x + p.w - R;
+  const by = p.y + (NARROW ? 104 : 74), bh = NARROW ? 46 : 42;
+  const X = (v) => x0 + (x1 - x0) * v;
+  const g = state.guess / 100;
+
+  ctx.fillStyle = C.ink; ctx.font = "700 " + F.title() + UI;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("Where everybody ends up", p.x + 8, p.y + 10);
+
+  ctx.fillStyle = C.line; ctx.fillRect(x0, by, x1 - x0, bh);
+
+  const vax = 1 - s0;
+  if (vax > 0){
+    ctx.fillStyle = C.teal; ctx.globalAlpha = 0.5;
+    ctx.fillRect(x0, by, X(vax) - x0, bh); ctx.globalAlpha = 1;
+  }
+  if (revealed){
+    const a = vax, b = Math.min(vax + fin, 1);
+    const split = Math.min(Math.max(thr, a), b);
+    ctx.fillStyle = C.accent; ctx.globalAlpha = 0.85;
+    ctx.fillRect(X(a), by, X(split) - X(a), bh); ctx.globalAlpha = 1;
+    ctx.fillStyle = C.accent; ctx.globalAlpha = 0.38;
+    ctx.fillRect(X(split), by, X(b) - X(split), bh); ctx.globalAlpha = 1;
+    ctx.fillStyle = C.panel; ctx.font = "700 " + F.axis() + MONO;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    if (X(b) - X(a) > 56) ctx.fillText(pct(fin) + " infected", (X(a) + X(b)) / 2, by + bh / 2);
+  } else {
+    ctx.fillStyle = C.muted; ctx.font = "600 " + F.axis() + UI;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("?", (X(vax) + x1) / 2, by + bh / 2);
+  }
+
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(X(thr), by - 8); ctx.lineTo(X(thr), by + bh + 8); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = C.ink; ctx.font = "700 " + F.axis() + UI;
+  ctx.textAlign = thr > 0.72 ? "right" : "left"; ctx.textBaseline = "bottom";
+  ctx.fillText("threshold " + pct(thr), X(thr) + (thr > 0.72 ? -6 : 6), by - 30);
+
+  ctx.fillStyle = C.teal;
+  ctx.beginPath();
+  ctx.moveTo(X(g), by + bh + 6);
+  ctx.lineTo(X(g) - 8, by + bh + 20);
+  ctx.lineTo(X(g) + 8, by + bh + 20);
+  ctx.closePath(); ctx.fill();
+  ctx.font = "700 " + F.axis() + UI;
+  ctx.textAlign = g > 0.75 ? "right" : (g < 0.25 ? "left" : "center");
+  ctx.textBaseline = "top";
+  ctx.fillText("your guess " + state.guess + "%", X(g) + (g > 0.75 ? 8 : (g < 0.25 ? -8 : 0)), by + bh + 24);
+
+  ctx.fillStyle = C.muted; ctx.font = "" + F.axis() + MONO;
+  ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+  for (let k = 0; k <= 4; k++) ctx.fillText((25 * k) + "%", X(k / 4), by - 9);
+}
+
+function render(){
+  layout();
+  const s0 = 1 - state.vax / 100;
+  const i0 = Model.SEED_I * s0;
+  const thr = Model.threshold(state.r0);
+  const fin = Model.finalSize(state.r0, s0);
+  const peak = Model.peakPrevalence(state.r0, s0, i0);
+  const tEnd = Model.span(state.r0, s0, i0);
+  const run = Model.integrate(state.r0, s0, i0, tEnd, 3200);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+  const p = panes();
+  drawCurve(p.a, run, s0, thr, fin);
+  ctx.fillStyle = css("--line"); ctx.fillRect(p.b.x + 8, p.b.y, p.b.w - 16, 1);
+  drawBar(p.b, s0, thr, fin);
+
+  el("r0out").textContent = state.r0.toFixed(2);
+  el("vaxout").textContent = state.vax + "%";
+  el("guessout").textContent = state.guess + "%";
+  el("rThr").textContent = pct(thr);
+  el("rFinal").textContent = revealed ? pct(fin) : "hidden";
+  el("rOver").textContent = revealed ? ((fin - thr > 0 ? "+" : "") + pct(fin - thr)) : "hidden";
+  el("rPeak").textContent = revealed ? pct(peak) : "hidden";
+  el("rScore").textContent = hits + " of " + asked;
+
+  const v = el("verdict"), vt = el("verdicttext");
+  v.classList.remove("hit", "miss");
+  if (!revealed){
+    vt.textContent = Model.takesOff(state.r0, s0)
+      ? "R₀ = " + state.r0.toFixed(2) + " with " + state.vax + "% already immune. Guess the fraction ever infected, then reveal."
+      : "R₀ · s₀ = " + (state.r0 * s0).toFixed(2) + ", which is not above one. Guess before you reveal — this one may surprise you.";
+  } else {
+    const err = Math.abs(state.guess / 100 - fin);
+    v.classList.add(err <= 0.05 ? "hit" : "miss");
+    if (!Model.takesOff(state.r0, s0)){
+      vt.textContent = "No epidemic. R₀ · s₀ = " + (state.r0 * s0).toFixed(2)
+        + " is not above one, so each case makes less than one more and the seed dies out. Ever infected: essentially nobody.";
+    } else {
+      vt.textContent = "Ever infected " + pct(fin) + ", against a threshold of " + pct(thr)
+        + ". The epidemic carried on for another " + pct(fin - thr)
+        + " of the population after it had already begun to shrink. You guessed " + state.guess
+        + "%, " + (err <= 0.05 ? "within five points." : "out by " + pct(err) + ".");
+    }
+  }
+}
+
+function hide(){ revealed = false; render(); }
+
+function bind(id, key, parse, rehide){
+  const input = el(id);
+  input.addEventListener("input", () => {
+    state[key] = parse(input.value);
+    if (rehide) revealed = false;
+    render();
+  });
+}
+bind("r0", "r0", parseFloat, true);
+bind("vax", "vax", (v) => parseInt(v, 10), true);
+bind("guess", "guess", (v) => parseInt(v, 10), false);
+
+el("reveal").addEventListener("click", () => {
+  if (!revealed){
+    const s0 = 1 - state.vax / 100;
+    const fin = Model.finalSize(state.r0, s0);
+    asked++;
+    if (Math.abs(state.guess / 100 - fin) <= 0.05) hits++;
+    revealed = true;
+  }
+  render();
+});
+el("next").addEventListener("click", () => {
+  state.r0 = Math.round((0.8 + rngRound() * 4.4) * 20) / 20;
+  el("r0").value = String(state.r0);
+  hide();
+});
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("r0").value = String(defaults.r0);
+  el("vax").value = String(defaults.vax);
+  el("guess").value = String(defaults.guess);
+  asked = 0; hits = 0;
+  hide();
+});
+
+let rt = 0;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+
+  push("the herd immunity threshold is exactly 1 - 1/R0", (function(){
+    for (let k = 0; k < 50; k++){
+      const R0 = 1.02 + k * (5.98 - 1.02) / 49;
+      if (!near(M.threshold(R0), 1 - 1 / R0, 1e-15)) return false;
+    }
+    for (const R0 of [0.2, 0.75, 1]) if (M.threshold(R0) !== 0) return false;
+    return true;
+  })(), "checked at 50 values of R0 from 1.02 to 5.98, and zero at or below R0 = 1");
+
+  push("the final size solves z = s0(1 - exp(-R0 z)) to 1e-12", (function(){
+    for (let k = 0; k < 50; k++){
+      const R0 = 1.05 + k * (6 - 1.05) / 49;
+      const s0 = 0.55 + 0.45 * (k % 7) / 6;
+      if (!M.takesOff(R0, s0)) continue;
+      const z = M.finalSize(R0, s0);
+      if (!near(M.finalSizeResidual(R0, s0, z), 0, 1e-12)) return false;
+      if (!(z > 0 && z <= s0 + 1e-15)) return false;
+    }
+    return true;
+  })(), "residual of the final size equation at the bisected root, over 50 (R0, s0) pairs");
+
+  push("bisection agrees with fixed-point iteration to 1e-13", (function(){
+    for (const R0 of [1.3, 1.8, 2.5, 3.6, 5.2]){
+      for (const s0 of [1, 0.9, 0.7]){
+        if (!M.takesOff(R0, s0)) continue;
+        let z = s0;
+        for (let n = 0; n < 4000; n++) z = s0 * (1 - Math.exp(-R0 * z));
+        if (!near(M.finalSize(R0, s0), z, 1e-13)) return false;
+      }
+    }
+    return true;
+  })(), "two independent root finders, bisection and iterating the map itself, land on the same number");
+
+  push("the epidemic always overshoots the threshold", (function(){
+    for (let k = 0; k < 50; k++){
+      const R0 = 1.02 + k * (5.98 - 1.02) / 49;
+      const z = M.finalSize(R0, 1), h = M.threshold(R0);
+      if (!(z > h + 1e-9)) return false;
+      if (!(z < 1)) return false;
+    }
+    return true;
+  })(), "final size strictly exceeds 1 - 1/R0 and stays strictly below 1 at all 50 values");
+
+  push("the overshoot is largest around R0 = 2 and is not small", (function(){
+    let best = 0, bestR = 0;
+    for (let R0 = 1.02; R0 <= 6; R0 += 0.01){
+      const g = M.finalSize(R0, 1) - M.threshold(R0);
+      if (g > best){ best = g; bestR = R0; }
+    }
+    if (!(bestR > 2.05 && bestR < 2.25)) return false;
+    if (!near(best, 0.2984, 2e-3)) return false;
+    if (!near(M.finalSize(2.5, 1), 0.8926, 1e-3)) return false;
+    if (!near(M.finalSize(1.5, 1), 0.5828, 1e-3)) return false;
+    return true;
+  })(), "peak gap 0.298 near R0 = 2; attack rates 0.583 at R0 = 1.5 and 0.893 at R0 = 2.5");
+
+  push("RK4 reproduces the closed-form final size", (function(){
+    for (const R0 of [1.6, 2.5, 4]){
+      const s0 = 1, i0 = 1e-6;
+      const run = M.integrate(R0, s0, i0, M.span(R0, s0, i0), 12000);
+      if (!near(run.finalC, M.finalSize(R0, s0), 1e-5)) return false;
+    }
+    return true;
+  })(), "integrating the differential equations forward and reading off the end agrees with the transcendental root");
+
+  push("RK4 reproduces the closed-form peak prevalence", (function(){
+    for (const R0 of [1.6, 2.5, 4]){
+      const s0 = 1, i0 = 1e-6;
+      const run = M.integrate(R0, s0, i0, M.span(R0, s0, i0), 12000);
+      if (!near(run.peakI, M.peakPrevalence(R0, s0, i0), 1e-6)) return false;
+      if (!near(run.peakS, 1 / R0, 1e-3)) return false;
+    }
+    return true;
+  })(), "peak height matches i0 + s0 - 1/R0 - ln(R0 s0)/R0, and the peak lands where s = 1/R0");
+
+  push("S + I + R stays at one through the whole integration", (function(){
+    for (const R0 of [1.3, 2.5, 5]){
+      const run = M.integrate(R0, 1, 1e-5, M.span(R0, 1, 1e-5), 8000);
+      if (!(run.drift < 1e-13)) return false;
+    }
+    return true;
+  })(), "all three compartments are integrated separately, so their sum is a result, not an identity");
+
+  push("the conserved quantity i + s - ln(s)/R0 does not drift", (function(){
+    for (const R0 of [1.3, 2.5, 5]){
+      const run = M.integrate(R0, 1, 1e-5, M.span(R0, 1, 1e-5), 8000);
+      if (!(run.vdrift < 1e-11)) return false;
+    }
+    return true;
+  })(), "the exact first integral of the SIR system holds along the numerical trajectory");
+
+  push("below one, nothing happens however you seed it", (function(){
+    for (const R0 of [0.6, 0.9, 0.99]){
+      let prev = Infinity;
+      for (const i0 of [1e-3, 1e-4, 1e-5, 1e-6]){
+        const run = M.integrate(R0, 1 - i0, i0, 60, 4000);
+        if (!(run.finalC < 3 * i0 / (1 - R0))) return false;
+        if (!(run.finalC < prev)) return false;
+        prev = run.finalC;
+      }
+      if (M.finalSize(R0, 1) !== 0) return false;
+    }
+    return true;
+  })(), "total infected shrinks with the seed and is bounded by i0/(1-R0), the sum of the decaying chain");
+
+  push("vaccinating to the threshold stops it, and the arithmetic is the same arithmetic", (function(){
+    for (const R0 of [1.5, 2.5, 4]){
+      const h = M.threshold(R0);
+      if (!near(R0 * (1 - h), 1, 1e-12)) return false;
+      if (M.takesOff(R0, 1 - h - 1e-9) !== false) return false;
+      if (M.takesOff(R0, 1 - h + 1e-6) !== true) return false;
+      if (!(M.finalSize(R0, 1 - h + 0.02) < 0.25 * M.finalSize(R0, 1))) return false;
+    }
+    return true;
+  })(), "immunity of exactly 1 - 1/R0 puts R_eff at exactly 1; two points either side flip whether an epidemic exists");
+
+  push("nothing is non-finite anywhere on the control grid", (function(){
+    for (let r = 0.5; r <= 6.001; r += 0.1){
+      for (let v = 0; v <= 95; v += 5){
+        const s0 = 1 - v / 100, i0 = M.SEED_I * s0;
+        const vals = [M.threshold(r), M.finalSize(r, s0), M.peakPrevalence(r, s0, i0), M.span(r, s0, i0)];
+        for (const x of vals) if (!Number.isFinite(x)) return false;
+        if (M.finalSize(r, s0) < 0 || M.finalSize(r, s0) > 1) return false;
+      }
+    }
+    return true;
+  })(), "56 R0 values by 20 immunity levels, all finite and all fractions in range");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

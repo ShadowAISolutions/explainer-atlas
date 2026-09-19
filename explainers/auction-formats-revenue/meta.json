@@ -1,0 +1,22 @@
+{
+  "slug": "auction-formats-revenue",
+  "title": "Two Auctions, Two Sets of Bids, One Revenue",
+  "domain": "economics",
+  "difficulty": 4,
+  "summary": "Run a first-price and a second-price auction on exactly the same bidders. The bids look nothing alike and the seller earns the same.",
+  "prerequisites": [],
+  "tags": [
+    "auctions",
+    "mechanism-design",
+    "revenue-equivalence",
+    "vickrey",
+    "order-statistics"
+  ],
+  "interaction_pattern": "race-two-methods",
+  "sources": [
+    { "title": "Vickrey, Counterspeculation, Auctions, and Competitive Sealed Tenders, J. Finance 16(1), 1961", "url": "https://www.jstor.org/stable/2977633" },
+    { "title": "Myerson, Optimal Auction Design, Mathematics of Operations Research 6(1), 1981", "url": "https://pubsonline.informs.org/doi/10.1287/moor.6.1.58" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}

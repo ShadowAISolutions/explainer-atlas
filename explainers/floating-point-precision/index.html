@@ -69,10 +69,9 @@ footer.page a{color:var(--accent)}
 
 <div class="layout">
   <figure class="stage" data-role="stage">
-    <canvas id="view" width="900" height="470" role="img"
+    <canvas id="view" width="1280" height="880" role="img"
             aria-label="Upper panel: a magnified stretch of the number line showing individual representable doubles as ticks, with the gap between them labelled. Lower panel: the gap size plotted against magnitude on logarithmic axes, forming a staircase that doubles at every power of two."></canvas>
     <div class="bits" id="bits" aria-live="polite"></div>
-    <div class="bits legend" aria-hidden="true"></div>
     <figcaption>Top: the actual representable doubles near your chosen value — each tick is a number that exists; everything between them does not. Bottom: the gap size as a staircase, doubling at every power of two.</figcaption>
   </figure>
 
@@ -268,19 +267,39 @@ function demoText(){
   }
 }
 
+const SS = 2;
+let W = 640, H = 440, NARROW = false;
+
+/* Track the available width so one canvas unit is one CSS pixel. A fixed
+   canvas scaled into its slot is what made the labels unreadable. */
+function layout(){
+  const avail = cv.parentNode ? (cv.parentNode.clientWidth || 640) : 640;
+  NARROW = avail < 470;
+  W = Math.max(300, Math.min(920, Math.round(avail)));
+  H = NARROW ? 570 : 450;
+  if (cv.width !== W*SS){ cv.width = W*SS; cv.height = H*SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
 function render(){
-  const W = cv.width, H = cv.height, mid = Math.round(H*0.48);
+  layout();
+  const MONO = css("--font-mono");
+  const upperH = NARROW ? 240 : 200;
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
 
   const x = currentValue(), gap = Model.ulp(x);
-  const pad = 42;
+  const pad = NARROW ? 46 : 54;
 
   /* ---- upper: the number line, magnified to a handful of ULPs ---- */
   const SHOW = 9;
   const left = x - (SHOW/2)*gap;
   const lx = (v) => pad + ((v - left)/(SHOW*gap))*(W - 2*pad);
-  const axisY = mid - 52;
+  const axisY = NARROW ? 108 : 96;
+
+  ctx.fillStyle = css("--ink"); ctx.font = "700 15px " + MONO;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("representable doubles near 2^" + state.expo, pad - 8, 16);
 
   ctx.strokeStyle = css("--line"); ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(pad, axisY); ctx.lineTo(W - pad, axisY); ctx.stroke();
@@ -291,32 +310,35 @@ function render(){
     const here = Math.abs(i - SHOW/2) < 0.5;
     ctx.strokeStyle = here ? css("--accent") : css("--ink");
     ctx.lineWidth = here ? 3 : 1.5;
-    ctx.beginPath(); ctx.moveTo(px, axisY - 16); ctx.lineTo(px, axisY + 16); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px, axisY - 18); ctx.lineTo(px, axisY + 18); ctx.stroke();
   }
-  ctx.fillStyle = css("--accent"); ctx.font = "700 12px " + css("--font-mono");
-  ctx.textAlign = "center";
-  ctx.fillText("one gap = " + gap.toExponential(3), W/2, axisY + 40);
-  ctx.fillStyle = css("--muted"); ctx.font = "600 11px " + css("--font-mono");
-  ctx.fillText("nothing exists between these ticks", W/2, axisY + 58);
-  ctx.textAlign = "left";
-  ctx.fillText("representable doubles near 2^" + state.expo, pad, 22);
+  ctx.fillStyle = css("--accent"); ctx.font = "700 15px " + MONO;
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText("one gap = " + gap.toExponential(3), W/2, axisY + 30);
+  ctx.fillStyle = css("--muted"); ctx.font = "600 13px " + MONO;
+  ctx.fillText("nothing exists between these ticks", W/2, axisY + 52);
 
   /* ---- lower: gap against magnitude, log-log staircase ---- */
-  const gy0 = mid + 16, gy1 = H - 34;
+  const gy0 = upperH + 34, gy1 = H - 46;
   const K0 = -24, K1 = 60;
   const gx = (k) => pad + ((k - K0)/(K1 - K0))*(W - 2*pad);
   const gLo = -24 - 52, gHi = 60 - 52;
   const gyv = (log2gap) => gy1 - ((log2gap - gLo)/(gHi - gLo))*(gy1 - gy0);
 
+  ctx.fillStyle = css("--ink"); ctx.font = "700 15px " + MONO;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("the gap, against magnitude", pad - 8, upperH + 4);
+
   ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
-  ctx.font = "11px " + css("--font-mono"); ctx.fillStyle = css("--muted");
+  ctx.font = "13px " + MONO; ctx.fillStyle = css("--muted");
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
   for (let g = -70; g <= 10; g += 20){
     const y = gyv(g);
     ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
-    ctx.fillText("2^" + g, 4, y + 4);
+    ctx.fillText("2^" + g, pad - 7, y);
   }
 
-  ctx.strokeStyle = css("--accent"); ctx.lineWidth = 2.2; ctx.beginPath();
+  ctx.strokeStyle = css("--accent"); ctx.lineWidth = 2.4; ctx.beginPath();
   for (let k = K0; k <= K1; k++){
     const y = gyv(k - 52);
     ctx.lineTo(gx(k), y);
@@ -326,13 +348,18 @@ function render(){
 
   /* marker + the gap = 1 threshold */
   ctx.fillStyle = css("--accent");
-  ctx.beginPath(); ctx.arc(gx(state.expo) + 2, gyv(state.expo - 52), 5, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(gx(state.expo) + 2, gyv(state.expo - 52), 6, 0, Math.PI*2); ctx.fill();
   ctx.strokeStyle = css("--muted"); ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pad, gyv(0)); ctx.lineTo(W - pad, gyv(0)); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = css("--muted"); ctx.font = "600 11px " + css("--font-mono");
-  ctx.fillText("gap = 1 : integers start going missing at k = 53", pad + 6, gyv(0) - 6);
-  ctx.fillText("magnitude k →", W - pad - 96, H - 12);
+  ctx.fillStyle = css("--muted"); ctx.font = "600 13px " + MONO;
+  ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+  ctx.fillText(NARROW ? "gap = 1 at k = 53" : "gap = 1 : integers start going missing at k = 53", pad + 6, gyv(0) - 7);
+
+  ctx.font = "13px " + MONO; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (const k of (NARROW ? [-24, 0, 30, 60] : [-24, 0, 20, 40, 60])) ctx.fillText(String(k), gx(k), gy1 + 8);
+  ctx.font = "13px " + css("--font-body");
+  ctx.fillText("magnitude k", W/2, gy1 + 27);
 
   /* ---- bit layout ---- */
   const b = Model.bits(x);
@@ -365,6 +392,8 @@ el("reset").addEventListener("click", () => {
   el("demo").value = defaults.demo; el("terms").value = defaults.terms;
   render();
 });
+let __rt = 0;
+window.addEventListener("resize", () => { clearTimeout(__rt); __rt = setTimeout(render, 120); });
 render();
 
 /* ---------------- SELFTEST ---------------- */

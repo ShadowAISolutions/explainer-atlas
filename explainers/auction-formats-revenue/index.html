@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two Auctions, Two Sets of Bids, One Revenue — Explainer Atlas</title>
+<meta name="description" content="Run a first-price and a second-price auction on exactly the same bidders. The bids look nothing alike and the seller earns the same.">
+<style>
+:root{
+  --bg:#f4f2ec; --panel:#123128; --panel-ink:#f0ece0; --ink:#17231e; --muted:#5d6b62; --line:#d6d3c6;
+  --felt:#0e2a22; --felt-line:#27473c;
+  --first:#e0a32c; --second:#6fc3d9; --theory:#f0ece0;
+  --accent:#9c5518; --accent-soft:#f6e9db;
+  --radius:3px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Hoefler Text",Baskerville,Georgia,serif;
+  --font-ui:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.6rem,1.05rem + 2.4vw,2.45rem);
+  --scale-body:clamp(1rem,0.96rem + 0.2vw,1.08rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#111512; --panel:#0e2a22; --panel-ink:#eae6da; --ink:#e7eae6; --muted:#97a49c; --line:#26312b;
+    --felt:#0b211b; --felt-line:#1f3b31;
+    --accent:#e0a32c; --accent-soft:#2a1f0e;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.62 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:70rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:calc(var(--pad)*0.7)}
+h1{font-size:var(--scale-h1); line-height:1.1; margin:0 0 .3em; letter-spacing:-.01em; font-weight:600}
+.kicker{margin:0 0 .5em; color:var(--accent); font:700 .72rem/1.3 var(--font-ui); text-transform:uppercase; letter-spacing:.18em}
+.standfirst{margin:0; color:var(--muted); max-width:42em}
+figure.stage{margin:var(--pad) 0 0; background:var(--felt); border:1px solid var(--felt-line);
+  border-radius:var(--radius); padding:0; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin:0; padding:.7em 1em; color:var(--muted); font-size:.85rem; font-family:var(--font-ui); line-height:1.45;
+  background:var(--bg); border-top:1px solid var(--line)}
+.controls{margin-top:calc(var(--pad)*0.6); background:transparent; border:0; padding:0;
+  display:grid; gap:1.1em var(--pad); grid-template-columns:1fr; font-family:var(--font-ui)}
+@media (min-width:46rem){ .controls{grid-template-columns:repeat(3,1fr); align-items:start} }
+.control{display:grid; gap:.3em; align-content:start; border-top:2px solid var(--ink); padding-top:.7em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font-weight:700; font-size:.92rem}
+.control output{font:700 .9rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.26em .48em; border-radius:2px}
+.control .hint{color:var(--muted); font-size:.79rem; line-height:1.4; margin:0}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+button{font:600 .9rem/1.2 var(--font-ui); color:inherit; background:var(--bg); border:1px solid var(--ink); border-radius:2px; padding:.6em .7em; min-height:40px; width:100%; cursor:pointer}
+button:hover{background:var(--accent-soft)}
+.btnpair{display:grid; grid-template-columns:1fr 1fr; gap:.5em; margin-top:.3em}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:0; margin:var(--pad) 0 0; padding:0;
+  border:2px solid var(--ink); border-radius:var(--radius); overflow:hidden}
+.readout div{padding:.6em .8em; border-right:1px solid var(--line)}
+.readout div:last-child{border-right:0}
+.readout dt{margin:0; color:var(--muted); font:600 .7rem/1.3 var(--font-ui); text-transform:uppercase; letter-spacing:.09em}
+.readout dd{margin:.15em 0 0; font:700 1.08rem/1.2 var(--font-mono)}
+.prose{max-width:38em; margin:calc(var(--pad)*1.6) auto 0}
+.prose h2{font:600 1.22rem/1.3 var(--font-body); margin:2em 0 .5em; color:var(--accent)}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--font-mono); font-size:.9em; background:var(--accent-soft); padding:.75em .9em;
+  border-radius:2px; border-left:3px solid var(--accent); overflow-x:auto; white-space:pre}
+footer.page{margin-top:calc(var(--pad)*1.8); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem; font-family:var(--font-ui)}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Economics</p>
+  <h1>Two Auctions, Two Sets of Bids, One Revenue</h1>
+  <p class="standfirst">In a second-price auction you should bid exactly what the thing is worth to you. In a first-price auction you should shade your bid down. Do both properly and the seller cannot tell the difference.</p>
+</header>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="1040" height="560" role="img"
+          aria-label="Top: the distribution of bids in each format, with first-price bids shaded below the bidders' values and second-price bids equal to them. Bottom: the running average revenue of both formats converging on the same theoretical line."></canvas>
+  <figcaption>Both formats are run on the same drawn valuations, auction by auction. The bid histograms are different shapes; the running averages underneath walk to the same number.</figcaption>
+</figure>
+
+<section class="controls" data-role="controls" aria-label="Simulation controls">
+  <div class="control">
+    <div class="row">
+      <label for="n">Bidders</label>
+      <output id="nout" for="n">4</output>
+    </div>
+    <input type="range" id="n" min="2" max="12" step="1" value="4">
+    <p class="hint">Each draws a private value uniformly between 0 and 1, and knows only their own.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="res">Reserve price</label>
+      <output id="resout" for="res">0.00</output>
+    </div>
+    <input type="range" id="res" min="0" max="0.9" step="0.01" value="0">
+    <p class="hint">The seller refuses to sell below this. Try 0.50.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="runs">Auctions run</label>
+      <output id="runsout" for="runs">2000</output>
+    </div>
+    <input type="range" id="runs" min="100" max="8000" step="100" value="2000">
+    <p class="hint">More auctions, less noise. The theory line does not move.</p>
+    <div class="btnpair">
+      <button type="button" id="redraw">New draw</button>
+      <button type="button" id="reset">Reset</button>
+    </div>
+  </div>
+</section>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>First-price revenue</dt><dd id="rFp">0.600</dd></div>
+  <div><dt>Second-price revenue</dt><dd id="rSp">0.600</dd></div>
+  <div><dt>Theory</dt><dd id="rTh">0.600</dd></div>
+  <div><dt>Sold</dt><dd id="rEff">100.0%</dd></div>
+  <div><dt>Surplus destroyed</dt><dd id="rLoss">0.000</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>Four bidders, values drawn at random between 0 and 1, reserve at zero. The gold histogram is what they bid in a first-price auction and the blue one is what they bid in a second-price auction, and they are obviously not the same distribution &#8212; the gold one is squashed down and to the left. Yet the two running averages underneath, of what the seller actually collects, walk to the same number and stay there.</p>
+
+  <h2>Why you tell the truth in a second-price auction</h2>
+  <p>You win if your bid is highest, and you pay the second-highest bid. Your bid therefore decides only whether you win, never how much you pay. Bid above your value and the only auctions you newly win are ones where the price lands between your value and your bid &#8212; you win and lose money. Bid below it and the only auctions you newly lose are ones you would have won at a profit. Every deviation is weakly bad against every possible set of rival bids, which is stronger than an equilibrium: you do not need to know or guess anything about the others. That property is why the format is used for advertising slots and for spectrum, and it is what William Vickrey got the Nobel for.</p>
+
+  <h2>Why you shade in a first-price auction</h2>
+  <p>Here you pay what you bid, so bidding your value guarantees a payoff of exactly zero. You must shade, and how much depends on how many rivals you are shading against. With n bidders whose values are uniform, the symmetric equilibrium is</p>
+  <p class="math">b(v) = v &#183; (n &#8722; 1) / n</p>
+  <p>which is a bidder's own value multiplied by the probability-weighted expectation of the highest rival value, given they are the highest. Two bidders shade to half. Ten bidders shade to ninety per cent, because with nine rivals the chance that one of them is close behind you is high. Drag the bidder slider and watch the gold histogram slide right towards the blue one without ever reaching it.</p>
+
+  <h2>The revenue is the same, and it is no accident</h2>
+  <p>The seller's expected take in the second-price auction is the expected second-highest value, which for n uniform draws is (n&#8722;1)/(n+1). In the first-price auction the seller takes the winner's bid, which is (n&#8722;1)/n times the expected highest value, and the expected highest of n uniform draws is n/(n+1). The n cancels and you get (n&#8722;1)/(n+1) again.</p>
+  <p>That is not a coincidence of the uniform distribution. The revenue equivalence theorem says any auction that always gives the item to the highest-value bidder and gives a bidder with the lowest possible value zero expected payoff raises the same expected revenue, whatever the bidding rules look like. The format changes who pays what in any single auction &#8212; the two running averages wobble differently, and at 200 auctions they can be several per cent apart &#8212; but not the average.</p>
+
+  <h2>What a reserve price actually does</h2>
+  <p>Push the reserve to 0.50 and revenue goes up in both formats. A reserve is the one lever that beats revenue equivalence, because it breaks the first condition: the item no longer always goes to the highest-value bidder. When every value falls below the reserve the sale simply does not happen, and the surplus that a buyer would have enjoyed is destroyed rather than transferred.</p>
+  <p>Myerson's result gives the exact trade. With uniform values the expected revenue at reserve r is</p>
+  <p class="math">R(r) = (n&#8722;1)/(n+1) &#8722; 2n&#183;r^(n+1)/(n+1) + r^n</p>
+  <p>and differentiating gives n&#183;r^(n&#8722;1)&#183;(1 &#8722; 2r), so the best reserve is exactly one half &#8212; for two bidders and for two hundred. That is worth sitting with: the optimal reserve does not depend on how many bidders show up, only on the distribution their values come from.</p>
+
+  <h2>What to try</h2>
+  <p>Set two bidders and a reserve of 0.50. Revenue rises from 0.333 to 0.417, a quarter more, while the item goes unsold a quarter of the time. Then set ten bidders and keep the reserve at 0.50: revenue barely moves, because with ten draws it is nearly certain that someone clears half anyway. The reserve is worth a lot in a thin market and almost nothing in a thick one, which is the practical form of the result.</p>
+  <p>Finally, drop the runs to 100 and press New draw a few times. The two formats disagree by whole percentage points, in both directions. Revenue equivalence is a statement about expectations, and expectations are not what any particular seller gets.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &#183; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260919;
+
+/* ---- MODEL: independent private values, uniform on [0,1] ---------------- */
+const Model = {
+  /* Symmetric first-price equilibrium bid with a reserve, in closed form.
+     Below the reserve a bidder does not participate. */
+  bidFirst(v, n, r){
+    if (v < r) return 0;
+    if (v <= 0) return 0;
+    return v * (n - 1) / n + Math.pow(r, n) / (n * Math.pow(v, n - 1));
+  },
+
+  /* The same bid from the equilibrium condition it solves, by quadrature:
+     b(v) = v - (integral of F(x)^(n-1) from r to v) / F(v)^(n-1). */
+  bidFirstByQuadrature(v, n, r, steps){
+    if (v < r || v <= 0) return 0;
+    const m = steps || 20000;
+    let s = 0;
+    for (let k = 0; k < m; k++){
+      const x = r + (v - r) * (k + 0.5) / m;
+      s += Math.pow(x, n - 1);
+    }
+    return v - (v - r) * s / m / Math.pow(v, n - 1);
+  },
+
+  bidSecond(v, r){ return v < r ? 0 : v; },
+
+  /* Payoff to bidder 1 in a second-price auction, given the highest rival
+     bid. Used to show truthful bidding cannot be beaten. */
+  payoffSecond(value, bid, topRival, r){
+    if (bid < r) return 0;
+    const price = Math.max(topRival, r);
+    if (bid < topRival) return 0;
+    if (bid === topRival) return 0.5 * (value - price);
+    return value - price;
+  },
+
+  /* One auction: draw n values, settle both formats on the same draw. */
+  auction(rng, n, r){
+    let v1 = -1, v2 = -1;
+    for (let k = 0; k < n; k++){
+      const v = rng();
+      if (v > v1){ v2 = v1; v1 = v; } else if (v > v2){ v2 = v; }
+    }
+    const sold = v1 >= r;
+    const fp = sold ? this.bidFirst(v1, n, r) : 0;
+    const sp = sold ? Math.max(v2, r) : 0;
+    return { v1: v1, v2: v2, sold: sold, fp: fp, sp: sp };
+  },
+
+  run(seed, n, r, runs){
+    const rng = mulberry32(seed);
+    const BINS = 40;
+    const hf = new Float64Array(BINS), hs = new Float64Array(BINS);
+    const curveFp = [], curveSp = [];
+    const every = Math.max(1, Math.floor(runs / 220));
+    let sumF = 0, sumS = 0, sold = 0, lost = 0, bids = 0, wrongWinner = 0;
+    for (let a = 0; a < runs; a++){
+      const o = this.auction(rng, n, r);
+      sumF += o.fp; sumS += o.sp;
+      if (o.sold){
+        sold++;
+        const bf = this.bidFirst(o.v1, n, r), bs = this.bidSecond(o.v1, r);
+        hf[Math.min(BINS - 1, Math.floor(bf * BINS))]++;
+        hs[Math.min(BINS - 1, Math.floor(bs * BINS))]++;
+        bids++;
+        if (this.bidFirst(o.v1, n, r) < this.bidFirst(o.v2, n, r)) wrongWinner++;
+      } else {
+        lost += o.v1;
+      }
+      if ((a + 1) % every === 0 || a === runs - 1){
+        curveFp.push([a + 1, sumF / (a + 1)]);
+        curveSp.push([a + 1, sumS / (a + 1)]);
+      }
+    }
+    for (let k = 0; k < BINS; k++){ if (bids){ hf[k] /= bids; hs[k] /= bids; } }
+    return { meanFp: sumF / runs, meanSp: sumS / runs, soldFrac: sold / runs,
+             lost: lost / runs, hf: hf, hs: hs, curveFp: curveFp, curveSp: curveSp,
+             wrongWinner: wrongWinner, bins: BINS };
+  },
+
+  /* Myerson: expected revenue is the expected virtual value of the winner.
+     For uniform values the virtual value is 2v - 1. */
+  revenueExact(n, r){
+    return (n - 1) / (n + 1) - 2 * n * Math.pow(r, n + 1) / (n + 1) + Math.pow(r, n);
+  },
+
+  /* The same number the long way: integrate what each format actually pays,
+     against the order-statistic densities. Nothing here uses Myerson. */
+  revenueSecondByQuadrature(n, r, steps){
+    const m = steps || 40000;
+    let s = 0;
+    for (let k = 0; k < m; k++){
+      const v = (k + 0.5) / m;
+      if (v < r) continue;
+      s += v * n * (n - 1) * Math.pow(v, n - 2) * (1 - v);
+    }
+    return s / m + r * n * Math.pow(r, n - 1) * (1 - r);
+  },
+
+  revenueFirstByQuadrature(n, r, steps){
+    const m = steps || 40000;
+    let s = 0;
+    for (let k = 0; k < m; k++){
+      const v = (k + 0.5) / m;
+      if (v < r) continue;
+      s += this.bidFirst(v, n, r) * n * Math.pow(v, n - 1);
+    }
+    return s / m;
+  },
+
+  soldProbability(n, r){ return 1 - Math.pow(r, n); },
+
+  surplusDestroyed(n, r){ return n * Math.pow(r, n + 1) / (n + 1); }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { n: 4, res: 0, runs: 2000 };
+const state = Object.assign({}, defaults);
+let drawSeed = SEED;
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+let W = 1040, H = 560, NARROW = false;
+
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888"; }
+const UI = '-apple-system,system-ui,"Segoe UI",Roboto,sans-serif';
+const MONO = 'ui-monospace,SFMono-Regular,Menlo,monospace';
+
+function layout(){
+  const avail = cv.parentNode ? (cv.parentNode.clientWidth || 1040) : 1040;
+  NARROW = avail < 620;
+  if (NARROW){ W = 350; H = 700; } else { W = 1040; H = 560; }
+  if (cv.width !== W * SS){ cv.width = W * SS; cv.height = H * SS; }
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function drawHist(p, res){
+  const INK = css("--panel-ink"), LINE = css("--felt-line"),
+        A = css("--first"), B = css("--second");
+  const L = NARROW ? 52 : 62, R = NARROW ? 14 : 34, T = NARROW ? 66 : 58, Bm = 40;
+  const x0 = p.x + L, x1 = p.x + p.w - R, y0 = p.y + T, y1 = p.y + p.h - Bm;
+  const bins = res.bins;
+  let top = 0;
+  for (let k = 0; k < bins; k++) top = Math.max(top, res.hf[k], res.hs[k]);
+  top = top || 1;
+  const X = (u) => x0 + (x1 - x0) * u;
+  const Y = (v) => y1 - (y1 - y0) * (v / top);
+
+  ctx.strokeStyle = LINE; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, y1); ctx.lineTo(x1, y1); ctx.stroke();
+
+  const bw = (x1 - x0) / bins;
+  for (const [h, col, alpha] of [[res.hs, B, 0.45], [res.hf, A, 0.75]]){
+    ctx.fillStyle = col; ctx.globalAlpha = alpha;
+    for (let k = 0; k < bins; k++){
+      if (h[k] <= 0) continue;
+      ctx.fillRect(x0 + bw * k + 0.5, Y(h[k]), bw - 1, y1 - Y(h[k]));
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.fillStyle = INK; ctx.font = "13px " + MONO;
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let k = 0; k <= 4; k++) ctx.fillText((k / 4).toFixed(2), X(k / 4), y1 + 8);
+  ctx.font = "13px " + UI;
+  ctx.fillText("winning bid", (x0 + x1) / 2, y1 + 25);
+
+  ctx.font = "700 15px " + UI; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("What the winner bids", p.x + 12, p.y + 10);
+  ctx.font = "700 13px " + UI;
+  ctx.fillStyle = A; ctx.fillText("first price, shaded down", p.x + 12, p.y + 32);
+  ctx.fillStyle = B;
+  ctx.fillText("second price, the honest value", p.x + 12 + (NARROW ? 0 : 210), p.y + 32 + (NARROW ? 17 : 0));
+}
+
+function drawRace(p, res, theory){
+  const INK = css("--panel-ink"), LINE = css("--felt-line"),
+        A = css("--first"), B = css("--second"), TH = css("--theory");
+  const L = NARROW ? 52 : 62, R = NARROW ? 14 : 34, T = NARROW ? 62 : 54, Bm = 40;
+  const x0 = p.x + L, x1 = p.x + p.w - R, y0 = p.y + T, y1 = p.y + p.h - Bm;
+  const pts = res.curveFp.concat(res.curveSp);
+  let lo = theory, hi = theory;
+  for (const q of pts){ if (q[0] < 25) continue; lo = Math.min(lo, q[1]); hi = Math.max(hi, q[1]); }
+  const pad = Math.max(0.02, (hi - lo) * 0.25);
+  lo -= pad; hi += pad;
+  const n0 = 25, n1 = Math.max(n0 + 1, state.runs);
+  const X = (a) => x0 + (x1 - x0) * (Math.log(Math.max(a, n0)) - Math.log(n0)) / (Math.log(n1) - Math.log(n0));
+  const Y = (v) => y1 - (y1 - y0) * (v - lo) / (hi - lo);
+
+  ctx.strokeStyle = LINE; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, y1); ctx.lineTo(x1, y1); ctx.stroke();
+
+  ctx.strokeStyle = TH; ctx.globalAlpha = 0.85; ctx.setLineDash([6, 5]); ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(x0, Y(theory)); ctx.lineTo(x1, Y(theory)); ctx.stroke();
+  ctx.setLineDash([]); ctx.globalAlpha = 1;
+  ctx.fillStyle = TH; ctx.font = "700 13px " + UI;
+  ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+  ctx.fillText("theory " + theory.toFixed(4), x1, Y(theory) - 6);
+
+  for (const [curve, col] of [[res.curveSp, B], [res.curveFp, A]]){
+    ctx.strokeStyle = col; ctx.lineWidth = 2.4; ctx.beginPath();
+    let started = false;
+    for (const q of curve){
+      if (q[0] < n0) continue;
+      const px = X(q[0]), py = Y(q[1]);
+      if (!started){ ctx.moveTo(px, py); started = true; } else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = INK; ctx.font = "13px " + MONO;
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  const marks = [25, 100, 400, 1600, 6400].filter((m) => m <= n1);
+  for (const m of marks) ctx.fillText(String(m), X(m), y1 + 8);
+  ctx.font = "13px " + UI;
+  ctx.fillText("auctions run so far", (x0 + x1) / 2, y1 + 25);
+  ctx.textAlign = "right"; ctx.font = "13px " + MONO; ctx.textBaseline = "middle";
+  ctx.fillText(hi.toFixed(3), x0 - 7, y0 + 6);
+  ctx.fillText(lo.toFixed(3), x0 - 7, y1 - 6);
+
+  ctx.fillStyle = INK; ctx.font = "700 15px " + UI;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("Average revenue so far", p.x + 12, p.y + 10);
+  ctx.font = "700 13px " + UI; ctx.fillStyle = css("--muted");
+  ctx.fillText("both formats, same draws", p.x + 12, p.y + 31);
+}
+
+function render(){
+  layout();
+  const res = Model.run(drawSeed, state.n, state.res, state.runs);
+  const theory = Model.revenueExact(state.n, state.res);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--felt"); ctx.fillRect(0, 0, W, H);
+  const p = NARROW
+    ? { a: { x: 0, y: 0, w: W, h: 330 }, b: { x: 0, y: 330, w: W, h: 370 } }
+    : { a: { x: 0, y: 0, w: W, h: 270 }, b: { x: 0, y: 270, w: W, h: 290 } };
+  drawHist(p.a, res);
+  ctx.fillStyle = css("--felt-line"); ctx.fillRect(p.b.x + 12, p.b.y, p.b.w - 24, 1);
+  drawRace(p.b, res, theory);
+
+  el("nout").textContent = String(state.n);
+  el("resout").textContent = state.res.toFixed(2);
+  el("runsout").textContent = String(state.runs);
+  el("rFp").textContent = res.meanFp.toFixed(4);
+  el("rSp").textContent = res.meanSp.toFixed(4);
+  el("rTh").textContent = theory.toFixed(4);
+  el("rEff").textContent = (100 * res.soldFrac).toFixed(1) + "%";
+  el("rLoss").textContent = res.lost.toFixed(4);
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parse(input.value); render(); });
+}
+bind("n", "n", (v) => parseInt(v, 10));
+bind("res", "res", parseFloat);
+bind("runs", "runs", (v) => parseInt(v, 10));
+el("redraw").addEventListener("click", () => { drawSeed = (drawSeed * 1664525 + 1013904223) >>> 0; render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("n").value = String(defaults.n);
+  el("res").value = String(defaults.res);
+  el("runs").value = String(defaults.runs);
+  drawSeed = SEED;
+  render();
+});
+
+let rt = 0;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+  const M = Model;
+
+  push("truthful bidding cannot be beaten in the second-price auction", (function(){
+    const rng = mulberry32(31337);
+    for (let c = 0; c < 4000; c++){
+      const v = rng(), topRival = rng(), r = c % 4 === 0 ? 0.3 * rng() : 0;
+      const truth = M.payoffSecond(v, M.bidSecond(v, 0), topRival, r);
+      for (const d of [-0.4, -0.15, -0.02, 0.02, 0.15, 0.4]){
+        const b = Math.max(0, v + d);
+        if (M.payoffSecond(v, b, topRival, r) > truth + 1e-12) return false;
+      }
+    }
+    return true;
+  })(), "4000 seeded value-and-rival pairs times six deviations, with and without a reserve: no deviation ever pays more than bidding your value");
+
+  push("the first-price equilibrium bid is v(n-1)/n with no reserve", (function(){
+    for (let n = 2; n <= 12; n++){
+      for (let k = 1; k <= 40; k++){
+        const v = k / 40;
+        if (!near(M.bidFirst(v, n, 0), v * (n - 1) / n, 1e-14)) return false;
+      }
+    }
+    return near(M.bidFirst(0.8, 2, 0), 0.4, 1e-15) && near(M.bidFirst(0.8, 10, 0), 0.72, 1e-15);
+  })(), "440 (n, v) pairs; two bidders shade to a half and ten to nine tenths");
+
+  push("the bid function solves the equilibrium integral it came from", (function(){
+    for (const n of [2, 3, 5, 9]){
+      for (const r of [0, 0.25, 0.6]){
+        for (const v of [0.3, 0.55, 0.8, 1]){
+          if (v < r) continue;
+          const q = M.bidFirstByQuadrature(v, n, r, 6000);
+          if (!near(M.bidFirst(v, n, r), q, 1e-8)) return false;
+        }
+      }
+    }
+    return near(M.bidFirst(0.6, 4, 0.6), 0.6, 1e-14);
+  })(), "b(v) = v minus the integral of F^(n-1) over F(v)^(n-1), by quadrature, matches the closed form to 1e-8; the marginal type bids exactly the reserve");
+
+  push("both formats earn exactly the same expected revenue", (function(){
+    for (const n of [2, 3, 5, 9, 12]){
+      for (const r of [0, 0.2, 0.5, 0.75]){
+        const ex = M.revenueExact(n, r);
+        if (!near(M.revenueFirstByQuadrature(n, r, 20000), ex, 4e-5)) return false;
+        if (!near(M.revenueSecondByQuadrature(n, r, 20000), ex, 4e-5)) return false;
+      }
+    }
+    return true;
+  })(), "integrating what each format actually collects, against the order-statistic densities, gives Myerson's virtual-value formula in all 20 cases");
+
+  push("with no reserve the revenue is (n-1)/(n+1)", (function(){
+    for (let n = 2; n <= 12; n++){
+      if (!near(M.revenueExact(n, 0), (n - 1) / (n + 1), 1e-15)) return false;
+    }
+    return near(M.revenueExact(2, 0), 1 / 3, 1e-15) && near(M.revenueExact(4, 0), 0.6, 1e-15);
+  })(), "two bidders give a third, four give three fifths, exactly");
+
+  push("simulated revenue converges on the theory in both formats", (function(){
+    for (const n of [2, 9]){
+      for (const r of [0, 0.5]){
+        const res = M.run(777, n, r, 20000);
+        const ex = M.revenueExact(n, r);
+        if (!(Math.abs(res.meanFp - ex) / ex < 0.01)) return false;
+        if (!(Math.abs(res.meanSp - ex) / ex < 0.01)) return false;
+      }
+    }
+    return true;
+  })(), "20000 seeded auctions for four settings: both Monte Carlo means land inside one per cent of the closed form");
+
+  push("the highest-value bidder wins in both formats, always", (function(){
+    for (const n of [2, 5, 12]){
+      for (const r of [0, 0.4]){
+        const res = M.run(4242, n, r, 2000);
+        if (res.wrongWinner !== 0) return false;
+      }
+    }
+    for (const n of [2, 6]){
+      for (const r of [0, 0.4]){
+        for (let k = 1; k < 40; k++){
+          const a = k / 40, b = (k + 1) / 40;
+          if (a < r) continue;
+          if (!(M.bidFirst(b, n, r) > M.bidFirst(a, n, r))) return false;
+        }
+      }
+    }
+    return true;
+  })(), "the bid function is strictly increasing in value, so ranking by bid is ranking by value; 12000 simulated auctions never invert it");
+
+  push("the fraction sold is exactly 1 - r^n", (function(){
+    for (const n of [2, 5, 12]){
+      for (const r of [0, 0.3, 0.7]){
+        const res = M.run(9091, n, r, 6000);
+        if (!near(res.soldFrac, M.soldProbability(n, r), 0.02)) return false;
+      }
+    }
+    return near(M.soldProbability(2, 0.5), 0.75, 1e-15) && near(M.soldProbability(10, 0.5), 1 - Math.pow(0.5, 10), 1e-15);
+  })(), "two bidders with a reserve of a half leave the item unsold a quarter of the time; ten bidders, one time in a thousand");
+
+  push("a reserve raises revenue and destroys surplus at the same time", (function(){
+    for (const n of [2, 3, 6, 12]){
+      if (!(M.revenueExact(n, 0.5) > M.revenueExact(n, 0))) return false;
+      if (!(M.surplusDestroyed(n, 0.5) > 0)) return false;
+      if (!(M.soldProbability(n, 0.5) < 1)) return false;
+      const res = M.run(5150, n, 0.5, 6000);
+      if (!near(res.lost, M.surplusDestroyed(n, 0.5), 0.015)) return false;
+    }
+    return near(M.revenueExact(2, 0.5), 5 / 12, 1e-15);
+  })(), "two bidders go from 0.3333 to 0.4167, a quarter more, and the destroyed surplus matches n r^(n+1)/(n+1) in simulation");
+
+  push("the revenue-maximising reserve is one half, for every number of bidders", (function(){
+    for (let n = 2; n <= 12; n++){
+      let best = -1, bestR = -1;
+      for (let k = 0; k <= 1000; k++){
+        const r = k / 1000, v = M.revenueExact(n, r);
+        if (v > best){ best = v; bestR = r; }
+      }
+      if (!near(bestR, 0.5, 1e-9)) return false;
+      const d = (r) => n * Math.pow(r, n - 1) * (1 - 2 * r);
+      if (!near(d(0.5), 0, 1e-15)) return false;
+      if (!(d(0.4) > 0 && d(0.6) < 0)) return false;
+    }
+    return true;
+  })(), "scanning 1001 reserves finds the maximum at 0.500 for n = 2 to 12, and the derivative n r^(n-1)(1-2r) changes sign there");
+
+  push("the same seed gives the same auctions", (function(){
+    const a = M.run(2024, 5, 0.3, 500), b = M.run(2024, 5, 0.3, 500);
+    if (a.meanFp !== b.meanFp || a.meanSp !== b.meanSp || a.lost !== b.lost) return false;
+    const c = M.run(2025, 5, 0.3, 500);
+    return c.meanFp !== a.meanFp;
+  })(), "identical to the last bit on a repeat, and different on a different seed");
+
+  push("nothing is non-finite across the control grid", (function(){
+    for (let n = 2; n <= 12; n++){
+      for (let k = 0; k <= 9; k++){
+        const r = k * 0.1;
+        const res = M.run(11, n, r, 200);
+        for (const x of [res.meanFp, res.meanSp, res.soldFrac, res.lost, M.revenueExact(n, r)]){
+          if (!Number.isFinite(x)) return false;
+        }
+        if (res.meanFp < 0 || res.meanFp > 1 || res.meanSp < 0 || res.meanSp > 1) return false;
+      }
+    }
+    return true;
+  })(), "11 bidder counts by 10 reserve levels, every statistic finite and inside [0,1]");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

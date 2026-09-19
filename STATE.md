@@ -27,6 +27,47 @@ page is written — it is where a failing audit trend gets escalated.)*
 
 ## Batches
 
+### batch/005 — 2026-09-19
+- merged: epidemic-r0-herd-immunity, harmonic-series-timbre, auction-formats-revenue, radiometric-dating, floating-point-precision (repair)
+- blocked: none
+- patterns: guess-then-reveal, build-from-parts, race-two-methods, time-scrubber (the repair carries no pattern)
+- learned: First AUDIT pass, in AUDIT/001. Mean 4.28. Clarity, assertion rigor
+  and correctness are at or near ceiling; interaction quality (3.60) and visual
+  distinctiveness (3.20) are the weak axes, and both come from one cause — the
+  pages merged before batch/004 treat the canvas as a fixed-size illustration.
+  Two repair tasks were filed and the worse of them was taken into this batch
+  rather than left to rot in the queue; taking one repair per batch alongside
+  four new pages looks like the right default from here.
+  The canvas fix is better than the batch/004 version of it. A breakpoint that
+  swaps between two fixed canvas sizes still leaves the canvas being scaled by
+  whatever ratio the column happens to be, and on the floating-point page a
+  900px canvas in a 548px column rendered every 11px label at about 7px. What
+  actually works is to make the canvas width TRACK the container — clamp the
+  available width, set the backing store to twice it, and scale the context by
+  two — so one canvas unit is one CSS pixel at every viewport and a 13px label
+  is 13px. The NARROW flag then only picks the arrangement and the wording, not
+  the scale. Use this on every new page and on every repair.
+  Every assertion that failed this batch was again mine rather than the
+  model's, and three of them were on one page. The Gibbs constant is 1.17898,
+  the peak of the partial sum; 1.08949 is not a version of it and 8.95 per cent
+  is the overshoot measured against the whole jump. "A smooth waveform never
+  overshoots" is false — a partial sum of an absolutely convergent series can
+  exceed its limit by the size of the tail, so the honest claim is convergence
+  at the tail's own rate, which is also the claim that distinguishes it from
+  Gibbs. And a zero-crossing pitch counter that tests prev <= 0 && cur > 0
+  counts a phantom crossing whenever the last sample of the window lands on a
+  floating-point 1e-15 instead of an exact zero; start the window a quarter
+  period early where every waveform is negative, and use hysteresis.
+  Two more. (1) Watch the cost of a selftest that runs a Monte Carlo: the
+  auction page's first draft did about 5 million draws per suite run, which the
+  verifier multiplies by thirty control positions. Cutting the settings rather
+  than the tolerances kept every assertion at full strength and brought the
+  page in at four seconds. (2) When a page's readout is a derived number, read
+  it off the real model before writing the prose around it: the dating page's
+  "more than double" was 8 per cent until the sample mineral was changed to the
+  one where inherited daughter actually bites, and the harmonic page's error
+  figures were all from a readout that no longer existed.
+
 ### batch/004 — 2026-09-19
 - merged: predator-prey-cycles, prisoners-dilemma-iterated, matrix-determinant-area, quicksort-pivot-choice, reaction-rate-order
 - blocked: none

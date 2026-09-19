@@ -1,0 +1,22 @@
+{
+  "slug": "harmonic-series-timbre",
+  "title": "Timbre Is a List of Numbers",
+  "domain": "music-theory",
+  "difficulty": 2,
+  "summary": "Stack sine waves one harmonic at a time and watch a square, a sawtooth and a triangle assemble themselves out of nothing but amplitudes.",
+  "prerequisites": [],
+  "tags": [
+    "fourier-series",
+    "timbre",
+    "harmonics",
+    "additive-synthesis",
+    "gibbs-phenomenon"
+  ],
+  "interaction_pattern": "build-from-parts",
+  "sources": [
+    { "title": "Gibbs, Fourier's Series, Nature 59, 1899", "url": "https://www.nature.com/articles/059606a0" },
+    { "title": "Helmholtz, On the Sensations of Tone, 1877 (Ellis translation)", "url": "https://archive.org/details/onsensationston00helmgoog" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}
