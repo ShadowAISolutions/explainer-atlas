@@ -1,12 +1,19 @@
 {
   "generated_at": "2026-09-19",
-  "count": 8,
+  "count": 13,
   "domains": {
     "biology": [
       "population-logistic-chaos"
     ],
     "computer-science": [
+      "dijkstra-vs-astar",
       "floating-point-precision"
+    ],
+    "economics": [
+      "supply-demand-tax-incidence"
+    ],
+    "engineering": [
+      "pid-controller"
     ],
     "game-theory": [
       "monty-hall"
@@ -16,7 +23,11 @@
     ],
     "mathematics": [
       "fourier-series-square-wave",
+      "newton-raphson-basins",
       "numerical-integration-error"
+    ],
+    "music-theory": [
+      "equal-temperament"
     ],
     "physics": [
       "damped-harmonic-oscillator"
@@ -27,11 +38,16 @@
   },
   "interaction_patterns": {
     "build-from-parts": 2,
+    "compare-side-by-side": 1,
+    "drag-parameter": 1,
     "draw-input": 1,
     "guess-then-reveal": 1,
     "perturb-and-observe": 2,
     "race-two-methods": 1,
-    "time-scrubber": 1
+    "spatial-explore": 1,
+    "step-through": 1,
+    "time-scrubber": 1,
+    "tune-to-match": 1
   },
   "explainers": [
     {
@@ -89,6 +105,72 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 9
+    },
+    {
+      "slug": "dijkstra-vs-astar",
+      "title": "A Guess About Distance Is Worth Half the Search",
+      "domain": "computer-science",
+      "difficulty": 3,
+      "summary": "Step two shortest-path searches through a maze one expansion at a time and watch a rough distance estimate halve the work without costing a step of path.",
+      "prerequisites": [],
+      "tags": [
+        "a-star",
+        "dijkstra",
+        "heuristics",
+        "admissibility",
+        "graph-search",
+        "pathfinding"
+      ],
+      "interaction_pattern": "step-through",
+      "sources": [
+        {
+          "title": "A* search algorithm — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/A*_search_algorithm"
+        },
+        {
+          "title": "Hart, Nilsson & Raphael (1968), A Formal Basis for the Heuristic Determination of Minimum Cost Paths",
+          "url": "https://ieeexplore.ieee.org/document/4082128"
+        },
+        {
+          "title": "Amit Patel, Introduction to A* — Red Blob Games",
+          "url": "https://www.redblobgames.com/pathfinding/a-star/introduction.html"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 11
+    },
+    {
+      "slug": "equal-temperament",
+      "title": "Every Interval Slightly Wrong, On Purpose",
+      "domain": "music-theory",
+      "difficulty": 2,
+      "summary": "Put a just interval beside its equal-tempered twin, watch the beats appear, and see where the twelve-tone compromise spends its error.",
+      "prerequisites": [],
+      "tags": [
+        "tuning",
+        "equal-temperament",
+        "just-intonation",
+        "cents",
+        "beats",
+        "pythagorean-comma"
+      ],
+      "interaction_pattern": "compare-side-by-side",
+      "sources": [
+        {
+          "title": "Equal temperament — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Equal_temperament"
+        },
+        {
+          "title": "Cent (music) — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Cent_(music)"
+        },
+        {
+          "title": "Pythagorean comma — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Pythagorean_comma"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 11
     },
     {
       "slug": "floating-point-precision",
@@ -208,6 +290,41 @@
       "assertions_count": 9
     },
     {
+      "slug": "newton-raphson-basins",
+      "title": "Where You Start Decides Where You Land",
+      "domain": "mathematics",
+      "difficulty": 4,
+      "summary": "Newton's method doubles its correct digits every step near a root. Pan the complex plane and watch the map of where each start ends up turn fractal.",
+      "prerequisites": [
+        "numerical-integration-error"
+      ],
+      "tags": [
+        "newton-raphson",
+        "root-finding",
+        "quadratic-convergence",
+        "fractals",
+        "complex-analysis",
+        "basins-of-attraction"
+      ],
+      "interaction_pattern": "spatial-explore",
+      "sources": [
+        {
+          "title": "Newton fractal — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Newton_fractal"
+        },
+        {
+          "title": "Newton's method — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Newton%27s_method"
+        },
+        {
+          "title": "Cayley, A. (1879), The Newton–Fourier imaginary problem",
+          "url": "https://www.jstor.org/stable/2369308"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 11
+    },
+    {
       "slug": "numerical-integration-error",
       "title": "Why Simpson's Rule Beats the Trapezoid",
       "domain": "mathematics",
@@ -234,6 +351,41 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 8
+    },
+    {
+      "slug": "pid-controller",
+      "title": "Three Knobs, Three Different Ways to Be Wrong",
+      "domain": "engineering",
+      "difficulty": 4,
+      "summary": "Tune a PID controller by hand against a target step response and find out what each of the three terms fixes, and what each one breaks.",
+      "prerequisites": [
+        "damped-harmonic-oscillator"
+      ],
+      "tags": [
+        "control-theory",
+        "pid",
+        "step-response",
+        "stability",
+        "routh-hurwitz",
+        "overshoot"
+      ],
+      "interaction_pattern": "tune-to-match",
+      "sources": [
+        {
+          "title": "PID controller — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/PID_controller"
+        },
+        {
+          "title": "Routh–Hurwitz stability criterion — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Routh%E2%80%93Hurwitz_stability_criterion"
+        },
+        {
+          "title": "Step response — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Step_response"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 11
     },
     {
       "slug": "population-logistic-chaos",
@@ -267,6 +419,39 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 11
+    },
+    {
+      "slug": "supply-demand-tax-incidence",
+      "title": "The Law Says Who Pays, the Market Decides Who Bears It",
+      "domain": "economics",
+      "difficulty": 2,
+      "summary": "Drag two elasticities and watch a tax burden slide between buyers and sellers, while the side the law taxes makes no difference at all.",
+      "prerequisites": [],
+      "tags": [
+        "tax-incidence",
+        "elasticity",
+        "deadweight-loss",
+        "supply-and-demand",
+        "public-finance",
+        "surplus"
+      ],
+      "interaction_pattern": "drag-parameter",
+      "sources": [
+        {
+          "title": "Tax incidence — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Tax_incidence"
+        },
+        {
+          "title": "Deadweight loss — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Deadweight_loss"
+        },
+        {
+          "title": "Price elasticity of demand — Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Price_elasticity_of_demand"
+        }
+      ],
+      "created_at": "2026-09-19",
+      "assertions_count": 12
     }
   ]
 }
