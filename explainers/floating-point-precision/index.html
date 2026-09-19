@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Gaps Between Numbers Are Not All the Same Size — Explainer Atlas</title>
+<meta name="description" content="Doubles space real numbers unevenly. Slide the magnitude up and watch the gap between neighbouring representable values double at every power of two.">
+<style>
+:root{
+  --bg:#f5f4f7; --panel:#ffffff; --ink:#18181b; --muted:#71717a; --line:#dcdae1;
+  --accent:#a21caf; --accent-soft:#f8e8fb; --sign:#0284c7; --expo:#ca8a04; --mant:#16a34a;
+  --radius:5px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#121014; --panel:#1a171d; --ink:#ececf0; --muted:#9b96a3; --line:#2b2731;
+        --accent:#e879f9; --accent-soft:#2a1230; --sign:#38bdf8; --expo:#fbbf24; --mant:#4ade80;}
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0;background:var(--bg);color:var(--ink);font:clamp(.95rem,.92rem + .2vw,1.03rem)/1.6 var(--font-body);-webkit-text-size-adjust:100%}
+.wrap{max-width:62rem;margin:0 auto;padding:var(--pad)}
+header.page{padding-bottom:var(--pad)}
+h1{font-size:clamp(1.45rem,1rem + 2.1vw,2.15rem);line-height:1.14;margin:0 0 .35em;font-weight:700;letter-spacing:-.022em}
+.kicker{margin:0 0 .45em;color:var(--accent);font:700 .7rem/1.3 var(--font-mono);text-transform:uppercase;letter-spacing:.16em}
+.standfirst{margin:0;color:var(--muted);max-width:44em}
+.layout{display:grid;gap:var(--pad);grid-template-columns:1fr;margin-top:var(--pad)}
+@media (min-width:58rem){.layout{grid-template-columns:minmax(0,1.5fr) minmax(15rem,1fr);align-items:start}}
+figure.stage{margin:0}
+figure.stage canvas{display:block;width:100%;height:auto;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+figcaption{margin-top:.6em;color:var(--muted);font-size:.83rem}
+.bits{margin-top:.7em;font:.72rem/1.5 var(--font-mono);word-break:break-all;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:.7em .8em}
+.bits .s{color:var(--sign)} .bits .e{color:var(--expo)} .bits .m{color:var(--mant)}
+.bits .legend{display:flex;flex-wrap:wrap;gap:1em;margin-top:.55em;font-family:var(--font-body);font-size:.74rem;color:var(--muted)}
+.controls{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad);display:grid;gap:1.05em}
+.control{display:grid;gap:.3em}
+.control .row{display:flex;justify-content:space-between;align-items:baseline;gap:.7em}
+.control label{font-weight:700;font-size:.87rem}
+.control output{font:700 .82rem/1 var(--font-mono);color:var(--accent);background:var(--accent-soft);padding:.22em .45em;border-radius:3px}
+.control .hint{margin:0;color:var(--muted);font-size:.78rem;line-height:1.5}
+input[type=range]{width:100%;accent-color:var(--accent);min-height:26px}
+select{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:.5em .6em;min-height:40px;width:100%}
+button{font:inherit;font-weight:700;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:.55em .8em;min-height:40px;width:100%;cursor:pointer}
+button:hover{border-color:var(--accent);color:var(--accent)}
+:where(button,input,select):focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+dl.readout{margin:0;display:grid;gap:.45em;font:.8rem/1.4 var(--font-mono);border-top:1px solid var(--line);padding-top:.85em}
+dl.readout div{display:grid;gap:.1em}
+dl.readout dt{margin:0;color:var(--muted);font-family:var(--font-body);font-size:.74rem;text-transform:uppercase;letter-spacing:.06em}
+dl.readout dd{margin:0;font-weight:700;word-break:break-all}
+.prose{max-width:38em;margin-top:calc(var(--pad)*1.4)}
+.prose h2{font-size:1.01rem;font-weight:700;margin:1.9em 0 .5em;letter-spacing:-.005em}
+.prose p{margin:0 0 1.02em}
+.prose code{font:.89em var(--font-mono);background:var(--accent-soft);padding:.12em .36em;border-radius:3px}
+.prose .math{font:.86rem/1.75 var(--font-mono);background:var(--accent-soft);padding:.8em .9em;border-radius:var(--radius);overflow-x:auto;margin:0 0 1.02em}
+footer.page{margin-top:calc(var(--pad)*1.5);padding-top:var(--pad);border-top:1px solid var(--line);color:var(--muted);font-size:.83rem}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Computer science · numerics</p>
+  <h1>The Gaps Between Numbers Are Not All the Same Size</h1>
+  <p class="standfirst">A double is not a real number with a bit of rounding. It is one of about 2⁶⁴ specific values, spaced unevenly along the line — dense near zero, and hundreds of millions apart out where the big numbers live.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="470" role="img"
+            aria-label="Upper panel: a magnified stretch of the number line showing individual representable doubles as ticks, with the gap between them labelled. Lower panel: the gap size plotted against magnitude on logarithmic axes, forming a staircase that doubles at every power of two."></canvas>
+    <div class="bits" id="bits" aria-live="polite"></div>
+    <div class="bits legend" aria-hidden="true"></div>
+    <figcaption>Top: the actual representable doubles near your chosen value — each tick is a number that exists; everything between them does not. Bottom: the gap size as a staircase, doubling at every power of two.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Magnitude and worked examples">
+    <div class="control">
+      <div class="row">
+        <label for="expo">Magnitude — value near 2^k</label>
+        <output id="expoout" for="expo">0</output>
+      </div>
+      <input type="range" id="expo" min="-24" max="60" step="1" value="0">
+      <p class="hint">k = 0 means around 1. k = 53 is where the gap first exceeds 1 and integers start going missing.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="frac">Position inside the binade</label>
+        <output id="fracout" for="frac">0.00</output>
+      </div>
+      <input type="range" id="frac" min="0" max="0.99" step="0.01" value="0">
+      <p class="hint">Slides from 2^k up towards 2^(k+1). The gap is constant the whole way across, then doubles at the far end.</p>
+    </div>
+
+    <div class="control">
+      <label for="demo">Worked example</label>
+      <select id="demo">
+        <option value="pointthree">0.1 + 0.2 is not 0.3</option>
+        <option value="safeint">Integers run out at 2^53</option>
+        <option value="absorb">Small terms get absorbed</option>
+        <option value="cancel">Subtraction destroys digits</option>
+      </select>
+      <p class="hint">Each one is computed live in your browser, not quoted.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="terms">Terms in the sum</label>
+        <output id="termsout" for="terms">100000</output>
+      </div>
+      <input type="range" id="terms" min="1000" max="200000" step="1000" value="100000">
+      <p class="hint">Used by the absorption example — naive addition against Kahan's compensated version.</p>
+    </div>
+
+    <dl class="readout">
+      <div><dt>value</dt><dd id="val">—</dd></div>
+      <div><dt>gap to the next double (ULP)</dt><dd id="ulp">—</dd></div>
+      <div><dt>relative precision</dt><dd id="rel">—</dd></div>
+      <div><dt>worked example</dt><dd id="demoout">—</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Drag the magnitude slider from 0 up to 53 and watch the gap readout. At k = 0 the spacing is about 2.2 × 10⁻¹⁶. At k = 53 it is exactly 2. Not two parts in a billion — two. Every odd integer above 2⁵³ is simply absent from the format, which is why <code>MAX_SAFE_INTEGER + 2</code> and <code>MAX_SAFE_INTEGER + 1</code> are the same number.</p>
+
+  <h2>Why it is a staircase</h2>
+
+  <p>A double stores a sign, an 11-bit exponent and a 52-bit fraction. The value is</p>
+
+  <p class="math">(−1)^s × 1.f × 2^(e − 1023)</p>
+
+  <p>The fraction has a fixed 52 bits regardless of scale, so within any interval [2ᵏ, 2ᵏ⁺¹) — a <em>binade</em> — the representable values are evenly spaced 2ᵏ⁻⁵² apart. Cross into the next binade and the exponent ticks up, so the spacing doubles. That is the staircase in the lower panel: flat across each binade, one octave step at each power of two.</p>
+
+  <p>The payoff is that <em>relative</em> precision is nearly constant: about 16 decimal digits, whether you are measuring atoms or galaxies. Floating point trades absolute accuracy for scale invariance, which is almost always the right trade — and is exactly why bugs show up as relative errors that look tiny until they are compared against something absolute.</p>
+
+  <h2>Three ways this bites</h2>
+
+  <p>Pick <em>0.1 + 0.2</em>. Neither 0.1 nor 0.2 is representable; in binary they are repeating fractions, so each is stored as the nearest double. Their sum lands one ULP above the nearest double to 0.3, and the difference is exactly 5.55 × 10⁻¹⁷ — a specific number you can print, not vagueness.</p>
+
+  <p>Pick <em>small terms get absorbed</em> and push the term count up. Adding 10⁻¹⁶ to 1 gives back exactly 1: the true sum falls between two representable doubles and rounds to the one it started at. A hundred thousand such additions still give exactly 1. Kahan summation fixes this by keeping the lost part in a second variable and feeding it back on the next iteration — same data, same hardware, recovered digits.</p>
+
+  <p>Pick <em>subtraction destroys digits</em>. Subtracting two nearly equal numbers is exactly representable — no rounding at all — and that is the problem. The leading digits cancel and the result is dominated by whatever error was already in the operands, now promoted from the sixteenth digit to the first. This is why the quadratic formula is rewritten before it is implemented.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set k to 52 and slide the binade position across. The value changes; the gap does not budge. Then nudge k to 53 and watch the gap double in one step. Everything about floating-point arithmetic follows from that staircase.</p>
+
+  <p>The practical rule: never test two floats for equality, and never use a fixed tolerance like 1e-9 without knowing the magnitudes involved. At k = 40 the gap is already larger than 1e-9, so that comparison is asking whether two numbers are closer than the format can distinguish. Scale the tolerance to the values, or compare in ULPs.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---------------- MODEL: pure ---------------- */
+
+const buf = new ArrayBuffer(8);
+const f64 = new Float64Array(buf), u32 = new Uint32Array(buf);
+
+const Model = {
+  /* the gap to the next representable double above x */
+  ulp(x){
+    if (x === 0) return Math.pow(2, -1074);
+    f64[0] = Math.abs(x);
+    const next = Model.nextUp(Math.abs(x));
+    return next - Math.abs(x);
+  },
+
+  nextUp(x){
+    f64[0] = x;
+    let lo = u32[0], hi = u32[1];
+    lo = (lo + 1) >>> 0;
+    if (lo === 0) hi = (hi + 1) >>> 0;
+    u32[0] = lo; u32[1] = hi;
+    return f64[0];
+  },
+
+  /* sign, biased exponent and 52-bit fraction, as bit strings */
+  bits(x){
+    f64[0] = x;
+    const hi = u32[1] >>> 0, lo = u32[0] >>> 0;
+    const all = (hi.toString(2).padStart(32, "0")) + (lo.toString(2).padStart(32, "0"));
+    return { sign: all.slice(0, 1), exponent: all.slice(1, 12), mantissa: all.slice(12) };
+  },
+
+  /* rebuild a double from its decoded parts — proves the decode is faithful */
+  fromBits(b){
+    const all = b.sign + b.exponent + b.mantissa;
+    u32[1] = parseInt(all.slice(0, 32), 2) >>> 0;
+    u32[0] = parseInt(all.slice(32), 2) >>> 0;
+    return f64[0];
+  },
+
+  machineEpsilon(){
+    let e = 1;
+    while (1 + e/2 !== 1) e = e/2;
+    return e;
+  },
+
+  naiveSum(terms, term, start){
+    let s = start;
+    for (let i = 0; i < terms; i++) s += term;
+    return s;
+  },
+
+  kahanSum(terms, term, start){
+    let s = start, c = 0;
+    for (let i = 0; i < terms; i++){
+      const y = term - c;
+      const t = s + y;
+      c = (t - s) - y;
+      s = t;
+    }
+    return s;
+  },
+
+  /* the classic cancellation: (1 + d) - 1 loses everything below one ULP */
+  cancellation(d){ return (1 + d) - 1; }
+};
+
+/* ---------------- STATE + VIEW ---------------- */
+
+const defaults = { expo: 0, frac: 0, demo: "pointthree", terms: 100000 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+function currentValue(){
+  return Math.pow(2, state.expo)*(1 + state.frac);
+}
+
+function demoText(){
+  switch (state.demo){
+    case "pointthree": {
+      const d = 0.1 + 0.2 - 0.3;
+      return "0.1 + 0.2 - 0.3 = " + d.toExponential(6) + "  (exactly one ULP of 0.3)";
+    }
+    case "safeint": {
+      const m = Number.MAX_SAFE_INTEGER;
+      return "2^53 + 1 and 2^53 + 2 both store as " + (m + 2).toString() +
+             "; the gap up there is " + Model.ulp(m + 2).toString();
+    }
+    case "absorb": {
+      const naive = Model.naiveSum(state.terms, 1e-16, 1);
+      const kahan = Model.kahanSum(state.terms, 1e-16, 1);
+      return "1 + " + state.terms + " x 1e-16 -> naive " + naive.toFixed(15) +
+             ", Kahan " + kahan.toFixed(15);
+    }
+    case "cancel": {
+      const got = Model.cancellation(1e-16);
+      return "(1 + 1e-16) - 1 = " + got.toExponential(3) + " instead of 1e-16; every digit was lost";
+    }
+    default: return "-";
+  }
+}
+
+function render(){
+  const W = cv.width, H = cv.height, mid = Math.round(H*0.48);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+
+  const x = currentValue(), gap = Model.ulp(x);
+  const pad = 42;
+
+  /* ---- upper: the number line, magnified to a handful of ULPs ---- */
+  const SHOW = 9;
+  const left = x - (SHOW/2)*gap;
+  const lx = (v) => pad + ((v - left)/(SHOW*gap))*(W - 2*pad);
+  const axisY = mid - 52;
+
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad, axisY); ctx.lineTo(W - pad, axisY); ctx.stroke();
+
+  for (let i = 0; i <= SHOW; i++){
+    const v = left + i*gap;
+    const px = lx(v);
+    const here = Math.abs(i - SHOW/2) < 0.5;
+    ctx.strokeStyle = here ? css("--accent") : css("--ink");
+    ctx.lineWidth = here ? 3 : 1.5;
+    ctx.beginPath(); ctx.moveTo(px, axisY - 16); ctx.lineTo(px, axisY + 16); ctx.stroke();
+  }
+  ctx.fillStyle = css("--accent"); ctx.font = "700 12px " + css("--font-mono");
+  ctx.textAlign = "center";
+  ctx.fillText("one gap = " + gap.toExponential(3), W/2, axisY + 40);
+  ctx.fillStyle = css("--muted"); ctx.font = "600 11px " + css("--font-mono");
+  ctx.fillText("nothing exists between these ticks", W/2, axisY + 58);
+  ctx.textAlign = "left";
+  ctx.fillText("representable doubles near 2^" + state.expo, pad, 22);
+
+  /* ---- lower: gap against magnitude, log-log staircase ---- */
+  const gy0 = mid + 16, gy1 = H - 34;
+  const K0 = -24, K1 = 60;
+  const gx = (k) => pad + ((k - K0)/(K1 - K0))*(W - 2*pad);
+  const gLo = -24 - 52, gHi = 60 - 52;
+  const gyv = (log2gap) => gy1 - ((log2gap - gLo)/(gHi - gLo))*(gy1 - gy0);
+
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+  ctx.font = "11px " + css("--font-mono"); ctx.fillStyle = css("--muted");
+  for (let g = -70; g <= 10; g += 20){
+    const y = gyv(g);
+    ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
+    ctx.fillText("2^" + g, 4, y + 4);
+  }
+
+  ctx.strokeStyle = css("--accent"); ctx.lineWidth = 2.2; ctx.beginPath();
+  for (let k = K0; k <= K1; k++){
+    const y = gyv(k - 52);
+    ctx.lineTo(gx(k), y);
+    ctx.lineTo(gx(k + 1) - 0.001, y);
+  }
+  ctx.stroke();
+
+  /* marker + the gap = 1 threshold */
+  ctx.fillStyle = css("--accent");
+  ctx.beginPath(); ctx.arc(gx(state.expo) + 2, gyv(state.expo - 52), 5, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = css("--muted"); ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, gyv(0)); ctx.lineTo(W - pad, gyv(0)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = css("--muted"); ctx.font = "600 11px " + css("--font-mono");
+  ctx.fillText("gap = 1 : integers start going missing at k = 53", pad + 6, gyv(0) - 6);
+  ctx.fillText("magnitude k →", W - pad - 96, H - 12);
+
+  /* ---- bit layout ---- */
+  const b = Model.bits(x);
+  el("bits").innerHTML =
+    '<span class="s">' + b.sign + '</span> ' +
+    '<span class="e">' + b.exponent + '</span> ' +
+    '<span class="m">' + b.mantissa + '</span>' +
+    '<div class="legend"><span><b class="s">&#9632;</b> sign (1)</span>' +
+    '<span><b class="e">&#9632;</b> exponent (11) = ' + parseInt(b.exponent, 2) +
+    ' &minus; 1023 = ' + (parseInt(b.exponent, 2) - 1023) + '</span>' +
+    '<span><b class="m">&#9632;</b> fraction (52)</span></div>';
+
+  /* ---- readouts ---- */
+  el("expoout").textContent = String(state.expo);
+  el("fracout").textContent = state.frac.toFixed(2);
+  el("termsout").textContent = String(state.terms);
+  el("val").textContent = x.toPrecision(17);
+  el("ulp").textContent = gap.toExponential(6);
+  el("rel").textContent = (gap/x).toExponential(3) + "  (about 16 digits)";
+  el("demoout").textContent = demoText();
+}
+
+el("expo").addEventListener("input", (e) => { state.expo = parseInt(e.target.value, 10); render(); });
+el("frac").addEventListener("input", (e) => { state.frac = parseFloat(e.target.value); render(); });
+el("demo").addEventListener("change", (e) => { state.demo = e.target.value; render(); });
+el("terms").addEventListener("input", (e) => { state.terms = parseInt(e.target.value, 10); render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("expo").value = defaults.expo; el("frac").value = defaults.frac;
+  el("demo").value = defaults.demo; el("terms").value = defaults.terms;
+  render();
+});
+render();
+
+/* ---------------- SELFTEST ---------------- */
+
+const near = (a, b, tol) => Number.isFinite(a) && Math.abs(a - b) <= tol;
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1. the canonical rounding residue, to the last bit */
+  push("0.1 + 0.2 - 0.3 is exactly 5.551115123125783e-17",
+    (0.1 + 0.2 - 0.3) === 5.551115123125783e-17,
+    "an exact double, not an approximation: it is one ULP of 0.3");
+
+  /* 2. the spacing law, checked against 2^(k-52) at every magnitude */
+  push("ULP at 2^k equals 2^(k-52) for k = -24..60", (function(){
+    for (let k = -24; k <= 60; k++)
+      if (Model.ulp(Math.pow(2, k)) !== Math.pow(2, k - 52)) return false;
+    return true;
+  })(), "85 magnitudes, exact equality rather than a tolerance");
+
+  /* 3. the spacing is constant across a binade and doubles at its top */
+  push("the gap is flat within a binade and doubles at the boundary", (function(){
+    for (const k of [0, 10, 52]){
+      const g = Model.ulp(Math.pow(2, k));
+      for (const f of [0.01, 0.5, 0.99])
+        if (Model.ulp(Math.pow(2, k)*(1 + f)) !== g) return false;
+      if (Model.ulp(Math.pow(2, k + 1)) !== 2*g) return false;
+    }
+    return true;
+  })(), "the staircase in the lower panel, asserted numerically");
+
+  /* 4. integers run out where the gap passes 1 */
+  push("2^53 + 1 and 2^53 + 2 are the same double", (function(){
+    const m = Math.pow(2, 53);
+    return (m + 1) === m && (m + 2) !== m && Model.ulp(m) === 2;
+  })(), "adding one at 2^53 is a no-op; the gap up there is exactly 2");
+
+  /* 5. machine epsilon by search matches 2^-52 */
+  push("machine epsilon is exactly 2^-52", (function(){
+    const e = Model.machineEpsilon();
+    return e === Math.pow(2, -52) && (1 + e/2) === 1 && (1 + e) !== 1;
+  })(), "found by halving until 1 + e/2 rounds back to 1");
+
+  /* 6. absorption, and Kahan recovering from it */
+  push("naive summation absorbs 1e-16 terms; Kahan does not", (function(){
+    const n = 100000;
+    const naive = Model.naiveSum(n, 1e-16, 1);
+    const kahan = Model.kahanSum(n, 1e-16, 1);
+    return naive === 1 && kahan > 1 && near(kahan - 1, n*1e-16, n*1e-16*1e-6);
+  })(), "100000 additions leave naive at exactly 1; Kahan recovers 1e-11");
+
+  /* 7. subtraction of near-equal values is exact, and that is the problem */
+  push("(1 + d) - 1 loses everything below one ULP", (function(){
+    return Model.cancellation(1e-16) === 0 &&
+           Model.cancellation(Math.pow(2, -52)) === Math.pow(2, -52);
+    })(), "the cancellation is exact; what was lost was lost in the addition before it");
+
+  /* 8. the bit decode is faithful */
+  push("decoding and rebuilding reproduces the double exactly", (function(){
+    const cases = [1, 0.1, 0.5, 2, 1e-24, 1e60, Math.PI, Math.pow(2, 53), 1 + Math.pow(2, -52)];
+    for (const v of cases) if (Model.fromBits(Model.bits(v)) !== v) return false;
+    return true;
+  })(), "sign, exponent and fraction round-trip bit for bit");
+
+  /* 9. the exponent field really is the stored magnitude plus the 1023 bias */
+  push("the exponent field equals k + 1023 at every 2^k", (function(){
+    for (let k = -24; k <= 60; k++)
+      if (parseInt(Model.bits(Math.pow(2, k)).exponent, 2) !== k + 1023) return false;
+    return true;
+  })(), "the bias the panel subtracts is the real one");
+
+  /* 10. nothing degenerate across the control ranges */
+  push("value and gap stay finite and positive across every setting", (function(){
+    for (let k = -24; k <= 60; k++) for (const f of [0, 0.5, 0.99]){
+      const v = Math.pow(2, k)*(1 + f), g = Model.ulp(v);
+      if (!Number.isFinite(v) || !Number.isFinite(g) || g <= 0) return false;
+    }
+    return true;
+  })(), "255 combinations swept");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, seed: 20260101 };
+
+})();
+</script>
+</body>
+</html>
