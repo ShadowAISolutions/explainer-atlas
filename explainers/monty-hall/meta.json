@@ -1,0 +1,16 @@
+{
+  "slug": "monty-hall",
+  "title": "The Host Knows, and That Is the Whole Trick",
+  "domain": "game-theory",
+  "difficulty": 2,
+  "summary": "Play the doors, then take away the host's knowledge and watch the two-thirds advantage vanish, which is where the puzzle's real lesson lives.",
+  "prerequisites": [],
+  "tags": ["probability", "conditioning", "bayes", "paradox", "monte-carlo"],
+  "interaction_pattern": "guess-then-reveal",
+  "sources": [
+    { "title": "Selvin, A Problem in Probability, The American Statistician 29(1), 1975", "url": "https://www.tandfonline.com/doi/abs/10.1080/00031305.1975.10479121" },
+    { "title": "Rosenhouse, The Monty Hall Problem, Oxford University Press, 2009", "url": "https://global.oup.com/academic/product/the-monty-hall-problem-9780195367898" }
+  ],
+  "created_at": "2026-09-19",
+  "assertions_count": 9
+}

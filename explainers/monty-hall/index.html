@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Host Knows, and That Is the Whole Trick — Explainer Atlas</title>
+<meta name="description" content="Switching doors wins two thirds of the time — but only because the host knew where the car was. Take that away and the advantage vanishes.">
+<style>
+:root{
+  --bg:#fffdf7; --panel:#ffffff; --ink:#1c1917; --muted:#78716c; --line:#e7e2d6;
+  --accent:#b45309; --accent-soft:#fdf0dc; --win:#15803d; --win-soft:#e3f3e8; --lose:#b91c1c;
+  --radius:2px; --pad:clamp(14px,3vw,28px);
+  --font-body:Georgia,"Times New Roman",serif;
+  --font-ui:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#17150f; --panel:#1f1c14; --ink:#f0ece2; --muted:#a8a296; --line:#332f24;
+        --accent:#fbbf24; --accent-soft:#2b2211; --win:#5fce89; --win-soft:#12281a; --lose:#f87171;}
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0;background:var(--bg);color:var(--ink);font:clamp(.98rem,.95rem + .2vw,1.07rem)/1.65 var(--font-body);-webkit-text-size-adjust:100%}
+.wrap{max-width:56rem;margin:0 auto;padding:var(--pad)}
+header.page{text-align:center;padding-bottom:var(--pad);border-bottom:1px solid var(--line)}
+h1{font-size:clamp(1.55rem,1.1rem + 2.3vw,2.5rem);line-height:1.1;margin:0 0 .3em;letter-spacing:-.018em}
+.kicker{margin:0 0 .5em;color:var(--accent);font:700 .7rem/1.3 var(--font-ui);text-transform:uppercase;letter-spacing:.2em}
+.standfirst{margin:0 auto;color:var(--muted);max-width:36em}
+figure.stage{margin:var(--pad) 0 0;overflow:hidden}
+figure.stage canvas{display:block;width:100%;height:auto;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+figcaption{margin-top:.6em;color:var(--muted);font:.83rem/1.5 var(--font-ui);text-align:center}
+.doors{display:grid;grid-template-columns:repeat(auto-fit,minmax(5.5rem,1fr));gap:.6em;margin-top:.8em}
+.doors button{font:700 .9rem/1 var(--font-ui);min-height:46px;color:inherit;background:var(--panel);border:2px solid var(--line);border-radius:var(--radius);cursor:pointer}
+.doors button[aria-pressed=true]{border-color:var(--accent);color:var(--accent)}
+.doors button:disabled{opacity:.4;cursor:not-allowed}
+.doors button:hover:not(:disabled){border-color:var(--accent)}
+.verdict{margin:.9em 0 0;text-align:center;font:700 1.02rem/1.4 var(--font-ui);min-height:1.4em;color:var(--accent)}
+.controls{margin-top:var(--pad);background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad);display:grid;gap:1.1em}
+@media (min-width:46rem){.controls{grid-template-columns:1fr 1fr;gap:1.1em 1.6em}
+  .controls .full{grid-column:1 / -1}}
+.control{display:grid;gap:.3em;font-family:var(--font-ui)}
+.control .row{display:flex;justify-content:space-between;align-items:baseline;gap:.7em}
+.control label{font-weight:700;font-size:.87rem}
+.control output{font:700 .84rem/1 var(--font-mono);color:var(--accent)}
+.control .hint{margin:0;color:var(--muted);font-size:.78rem;line-height:1.5}
+input[type=range]{width:100%;accent-color:var(--accent);min-height:26px}
+select{font:inherit;font-family:var(--font-ui);color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:.5em .6em;min-height:40px;width:100%}
+.controls button{font:700 .88rem/1 var(--font-ui);color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:.6em .8em;min-height:42px;cursor:pointer}
+.controls button:hover{border-color:var(--accent);color:var(--accent)}
+:where(button,input,select):focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+table.odds{width:100%;border-collapse:collapse;font:.85rem/1.5 var(--font-mono)}
+table.odds th{text-align:left;font-family:var(--font-ui);font-size:.69rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:.3em .2em;border-bottom:1px solid var(--line)}
+table.odds td{padding:.35em .2em;border-bottom:1px solid var(--line)}
+table.odds td.big{font-weight:700;color:var(--win)}
+.prose{max-width:37em;margin:calc(var(--pad)*1.6) auto 0}
+.prose h2{font:700 1rem/1.3 var(--font-ui);text-transform:uppercase;letter-spacing:.09em;color:var(--accent);margin:1.9em 0 .5em}
+.prose p{margin:0 0 1.05em}
+.prose .math{font:.87rem/1.75 var(--font-mono);background:var(--accent-soft);padding:.8em .9em;border-radius:var(--radius);overflow-x:auto;margin:0 0 1.05em}
+footer.page{margin-top:calc(var(--pad)*1.5);padding-top:var(--pad);border-top:1px solid var(--line);color:var(--muted);font:.83rem/1.5 var(--font-ui);text-align:center}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Game theory · conditional probability</p>
+  <h1>The Host Knows, and That Is the Whole Trick</h1>
+  <p class="standfirst">Switching doors wins two thirds of the time. Almost nobody believes that from the proof. So play it — and then take the host's knowledge away and watch the advantage evaporate.</p>
+</header>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="900" height="420" role="img"
+          aria-label="A row of doors, one hiding a car and the rest goats, with a bar chart beneath comparing the measured win rate for switching against the win rate for staying, both against their exact theoretical values."></canvas>
+  <div class="doors" id="doors" role="group" aria-label="Choose a door"></div>
+  <p class="verdict" id="verdict">Pick a door to begin.</p>
+  <figcaption>Pick a door, the host opens a goat, then decide. The bars below track what you have actually won against the exact odds.</figcaption>
+</figure>
+
+<section class="controls" data-role="controls" aria-label="Game rules and simulation">
+  <div class="control">
+    <div class="row">
+      <label for="doorcount">Number of doors</label>
+      <output id="doorcountout" for="doorcount">3</output>
+    </div>
+    <input type="range" id="doorcount" min="3" max="12" step="1" value="3">
+    <p class="hint">The host still opens exactly one goat. With more doors, switching means picking at random among those left.</p>
+  </div>
+
+  <div class="control">
+    <label for="host">What the host knows</label>
+    <select id="host">
+      <option value="knows">Knows where the car is — always opens a goat</option>
+      <option value="random">Knows nothing — opens a door at random</option>
+    </select>
+    <p class="hint">With an ignorant host, rounds where the car gets revealed are void. This one setting is the whole puzzle.</p>
+  </div>
+
+  <div class="control full">
+    <div class="row">
+      <label for="trials">Simulated rounds</label>
+      <output id="trialsout" for="trials">2000</output>
+    </div>
+    <input type="range" id="trials" min="0" max="20000" step="500" value="2000">
+    <p class="hint">Seeded, so the same setting always gives the same result. These are added to the bars alongside anything you play by hand.</p>
+  </div>
+
+  <table class="odds full">
+    <thead><tr><th>Strategy</th><th>Exact</th><th>Simulated</th><th>Your play</th></tr></thead>
+    <tbody>
+      <tr><td>Switch</td><td class="big" id="sw-exact">—</td><td id="sw-sim">—</td><td id="sw-you">—</td></tr>
+      <tr><td>Stay</td><td id="st-exact">—</td><td id="st-sim">—</td><td id="st-you">—</td></tr>
+    </tbody>
+  </table>
+
+  <button type="button" id="reset" class="full">Reset everything</button>
+</section>
+
+<article class="prose" data-role="prose">
+  <p>The objection everyone raises is the same, and it sounds airtight: two doors are left, one has the car, so it is fifty-fifty. The trouble is that the two remaining doors did not get there the same way.</p>
+
+  <h2>Follow the information</h2>
+
+  <p>Your door was chosen before anything was known. It had a one-in-three chance then and nothing that happened afterwards touched it — the host was never going to open your door, so watching him not open it tells you nothing about it. That door is frozen at 1/3.</p>
+
+  <p>The other two doors started with 2/3 between them. The host then removed one of them, and here is the thing: he removed it <em>on purpose</em>. He looked, and he opened a door he knew was empty. The 2/3 did not evaporate with the door he opened; it could not, because he was never going to open the car. All of it lands on the single door he left standing.</p>
+
+  <p class="math">P(car behind your door)     = 1/3
+P(car behind the other two) = 2/3  →  all of it on the one still closed</p>
+
+  <p>So switching is a two-thirds bet against a one-third bet. The fifty-fifty intuition treats the host as a coin. He is not; he is a filter with information you do not have.</p>
+
+  <h2>Take the knowledge away</h2>
+
+  <p>Switch the host to <em>knows nothing</em>. Now he opens a random door, and sometimes he reveals the car — those rounds are void and get thrown out. Play the rest and the advantage is gone: switching and staying both win half the time.</p>
+
+  <p>Nothing about the doors changed. What changed is that an open goat door no longer carries information, because a goat is simply what you usually get when you open a door at random. The surviving rounds are exactly those where both remaining doors are equally likely, so they are. The entire 2/3 result lives in the host's knowledge, not in the geometry of the problem — which is why the puzzle is so much better as a lesson about conditioning than as a lesson about doors.</p>
+
+  <h2>Push the door count up</h2>
+
+  <p>Drag the doors to twelve. Your first pick is right 1/12 of the time, so 11/12 of the probability sits elsewhere. The host opens one goat, and now the remaining mass is spread over ten closed doors rather than concentrated on one:</p>
+
+  <p class="math">P(switch wins) = (N − 1) / (N(N − 2))</p>
+
+  <p>which at N = 12 is about 0.092 against staying's 0.083 — better, but barely. The famous version of this generalisation has the host open <em>every</em> other goat, leaving one door; that one carries the whole 11/12 and switching becomes overwhelming. Opening a single door instead, as here, spreads the same evidence thinly. It is the amount of information the host gives away that matters, not the drama of the reveal.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set three doors, a knowing host, and 20000 simulated rounds. The simulated bar lands on 0.667 within a whisker. Then flip the host to ignorant and watch both bars snap to 0.5 — the clearest demonstration that this was never a puzzle about doors.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---------------- MODEL: pure ---------------- */
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0)/4294967296;
+  };
+}
+const SEED = 20260101;
+
+const Model = {
+  /* Exact probabilities by full enumeration over car position, first pick and
+     host choice. "Switch" means moving to a uniformly random still-closed door
+     other than the original pick. Void rounds (ignorant host reveals the car)
+     are excluded from the conditioning, as the puzzle requires. */
+  exact(N, hostKnows){
+    let wSwitch = 0, wStay = 0, valid = 0;
+    for (let car = 0; car < N; car++){
+      for (let pick = 0; pick < N; pick++){
+        /* candidate doors the host may open */
+        const options = [];
+        for (let h = 0; h < N; h++){
+          if (h === pick) continue;
+          if (hostKnows && h === car) continue;
+          options.push(h);
+        }
+        if (options.length === 0) continue;
+        const wEach = (1/N)*(1/N)*(1/options.length);
+        for (const open of options){
+          if (!hostKnows && open === car) continue;         /* void round */
+          valid += wEach;
+          if (pick === car) wStay += wEach;
+          const remaining = N - 2;                          /* closed, not the pick */
+          if (remaining > 0 && car !== pick && car !== open) wSwitch += wEach*(1/remaining);
+        }
+      }
+    }
+    return valid > 0
+      ? { switchWin: wSwitch/valid, stayWin: wStay/valid, valid }
+      : { switchWin: 0, stayWin: 0, valid: 0 };
+  },
+
+  /* Seeded simulation. Returns win counts for both strategies over valid rounds. */
+  simulate(N, hostKnows, trials, seed){
+    const rnd = mulberry32(seed);
+    let sw = 0, st = 0, valid = 0;
+    for (let i = 0; i < trials; i++){
+      const car = Math.floor(rnd()*N);
+      const pick = Math.floor(rnd()*N);
+      const options = [];
+      for (let h = 0; h < N; h++){
+        if (h === pick) continue;
+        if (hostKnows && h === car) continue;
+        options.push(h);
+      }
+      if (options.length === 0) continue;
+      const open = options[Math.floor(rnd()*options.length)];
+      if (!hostKnows && open === car) continue;             /* void */
+      valid++;
+      if (pick === car) st++;
+      const closed = [];
+      for (let d = 0; d < N; d++) if (d !== pick && d !== open) closed.push(d);
+      if (closed.length && closed[Math.floor(rnd()*closed.length)] === car) sw++;
+    }
+    return { sw, st, valid };
+  },
+
+  /* the textbook closed form for a knowing host opening exactly one goat */
+  switchFormula(N){ return (N - 1)/(N*(N - 2)); }
+};
+
+/* ---------------- STATE + VIEW ---------------- */
+
+const defaults = { N: 3, host: "knows", trials: 2000 };
+const state = { N: defaults.N, host: defaults.host, trials: defaults.trials,
+                phase: "pick", pick: -1, car: -1, opened: -1,
+                you: { swWin: 0, swN: 0, stWin: 0, stN: 0 },
+                rnd: mulberry32(SEED) };
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const pct = (x) => Number.isFinite(x) ? (x*100).toFixed(1) + "%" : "—";
+const rate = (w, n) => n > 0 ? pct(w/n) : "not yet";
+
+function newRound(){
+  state.phase = "pick"; state.pick = -1; state.opened = -1;
+  state.car = Math.floor(state.rnd()*state.N);
+  buildDoors(); render();
+  el("verdict").textContent = "Pick a door to begin.";
+}
+
+function buildDoors(){
+  const box = el("doors");
+  box.innerHTML = "";
+  for (let i = 0; i < state.N; i++){
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = "Door " + (i + 1);
+    b.setAttribute("aria-pressed", String(state.pick === i));
+    b.disabled = (state.phase === "done") || (state.phase === "decide" && i === state.opened);
+    b.addEventListener("click", () => onDoor(i));
+    box.appendChild(b);
+  }
+  if (state.phase === "decide" || state.phase === "done"){
+    const again = document.createElement("button");
+    again.type = "button";
+    again.textContent = state.phase === "done" ? "Play again" : "Stay put";
+    again.addEventListener("click", () => state.phase === "done" ? newRound() : onDoor(state.pick));
+    box.appendChild(again);
+  }
+}
+
+function onDoor(i){
+  if (state.phase === "pick"){
+    state.pick = i;
+    const options = [];
+    for (let h = 0; h < state.N; h++){
+      if (h === state.pick) continue;
+      if (state.host === "knows" && h === state.car) continue;
+      options.push(h);
+    }
+    state.opened = options[Math.floor(state.rnd()*options.length)];
+    if (state.host === "random" && state.opened === state.car){
+      el("verdict").textContent = "The host opened the car. Round void — that is the cost of an ignorant host.";
+      state.phase = "done"; buildDoors(); render(); return;
+    }
+    state.phase = "decide";
+    el("verdict").textContent = "Door " + (state.opened + 1) + " is a goat. Switch, or stay put?";
+    buildDoors(); render(); return;
+  }
+  if (state.phase === "decide"){
+    const switched = (i !== state.pick);
+    const won = (i === state.car);
+    if (switched){ state.you.swN++; if (won) state.you.swWin++; }
+    else { state.you.stN++; if (won) state.you.stWin++; }
+    state.pick = i; state.phase = "done";
+    el("verdict").textContent = (won ? "The car. " : "A goat. ") +
+      (switched ? "You switched." : "You stayed.");
+    buildDoors(); render();
+  }
+}
+
+function render(){
+  const W = cv.width, H = cv.height, doorTop = 26, doorH = 170;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+
+  /* doors */
+  const pad = 30, gap = 8;
+  const dw = (W - 2*pad - gap*(state.N - 1))/state.N;
+  ctx.font = "700 13px " + css("--font-mono");
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (let i = 0; i < state.N; i++){
+    const x = pad + i*(dw + gap);
+    const open = (i === state.opened) || state.phase === "done";
+    ctx.fillStyle = open ? css("--bg") : css("--accent-soft");
+    ctx.fillRect(x, doorTop, dw, doorH);
+    ctx.lineWidth = (i === state.pick) ? 3 : 1.5;
+    ctx.strokeStyle = (i === state.pick) ? css("--accent") : css("--line");
+    ctx.strokeRect(x, doorTop, dw, doorH);
+    if (open){
+      ctx.fillStyle = (i === state.car) ? css("--win") : css("--muted");
+      ctx.fillText((i === state.car) ? "CAR" : "goat", x + dw/2, doorTop + doorH/2);
+    } else {
+      ctx.fillStyle = css("--muted");
+      ctx.fillText(String(i + 1), x + dw/2, doorTop + doorH/2);
+    }
+  }
+
+  /* odds bars */
+  const ex = Model.exact(state.N, state.host === "knows");
+  const sim = Model.simulate(state.N, state.host === "knows", state.trials, SEED);
+  const barTop = doorTop + doorH + 42, barH = 30, barL = 118, barW = W - barL - pad - 66;
+  ctx.textAlign = "left";
+  ctx.font = "600 12px " + css("--font-ui");
+  const rows = [
+    ["switch", ex.switchWin, sim.valid ? sim.sw/sim.valid : null, css("--win")],
+    ["stay",   ex.stayWin,   sim.valid ? sim.st/sim.valid : null, css("--muted")]
+  ];
+  rows.forEach(([label, exact, simv, colour], r) => {
+    const y = barTop + r*(barH + 26);
+    ctx.fillStyle = css("--muted");
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, pad, y + barH/2);
+    ctx.fillStyle = css("--line"); ctx.fillRect(barL, y, barW, barH);
+    ctx.fillStyle = colour; ctx.fillRect(barL, y, barW*exact, barH);
+    if (simv !== null){
+      ctx.strokeStyle = css("--ink"); ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(barL + barW*simv, y - 5); ctx.lineTo(barL + barW*simv, y + barH + 5); ctx.stroke();
+    }
+    ctx.fillStyle = css("--ink"); ctx.font = "700 13px " + css("--font-mono");
+    ctx.fillText(pct(exact), barL + barW + 10, y + barH/2);
+    ctx.font = "600 12px " + css("--font-ui");
+  });
+  ctx.fillStyle = css("--muted"); ctx.font = "600 11px " + css("--font-ui");
+  ctx.fillText("bars: exact odds   |   vertical rule: " + sim.valid + " simulated rounds", pad, H - 14);
+
+  /* readouts */
+  el("doorcountout").textContent = String(state.N);
+  el("trialsout").textContent = String(state.trials);
+  el("sw-exact").textContent = pct(ex.switchWin);
+  el("st-exact").textContent = pct(ex.stayWin);
+  el("sw-sim").textContent = sim.valid ? pct(sim.sw/sim.valid) : "none run";
+  el("st-sim").textContent = sim.valid ? pct(sim.st/sim.valid) : "none run";
+  el("sw-you").textContent = rate(state.you.swWin, state.you.swN);
+  el("st-you").textContent = rate(state.you.stWin, state.you.stN);
+}
+
+el("doorcount").addEventListener("input", (e) => { state.N = parseInt(e.target.value, 10); newRound(); });
+el("host").addEventListener("change", (e) => { state.host = e.target.value; newRound(); });
+el("trials").addEventListener("input", (e) => { state.trials = parseInt(e.target.value, 10); render(); });
+el("reset").addEventListener("click", () => {
+  state.N = defaults.N; state.host = defaults.host; state.trials = defaults.trials;
+  state.you = { swWin: 0, swN: 0, stWin: 0, stN: 0 };
+  state.rnd = mulberry32(SEED);
+  el("doorcount").value = defaults.N; el("host").value = defaults.host; el("trials").value = defaults.trials;
+  newRound();
+});
+newRound();
+
+/* ---------------- SELFTEST ---------------- */
+
+const near = (a, b, tol) => Number.isFinite(a) && Math.abs(a - b) <= tol;
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1. the classic answer, by exhaustive enumeration */
+  push("three doors, knowing host: switch wins exactly 2/3", (function(){
+    const e = Model.exact(3, true);
+    return near(e.switchWin, 2/3, 1e-12) && near(e.stayWin, 1/3, 1e-12);
+  })(), "enumerated over every car position, pick and host choice");
+
+  /* 2. the whole result lives in the host's knowledge */
+  push("three doors, ignorant host: both strategies win exactly 1/2", (function(){
+    const e = Model.exact(3, false);
+    return near(e.switchWin, 0.5, 1e-12) && near(e.stayWin, 0.5, 1e-12);
+  })(), "conditioned on the opened door being a goat, the advantage disappears");
+
+  /* 3. the closed form for N doors */
+  push("switch odds match (N-1)/(N(N-2)) for N = 3..12", (function(){
+    for (let N = 3; N <= 12; N++)
+      if (!near(Model.exact(N, true).switchWin, Model.switchFormula(N), 1e-12)) return false;
+    return true;
+  })(), "enumeration agrees with the closed form at every door count");
+
+  /* 4. staying is always 1/N against a knowing host */
+  push("staying wins exactly 1/N against a knowing host", (function(){
+    for (let N = 3; N <= 12; N++)
+      if (!near(Model.exact(N, true).stayWin, 1/N, 1e-12)) return false;
+    return true;
+  })(), "the first pick is frozen at its original odds; the host cannot touch it");
+
+  /* 5. switching is never worse, and strictly better with a knowing host */
+  push("switching strictly beats staying at every door count", (function(){
+    for (let N = 3; N <= 12; N++){
+      const e = Model.exact(N, true);
+      if (!(e.switchWin > e.stayWin + 1e-12)) return false;
+    }
+    return true;
+  })(), "true even at N=12, where the edge is only 0.9 percentage points");
+
+  /* 6. simulation converges on the exact answer */
+  push("20000 seeded rounds land within 3 standard errors of 2/3", (function(){
+    const s = Model.simulate(3, true, 20000, SEED);
+    const p = s.sw/s.valid, se = Math.sqrt((2/3)*(1/3)/s.valid);
+    return Math.abs(p - 2/3) < 3*se;
+  })(), "independent Monte Carlo agreeing with the enumeration");
+
+  /* 7. determinism */
+  push("the simulation is reproducible from its seed", (function(){
+    const a = Model.simulate(5, true, 3000, SEED), b = Model.simulate(5, true, 3000, SEED);
+    return a.sw === b.sw && a.st === b.st && a.valid === b.valid;
+  })(), "same seed, same counts, every time");
+
+  /* 8. an ignorant host voids the expected share of rounds.
+        P(void) = P(car not at the pick) * P(host lands on it)
+                = ((N-1)/N) * (1/(N-1)) = 1/N. */
+  push("an ignorant host voids exactly 1/N of rounds", (function(){
+    for (const N of [3, 5, 8]){
+      const s = Model.simulate(N, false, 40000, SEED + N);
+      const voidRate = 1 - s.valid/40000;
+      if (Math.abs(voidRate - 1/N) > 0.01) return false;
+    }
+    return true;
+  })(), "((N-1)/N) x (1/(N-1)) = 1/N; at three doors he reveals the car a third of the time");
+
+  /* 9. probabilities stay well-formed everywhere */
+  push("all probabilities lie in [0,1] across every setting", (function(){
+    for (let N = 3; N <= 12; N++) for (const k of [true, false]){
+      const e = Model.exact(N, k);
+      for (const v of [e.switchWin, e.stayWin])
+        if (!Number.isFinite(v) || v < 0 || v > 1) return false;
+    }
+    return true;
+  })(), "20 configurations, no NaN and nothing out of range");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED };
+
+})();
+</script>
+</body>
+</html>
