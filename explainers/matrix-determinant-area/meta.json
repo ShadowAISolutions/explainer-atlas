@@ -1,0 +1,19 @@
+{
+  "slug": "matrix-determinant-area",
+  "title": "Draw Anything. It Grows by ad − bc.",
+  "domain": "mathematics",
+  "difficulty": 2,
+  "summary": "Draw a shape, push the four entries of a 2x2 matrix around, and watch every area multiply by the same number — the determinant — going negative when the plane turns over and zero when it collapses.",
+  "prerequisites": [],
+  "tags": [
+    "determinant",
+    "linear-algebra",
+    "area",
+    "orientation",
+    "singular-matrix"
+  ],
+  "interaction_pattern": "draw-input",
+  "sources": [],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}
