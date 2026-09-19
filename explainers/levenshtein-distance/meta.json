@@ -1,0 +1,19 @@
+{
+  "slug": "levenshtein-distance",
+  "title": "Forty-Two Small Decisions",
+  "domain": "linguistics",
+  "difficulty": 2,
+  "summary": "Step through the edit-distance table one cell at a time and see that every cell is the same three-way choice, then read the alignment back off the finished grid.",
+  "prerequisites": [],
+  "tags": [
+    "edit-distance",
+    "dynamic-programming",
+    "strings",
+    "alignment",
+    "metric"
+  ],
+  "interaction_pattern": "step-through",
+  "sources": [],
+  "created_at": "2026-09-19",
+  "assertions_count": 12
+}
