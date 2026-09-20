@@ -1,0 +1,17 @@
+{
+  "slug": "titration-curve-equivalence",
+  "title": "Half Way Along, The Meter Almost Reads The pKa",
+  "domain": "chemistry",
+  "difficulty": 2,
+  "summary": "Add base to a weak acid and two landmarks appear for free: the pKa half way to equivalence, and an equivalence point that is never at pH 7. Both are shortcuts, and the page shows exactly where each one breaks.",
+  "prerequisites": [],
+  "tags": ["titration", "weak-acid", "pka", "equivalence-point", "henderson-hasselbalch", "buffer"],
+  "interaction_pattern": "drag-parameter",
+  "sources": [
+    { "title": "Harris, Quantitative Chemical Analysis, 9th edition, chapters 9 to 11", "url": "https://www.macmillanlearning.com/college/us/product/Quantitative-Chemical-Analysis/p/1319324509" },
+    { "title": "de Levie, The formalism of titration theory, Chemical Educator 6 (2001) 272-276", "url": "https://doi.org/10.1007/s00897010509a" },
+    { "title": "NIST Critically Selected Stability Constants of Metal Complexes, standard reference database 46", "url": "https://www.nist.gov/srd/nist46" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 13
+}
