@@ -1,6 +1,6 @@
 {
   "generated_at": "2026-09-20",
-  "count": 80,
+  "count": 85,
   "domains": {
     "biology": [
       "allometric-scaling-metabolism",
@@ -43,10 +43,12 @@
       "auction-formats-revenue",
       "comparative-advantage-ppf",
       "compound-interest-doubling",
+      "discounting-and-npv",
       "price-elasticity-revenue",
       "supply-demand-tax-incidence"
     ],
     "engineering": [
+      "antenna-radiation-pattern",
       "beam-bending-moment",
       "control-loop-dead-time",
       "gear-train-ratio",
@@ -54,6 +56,7 @@
       "pid-controller"
     ],
     "game-theory": [
+      "evolutionarily-stable-strategy",
       "monty-hall",
       "nash-equilibrium-mixed",
       "prisoners-dilemma-iterated",
@@ -73,6 +76,7 @@
       "markov-text-order",
       "phoneme-vowel-space-formants",
       "sound-change-chain-shift",
+      "syllable-weight-and-stress",
       "zipf-law-word-frequency"
     ],
     "mathematics": [
@@ -87,6 +91,7 @@
     "music-theory": [
       "beat-frequency-tuning",
       "chord-voice-leading-distance",
+      "comma-pump-drift",
       "equal-temperament",
       "harmonic-series-timbre",
       "rhythm-polymeter-cycle"
@@ -110,17 +115,17 @@
     ]
   },
   "interaction_patterns": {
-    "build-from-parts": 8,
+    "build-from-parts": 9,
     "compare-side-by-side": 7,
     "drag-parameter": 7,
     "draw-input": 6,
     "guess-then-reveal": 7,
     "live-code": 5,
-    "perturb-and-observe": 8,
+    "perturb-and-observe": 9,
     "race-two-methods": 6,
-    "spatial-explore": 7,
-    "step-through": 6,
-    "time-scrubber": 7,
+    "spatial-explore": 8,
+    "step-through": 7,
+    "time-scrubber": 8,
     "tune-to-match": 6
   },
   "explainers": [
@@ -189,6 +194,39 @@
       ],
       "created_at": "2026-09-20",
       "assertions_count": 13
+    },
+    {
+      "slug": "antenna-radiation-pattern",
+      "title": "Two Antennas, One Beam, And The Formula That Loses Half Of It",
+      "domain": "engineering",
+      "difficulty": 3,
+      "summary": "Spacing and phase set everything a two-element array radiates. Push them around and watch the textbook main-lobe formula quietly drop a second beam pointing the opposite way.",
+      "prerequisites": [],
+      "tags": [
+        "antenna-array",
+        "array-factor",
+        "interference",
+        "directivity",
+        "grating-lobes",
+        "phased-array"
+      ],
+      "interaction_pattern": "spatial-explore",
+      "sources": [
+        {
+          "title": "Balanis, Antenna Theory: Analysis and Design, 4th ed., chapter 6 (arrays of point sources)",
+          "url": "https://www.wiley.com/en-us/Antenna+Theory%3A+Analysis+and+Design%2C+4th+Edition-p-9781118642061"
+        },
+        {
+          "title": "Kraus and Marhefka, Antennas For All Applications, 3rd ed., chapter 5 (arrays of point sources)",
+          "url": "https://search.worldcat.org/title/47971645"
+        },
+        {
+          "title": "Orfanidis, Electromagnetic Waves and Antennas, chapter 22 (array design methods)",
+          "url": "https://www.ece.rutgers.edu/~orfanidi/ewa/"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 14
     },
     {
       "slug": "arithmetic-coding-interval",
@@ -605,6 +643,39 @@
       "assertions_count": 13
     },
     {
+      "slug": "comma-pump-drift",
+      "title": "Sing It Round Again And You Are Flat",
+      "domain": "music-theory",
+      "difficulty": 3,
+      "summary": "Tune every chord of I vi ii V pure against the one before and the tonic comes back a syntonic comma flat, every time round. Step through it, then watch tempering close the loop.",
+      "prerequisites": [],
+      "tags": [
+        "just-intonation",
+        "syntonic-comma",
+        "temperament",
+        "meantone",
+        "equal-temperament",
+        "cents"
+      ],
+      "interaction_pattern": "step-through",
+      "sources": [
+        {
+          "title": "Barbour, Tuning and Temperament: A Historical Survey",
+          "url": "https://store.doverpublications.com/products/9780486434063"
+        },
+        {
+          "title": "Benson, Music: A Mathematical Offering, chapter 5 (scales and temperaments)",
+          "url": "https://homepages.abdn.ac.uk/d.j.benson/pages/html/maths-music.html"
+        },
+        {
+          "title": "Helmholtz, On the Sensations of Tone, appendix XX (tempered intervals)",
+          "url": "https://archive.org/details/onsensationston00helmgoog"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 12
+    },
+    {
       "slug": "comparative-advantage-ppf",
       "title": "Worse At Everything, Still Worth Trading With",
       "domain": "economics",
@@ -820,6 +891,39 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 11
+    },
+    {
+      "slug": "discounting-and-npv",
+      "title": "The Number That Decides It Is The One Nobody Can Measure",
+      "domain": "economics",
+      "difficulty": 2,
+      "summary": "Scrub the discount rate and watch two projects trade places at 10.03 per cent, then meet a cash flow with two internal rates of return and another, with the same two sign changes, that has none.",
+      "prerequisites": [],
+      "tags": [
+        "net-present-value",
+        "discounting",
+        "internal-rate-of-return",
+        "annuity",
+        "perpetuity",
+        "cost-benefit"
+      ],
+      "interaction_pattern": "time-scrubber",
+      "sources": [
+        {
+          "title": "Brealey, Myers and Allen, Principles of Corporate Finance, chapters 2 and 5",
+          "url": "https://www.mheducation.com/highered/product/principles-corporate-finance-brealey-myers/M9781260013900.html"
+        },
+        {
+          "title": "HM Treasury, The Green Book: appraisal and evaluation in central government",
+          "url": "https://www.gov.uk/government/publications/the-green-book-appraisal-and-evaluation-in-central-governent"
+        },
+        {
+          "title": "Hazen, A new perspective on multiple internal rates of return, The Engineering Economist 48 (2003) 31-51",
+          "url": "https://doi.org/10.1080/00137910308965050"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 12
     },
     {
       "slug": "double-slit-interference",
@@ -1066,6 +1170,39 @@
         }
       ],
       "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
+      "slug": "evolutionarily-stable-strategy",
+      "title": "The Only Thing It Cannot Beat Is A Copy Of Itself",
+      "domain": "game-theory",
+      "difficulty": 3,
+      "summary": "Inject mutants into a settled population and watch one straight line decide their fate: its left end asks whether a rare newcomer can get in, its right end whether it could finish the job.",
+      "prerequisites": [],
+      "tags": [
+        "evolutionarily-stable-strategy",
+        "hawk-dove",
+        "replicator-dynamic",
+        "nash-equilibrium",
+        "invasion-barrier",
+        "population-games"
+      ],
+      "interaction_pattern": "perturb-and-observe",
+      "sources": [
+        {
+          "title": "Maynard Smith and Price, The logic of animal conflict, Nature 246 (1973) 15-18",
+          "url": "https://doi.org/10.1038/246015a0"
+        },
+        {
+          "title": "Maynard Smith, Evolution and the Theory of Games, Cambridge University Press 1982",
+          "url": "https://doi.org/10.1017/CBO9780511806292"
+        },
+        {
+          "title": "Hofbauer and Sigmund, Evolutionary Games and Population Dynamics, Cambridge University Press 1998",
+          "url": "https://doi.org/10.1017/CBO9781139173179"
+        }
+      ],
+      "created_at": "2026-09-20",
       "assertions_count": 13
     },
     {
@@ -2410,6 +2547,39 @@
         }
       ],
       "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
+      "slug": "syllable-weight-and-stress",
+      "title": "Four Thousand Words, Two Places To Put The Stress",
+      "domain": "linguistics",
+      "difficulty": 2,
+      "summary": "Build a Latin word one syllable at a time and watch the accent jump when the second-from-last syllable turns heavy. The whole rule is three states read backwards.",
+      "prerequisites": [],
+      "tags": [
+        "stress",
+        "syllable-weight",
+        "latin",
+        "phonology",
+        "finite-state",
+        "prosody"
+      ],
+      "interaction_pattern": "build-from-parts",
+      "sources": [
+        {
+          "title": "Allen, Vox Latina: the pronunciation of Classical Latin, 2nd ed., chapter on accent",
+          "url": "https://www.cambridge.org/core/books/vox-latina/2E6B2C79A0FBDA0B0A1E0CD6E2DCCB45"
+        },
+        {
+          "title": "Hayes, Metrical Stress Theory: Principles and Case Studies",
+          "url": "https://press.uchicago.edu/ucp/books/book/chicago/M/bo3618437.html"
+        },
+        {
+          "title": "Gordon, Syllable Weight: Phonetics, Phonology, Typology",
+          "url": "https://www.routledge.com/Syllable-Weight-Phonetics-Phonology-Typology/Gordon/p/book/9780415976099"
+        }
+      ],
+      "created_at": "2026-09-20",
       "assertions_count": 12
     },
     {
