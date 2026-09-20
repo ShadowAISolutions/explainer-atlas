@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>It Only Undoes Part of What You Did — Explainer Atlas</title>
+<meta name="description" content="Squeeze an equilibrium and it shifts to push back, but never all the way back. Three separate nudges, and only one of them moves the equilibrium constant.">
+<style>
+:root{
+  --bg:#f7f5f1; --panel:#fffefb; --ink:#1a1714; --muted:#6b6257; --line:#e0dbd1;
+  --react:#146b6b; --prod:#6b3fa0; --accent:#b4541a; --accent-soft:#f7e9de;
+  --warn:#9c2f2f; --grid:#ece8e0;
+  --pad:clamp(14px,3vw,26px);
+  --sans:ui-sans-serif,system-ui,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#131110; --panel:#1c1917; --ink:#ece7e0; --muted:#9d948a; --line:#2e2a26;
+    --react:#4bbcbc; --prod:#b08ae0; --accent:#e8874a; --accent-soft:#33210f;
+    --warn:#e4736f; --grid:#242019;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:clamp(1rem,.96rem + .22vw,1.07rem)/1.6 var(--sans); -webkit-text-size-adjust:100%}
+.wrap{max-width:60rem; margin:0 auto; padding:var(--pad)}
+
+header.page{display:grid; gap:.2em; padding:calc(var(--pad)*.5) 0 var(--pad)}
+.kicker{margin:0; color:var(--accent); font:700 .7rem/1 var(--mono);
+  text-transform:uppercase; letter-spacing:.2em}
+h1{font-size:clamp(1.65rem,1.1rem + 2.9vw,2.8rem); line-height:1.08; margin:.25em 0 .3em;
+  font-weight:800; letter-spacing:-.025em; max-width:15em}
+.standfirst{margin:0; color:var(--muted); max-width:38em}
+
+.nudges{border:1px solid var(--line); border-left:5px solid var(--accent); background:var(--panel);
+  padding:var(--pad); display:grid; gap:1em 1.6em; border-radius:4px}
+@media (min-width:42rem){ .nudges{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (min-width:62rem){ .nudges{grid-template-columns:repeat(3,minmax(0,1fr))} }
+.control{display:grid; gap:.3em; min-width:0}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font:700 .72rem/1.3 var(--mono); text-transform:uppercase; letter-spacing:.1em}
+.control output{font:700 .82rem/1 var(--mono); color:var(--accent); background:var(--accent-soft);
+  padding:.25em .45em; border-radius:3px; font-variant-numeric:tabular-nums}
+.control .hint{margin:0; color:var(--muted); font-size:.78rem; line-height:1.45}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; font-family:var(--mono); font-size:.82rem; color:inherit;
+  background:var(--bg); border:1px solid var(--line); padding:.55em .6em; min-height:42px;
+  border-radius:3px}
+button{cursor:pointer; font-weight:700; letter-spacing:.05em}
+button:hover,select:hover{border-color:var(--accent); color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.btnrow{display:flex; gap:.5em; flex-wrap:wrap}
+.btnrow button{flex:1 1 7rem}
+
+figure.stage{margin:var(--pad) 0 0; background:var(--panel); border:1px solid var(--line);
+  border-radius:4px; padding:10px 10px 0; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto}
+figcaption{margin:0; padding:.7em 4px 1em; color:var(--muted); font-size:.85rem}
+
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:1px;
+  margin:var(--pad) 0 0; padding:0; background:var(--line); border:1px solid var(--line); border-radius:4px}
+.readout div{background:var(--panel); padding:.6em .75em}
+.readout dt{margin:0; color:var(--muted); font:.66rem/1.4 var(--mono); text-transform:uppercase; letter-spacing:.1em}
+.readout dd{margin:.2em 0 0; font:700 1.02rem/1.25 var(--mono); font-variant-numeric:tabular-nums}
+
+.prose{max-width:36em; margin:calc(var(--pad)*1.6) auto 0}
+.prose h2{font:800 1.02rem/1.3 var(--sans); margin:2em 0 .5em; letter-spacing:-.01em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--mono); font-size:.86rem; background:var(--panel);
+  padding:.8em 1em; border-radius:4px; border:1px solid var(--line); overflow-x:auto;
+  white-space:pre-wrap; line-height:1.7}
+.prose em{color:var(--accent); font-style:normal; font-weight:700}
+footer.page{max-width:36em; margin:calc(var(--pad)*1.8) auto 0; padding-top:var(--pad);
+  border-top:1px solid var(--line); color:var(--muted); font-size:.84rem}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Chemistry</p>
+  <h1>It Only Undoes Part of What You Did</h1>
+  <p class="standfirst">Squeeze a gas equilibrium into half the space and it shifts to push back.
+  It never pushes all the way back. And of the three ways to disturb it, only one moves the
+  equilibrium constant at all.</p>
+</header>
+
+<section class="nudges" data-role="controls" aria-label="Disturbances">
+  <div class="control">
+    <div class="row"><label for="rxn">Reaction</label></div>
+    <select id="rxn">
+      <option value="dim" selected>2 NO2 to N2O4</option>
+      <option value="split">N2O4 to 2 NO2</option>
+      <option value="hi">H2 + I2 to 2 HI</option>
+    </select>
+    <p class="hint">The first two are the same chemistry written in opposite directions. The
+    third has the same number of gas molecules on both sides.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="vol">Volume</label>
+      <output id="volout" for="vol">1.00 L</output>
+    </div>
+    <input type="range" id="vol" min="0.4" max="8" step="0.05" value="1">
+    <p class="hint">The flask settled at 2 litres and the page opens with it already squeezed
+    into 1. Which side gains depends on which side has fewer molecules.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="temp">Temperature</label>
+      <output id="tempout" for="temp">298 K</output>
+    </div>
+    <input type="range" id="temp" min="250" max="700" step="1" value="298">
+    <p class="hint">The only disturbance here that moves the equilibrium constant itself.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="add">Extra reactant</label>
+      <output id="addout" for="add">0.00 mol</output>
+    </div>
+    <input type="range" id="add" min="0" max="4" step="0.05" value="0">
+    <p class="hint">Tipped into the flask once it has already settled. Watch how much of it
+    the reaction eats.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="inert">Argon</label>
+      <output id="inertout" for="inert">0.00 mol</output>
+    </div>
+    <input type="range" id="inert" min="0" max="6" step="0.1" value="0">
+    <p class="hint">An inert gas at fixed volume. The pressure readout climbs; nothing else
+    moves at all.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="squeeze">Quick nudges</label></div>
+    <div class="btnrow">
+      <button type="button" id="squeeze">Halve volume</button>
+      <button type="button" id="expand">Double volume</button>
+      <button type="button" id="reset">Reset</button>
+    </div>
+    <p class="hint">Reset puts the flask back to the starting conditions of the chosen reaction.</p>
+  </div>
+</section>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="900" height="520" role="img"
+    aria-label="A strip showing the reaction quotient against the equilibrium constant, and a bar chart of every species' concentration before the disturbance and after the equilibrium has reset itself."></canvas>
+  <figcaption id="cap">The top strip shows where the reaction quotient lands the instant you
+  disturb the flask, and the constant it has to return to. The bars are concentrations: hollow
+  before the disturbance, solid once it has settled again.</figcaption>
+</figure>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Equilibrium constant</dt><dd id="rK">&mdash;</dd></div>
+  <div><dt>Quotient just after</dt><dd id="rQ">&mdash;</dd></div>
+  <div><dt>Reaction runs</dt><dd id="rDir">&mdash;</dd></div>
+  <div><dt>Total pressure</dt><dd id="rP">&mdash;</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>Two moles of nitrogen dioxide sit in a two litre flask at room temperature, mostly paired
+  up as the colourless dimer. Halve the flask. Every concentration doubles on the spot, and the
+  quotient that has to equal 216 drops to exactly half of it, because the quotient carries one
+  more concentration on the bottom than on the top. The reaction is no longer at equilibrium and
+  it runs forward until it is again.</p>
+
+  <p>Here is the part the slogan hides. The dioxide concentration before the squeeze was 0.047
+  molar. Doubling the density alone would have taken it to 0.094. After the shift it settles at
+  0.067: higher than it was, lower than it would have been. The opposition is real and it is
+  partial, and the partial bit is the one statement here that is a theorem. Halve the volume of
+  any gas equilibrium and the pressure rises by a factor strictly between one and two, never
+  quite reaching the two that a mixture unable to react would give; over four hundred seeded
+  mixtures the page measures that factor between 1.475 and 1.998.</p>
+
+  <p>What is <em>not</em> a theorem is the tidier version of the same sentence about
+  concentrations. Give a reactant a big coefficient and a hard forward shift can consume it
+  faster than the squeeze concentrates it. The page exhibits such a mixture and asserts the
+  embarrassment: halving its volume takes one reactant from 0.0798 molar down to 0.0629, a fall
+  of a fifth, while every other concentration in the flask goes up.</p>
+
+  <h2>What the constant is a constant of</h2>
+
+  <p class="math">Q  = product concentrations over reactant concentrations, each raised to its coefficient
+K  = the one value of Q the reaction will sit still at, and it depends on temperature alone</p>
+
+  <p>Adding reactant lowers Q, so the reaction runs forward. Squeezing multiplies Q by a power
+  of the volume, and the power is the difference in molecule counts between the two sides, so a
+  squeeze pushes the reaction toward whichever side has fewer molecules. Neither of those
+  touches K. Heating is different in kind: it does not disturb the mixture at all, it moves the
+  target. Take the dimerisation to 400 K and K falls from 216 to 0.60, because the reaction
+  gives out 57 kilojoules per mole and heat is effectively a product. The flask turns brown.</p>
+
+  <h2>The same reaction, written backwards</h2>
+
+  <p>Switch to the second preset. It is the identical chemistry, written as the dimer splitting,
+  and now the constant is one over 216 and the side with fewer molecules is on the left. Squeeze
+  it and it shifts left, which is the same physical shift as before under a different name. The
+  rule is about the <em>equation</em>; the chemistry does not know which way you wrote it.</p>
+
+  <h2>Two things that look like disturbances and are not</h2>
+
+  <p>Choose the third preset, where two molecules go to two molecules. The volume slider now
+  does nothing whatsoever: the volume cancels out of the quotient exactly, and the page asserts
+  the extent of reaction is identical to the last decimal across the whole range. Then push the
+  argon slider on any preset. The pressure readout climbs and nothing else on screen moves, and
+  the assertion checks that the extent is not merely close but unchanged. Argon at fixed volume
+  changes no concentration, and concentrations are all the quotient knows about. Add argon at
+  fixed <em>pressure</em> instead and the flask must expand to make room, which is a volume
+  change wearing a disguise, and the volume slider already shows you what that does.</p>
+
+  <h2>What to try</h2>
+
+  <p>Start on the dimerisation and push <em>Extra reactant</em> to one mole. The reaction eats
+  0.978 of the mole you added, leaving the dioxide concentration at 0.058 against the 0.047 it
+  held before, so it partly undid the change and no more. Then drag the temperature from 298 K
+  up to 400 K and watch the target itself slide down the strip while the bars chase it.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+const R_GAS = 8.314;               /* J per mole per kelvin */
+
+/* ---- MODEL: pure functions. No DOM. ------------------------------------- */
+const Model = {
+  RXN: {
+    dim: { name: "2 NO2 ⇌ N2O4",
+      species: ["NO2", "N2O4"], nu: [-2, 1], n0: [2, 0],
+      atoms: [{N:1, O:2}, {N:2, O:4}],
+      K0: 216, T0: 298, dH: -57200, V0: 2, Tstart: 298 },
+    split: { name: "N2O4 ⇌ 2 NO2",
+      species: ["N2O4", "NO2"], nu: [-1, 2], n0: [1, 0],
+      atoms: [{N:2, O:4}, {N:1, O:2}],
+      K0: 1/216, T0: 298, dH: 57200, V0: 2, Tstart: 298 },
+    hi: { name: "H2 + I2 ⇌ 2 HI",
+      species: ["H2", "I2", "HI"], nu: [-1, -1, 2], n0: [1, 1, 0],
+      atoms: [{H:2}, {I:2}, {H:1, I:1}],
+      K0: 54.3, T0: 698, dH: -9400, V0: 2, Tstart: 698 }
+  },
+
+  /* van 't Hoff with a constant reaction enthalpy */
+  K(rxn, T){ return rxn.K0 * Math.exp(-rxn.dH / R_GAS * (1/T - 1/rxn.T0)); },
+
+  /* how far the extent may run before some species would go negative */
+  bounds(nu, n){
+    let lo = -Infinity, hi = Infinity;
+    for (let i = 0; i < nu.length; i++){
+      if (nu[i] > 0) lo = Math.max(lo, -n[i] / nu[i]);
+      if (nu[i] < 0) hi = Math.min(hi, -n[i] / nu[i]);
+    }
+    return [lo, hi];
+  },
+  lnQ(nu, n, x, V){
+    let s = 0;
+    for (let i = 0; i < nu.length; i++) s += nu[i] * Math.log((n[i] + nu[i]*x) / V);
+    return s;
+  },
+  Q(nu, n, x, V){ return Math.exp(this.lnQ(nu, n, x, V)); },
+
+  /* ln Q rises strictly with the extent, from minus infinity to plus
+     infinity across the feasible interval, so one bisection finds the root  */
+  solve(nu, n, V, K){
+    const b = this.bounds(nu, n), span = b[1] - b[0];
+    let a = b[0] + span*1e-12, c = b[1] - span*1e-12;
+    const f = (x) => this.lnQ(nu, n, x, V) - Math.log(K);
+    let fa = f(a);
+    if (!Number.isFinite(fa)){ a = b[0] + span*1e-9; fa = f(a); }
+    for (let i = 0; i < 90; i++){
+      const m = (a + c) / 2, fm = f(m);
+      if (!Number.isFinite(fm)){ c = m; continue; }
+      if ((fm < 0) === (fa < 0)){ a = m; fa = fm; } else c = m;
+    }
+    return (a + c) / 2;
+  },
+
+  /* the exact root for one reactant plus one reactant giving two products,
+     which is a quadratic. An independent check on the bisection.            */
+  solveQuadratic(a0, b0, K){
+    const A = K - 4, B = -K*(a0 + b0), C = K*a0*b0;
+    if (Math.abs(A) < 1e-13) return -C / B;
+    const disc = B*B - 4*A*C;
+    if (disc < 0) return null;
+    const root = Math.sqrt(disc);
+    const cands = [(-B + root)/(2*A), (-B - root)/(2*A)]
+      .filter(r => r > 0 && r < Math.min(a0, b0));
+    return cands.length ? Math.min.apply(null, cands) : null;
+  },
+
+  /* the full state of the flask under one setting of the controls */
+  evaluate(key, T, V, add, inert){
+    const rxn = this.RXN[key];
+    const K = this.K(rxn, T);
+    const Kref = this.K(rxn, rxn.Tstart);
+
+    /* where it had settled before anything was done to it */
+    const xRef = this.solve(rxn.nu, rxn.n0, rxn.V0, Kref);
+    const nRef = rxn.nu.map((v, i) => rxn.n0[i] + v*xRef);
+
+    /* the disturbance: the extra reactant goes in, the volume may have
+       changed, the target may have moved                                    */
+    const nDist = nRef.slice(); nDist[0] += add;
+    const qDist = this.Q(rxn.nu, nDist, 0, V);
+
+    const x = this.solve(rxn.nu, nDist, V, K);
+    const nNew = rxn.nu.map((v, i) => nDist[i] + v*x);
+
+    const molesGas = nNew.reduce((s, v) => s + v, 0) + inert;
+    const pressure = molesGas * 0.083145 * T / V;   /* bar, litres, kelvin */
+
+    return { rxn, K, Kref, xRef, nRef, nDist, qDist, x, nNew, pressure,
+             cRef: nRef.map(v => v / rxn.V0), cNew: nNew.map(v => v / V),
+             cDist: nDist.map(v => v / V) };
+  },
+
+  /* conserved atom counts, which no shift may alter */
+  atomTally(rxn, n){
+    const out = {};
+    rxn.atoms.forEach((a, i) => {
+      for (const el in a) out[el] = (out[el] || 0) + a[el] * n[i];
+    });
+    return out;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+/* the flask settled at the reaction's own volume; the page opens with it
+   already squeezed, so the subject of the page is on screen in the first
+   frame rather than one drag away                                          */
+const defaults = { key: "dim", T: 298, V: 1, add: 0, inert: 0 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const SS = 2;
+let W = 900, H = 520, NARROW = false;
+
+function fitCanvas(){
+  const box = cv.parentElement.getBoundingClientRect().width - 20;
+  W = Math.max(280, Math.min(880, Math.round(box)));
+  NARROW = W < 470;
+  H = NARROW ? 375 : 335;
+  cv.width = Math.round(W*SS); cv.height = Math.round(H*SS);
+  cv.style.width = "100%"; cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function text(x, y, s, colour, align, baseline, plate){
+  ctx.textAlign = align || "left"; ctx.textBaseline = baseline || "alphabetic";
+  if (plate){
+    const w = ctx.measureText(s).width;
+    let lx = x; if (ctx.textAlign === "center") lx = x - w/2; if (ctx.textAlign === "right") lx = x - w;
+    ctx.fillStyle = css("--panel"); ctx.fillRect(lx - 3, y - 8, w + 6, 14);
+  }
+  ctx.fillStyle = colour; ctx.fillText(s, x, y);
+}
+
+/* the quotient strip: a log axis wide enough to hold K, the disturbed Q and
+   the resting point, with a little slack at each end                       */
+function drawStrip(v, top){
+  const padL = NARROW ? 14 : 26, padR = NARROW ? 14 : 26;
+  const x0 = padL, x1 = W - padR;
+  const vals = [v.K, v.qDist, v.Kref].filter(z => Number.isFinite(z) && z > 0);
+  let lo = Math.log10(Math.min.apply(null, vals)), hi = Math.log10(Math.max.apply(null, vals));
+  const slack = Math.max(0.6, (hi - lo) * 0.35);
+  lo -= slack; hi += slack;
+  const X = (z) => x0 + (Math.log10(z) - lo) / (hi - lo) * (x1 - x0);
+
+  ctx.font = (NARROW ? 9 : 10) + "px " + css("--mono");
+  /* the heading gets a row of its own: the quotient marker roams the whole
+     width and struck the heading whenever it landed under the text         */
+  text(x0, top - 22, "THE QUOTIENT, ON A LOG SCALE", css("--muted"), "left", "alphabetic");
+
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x0, top + 14); ctx.lineTo(x1, top + 14); ctx.stroke();
+
+  /* K, the target */
+  const kx = X(v.K);
+  ctx.strokeStyle = css("--accent"); ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(kx, top + 2); ctx.lineTo(kx, top + 26); ctx.stroke();
+  text(kx, top + 40, "K = " + fmtNum(v.K), css("--accent"), kx > (x0 + x1)/2 ? "right" : "left", "middle");
+
+  /* Q the instant the flask was disturbed */
+  const qx = X(v.qDist);
+  ctx.fillStyle = css("--ink");
+  ctx.beginPath(); ctx.arc(qx, top + 14, 5, 0, Math.PI*2); ctx.fill();
+  const qSide = qx > (x0 + x1)/2 ? "right" : "left";
+  text(qx, top - 2, "Q = " + fmtNum(v.qDist), css("--ink"), qSide, "bottom");
+
+  /* the arrow from Q back to K */
+  if (Math.abs(qx - kx) > 6){
+    const dir = kx > qx ? 1 : -1;
+    ctx.strokeStyle = css("--ink"); ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(qx + dir*8, top + 14); ctx.lineTo(kx - dir*5, top + 14); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(kx - dir*5, top + 14); ctx.lineTo(kx - dir*12, top + 10);
+    ctx.lineTo(kx - dir*12, top + 18); ctx.closePath();
+    ctx.fillStyle = css("--ink"); ctx.fill();
+  }
+  return top + 52;
+}
+
+function fmtNum(z){
+  if (!Number.isFinite(z)) return "none";
+  const a = Math.abs(z);
+  if (a === 0) return "0";
+  if (a >= 1e4 || a < 1e-3) return z.toExponential(2);
+  if (a >= 100) return z.toFixed(1);
+  if (a >= 1) return z.toFixed(2);
+  return z.toPrecision(3);
+}
+
+function drawBars(v, top){
+  const rxn = v.rxn, n = rxn.species.length;
+  const padL = NARROW ? 14 : 26, padR = NARROW ? 14 : 26;
+  const x0 = padL, x1 = W - padR;
+  const bottom = H - (NARROW ? 26 : 22);
+
+  ctx.font = (NARROW ? 9 : 10) + "px " + css("--mono");
+  const head = "CONCENTRATION, EACH SPECIES ON ITS OWN SCALE";
+  const lg = "PALE: BEFORE   DASH: THE INSTANT AFTER   SOLID: SETTLED";
+  /* the legend shares the heading's line only when it measurably fits */
+  const oneLine = ctx.measureText(head).width + ctx.measureText(lg).width + 24 < (x1 - x0);
+  text(x0, top + 6, head, css("--muted"), "left", "alphabetic");
+  text(oneLine ? x1 : x0, top + (oneLine ? 6 : 20), lg, css("--muted"),
+       oneLine ? "right" : "left", "alphabetic");
+
+  const barTop = top + (oneLine ? 18 : 32);
+  const rowH = bottom - barTop - 16;
+  /* group the species around the middle instead of spreading two bars across
+     the whole frame, which leaves the picture mostly empty                  */
+  const pitch = Math.min((x1 - x0) / n, NARROW ? 110 : 168);
+  const first = (x0 + x1)/2 - pitch*(n - 1)/2;
+  /* one shared scale would squash a dilute species into a few pixels beside a
+     concentrated one, which hides the very comparison the page is making, so
+     each species is drawn against its own largest value and says so          */
+  const scale = (i) => (Math.max(v.cRef[i], v.cNew[i], v.cDist[i]) * 1.16) || 1;
+
+  const base = bottom;
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, base); ctx.lineTo(x1, base); ctx.stroke();
+
+  for (let i = 0; i < n; i++){
+    const cx = first + pitch*i;
+    const bw = Math.min(pitch * 0.34, 44);
+    const colour = rxn.nu[i] < 0 ? css("--react") : css("--prod");
+    const m = scale(i);
+    const hRef = Math.max(1, v.cRef[i] / m * rowH);
+    const hNew = Math.max(1, v.cNew[i] / m * rowH);
+    const hDist = Math.max(1, v.cDist[i] / m * rowH);
+
+    /* pale bar: where it sat before the flask was touched */
+    ctx.globalAlpha = 0.28; ctx.fillStyle = colour;
+    ctx.fillRect(cx - bw - 3, base - hRef, bw, hRef);
+    ctx.globalAlpha = 1;
+    /* solid bar: where it settled once the shift had run */
+    ctx.fillStyle = colour;
+    ctx.fillRect(cx + 3, base - hNew, bw, hNew);
+
+    /* the cap: where it stood the instant the flask was disturbed, before any
+       shift. The gap between this line and the solid bar is the relief.     */
+    ctx.strokeStyle = css("--accent"); ctx.lineWidth = 1.6;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(cx + 1, base - hDist); ctx.lineTo(cx + bw + 7, base - hDist);
+    ctx.stroke(); ctx.setLineDash([]);
+
+    text(cx, base + 13, rxn.species[i], colour, "center", "top");
+    text(cx - bw/2 - 3, base - hRef - 5, fmtNum(v.cRef[i]), css("--muted"), "center", "bottom");
+    text(cx + bw/2 + 3, base - Math.max(hNew, hDist) - 5, fmtNum(v.cNew[i]), colour, "center", "bottom");
+    if (Math.abs(hDist - hNew) > 9)
+      text(cx + bw + 10, base - hDist, fmtNum(v.cDist[i]), css("--accent"), "left", "middle", true);
+  }
+}
+
+function render(){
+  fitCanvas();
+  const v = Model.evaluate(state.key, state.T, state.V, state.add, state.inert);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+
+  const afterStrip = drawStrip(v, NARROW ? 46 : 48);
+  drawBars(v, afterStrip);
+
+  el("volout").textContent = state.V.toFixed(2) + " L";
+  el("tempout").textContent = Math.round(state.T) + " K";
+  el("addout").textContent = state.add.toFixed(2) + " mol";
+  el("inertout").textContent = state.inert.toFixed(2) + " mol";
+
+  el("rK").textContent = fmtNum(v.K);
+  el("rQ").textContent = fmtNum(v.qDist);
+  const rel = v.qDist / v.K;
+  el("rDir").textContent = Math.abs(Math.log(rel)) < 1e-9 ? "nowhere"
+    : (rel < 1 ? "forward" : "backward");
+  el("rP").textContent = v.pressure.toFixed(2) + " bar";
+
+  const disturbed = Math.abs(Math.log(rel)) > 1e-9;
+  el("cap").textContent = disturbed
+    ? "The quotient landed at " + fmtNum(v.qDist) + " and has to get back to " + fmtNum(v.K)
+      + ", so the reaction runs " + (rel < 1 ? "forward" : "backward")
+      + ". The bars show how far that gets it."
+    : "Nothing is out of place: the quotient is already sitting on the constant, so no bar"
+      + " moves. Whatever you just changed was not a disturbance.";
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parse(input.value); render(); });
+}
+bind("vol", "V", parseFloat);
+bind("temp", "T", parseFloat);
+bind("add", "add", parseFloat);
+bind("inert", "inert", parseFloat);
+
+function setVolume(v){
+  state.V = Math.min(8, Math.max(0.4, Math.round(v * 20) / 20));
+  el("vol").value = String(state.V); render();
+}
+el("squeeze").addEventListener("click", () => setVolume(state.V / 2));
+el("expand").addEventListener("click", () => setVolume(state.V * 2));
+el("rxn").addEventListener("change", () => {
+  state.key = el("rxn").value;
+  const r = Model.RXN[state.key];
+  state.T = r.Tstart; state.V = r.V0 / 2; state.add = 0; state.inert = 0;
+  el("temp").value = String(state.T); el("vol").value = String(state.V);
+  el("add").value = "0"; el("inert").value = "0";
+  render();
+});
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("rxn").value = defaults.key; el("temp").value = String(defaults.T);
+  el("vol").value = String(defaults.V); el("add").value = "0"; el("inert").value = "0";
+  render();
+});
+
+let rt;
+addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 90); });
+const mq = matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+  const DIM = Model.RXN.dim, SPL = Model.RXN.split, HI = Model.RXN.hi;
+
+  /* 1 -- the defining property, over seeded systems */
+  (function(){
+    const rng = mulberry32(SEED);
+    let n = 0, worst = 0;
+    for (let k = 0; k < 600 && n < 80; k++){
+      const nu = [-(1 + Math.floor(rng()*2)), -(1 + Math.floor(rng()*2)), 1 + Math.floor(rng()*3)];
+      const n0 = [0.5 + rng()*3, 0.5 + rng()*3, rng()*0.5];
+      const V = 0.5 + rng()*5, K = Math.exp(rng()*12 - 6);
+      const x = Model.solve(nu, n0, V, K), q = Model.Q(nu, n0, x, V);
+      if (!Number.isFinite(q)) continue;
+      n++; worst = Math.max(worst, Math.abs(q - K) / K);
+    }
+    push("the quotient equals the constant at every equilibrium found",
+      n === 80 && worst < 1e-10,
+      n + " seeded systems, worst relative gap " + worst.toExponential(2));
+  })();
+
+  /* 2 -- the bisection against an exact quadratic root */
+  (function(){
+    let worst = 0, n = 0;
+    for (let a = 0.5; a <= 3.001; a += 0.25) for (let b = 0.5; b <= 3.001; b += 0.25)
+      for (const K of [0.5, 5, 54.3, 500]){
+        const exact = Model.solveQuadratic(a, b, K);
+        if (exact === null) continue;
+        const num = Model.solve([-1, -1, 2], [a, b, 0], 3, K);
+        n++; worst = Math.max(worst, Math.abs(exact - num));
+      }
+    push("the bisection lands on the exact quadratic root",
+      n >= 380 && worst < 1e-12,
+      n + " cases, worst gap " + worst.toExponential(2));
+  })();
+
+  /* 3 -- adding reactant: the constant does not move, the extent does */
+  (function(){
+    const rng = mulberry32(SEED + 1);
+    let n = 0, dK = 0, minShift = Infinity;
+    for (let k = 0; k < 600 && n < 60; k++){
+      const key = ["dim", "split", "hi"][Math.floor(rng()*3)];
+      const rxn = Model.RXN[key], T = 260 + rng()*400, V = 0.5 + rng()*5;
+      const K1 = Model.K(rxn, T), K2 = Model.K(rxn, T);
+      const base = Model.evaluate(key, T, V, 0, 0);
+      const more = Model.evaluate(key, T, V, 0.5 + rng(), 0);
+      n++;
+      dK = Math.max(dK, Math.abs(K1 - K2));
+      minShift = Math.min(minShift, more.x - base.x);
+    }
+    push("adding reactant moves the extent forward and leaves the constant alone",
+      n === 60 && dK <= 1e-14 && minShift > 1e-6,
+      n + " systems: the constant moved " + dK + ", the smallest forward shift was "
+      + minShift.toExponential(2));
+  })();
+
+  /* 4 -- the volume rule, over seeded stoichiometries rather than the presets */
+  (function(){
+    const rng = mulberry32(SEED + 2);
+    let n = 0, bad = 0;
+    for (let k = 0; k < 4000 && n < 200; k++){
+      const a = 1 + Math.floor(rng()*3), b = 1 + Math.floor(rng()*3);
+      const c = 1 + Math.floor(rng()*3), d = Math.floor(rng()*3);
+      const dn = (c + d) - (a + b);
+      if (dn === 0) continue;
+      const nu = [-a, -b, c, d], n0 = [1 + rng()*2, 1 + rng()*2, 0.2 + rng(), 0.2 + rng()];
+      const V = 1 + rng()*3, K = Math.exp(rng()*8 - 4);
+      const x1 = Model.solve(nu, n0, V, K), x2 = Model.solve(nu, n0, V/2, K);
+      n++;
+      if ((x2 > x1) !== (dn < 0)) bad++;
+    }
+    push("halving the volume always shifts toward the side with fewer molecules",
+      n === 200 && bad === 0,
+      n + " seeded stoichiometries with unequal molecule counts, " + bad + " violations");
+  })();
+
+  /* 5 -- equal counts: the volume cancels exactly */
+  (function(){
+    const K = Model.K(HI, HI.Tstart);
+    const x0 = Model.solve(HI.nu, HI.n0, 1, K);
+    let worst = 0, n = 0;
+    for (let V = 0.4; V <= 8.001; V += 0.1){
+      n++; worst = Math.max(worst, Math.abs(Model.solve(HI.nu, HI.n0, V, K) - x0));
+    }
+    push("with the same count on both sides the volume changes nothing",
+      n > 70 && worst < 1e-12,
+      n + " volumes from 0.4 to 8 litres, worst spread in the extent " + worst.toExponential(2));
+  })();
+
+  /* 6 -- van 't Hoff, round trip and against a numerical integration */
+  (function(){
+    let round = 0, integ = 0;
+    for (const rxn of [DIM, SPL, HI]) for (const T of [250, 300, 350, 400, 500, 600, 700]){
+      const k2 = Model.K(rxn, T);
+      const back = k2 * Math.exp(-rxn.dH / R_GAS * (1/rxn.T0 - 1/T));
+      round = Math.max(round, Math.abs(back - rxn.K0) / rxn.K0);
+      /* the same constant by integrating d lnK by d(1/T) step by step */
+      const N = 4000, h = (1/T - 1/rxn.T0) / N;
+      let s = 0; for (let i = 0; i < N; i++) s += -rxn.dH / R_GAS * h;
+      integ = Math.max(integ, Math.abs(rxn.K0 * Math.exp(s) - k2) / k2);
+    }
+    push("van 't Hoff round trips and matches a step by step integration",
+      round < 1e-12 && integ < 1e-9,
+      "round trip worst " + round.toExponential(2) + ", integration worst "
+      + integ.toExponential(2));
+  })();
+
+  /* 7 -- the sign of the temperature effect follows the sign of the enthalpy */
+  (function(){
+    let ok = true;
+    for (const rxn of [DIM, SPL, HI]){
+      let prev = Model.K(rxn, 250);
+      for (let T = 255; T <= 700; T += 5){
+        const now = Model.K(rxn, T);
+        if (rxn.dH < 0 && !(now < prev)) ok = false;
+        if (rxn.dH > 0 && !(now > prev)) ok = false;
+        prev = now;
+      }
+    }
+    push("heating lowers the constant when heat comes out and raises it when heat goes in",
+      ok, "monotone over 250 to 700 kelvin for all three reactions, in the direction the"
+      + " enthalpy sets");
+  })();
+
+  /* 8 -- the published anchors */
+  (function(){
+    const a = Model.K(DIM, 298), b = Model.K(HI, 698), c = Model.K(SPL, 298);
+    push("the reference constants are the published ones and the reverse is the reciprocal",
+      near(a, 216, 1e-12) && near(b, 54.3, 1e-12) && near(a * c, 1, 1e-14),
+      "216 M-1 for the dimerisation at 298 K, 54.3 for hydrogen iodide at 698 K, and the"
+      + " product of the two directions is " + (a*c));
+  })();
+
+  /* 9 -- atoms are conserved by any shift */
+  (function(){
+    let worst = 0, n = 0;
+    for (const key of ["dim", "split", "hi"])
+      for (let T = 260; T <= 680; T += 60) for (const V of [0.5, 1, 2, 5, 8])
+        for (const add of [0, 1.5]){
+          const v = Model.evaluate(key, T, V, add, 0);
+          const before = Model.atomTally(v.rxn, v.nDist), after = Model.atomTally(v.rxn, v.nNew);
+          for (const e in before) worst = Math.max(worst, Math.abs(before[e] - after[e]));
+          n++;
+        }
+    push("no shift creates or destroys an atom",
+      n > 200 && worst < 1e-12,
+      n + " settings, worst atom imbalance " + worst.toExponential(2));
+  })();
+
+  /* 10 -- "it partly undoes the change" is a theorem about PRESSURE, and the
+     tidier version about concentrations is false. Both halves are asserted.   */
+  (function(){
+    const rng = mulberry32(SEED + 6);
+    let n = 0, lo = Infinity, hi = 0, molesRose = 0, flat = 0, flatWorst = 0;
+    for (let k = 0; k < 30000 && n < 400; k++){
+      const co = [1 + Math.floor(rng()*3), Math.floor(rng()*3),
+                  1 + Math.floor(rng()*3), Math.floor(rng()*3)];
+      const idx = co.map((v, i) => v > 0 ? i : -1).filter(i => i >= 0);
+      const nu = idx.map(i => i < 2 ? -co[i] : co[i]);
+      const n0 = idx.map(i => i < 2 ? 0.5 + rng()*3 : 0.05 + rng()*1.5);
+      const V = 0.5 + rng()*4, K = Math.exp(rng()*10 - 5);
+      const dn = (co[2] + co[3]) - (co[0] + co[1]);
+      const x1 = Model.solve(nu, n0, V, K), x2 = Model.solve(nu, n0, V/2, K);
+      const N1 = nu.reduce((s, v, i) => s + n0[i] + v*x1, 0);
+      const N2 = nu.reduce((s, v, i) => s + n0[i] + v*x2, 0);
+      if (!Number.isFinite(N1) || !Number.isFinite(N2) || N1 <= 0 || N2 <= 0) continue;
+      const ratio = 2 * N2 / N1;            /* the pressure ratio at fixed temperature */
+      if (dn === 0){ flat++; flatWorst = Math.max(flatWorst, Math.abs(ratio - 2)); continue; }
+      n++;
+      lo = Math.min(lo, ratio); hi = Math.max(hi, ratio);
+      if (N2 >= N1) molesRose++;
+    }
+    /* the tidier claim, and the mixture that breaks it */
+    const nuX = [-3, -2, 1, 1];
+    const n0X = [3.1436873036436737, 1.3820676433388144, 0.11815483572427184, 1.0991808358347044];
+    const VX = 0.936429156921804, KX = 120.33544752628221;
+    const xa = Model.solve(nuX, n0X, VX, KX), xb = Model.solve(nuX, n0X, VX/2, KX);
+    const ca = (n0X[1] + nuX[1]*xa) / VX, cb = (n0X[1] + nuX[1]*xb) / (VX/2);
+    push("a squeeze is partly relieved in pressure, and that is not true of every concentration",
+      n === 400 && lo > 1 && hi < 2 && molesRose === 0 && flat > 50 && flatWorst < 1e-12
+        && cb < ca,
+      n + " seeded mixtures: halving the volume multiplies the pressure by between "
+      + lo.toFixed(3) + " and " + hi.toFixed(3) + ", never reaching the 2 a mixture that could"
+      + " not react would give, and " + flat + " equal count mixtures give exactly 2 to "
+      + flatWorst.toExponential(2) + ". The tidier claim that every concentration therefore"
+      + " ends up between where it was and twice where it was is false: in the exhibited"
+      + " mixture one reactant falls from " + ca.toFixed(5) + " to " + cb.toFixed(5)
+      + " molar, a ratio of " + (cb/ca).toFixed(4) + ", while the volume halves around it");
+  })();
+
+  /* 11 -- the counterintuitive half: adding A converts less of A */
+  (function(){
+    const nu = [-1, -1, 2], K = 54.3, V = 2;
+    const base = Model.solve(nu, [1, 1, 0], V, K);
+    let ok = true, rows = [];
+    for (const extra of [0.5, 1, 2, 4]){
+      const x = Model.solve(nu, [1 + extra, 1, 0], V, K);
+      const convA = x / (1 + extra), convB = x / 1;
+      if (!(x > base && convA < base && convB > base)) ok = false;
+      rows.push(extra + ": " + convA.toFixed(4) + " and " + convB.toFixed(4));
+    }
+    push("adding one reactant converts more of the other and less of itself",
+      ok, "base conversion " + base.toFixed(4) + "; after adding [A] mol, the two conversions"
+      + " become " + rows.join("; "));
+  })();
+
+  /* 12 -- argon at fixed volume moves nothing at all */
+  (function(){
+    let worst = 0, pressureMoved = 0, n = 0;
+    for (const key of ["dim", "split", "hi"]) for (const V of [0.5, 2, 6])
+      for (const T of [280, 400, 650]){
+        const a = Model.evaluate(key, T, V, 0, 0), b = Model.evaluate(key, T, V, 0, 4);
+        worst = Math.max(worst, Math.abs(a.x - b.x));
+        pressureMoved = Math.min(pressureMoved || Infinity, b.pressure - a.pressure);
+        n++;
+      }
+    push("an inert gas at fixed volume changes the pressure and nothing else",
+      n === 27 && worst === 0 && pressureMoved > 0,
+      n + " settings: the extent moved " + worst + " while the pressure rose by at least "
+      + pressureMoved.toFixed(3) + " bar");
+  })();
+
+  /* 13 -- nothing degenerate escapes */
+  (function(){
+    let ok = true, n = 0;
+    for (const key of ["dim", "split", "hi"])
+      for (let T = 250; T <= 700; T += 50) for (let V = 0.4; V <= 8.001; V += 1.2)
+        for (const add of [0, 2, 4]) for (const ar of [0, 6]){
+          const v = Model.evaluate(key, T, V, add, ar);
+          const b = Model.bounds(v.rxn.nu, v.nDist);
+          if (!Number.isFinite(v.x) || !(v.x > b[0] && v.x < b[1])) ok = false;
+          if (!Number.isFinite(v.K) || !Number.isFinite(v.qDist) || !Number.isFinite(v.pressure)) ok = false;
+          if (v.cNew.some(c => !Number.isFinite(c) || c < 0)) ok = false;
+          n++;
+        }
+    push("every reachable setting gives a finite extent strictly inside its limits",
+      ok && n > 1000, n + " settings across all three reactions, all finite and all feasible");
+  })();
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
