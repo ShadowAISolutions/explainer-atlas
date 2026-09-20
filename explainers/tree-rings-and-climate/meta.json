@@ -1,0 +1,16 @@
+{
+  "slug": "tree-rings-and-climate",
+  "title": "Sliding One Log Along Another",
+  "domain": "earth-science",
+  "difficulty": 3,
+  "summary": "A tree ring is a year. Slide an undated timber along a dated chronology until the pattern locks and you have dated it to the year, until the noise wins and the lock is a confident lie.",
+  "prerequisites": [],
+  "tags": ["dendrochronology", "tree-rings", "cross-dating", "detrending", "correlation", "palaeoclimate"],
+  "interaction_pattern": "time-scrubber",
+  "sources": [
+    { "title": "Douglass, Crossdating in Dendrochronology, Journal of Forestry 39 (1941)", "url": "https://doi.org/10.1093/jof/39.10.825" },
+    { "title": "Cook and Kairiukstis (eds), Methods of Dendrochronology (Kluwer, 1990), chapters on standardisation and crossdating", "url": "https://doi.org/10.1007/978-94-015-7879-0" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 12
+}

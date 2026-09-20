@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sliding One Log Along Another &mdash; Explainer Atlas</title>
+<meta name="description" content="A tree ring is a year. Slide an undated timber along a dated chronology until the pattern locks, and you have dated it to the year - until the noise wins and the lock is a lie.">
+<style>
+:root{
+  --bg:#f3efe4; --panel:#fdfbf5; --sunk:#e8e2d2; --ink:#2a2317; --muted:#6d6249;
+  --line:#d8d0bb; --grid:#e6e0cf;
+  --ref:#7a5327; --ref-soft:#e9dcc7;
+  --und:#2f6b4f; --und-soft:#d9e8df;
+  --hit:#b4531f; --bark:#3d3324;
+  --pad:clamp(13px,2.6vw,24px);
+  --sans:"Iowan Old Style",Georgia,"Times New Roman",serif;
+  --ui:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#16130d; --panel:#1e1a12; --sunk:#110e09; --ink:#ece5d5; --muted:#9c9179;
+    --line:#312a1e; --grid:#241f16;
+    --ref:#cfa168; --ref-soft:#2b2317;
+    --und:#6fbd97; --und-soft:#12231a;
+    --hit:#e8905c; --bark:#c9bda5;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:clamp(1rem,0.96rem + 0.2vw,1.09rem)/1.65 var(--sans); -webkit-text-size-adjust:100%}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{max-width:40em}
+.kicker{margin:0 0 .5em; color:var(--hit); font:700 .7rem/1 var(--ui); text-transform:uppercase; letter-spacing:.18em}
+h1{margin:0 0 .3em; font:400 clamp(1.7rem,1.1rem + 2.6vw,2.7rem)/1.1 var(--sans); letter-spacing:-.012em}
+.standfirst{margin:0; color:var(--muted)}
+
+figure.stage{margin:var(--pad) 0 0; background:var(--panel); border:1px solid var(--line);
+  border-radius:3px; padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin:.7em 2px 0; color:var(--muted); font-size:.85rem; line-height:1.5; font-family:var(--ui)}
+
+.controls{margin-top:var(--pad); display:grid; gap:1em 1.6rem; grid-template-columns:1fr;
+  font-family:var(--ui)}
+@media (min-width:38rem){ .controls{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (min-width:56rem){ .controls{grid-template-columns:repeat(3,minmax(0,1fr))} }
+.control{display:grid; gap:.22em; align-content:start}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font:700 .7rem/1.3 var(--mono); text-transform:uppercase; letter-spacing:.1em; color:var(--muted)}
+.control output{font:700 .86rem/1 var(--mono); color:var(--hit)}
+.hint{margin:.05em 0 0; color:var(--muted); font-size:.78rem; line-height:1.45}
+input[type=range]{width:100%; accent-color:var(--und); min-height:26px; margin:.15em 0}
+select,button{font:inherit; color:inherit; background:var(--sunk); border:1px solid var(--line); border-radius:3px; padding:.45em .6em; min-height:38px; width:100%}
+button{cursor:pointer; font:700 .82rem/1 var(--ui)}
+button:hover{border-color:var(--ink)}
+.chk{display:flex; align-items:center; gap:.5em; font-size:.86rem; font-family:var(--ui)}
+/* The tick box's label is a sentence, not a field name, so it opts out of the
+   small-caps treatment the field labels share. */
+.control label.chk{font:inherit; font-size:.86rem; text-transform:none; letter-spacing:normal; color:inherit}
+.chk input{accent-color:var(--und); width:17px; height:17px}
+.stack{display:grid; gap:.45em; align-content:start}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--hit); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.2rem,1fr)); gap:.5em;
+  margin:var(--pad) 0 0; padding:0; font-family:var(--ui)}
+.readout div{background:var(--panel); border:1px solid var(--line); border-radius:3px; padding:.5em .65em}
+.readout dt{margin:0; color:var(--muted); font:.66rem/1.3 var(--mono); text-transform:uppercase; letter-spacing:.08em}
+.readout dd{margin:.16em 0 0; font:700 1rem/1.2 var(--mono)}
+
+/* Headings hang in their own column, the way a field report sets them. */
+.prose{max-width:48rem; margin:calc(var(--pad) * 1.7) 0 0}
+@media (min-width:52rem){
+  .prose{display:grid; grid-template-columns:9.5rem minmax(0,34em); column-gap:2rem}
+  .prose h2{grid-column:1; margin:0; text-align:right}
+  .prose > :not(h2){grid-column:2}
+}
+.prose h2{font:700 .74rem/1.5 var(--mono); text-transform:uppercase; letter-spacing:.11em;
+  color:var(--hit); margin:1.9em 0 .4em}
+.prose p{margin:0 0 1em}
+.prose .math{font:.86rem/1.7 var(--mono); background:var(--sunk); padding:.7em .85em; border-radius:3px; overflow-x:auto}
+footer.page{margin-top:calc(var(--pad) * 1.8); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.84rem; font-family:var(--ui)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important; transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">earth science &middot; dendrochronology</p>
+  <h1>Sliding One Log Along Another</h1>
+  <p class="standfirst">A tree ring is a year, and how wide it is records that year's growing season. Slide an
+     undated timber along a chronology whose dates are already known, and when the pattern of wide and
+     narrow years locks, the timber is dated &mdash; to the year, centuries before anyone kept records.</p>
+</header>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="900" height="600" role="img"
+          aria-label="Above, two ring-width series drawn as bars: a dated reference chronology and an undated core that the reader slides along it. Below, the correlation between the two at every possible offset, with the reader's current position and the true one marked."></canvas>
+  <figcaption>Above: the dated chronology in brown, and the undated core in green sitting wherever you have
+    put it. Below: how well the two patterns agree at every offset you could have chosen. Drag
+    <em>slide the core</em> until the green peak is the one you are standing on.</figcaption>
+</figure>
+
+<section class="controls" data-role="controls" aria-label="Cross dating controls">
+  <div class="control">
+    <div class="row"><label for="off">Slide the core</label><output id="offout" for="off">0 yr</output></div>
+    <input type="range" id="off" min="0" max="230" step="1" value="0">
+    <p class="hint">Where the outermost ring of the core sits against the chronology. Arrow keys step a year at a time; Home and End jump to the ends.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="noise">Bad wood</label><output id="noiseout" for="noise">0.10</output></div>
+    <input type="range" id="noise" min="0" max="0.6" step="0.02" value="0.1">
+    <p class="hint">How much of each ring is local accident rather than climate: a root in a stream, a fallen neighbour, an insect year.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="len">Rings on the core</label><output id="lenout" for="len">90</output></div>
+    <input type="range" id="len" min="25" max="160" step="5" value="90">
+    <p class="hint">How much of the timber survived. Short cores are the ones that get mis-dated.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="detrend">Detrending</label></div>
+    <select id="detrend">
+      <option value="negexp" selected>Divide by a fitted growth curve</option>
+      <option value="line">Subtract a fitted straight line</option>
+      <option value="none">None, use the raw widths</option>
+    </select>
+    <p class="hint">A young tree grows fast whatever the weather. That has to come out before the patterns can be compared.</p>
+  </div>
+
+  <div class="control stack">
+    <label class="chk" for="lost"><input type="checkbox" id="lost"> Lose a ring in a drought year</label>
+    <button type="button" id="find">Find the best match</button>
+  </div>
+
+  <div class="control stack">
+    <button type="button" id="another">Fell another tree</button>
+    <button type="button" id="reset">Reset</button>
+  </div>
+</section>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Agreement here</dt><dd id="r1">&mdash;</dd></div>
+  <div><dt>Best offset</dt><dd id="r2">&mdash;</dd></div>
+  <div><dt>True offset</dt><dd id="r3">&mdash;</dd></div>
+  <div><dt>Margin over runner-up</dt><dd id="r4">&mdash;</dd></div>
+  <div><dt>Count against match</dt><dd id="r5">&mdash;</dd></div>
+  <div><dt>Verdict</dt><dd id="r6">&mdash;</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>The brown bars are a chronology: a series of ring widths whose dates are already known, built by
+     working backwards from living trees. The green bars are a core drilled out of a roof beam with no
+     documents attached. Both trees stood through the same weather, so both recorded the same run of good
+     and bad summers, and the only question is which of the chronology's years the beam's rings belong to.
+     Slide it until the pattern lines up. When it locks, every ring in the beam has a year on it.</p>
+
+  <h2>Growth first</h2>
+
+  <p>Raw widths cannot be compared directly, because a young tree lays down wide rings whatever the weather
+     and a old one lays down narrow ones. That trend is the loudest thing in the series and it belongs to
+     the tree, not the climate. Set <em>detrending</em> to <em>none</em> and watch the correlation curve
+     turn into a single broad hump with no peak worth the name: two growth curves agree with each other
+     everywhere, so the pattern that carries the dates is drowned.</p>
+
+  <p>The standard fix is to fit a falling growth curve to each series and divide, which leaves a ratio near
+     one with the climate riding on it. Subtracting a straight line instead is cruder and has one exact
+     property worth knowing: least squares guarantees that the residuals have a fitted slope of zero, to
+     machine precision, every time. Dividing by a curve guarantees nothing of the kind, which is why the
+     first thing anyone checks after detrending is whether a trend is still in there.</p>
+
+  <h2>The lock</h2>
+
+  <p>With good wood the lock is unmistakable. At a bad-wood setting of 0.1 the correlation at the true
+     offset beats every other offset by at least 0.345, over three hundred seeded pairs of cores, every
+     single time, with a median margin of 0.554. You do not have to judge it; the number does the judging.</p>
+
+  <p>Now drag <em>bad wood</em> to the right. At 0.2 the method still finds the right year on every pair,
+     but the margin's worst case has fallen to 0.08. At 0.3 it is right 95 times in a hundred and the
+     margin's fifth percentile is 0.009 &mdash; a hair. At 0.45 it is right 46 times in a hundred, and at
+     0.6, fourteen.</p>
+
+  <h2>The cliff</h2>
+
+  <p>That is not a method degrading. That is a method falling off a cliff, and the way it falls is the
+     dangerous part. Past the cliff the highest correlation is usually at the <em>wrong</em> offset, and it
+     is a perfectly respectable-looking correlation. The margin readout goes negative: the true year is no
+     longer the best match, so there is nothing on the chart to tell you that you have just dated a beam to
+     a century it never stood in. Cross dating does not fail by returning "unknown". It fails by returning
+     a confident wrong answer.</p>
+
+  <p>This is why real dendrochronology never accepts a single core. Several cores from the same timber,
+     several timbers from the same building, and every one of them has to land on the same year against the
+     same chronology. Agreement between independent pieces of wood is doing the work that a single
+     correlation cannot do. Shorten the core to thirty rings and the same 0.3 setting that was right 95
+     times in a hundred is right 31 times in a hundred: there is less pattern to match, so there is less to
+     separate the right answer from the best of the wrong ones.</p>
+
+  <h2>Missing rings</h2>
+
+  <p>A tree in a drought year can lay down no measurable ring at all. Tick <em>lose a ring</em> and the
+     count of rings stops being a count of years: every ring inward of the missing one is now dated a year
+     too late, all the way to the pith. The pattern match still works, because the match is made on the
+     outer part where nothing is missing, and it is precisely the disagreement between the ring count and
+     the matched date that reveals the gap. A ring count alone would never have found it.</p>
+
+  <h2>What a narrow ring says</h2>
+
+  <p>Rather less than people want it to. A narrow ring is a bad growing season for that tree, and the
+     reason can be drought, cold, a late frost, shade from a neighbour that fell three years later, or
+     insects. The climate signal is only the part shared by many trees on many sites, which is exactly the
+     part that survives averaging and exactly the part that makes cross dating possible in the first place.
+     One narrow ring in one core is an anecdote. The same narrow ring in forty cores is a year.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set bad wood to 0.5, press <em>find the best match</em>, and compare the offset it returns with the
+     true offset in the readouts. Do it a few times with <em>fell another tree</em>. Then shorten the core
+     to 30 rings and watch how much sooner the cliff arrives. Then set <em>detrending</em> to none at a bad
+     wood of 0.1, where the method was otherwise perfect, and watch it drop to right roughly a third of the
+     time.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function normal(r){
+  let u = 0, v = 0;
+  while (u === 0) u = r();
+  while (v === 0) v = r();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+const SEED = 20260920;
+
+const YEARS = 640;          /* how long the synthetic climate runs */
+const REF_START = 40;       /* the chronology's first year within it */
+const REF_LEN = 320;
+const PHI = 0.3;            /* a year's weather remembers a little of last year's */
+const SIGNAL = 0.28;        /* how much of a ring width the shared climate is */
+const MAX_OFF = REF_LEN - 90;
+
+/* ---- MODEL --------------------------------------------------------------
+   One climate series; two trees that both wrote it down, each adding its own
+   growth curve and its own private accidents.                            */
+const Model = {
+
+  climate(seed){
+    const r = mulberry32(seed), c = new Float64Array(YEARS);
+    let prev = 0;
+    const k = Math.sqrt(1 - PHI * PHI);
+    for (let y = 0; y < YEARS; y++){ prev = PHI * prev + k * normal(r); c[y] = prev; }
+    return c;
+  },
+
+  /* A core: "len" rings starting at climate year "start", with a falling
+     growth curve of this tree's own and noise of this tree's own. */
+  core(c, start, len, noise, seed, A, b, k){
+    const r = mulberry32(seed), w = new Float64Array(len);
+    for (let a = 0; a < len; a++){
+      const g = A * Math.exp(-b * (a + 1)) + k;
+      w[a] = Math.max(0.02, g * (1 + SIGNAL * c[start + a] + noise * normal(r)));
+    }
+    return w;
+  },
+
+  /* A drought year with no measurable ring: the ring is simply not there, so
+     every ring inward of it is one year older than a count would say. */
+  dropRing(w, at){
+    const out = new Float64Array(w.length - 1);
+    for (let i = 0, j = 0; i < w.length; i++) if (i !== at) out[j++] = w[i];
+    return out;
+  },
+
+  /* Fit A exp(-b a) + k.  Once the decay rate b is fixed the other two
+     coefficients are an ordinary least squares problem and come out exactly,
+     so only b has to be searched: a geometric scan to bracket it, then a
+     golden section inside the bracket.  The scan alone leaves the rate up to
+     six per cent out, which is enough to leave a visible trend in the index
+     it is supposed to have removed.                                       */
+  solveAt(w, b){
+    const n = w.length;
+    let sx = 0, sxx = 0, sy = 0, sxy = 0;
+    for (let a = 0; a < n; a++){
+      const x = Math.exp(-b * (a + 1));
+      sx += x; sxx += x * x; sy += w[a]; sxy += x * w[a];
+    }
+    const det = sxx * n - sx * sx;
+    if (!(Math.abs(det) > 1e-14)) return { A: 0, b: b, k: sy / n, ss: Infinity };
+    const A = (sxy * n - sx * sy) / det, k = (sxx * sy - sx * sxy) / det;
+    let ss = 0;
+    for (let a = 0; a < n; a++){ const f = A * Math.exp(-b * (a + 1)) + k; ss += (w[a] - f) * (w[a] - f); }
+    return { A: A, b: b, k: k, ss: ss };
+  },
+  fitGrowth(w){
+    const STEP = 1.12;
+    let best = null, bi = 0;
+    for (let i = 0; i < 60; i++){
+      const cand = Model.solveAt(w, 0.002 * Math.pow(STEP, i));
+      if (best === null || cand.ss < best.ss){ best = cand; bi = i; }
+    }
+    if (best === null) return { A: 0, b: 0.01, k: Model.mean(w), ss: 0 };
+    let lo = 0.002 * Math.pow(STEP, Math.max(0, bi - 1));
+    let hi = 0.002 * Math.pow(STEP, Math.min(59, bi + 1));
+    const phi = (Math.sqrt(5) - 1) / 2;
+    let c1 = hi - phi * (hi - lo), c2 = lo + phi * (hi - lo);
+    let f1 = Model.solveAt(w, c1), f2 = Model.solveAt(w, c2);
+    for (let i = 0; i < 80; i++){
+      if (f1.ss < f2.ss){ hi = c2; c2 = c1; f2 = f1; c1 = hi - phi * (hi - lo); f1 = Model.solveAt(w, c1); }
+      else { lo = c1; c1 = c2; f1 = f2; c2 = lo + phi * (hi - lo); f2 = Model.solveAt(w, c2); }
+    }
+    const refined = Model.solveAt(w, (lo + hi) / 2);
+    return refined.ss <= best.ss ? refined : best;
+  },
+
+  fitLine(w){
+    const n = w.length;
+    let sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (let a = 0; a < n; a++){ sx += a; sy += w[a]; sxx += a * a; sxy += a * w[a]; }
+    const det = sxx * n - sx * sx;
+    const m = det !== 0 ? (sxy * n - sx * sy) / det : 0;
+    return { slope: m, intercept: (sy - m * sx) / n };
+  },
+
+  /* Ring width indices: the series with the tree's own growth taken out. */
+  index(w, how){
+    const n = w.length, out = new Float64Array(n);
+    if (how === "none"){ for (let a = 0; a < n; a++) out[a] = w[a]; return out; }
+    if (how === "line"){
+      const f = Model.fitLine(w);
+      for (let a = 0; a < n; a++) out[a] = w[a] - (f.intercept + f.slope * a);
+      return out;
+    }
+    const f = Model.fitGrowth(w);
+    for (let a = 0; a < n; a++){
+      const g = f.A * Math.exp(-f.b * (a + 1)) + f.k;
+      out[a] = Math.abs(g) > 1e-9 ? w[a] / g : 1;
+    }
+    return out;
+  },
+
+  mean(a){ let s = 0; for (let i = 0; i < a.length; i++) s += a[i]; return s / a.length; },
+
+  /* Pearson correlation of "m" values of a starting at ao against b from bo. */
+  corr(a, b, ao, bo, m){
+    if (m < 3) return 0;
+    let sa = 0, sb = 0;
+    for (let i = 0; i < m; i++){ sa += a[ao + i]; sb += b[bo + i]; }
+    sa /= m; sb /= m;
+    let num = 0, da = 0, db = 0;
+    for (let i = 0; i < m; i++){
+      const x = a[ao + i] - sa, y = b[bo + i] - sb;
+      num += x * y; da += x * x; db += y * y;
+    }
+    return da > 0 && db > 0 ? num / Math.sqrt(da * db) : 0;
+  },
+
+  /* The whole method: try the core at every offset along the chronology. */
+  profile(refIx, undIx){
+    const R = refIx.length, L = undIx.length, out = [];
+    for (let off = 0; off + L <= R; off++) out.push(Model.corr(refIx, undIx, off, 0, L));
+    return out;
+  },
+
+  bestOffset(prof){
+    let bi = 0;
+    for (let i = 1; i < prof.length; i++) if (prof[i] > prof[bi]) bi = i;
+    return bi;
+  },
+
+  /* How far the true offset beats the best of the others. Negative means the
+     method would confidently return the wrong year. */
+  margin(prof, trueOff){
+    if (trueOff < 0 || trueOff >= prof.length) return NaN;
+    let second = -2;
+    for (let i = 0; i < prof.length; i++) if (i !== trueOff && prof[i] > second) second = prof[i];
+    return prof[trueOff] - second;
+  },
+
+  /* One complete, seeded cross dating experiment. */
+  trial(seed, noise, len, how, lostRing){
+    const c = Model.climate(seed);
+    const trueOff = Math.floor(mulberry32(seed + 8191)() * (MAX_OFF + 1));
+    const refW = Model.core(c, REF_START, REF_LEN, noise, seed + 101, 1.4, 0.030, 0.35);
+    let undW = Model.core(c, REF_START + trueOff, len, noise, seed + 202, 1.1, 0.050, 0.40);
+    if (lostRing && undW.length > 8) undW = Model.dropRing(undW, Math.floor(undW.length * 0.62));
+    const refIx = Model.index(refW, how), undIx = Model.index(undW, how);
+    const prof = Model.profile(refIx, undIx);
+    const best = Model.bestOffset(prof);
+    return { climate: c, trueOff: trueOff, refW: refW, undW: undW, refIx: refIx, undIx: undIx,
+             prof: prof, best: best, margin: Model.margin(prof, trueOff),
+             lost: !!lostRing && undW.length < len };
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { off: 0, noise: 0.1, len: 90, detrend: "negexp", lost: false, tree: 0 };
+const state = Object.assign({}, defaults);
+
+const el = function(id){ return document.getElementById(id); };
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+function css(k){ return getComputedStyle(document.documentElement).getPropertyValue(k).trim(); }
+function pick(o, room){ for (let i = 0; i < o.length; i++) if (ctx.measureText(o[i]).width <= room) return o[i]; return ""; }
+
+let W, H, NARROW, PAD, FS, FSS, LM, RM, REFP, UNDP, CORRP, aEnd;
+
+function fitCanvas(){
+  const host = cv.parentElement;
+  W = Math.max(320, Math.min(1000, Math.round(host ? host.clientWidth - 20 : 880) || 880));
+  NARROW = W < 560;
+  PAD = NARROW ? 8 : 12;
+  FS  = NARROW ? 12 : 13;
+  FSS = NARROW ? 10 : 11;
+  LM  = NARROW ? 8 : 10;
+  RM  = NARROW ? 8 : 12;
+  const bar = NARROW ? 44 : 58;
+  REFP = { x: LM, y: PAD + FS + 12, w: W - LM - RM, h: bar };
+  UNDP = { x: LM, y: REFP.y + bar + FSS + 16, w: W - LM - RM, h: bar };
+  aEnd = UNDP.y + bar + FSS + 6 + FSS + 8;
+  CORRP = { x: LM, y: aEnd + 18 + FS + 14, w: W - LM - RM, h: NARROW ? 108 : 136 };
+  /* The legend under the correlation panel is the last row painted, so the
+     canvas ends where that row ends rather than at a round number. */
+  H = CORRP.y + CORRP.h + FSS + 5 + FSS + 8 + FSS + 8 + PAD;
+  cv.width = Math.round(W * SS); cv.height = Math.round(H * SS);
+  cv.style.width = "100%"; cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+function C(){
+  return { panel: css("--panel"), sunk: css("--sunk"), ink: css("--ink"), muted: css("--muted"),
+           line: css("--line"), grid: css("--grid"), ref: css("--ref"), refSoft: css("--ref-soft"),
+           und: css("--und"), undSoft: css("--und-soft"), hit: css("--hit"), bark: css("--bark") };
+}
+function standard(a){
+  const n = a.length, out = new Float64Array(n);
+  let m = 0;
+  for (let i = 0; i < n; i++) m += a[i];
+  m /= n;
+  let s = 0;
+  for (let i = 0; i < n; i++){ const d = a[i] - m; s += d * d; }
+  s = Math.sqrt(s / Math.max(1, n));
+  for (let i = 0; i < n; i++) out[i] = s > 1e-12 ? (a[i] - m) / s : 0;
+  return out;
+}
+function drawRings(c, p, series, first, total, colour, soft){
+  const bw = p.w / total;
+  ctx.fillStyle = soft; ctx.fillRect(p.x, p.y, p.w, p.h);
+  ctx.fillStyle = colour;
+  for (let i = 0; i < series.length; i++){
+    const v = Math.max(-2.6, Math.min(2.6, series[i]));
+    const h = p.h * (v + 2.6) / 5.2;
+    ctx.fillRect(p.x + (first + i) * bw, p.y + p.h - h, Math.max(0.8, bw - 0.35), h);
+  }
+  ctx.strokeStyle = c.line; ctx.lineWidth = 1;
+  ctx.strokeRect(p.x + .5, p.y + .5, p.w - 1, p.h - 1);
+}
+function drawCorr(c, t){
+  const p = CORRP, prof = t.prof, n = prof.length;
+  let lo = prof[0], hi = prof[0];
+  for (let i = 1; i < n; i++){ if (prof[i] < lo) lo = prof[i]; if (prof[i] > hi) hi = prof[i]; }
+  const span = Math.max(0.15, hi - lo);
+  lo -= span * 0.12; hi += span * 0.18;
+  const X = function(o){ return p.x + p.w * (n > 1 ? o / (n - 1) : 0.5); };
+  const Y = function(v){ return p.y + p.h * (hi - v) / (hi - lo); };
+
+  ctx.fillStyle = c.sunk; ctx.fillRect(p.x, p.y, p.w, p.h);
+  ctx.strokeStyle = c.grid; ctx.lineWidth = 1;
+  for (let i = 1; i < 4; i++){
+    const y = Math.round(p.y + p.h * i / 4) + .5;
+    ctx.beginPath(); ctx.moveTo(p.x, y); ctx.lineTo(p.x + p.w, y); ctx.stroke();
+  }
+  if (lo < 0 && hi > 0){
+    ctx.strokeStyle = c.line; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(p.x, Math.round(Y(0)) + .5); ctx.lineTo(p.x + p.w, Math.round(Y(0)) + .5); ctx.stroke();
+  }
+
+  ctx.strokeStyle = c.bark; ctx.lineWidth = 1.7; ctx.lineJoin = "round";
+  ctx.beginPath();
+  for (let i = 0; i < n; i++){ const x = X(i), y = Y(prof[i]); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+  ctx.stroke();
+
+  /* the year the beam really came from */
+  const tx = X(t.trueOff);
+  ctx.strokeStyle = c.hit; ctx.lineWidth = 1.4; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(tx, p.y); ctx.lineTo(tx, p.y + p.h); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = c.hit;
+  ctx.beginPath(); ctx.arc(tx, Y(prof[t.trueOff]), 4, 0, Math.PI * 2); ctx.fill();
+
+  /* where the reader is standing */
+  const ox = X(state.off);
+  ctx.strokeStyle = c.und; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(ox, p.y - 4); ctx.lineTo(ox, p.y + p.h + 4); ctx.stroke();
+  ctx.fillStyle = c.und;
+  ctx.beginPath(); ctx.arc(ox, Y(prof[Math.min(state.off, n - 1)]), 4.5, 0, Math.PI * 2); ctx.fill();
+
+  ctx.strokeStyle = c.line; ctx.lineWidth = 1;
+  ctx.strokeRect(p.x + .5, p.y + .5, p.w - 1, p.h - 1);
+
+  /* The page has almost no left margin, so the correlation's own scale is
+     written inside the panel on a plate rather than outside it, where only
+     the last digit would have fitted. */
+  ctx.font = FSS + "px " + css("--mono");
+  const marks = [[hi, p.y + FSS + 2], [lo, p.y + p.h - 4]];
+  for (let i = 0; i < marks.length; i++){
+    const txt = marks[i][0].toFixed(2), tw = ctx.measureText(txt).width;
+    ctx.fillStyle = c.sunk; ctx.globalAlpha = .85;
+    ctx.fillRect(p.x + 2, marks[i][1] - FSS, tw + 6, FSS + 4);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = c.muted; ctx.textAlign = "left";
+    ctx.fillText(txt, p.x + 5, marks[i][1]);
+  }
+  ctx.fillStyle = c.muted;
+  ctx.textAlign = "left";  ctx.fillText("0", p.x, p.y + p.h + FSS + 5);
+  ctx.textAlign = "right"; ctx.fillText(String(n - 1) + " yr", p.x + p.w, p.y + p.h + FSS + 5);
+  ctx.textAlign = "left";
+  ctx.fillText(pick(["how far the core has been slid along the chronology", "offset, in years"], p.w - 4),
+               p.x, p.y + p.h + FSS + 5 + FSS + 8);
+
+  const ly = p.y + p.h + FSS + 5 + FSS + 8 + FSS + 8;
+  ctx.font = FSS + "px " + css("--mono");
+  ctx.fillStyle = c.und; ctx.textAlign = "left";
+  const s1 = pick(["where you are standing", "you"], p.w * .42);
+  ctx.fillText(s1, p.x, ly);
+  const x2 = p.x + ctx.measureText(s1).width + (NARROW ? 12 : 24);
+  ctx.fillStyle = c.hit;
+  ctx.fillText(pick(["the year the beam really came from", "the true year"], p.x + p.w - x2 - 4), x2, ly);
+}
+
+/* Each trial is a pure function of its settings and the verifier re-renders
+   at nine positions of every control, so trials are kept once computed. */
+const trialMemo = {};
+function currentTrial(){
+  const key = [state.tree, state.noise, state.len, state.detrend, state.lost].join("|");
+  if (!Object.prototype.hasOwnProperty.call(trialMemo, key)){
+    trialMemo[key] = Model.trial(SEED + 1013 * (state.tree + 1), state.noise, state.len,
+                                 state.detrend, state.lost);
+  }
+  return trialMemo[key];
+}
+
+function render(){
+  fitCanvas();
+  const c = C();
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "alphabetic";
+
+  const t = currentTrial();
+  const maxOff = Math.max(0, t.prof.length - 1);
+  if (state.off > maxOff){ state.off = maxOff; el("off").value = String(maxOff); }
+  el("off").max = String(maxOff);
+
+  ctx.font = "700 " + FS + "px " + css("--ui"); ctx.fillStyle = c.ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["the dated chronology, " + REF_LEN + " years of it",
+                     "the dated chronology"], W - 2 * LM), LM, PAD + FS);
+  drawRings(c, REFP, standard(t.refIx), 0, REF_LEN, c.ref, c.refSoft);
+
+  ctx.font = FSS + "px " + css("--mono"); ctx.fillStyle = c.muted;
+  ctx.fillText(pick(["the undated core, " + t.undIx.length + " rings, slid " + state.off + " years along",
+                     t.undIx.length + " rings, slid " + state.off], W - 2 * LM),
+               LM, UNDP.y - 5);
+  drawRings(c, UNDP, standard(t.undIx), state.off, REF_LEN, c.und, c.undSoft);
+
+  ctx.font = FSS + "px " + css("--mono"); ctx.fillStyle = c.muted;
+  ctx.textAlign = "left";  ctx.fillText("first year", LM, UNDP.y + UNDP.h + FSS + 6);
+  ctx.textAlign = "right"; ctx.fillText("last year", LM + REFP.w, UNDP.y + UNDP.h + FSS + 6);
+  ctx.textAlign = "left";
+  ctx.fillText(pick(["ring widths with each tree's own growth taken out, standardised",
+                     "standardised ring widths"], REFP.w - 4),
+               LM, UNDP.y + UNDP.h + FSS + 6 + FSS + 8);
+
+  ctx.font = "700 " + FS + "px " + css("--ui"); ctx.fillStyle = c.ink;
+  ctx.fillText(pick(["how well the two agree at every offset you could have chosen",
+                     "agreement at every offset"], W - 2 * LM), LM, CORRP.y - 14);
+  drawCorr(c, t);
+
+  const here = t.prof[Math.min(state.off, t.prof.length - 1)];
+  const onIt = state.off === t.trueOff;
+  const wouldBeRight = t.best === t.trueOff;
+
+  el("offout").textContent = state.off + " yr";
+  el("noiseout").textContent = state.noise.toFixed(2);
+  el("lenout").textContent = String(t.undIx.length);
+
+  el("r1").textContent = here.toFixed(3);
+  el("r2").textContent = t.best + " yr";
+  el("r3").textContent = t.trueOff + " yr";
+  el("r4").textContent = Number.isFinite(t.margin) ? (t.margin >= 0 ? "+" : "") + t.margin.toFixed(3) : "none";
+  /* Counting rings inward from the outermost dates the pith one year later
+     for every ring the tree never laid down. That disagreement with the
+     matched date is the only trace a missing ring leaves. */
+  el("r5").textContent = !onIt ? "not dated yet" : t.lost ? "1 year apart" : "they agree";
+  el("r6").textContent = onIt ? "on the year" : wouldBeRight ? "keep sliding" : "a false lock is in there";
+}
+
+/* ---- controls ----------------------------------------------------------- */
+el("off").addEventListener("input", function(){ state.off = parseInt(el("off").value, 10); render(); });
+el("noise").addEventListener("input", function(){ state.noise = parseFloat(el("noise").value); render(); });
+el("len").addEventListener("input", function(){ state.len = parseInt(el("len").value, 10); render(); });
+el("detrend").addEventListener("change", function(){ state.detrend = el("detrend").value; render(); });
+el("lost").addEventListener("change", function(){ state.lost = el("lost").checked; render(); });
+el("find").addEventListener("click", function(){
+  state.off = currentTrial().best;
+  el("off").value = String(state.off);
+  render();
+});
+el("another").addEventListener("click", function(){ state.tree = (state.tree + 1) % 48; render(); });
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults);
+  el("off").value = String(defaults.off); el("noise").value = String(defaults.noise);
+  el("len").value = String(defaults.len); el("detrend").value = defaults.detrend;
+  el("lost").checked = false;
+  render();
+});
+
+let rt = null;
+window.addEventListener("resize", function(){ clearTimeout(rt); rt = setTimeout(render, 90); });
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+else if (mq.addListener) mq.addListener(render);
+
+render();
+
+/* ---- SELFTEST ------------------------------------------------------------ */
+const memo = {};
+function once(key, fn){
+  if (!Object.prototype.hasOwnProperty.call(memo, key)) memo[key] = fn();
+  return memo[key];
+}
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+function pc(x){ return (100 * x).toFixed(1) + "%"; }
+
+/* One sweep of 300 seeded pairs at each noise level, measured once. */
+function sweep(noise, len, how){
+  return once("s|" + noise + "|" + len + "|" + how, function(){
+    let hit = 0;
+    const margins = [];
+    for (let i = 0; i < 300; i++){
+      const t = Model.trial(50000 + i * 37, noise, len, how, false);
+      if (t.best === t.trueOff) hit++;
+      margins.push(t.margin);
+    }
+    margins.sort(function(a, b){ return a - b; });
+    return { rate: hit / 300, min: margins[0], p05: margins[15], median: margins[150] };
+  });
+}
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = function(name, pass, detail){ t.push({ name: name, pass: !!pass, detail: String(detail) }); };
+
+  /* 1 -- with good wood it is exact, every single time */
+  const S1 = sweep(0.1, 90, "negexp");
+  push("on good wood cross dating finds the year exactly, on every pair",
+       S1.rate === 1 && S1.min > 0.3,
+       "300 seeded pairs at a noise of 0.10: the right offset every time, and the worst margin over the " +
+       "best wrong offset is " + S1.min.toFixed(3) + ", with a median of " + S1.median.toFixed(3));
+
+  /* 2 -- the margin is what degrades first, before the answer does */
+  const S2 = sweep(0.2, 90, "negexp"), S3 = sweep(0.3, 90, "negexp");
+  push("the margin collapses a long way before the answer does",
+       S2.rate === 1 && S2.min < 0.15 && S3.rate >= 0.9 && S3.rate < 1 && S3.p05 < 0.05,
+       "at a noise of 0.20 the answer is still right on all 300 pairs, but the worst margin has fallen to " +
+       S2.min.toFixed(3) + " from " + S1.min.toFixed(3) + ". At 0.30 the answer is right " + pc(S3.rate) +
+       " of the time and the fifth percentile of the margin is " + S3.p05.toFixed(3));
+
+  /* 3 -- and then it does not degrade, it falls off a cliff */
+  const S4 = sweep(0.45, 90, "negexp"), S5 = sweep(0.6, 90, "negexp");
+  push("past the cliff the method is usually confidently wrong",
+       S4.rate < 0.6 && S5.rate < 0.3 && S4.median < 0 && S5.median < 0,
+       "noise 0.45 gives the right year " + pc(S4.rate) + " of the time and 0.60 gives " + pc(S5.rate) +
+       ". At both, the median margin is negative (" + S4.median.toFixed(3) + " and " + S5.median.toFixed(3) +
+       "), so on a typical pair some wrong offset correlates better than the true one and nothing on the " +
+       "chart says so");
+
+  /* 4 -- a short core falls off the cliff sooner */
+  const SHORT = sweep(0.3, 30, "negexp");
+  push("a short core loses the year sooner than a long one",
+       SHORT.rate < S3.rate - 0.1 && SHORT.median < S3.median,
+       "at the same noise of 0.30, a 30 ring core is dated correctly " + pc(SHORT.rate) + " of the time " +
+       "against " + pc(S3.rate) + " for a 90 ring core, and the median margin falls from " +
+       S3.median.toFixed(3) + " to " + SHORT.median.toFixed(3));
+
+  /* 5 -- the exact property of one detrending, and the absence of it in the other */
+  const DT = once("dt", function(){
+    let worstLine = 0, worstExp = 0;
+    for (let i = 0; i < 40; i++){
+      const c = Model.climate(9100 + i);
+      const w = Model.core(c, REF_START, 120, 0.15, 9200 + i, 1.4, 0.03, 0.35);
+      const spread = Math.sqrt(Model.fitLine(w).slope * Model.fitLine(w).slope);
+      const lineIx = Model.index(w, "line"), expIx = Model.index(w, "negexp");
+      worstLine = Math.max(worstLine, Math.abs(Model.fitLine(lineIx).slope));
+      worstExp = Math.max(worstExp, Math.abs(Model.fitLine(expIx).slope) / Math.max(1e-12, spread));
+    }
+    return { line: worstLine, exp: worstExp };
+  });
+  push("subtracting a line leaves exactly no slope, dividing by a curve does not",
+       DT.line < 1e-12 && DT.exp > 1e-6,
+       "over 40 cores: after subtracting the least squares line the residuals have a fitted slope of at " +
+       "most " + DT.line.toExponential(2) + ", which is machine precision and is a property of least " +
+       "squares rather than of the data. After dividing by a fitted growth curve the leftover slope is up " +
+       "to " + DT.exp.toExponential(2) + " of the raw slope it was meant to remove");
+
+  /* 6 -- taking the growth curve out is what makes the match possible at all */
+  const RAW = sweep(0.1, 90, "none");
+  push("without detrending there is no lock to find",
+       RAW.rate < 0.5 && RAW.median < S1.median - 0.2,
+       "the same 300 pairs at a noise of 0.10, matched on raw widths instead of indices: the right year " +
+       pc(RAW.rate) + " of the time against " + pc(S1.rate) + ", because two falling growth curves agree " +
+       "with each other at almost any offset");
+
+  /* 7 -- the climate really is in there, and detrending recovers it */
+  const REC = once("rec", function(){
+    const out = [];
+    for (const noise of [0, 0.1, 0.3]){
+      let sum = 0;
+      for (let i = 0; i < 40; i++){
+        const seed = 7700 + i * 13;
+        const c = Model.climate(seed);
+        const w = Model.core(c, REF_START, 160, noise, seed + 4, 1.4, 0.03, 0.35);
+        const ix = Model.index(w, "negexp");
+        const sig = new Float64Array(160);
+        for (let a = 0; a < 160; a++) sig[a] = c[REF_START + a];
+        sum += Model.corr(ix, sig, 0, 0, 160);
+      }
+      out.push({ noise: noise, r: sum / 40 });
+    }
+    return out;
+  });
+  push("the recovered index really is the climate the tree grew in",
+       REC[0].r > 0.98 && REC[1].r > 0.85 && REC[2].r > 0.5 && REC[1].r < REC[0].r && REC[2].r < REC[1].r,
+       "correlation of the detrended index with the climate series it was built from, averaged over 40 " +
+       "cores of 160 rings: " + REC.map(function(o){ return "noise " + o.noise.toFixed(2) + " gives " +
+       o.r.toFixed(3); }).join(", "));
+
+  /* 8 -- a missing ring, and exactly what it costs */
+  const MISS = once("miss", function(){
+    const seed = 424242;
+    const whole = Model.trial(seed, 0.08, 120, "negexp", false);
+    const gappy = Model.trial(seed, 0.08, 120, "negexp", true);
+    return { whole: whole, gappy: gappy,
+             lostAt: Math.floor(120 * 0.62),
+             countedWhole: whole.undW.length, countedGappy: gappy.undW.length };
+  });
+  push("a lost ring puts every earlier year exactly one year out",
+       MISS.countedWhole - MISS.countedGappy === 1 &&
+       MISS.gappy.best === MISS.gappy.trueOff &&
+       MISS.whole.best === MISS.whole.trueOff,
+       "the same tree with and without its drought ring: " + MISS.countedWhole + " rings against " +
+       MISS.countedGappy + ", a difference of exactly one. Both still cross date to the right offset, " +
+       "because the match is made on the outer rings where nothing is missing, so the ring count and the " +
+       "matched date disagree by a year and that disagreement is the only trace the missing ring leaves");
+
+  /* 9 -- the correlation itself, checked against cases with known answers */
+  push("the correlation is the ordinary Pearson one", (function(){
+    const a = Float64Array.from([1, 2, 3, 4, 5]);
+    const b = Float64Array.from([2, 4, 6, 8, 10]);
+    const d = Float64Array.from([5, 4, 3, 2, 1]);
+    const e = Float64Array.from([1, 1, 1, 1, 1]);
+    if (!near(Model.corr(a, b, 0, 0, 5), 1, 1e-12)) return false;
+    if (!near(Model.corr(a, d, 0, 0, 5), -1, 1e-12)) return false;
+    if (!near(Model.corr(a, e, 0, 0, 5), 0, 1e-12)) return false;
+    const f = Float64Array.from([1, 2, 3, 4, 5, 6]);
+    const g = Float64Array.from([10, 9, 1, 2, 3, 4]);
+    if (!near(Model.corr(f, g, 2, 2, 4), 1, 1e-12)) return false;
+    return near(Model.corr(a, b, 0, 0, 3), 1, 1e-12);
+  })(), "exactly 1 on a doubled series, exactly -1 on a reversed one, 0 against a constant, and 1 on a " +
+        "matching window offset into both");
+
+  /* 10 -- the growth curve fit does what it says */
+  push("the growth curve fit recovers a growth curve it was given", (function(){
+    for (const b of [0.02, 0.05, 0.11]){
+      const n = 140, w = new Float64Array(n);
+      for (let a = 0; a < n; a++) w[a] = 1.3 * Math.exp(-b * (a + 1)) + 0.4;
+      const f = Model.fitGrowth(w);
+      let worst = 0;
+      for (let a = 0; a < n; a++){
+        const g = f.A * Math.exp(-f.b * (a + 1)) + f.k;
+        worst = Math.max(worst, Math.abs(g - w[a]));
+      }
+      if (!(worst < 1e-6)) return false;
+      const ix = Model.index(w, "negexp");
+      for (let a = 0; a < n; a++) if (!near(ix[a], 1, 1e-6)) return false;
+    }
+    return true;
+  })(), "on three noiseless growth curves with decay rates of 0.02, 0.05 and 0.11 the fit reproduces every " +
+        "ring to better than 1e-6 and the index it leaves is flat at 1 to the same, so a tree that saw no " +
+        "weather at all yields no pattern to match");
+
+  /* 11 -- the climate series is what it claims to be */
+  push("the climate series has the memory it was built with", (function(){
+    const c = Model.climate(31337), n = YEARS;
+    let m = 0;
+    for (let i = 0; i < n; i++) m += c[i];
+    m /= n;
+    let v = 0, lag = 0;
+    for (let i = 0; i < n; i++) v += (c[i] - m) * (c[i] - m);
+    for (let i = 1; i < n; i++) lag += (c[i] - m) * (c[i - 1] - m);
+    const r1 = lag / v;
+    return Math.abs(m) < 0.15 && Math.abs(Math.sqrt(v / n) - 1) < 0.1 && Math.abs(r1 - PHI) < 0.06;
+  })(), "640 years: a mean within 0.15 of zero, a standard deviation within 0.1 of one, and a lag one " +
+        "correlation within 0.06 of the 0.30 it was generated with");
+
+  /* 12 -- total over every setting the controls can reach */
+  push("finite at every setting the controls can reach", (function(){
+    for (const how of ["negexp", "line", "none"]){
+      for (let noise = 0; noise <= 0.6001; noise += 0.2){
+        for (const len of [25, 90, 160]){
+          for (const lost of [false, true]){
+            const tr = Model.trial(SEED + 5, noise, len, how, lost);
+            if (!(tr.prof.length > 0)) return false;
+            for (let i = 0; i < tr.prof.length; i++)
+              if (!Number.isFinite(tr.prof[i]) || tr.prof[i] < -1.000001 || tr.prof[i] > 1.000001) return false;
+            if (!Number.isFinite(tr.margin)) return false;
+            if (!(tr.best >= 0 && tr.best < tr.prof.length)) return false;
+            if (!(tr.trueOff >= 0 && tr.trueOff < tr.prof.length)) return false;
+          }
+        }
+      }
+    }
+    return true;
+  })(), "3 detrendings by 4 noise levels by 3 core lengths by two ring counts: every correlation inside " +
+        "plus or minus one, every offset inside the chart, every margin a number");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
