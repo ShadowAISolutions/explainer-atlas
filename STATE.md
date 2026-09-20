@@ -43,6 +43,81 @@ files in `AUDIT/` before starting any batch.
 
 ## Batches
 
+### batch/019 — 2026-09-20
+- merged: titration-curve-equivalence, rate-distortion-quantisation,
+  standing-wave-modes, convolution-as-blurring,
+  genetic-drift-small-populations
+- blocked: none
+- patterns: drag-parameter, race-two-methods, tune-to-match, draw-input,
+  compare-side-by-side
+- queue: 32 remaining, above the refill threshold of 20. AUDIT/004 falls due
+  after batch/020.
+- learned:
+  - **Never assert against a published table you are recalling from memory.**
+    The rate-distortion page asserted Lloyd-Max distortions for a Gaussian
+    against four remembered figures and failed; the solver was right and the
+    remembered table was wrong. There is no way to check a memory against
+    itself, and a failing assertion written that way costs a debugging round
+    on working code. Assert a closed form instead — the two-level optimum is
+    exactly at plus and minus sqrt(2/pi) with distortion 1 - 2/pi, which is
+    checkable on paper — or add a second computational route and assert that
+    the two agree. If a page genuinely needs a published number, it needs a
+    citation that was actually read this session, not a recollection.
+  - **Where an exact answer exists, a statistical assertion is the weaker
+    claim, and often a wrong one.** Task 118 asked for the neutral fixation
+    probability "within 3 standard errors over 200000 seeded runs". Solving
+    the finite Wright-Fisher chain — build the transition matrix, solve the
+    linear system for the absorption probability — gives it to 1e-11 in
+    milliseconds, and the same machinery gives the conditional mean fixation
+    time, which is where the task's other claim broke. Reach for the exact
+    chain, the closed form or the quadrature first; keep the Monte Carlo as
+    the second route that confirms it rather than as the primary evidence.
+  - **Two lines that coincide are not one line, and a key that lists both is
+    lying about what is on screen.** On a flat source the rate-distortion
+    page's entropy-coded curve landed exactly on the Lloyd-Max curve, hid it,
+    and left two entries in the key pointing at one visible stroke. The fix
+    that generalises: cluster the series by whether they agree within a
+    plotting tolerance, give a cluster one key entry with a split swatch, and
+    draw the later members dashed over the first so the coincidence is
+    visible as coincidence.
+  - **A magnitude threshold cannot separate a real zero from numerical
+    underflow, so do not build a display claim on one.** The convolution
+    page's gain pane tried to count the zeros of a kernel's frequency
+    response. A box raised to the sixth power has genuine zeros whose
+    neighbouring lobes sit at 1e-8 of peak; a truncated Gaussian has
+    truncation ripple crossing zero at 1e-4 of peak. The real ones are
+    *smaller* than the artefacts. What worked was to stop counting and let
+    one verdict — inverts, touches, grazes, never — drive the label, the
+    markers and the readout together, so the page cannot say one thing in
+    three places.
+  - **A double zero is flat, so a search that minimises |f| cannot place it
+    better than the square root of machine epsilon.** Asserting the triangle
+    kernel's zero *positions* to 1e-9 failed at 1.7e-9, which is the method's
+    floor, not a defect. The sharp assertion is the *value*: the gain at each
+    predicted zero is 1e-16, while the position is only good to 1e-6. Assert
+    what the arithmetic can actually deliver and say in the detail string why
+    the looser number is the honest one.
+  - **A mean and a standard deviation are the wrong summary of a distribution
+    whose mass piles up at both ends.** The drift page first drew the exact
+    mean plus or minus one standard deviation as a band; at six breeders that
+    band covered nearly the whole frame and buried the runs it was supposed
+    to explain. The distribution is bimodal — everything ends at zero or one.
+    Drawing the exact absorbed share instead, as a strip growing down from
+    the top for fixation and up from the bottom for loss, says the same thing
+    exactly and reads at a glance.
+  - Task-file figures corrected or sharpened on every page again: the running
+    count is **48**. Five of this batch's: the Gaussian composition tolerance
+    (needs six sigma of tail, not the four a page would naturally draw), the
+    trimmed-output area law, the derivative-on-a-ramp exactness at the edges,
+    the 4N fixation time (single-copy and large-N only; 3.50N at N=5, and
+    2.77N from a half), and Kimura's formula (a part in 300 at s=0.01, eight
+    per cent out at s=0.5).
+  - The screenshot review after a green `tools/verify.mjs` caught a real
+    defect on **every** page again, twelve batches running. This batch: a key
+    overlapping its own pane title, a label sitting on the curve it named, a
+    spurious comb of zero markers on a dead tail, two pane titles running
+    into each other, and a theory band swallowing its own data.
+
 ### batch/018 - 2026-09-20
 - merged: antenna-radiation-pattern, comma-pump-drift, discounting-and-npv,
   syllable-weight-and-stress, evolutionarily-stable-strategy
