@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Twenty Questions, One Lucky Answer — Explainer Atlas</title>
+<meta name="description" content="Run twenty tests on pure noise at the five per cent level and something comes up significant about two thirds of the time. Step through the outcomes one at a time and watch it happen.">
+<style>
+:root{
+  --bg:#f3f5f8; --panel:#ffffff; --ink:#111823; --muted:#5c6878; --line:#d9dfe7;
+  --alarm:#b8342f; --alarm-soft:#fbeae9; --calm:#33608f; --calm-soft:#e7eff7;
+  --accent:#b8342f; --accent-soft:#fbeae9; --grid:#e8ecf2; --gold:#8a6a10;
+  --pad:clamp(14px,3vw,24px);
+  --sans:"Inter",ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0d1117; --panel:#151b23; --ink:#e3e8ef; --muted:#8e9aab; --line:#242c37;
+    --alarm:#f1706a; --alarm-soft:#2b1616; --calm:#6fa4dc; --calm-soft:#132130;
+    --accent:#f1706a; --accent-soft:#2b1616; --grid:#1b222b; --gold:#d6ab3c;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:clamp(.97rem,.94rem + .2vw,1.04rem)/1.62 var(--sans); -webkit-text-size-adjust:100%}
+.wrap{max-width:66rem; margin:0 auto; padding:var(--pad)}
+
+header.page{border-bottom:2px solid var(--ink); padding-bottom:.9em; margin-bottom:var(--pad)}
+.kicker{margin:0 0 .6em; color:var(--muted); font:600 .68rem/1 var(--mono);
+  text-transform:uppercase; letter-spacing:.18em}
+h1{font-size:clamp(1.5rem,1.15rem + 1.9vw,2.25rem); line-height:1.12; margin:0 0 .3em;
+  font-weight:650; letter-spacing:-.018em}
+.standfirst{margin:0; color:var(--muted); max-width:40em; font-size:.97em}
+
+/* controls on the left, stage on the right: the mirror of the usual shape */
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr}
+@media (min-width:58rem){ .layout{grid-template-columns:minmax(15rem,.72fr) minmax(0,1.6fr); align-items:start} }
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:6px;
+  padding:var(--pad); display:grid; gap:1.05em; align-content:start}
+.control{display:grid; gap:.28em; min-width:0}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font:600 .74rem/1.3 var(--mono); text-transform:uppercase; letter-spacing:.09em}
+.control output{font:700 .8rem/1 var(--mono); color:var(--accent); background:var(--accent-soft);
+  padding:.22em .45em; border-radius:3px; font-variant-numeric:tabular-nums}
+.control .hint{margin:0; color:var(--muted); font-size:.77rem; line-height:1.45}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; font-family:var(--mono); font-size:.8rem; color:inherit;
+  background:var(--bg); border:1px solid var(--line); padding:.5em .6em; min-height:40px; border-radius:4px}
+button{cursor:pointer; font-weight:700}
+button:hover,select:hover{border-color:var(--accent); color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.btnrow{display:grid; grid-template-columns:1fr 1fr; gap:.45em}
+.btnrow .wide{grid-column:1/-1}
+
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:6px;
+  padding:10px 10px 0; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto}
+figcaption{margin:0; padding:.7em 4px .9em; color:var(--muted); font-size:.85rem}
+
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8rem,1fr)); gap:1px;
+  margin:var(--pad) 0 0; padding:0; background:var(--line); border:1px solid var(--line); border-radius:6px}
+.readout div{background:var(--panel); padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font:.64rem/1.4 var(--mono); text-transform:uppercase; letter-spacing:.1em}
+.readout dd{margin:.18em 0 0; font:700 1rem/1.25 var(--mono); font-variant-numeric:tabular-nums}
+
+.prose{max-width:38em; margin:calc(var(--pad)*1.5) auto 0}
+.prose h2{font:650 1rem/1.3 var(--sans); margin:2em 0 .5em; letter-spacing:-.01em;
+  border-left:3px solid var(--accent); padding-left:.6em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--mono); font-size:.85rem; background:var(--panel);
+  padding:.8em 1em; border-radius:5px; border:1px solid var(--line); overflow-x:auto;
+  white-space:pre-wrap; line-height:1.7}
+.prose strong{font-weight:650}
+footer.page{max-width:38em; margin:calc(var(--pad)*1.8) auto 0; padding-top:var(--pad);
+  border-top:1px solid var(--line); color:var(--muted); font-size:.83rem}
+footer.page a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Statistics</p>
+  <h1>Twenty Questions, One Lucky Answer</h1>
+  <p class="standfirst">Measure twenty outcomes, test each at the five per cent level, and even
+  when nothing whatsoever is going on, something comes up significant about two thirds of the
+  time. Step through the outcomes and watch it arrive.</p>
+</header>
+
+<div class="layout">
+  <section class="controls" data-role="controls" aria-label="Study design">
+    <div class="control">
+      <div class="row">
+        <label for="k">Outcomes measured</label>
+        <output id="kout" for="k">20</output>
+      </div>
+      <input type="range" id="k" min="1" max="50" step="1" value="20">
+      <p class="hint">How many things the study looked at. Only the first can carry a real
+      effect; the rest are noise.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="step">Revealed so far</label>
+        <output id="stepout" for="step">6</output>
+      </div>
+      <input type="range" id="step" min="1" max="50" step="1" value="6">
+      <p class="hint">Walk the outcomes one at a time. Each new one is another chance for the
+      study to get lucky.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="eff">Real effect, outcome 1</label>
+        <output id="effout" for="eff">0.00</output>
+      </div>
+      <input type="range" id="eff" min="0" max="1.5" step="0.05" value="0">
+      <p class="hint">In standard deviations. Leave it at zero and every result on screen is a
+      false alarm by construction.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="n">Sample per group</label>
+        <output id="nout" for="n">10</output>
+      </div>
+      <input type="range" id="n" min="4" max="40" step="1" value="10">
+      <p class="hint">Two groups of this size per outcome, compared with a two sample t test.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="corr">Correction</label></div>
+      <select id="corr">
+        <option value="none" selected>None: each test at 0.05</option>
+        <option value="bonf">Bonferroni</option>
+        <option value="bh">Benjamini and Hochberg</option>
+        <option value="sidak">Sidak</option>
+      </select>
+      <p class="hint">Changes the line a p value has to fall under to be called significant.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="next">Run the study</label></div>
+      <div class="btnrow">
+        <button type="button" id="next">Next outcome</button>
+        <button type="button" id="study">New study</button>
+        <button type="button" id="reset" class="wide">Reset</button>
+      </div>
+      <p class="hint">A new study redraws every outcome from scratch with the same design.</p>
+    </div>
+  </section>
+
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="470" role="img"
+      aria-label="A strip of p values for each outcome measured so far, with the significance threshold marked, above a curve of the chance of at least one false alarm against the number of tests."></canvas>
+    <figcaption id="cap">Each mark is one outcome's p value. Anything left of the threshold gets
+    reported as a finding.</figcaption>
+  </figure>
+</div>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Threshold in force</dt><dd id="rT">&mdash;</dd></div>
+  <div><dt>Findings so far</dt><dd id="rF">&mdash;</dd></div>
+  <div><dt>False alarm chance</dt><dd id="rW">&mdash;</dd></div>
+  <div><dt>False alarms expected</dt><dd id="rE">&mdash;</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>There is nothing to find. Both groups in every outcome are drawn from the same
+  distribution, so every p value on screen is the product of chance alone. Step through the
+  outcomes and the marks pile up on the left of the axis roughly uniformly, because that is
+  what a p value does when the null hypothesis is true: it is equally likely to be anywhere
+  between nought and one. The page checks that with a Kolmogorov and Smirnov statistic on
+  twenty thousand simulated tests and gets 0.63 against a one per cent critical value of 1.63.</p>
+
+  <p>Uniform is exactly what makes twenty tests dangerous. Each has a one in twenty chance of
+  landing under 0.05, so the chance that <strong>none</strong> of them does is 0.95 raised to
+  the twentieth, and the chance at least one does is what is left.</p>
+
+  <p class="math">chance of at least one false alarm  =  1 - (1 - 0.05)^k
+k = 20  gives  0.6415, and the simulation over 200000 studies gives 0.6409</p>
+
+  <p>Two thirds. And the expected number of false alarms is 0.05 times k, which at twenty
+  outcomes is exactly one. A study that measures twenty things and reports the one that came
+  out significant has reported its average.</p>
+
+  <h2>What the corrections actually buy</h2>
+
+  <p>Bonferroni divides the threshold by the number of tests. It works: the false alarm rate
+  over the whole family drops to 0.0488 at twenty tests, and the page asserts it stays at or
+  under 0.05 for every k up to fifty. It is also slightly <em>more</em> cautious than asked,
+  because one minus (1 - 0.05/k) to the k is always a shade under 0.05, sliding down toward 1 -
+  e to the minus 0.05, which is 0.048771. Sidak's correction closes that gap and hits 0.05 on
+  the nose, and under independence there is no reason to prefer Bonferroni to it.</p>
+
+  <h2>A claim that does not survive the simulation</h2>
+
+  <p>The brief for this page asked to assert that Benjamini and Hochberg's procedure "controls
+  the false discovery rate below 0.05 while rejecting strictly more often than Bonferroni". The
+  second half holds. The first does not, in the case on screen. When every hypothesis is null,
+  every rejection is false, so the false discovery rate is just the chance of rejecting
+  anything, and Simes showed that chance is <em>exactly</em> the level you set. The simulation
+  agrees and overshoots 0.05 at several k, landing at 0.0508 for five tests. What is true is
+  the general statement: the false discovery rate is bounded by the level times the fraction of
+  hypotheses that are genuinely null, so it sits at 0.05 when all of them are and drops below
+  only when some are not. Put a real effect into the first outcome and watch it drop.</p>
+
+  <h2>The price of caution</h2>
+
+  <p>Push the effect slider to 1.2 standard deviations and leave the sample at ten. On its own
+  that outcome is detected 72 per cent of the time. Bury it among nineteen others and
+  Bonferroni finds it 25 per cent of the time; Benjamini and Hochberg finds it 26. The
+  correction did not weaken the evidence, it corrected the question you were allowed to ask of
+  it, and that is the same trade every honest multiple testing procedure makes.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set the effect back to zero, push outcomes to fifty, and step from one to fifty with the
+  correction off. Watch the false alarm curve pass three quarters. Then switch to Bonferroni
+  and step through again: the threshold line jumps left by a factor of fifty and almost nothing
+  crosses it.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+const ALPHA = 0.05;
+
+/* ---- MODEL: pure functions. No DOM. ------------------------------------- */
+const Model = {
+  /* --- the t distribution, through the regularised incomplete beta ------- */
+  lgamma(z){
+    const g = [676.5203681218851, -1259.1392167224028, 771.32342877765313,
+               -176.61502916214059, 12.507343278686905, -0.13857109526572012,
+               9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (z < 0.5) return Math.log(Math.PI / Math.sin(Math.PI*z)) - this.lgamma(1 - z);
+    z -= 1;
+    let x = 0.99999999999980993;
+    for (let i = 0; i < 8; i++) x += g[i] / (z + i + 1);
+    const t = z + 7.5;
+    return 0.5*Math.log(2*Math.PI) + (z + 0.5)*Math.log(t) - t + Math.log(x);
+  },
+  betacf(a, b, x){
+    const MAXIT = 300, EPS = 3e-16, FPMIN = 1e-300;
+    const qab = a + b, qap = a + 1, qam = a - 1;
+    let c = 1, d = 1 - qab*x/qap;
+    if (Math.abs(d) < FPMIN) d = FPMIN;
+    d = 1/d;
+    let h = d;
+    for (let m = 1; m <= MAXIT; m++){
+      const m2 = 2*m;
+      let aa = m*(b - m)*x / ((qam + m2)*(a + m2));
+      d = 1 + aa*d; if (Math.abs(d) < FPMIN) d = FPMIN;
+      c = 1 + aa/c;  if (Math.abs(c) < FPMIN) c = FPMIN;
+      d = 1/d; h *= d*c;
+      aa = -(a + m)*(qab + m)*x / ((a + m2)*(qap + m2));
+      d = 1 + aa*d; if (Math.abs(d) < FPMIN) d = FPMIN;
+      c = 1 + aa/c;  if (Math.abs(c) < FPMIN) c = FPMIN;
+      d = 1/d;
+      const del = d*c; h *= del;
+      if (Math.abs(del - 1) < EPS) break;
+    }
+    return h;
+  },
+  ibeta(x, a, b){
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    const bt = Math.exp(this.lgamma(a + b) - this.lgamma(a) - this.lgamma(b)
+                      + a*Math.log(x) + b*Math.log(1 - x));
+    return x < (a + 1)/(a + b + 2) ? bt*this.betacf(a, b, x)/a
+                                   : 1 - bt*this.betacf(b, a, 1 - x)/b;
+  },
+  /* two sided p value for a t statistic on nu degrees of freedom */
+  tP(t, nu){ return this.ibeta(nu/(nu + t*t), nu/2, 0.5); },
+  /* the critical value, by bisection on the p value */
+  tCrit(p, nu){
+    let lo = 0, hi = 1e4;
+    for (let i = 0; i < 200; i++){ const m = (lo + hi)/2; if (this.tP(m, nu) > p) lo = m; else hi = m; }
+    return (lo + hi)/2;
+  },
+
+  /* --- one simulated outcome -------------------------------------------- */
+  normals(rng, n){
+    const out = new Float64Array(n);
+    for (let i = 0; i < n; i += 2){
+      const u = Math.max(1e-12, rng()), v = rng(), r = Math.sqrt(-2*Math.log(u));
+      out[i] = r*Math.cos(2*Math.PI*v);
+      if (i + 1 < n) out[i + 1] = r*Math.sin(2*Math.PI*v);
+    }
+    return out;
+  },
+  ttest(rng, n, d){
+    const A = this.normals(rng, n), B = this.normals(rng, n);
+    let sa = 0, sb = 0, qa = 0, qb = 0;
+    for (let i = 0; i < n; i++){
+      const a = A[i], b = B[i] + d;
+      sa += a; sb += b; qa += a*a; qb += b*b;
+    }
+    const ma = sa/n, mb = sb/n;
+    const va = (qa - n*ma*ma)/(n - 1), vb = (qb - n*mb*mb)/(n - 1);
+    const sp = ((n - 1)*va + (n - 1)*vb)/(2*n - 2);
+    const t = (ma - mb)/Math.sqrt(sp*(2/n));
+    return { t: t, p: this.tP(Math.abs(t), 2*n - 2) };
+  },
+  /* a whole study: k outcomes, only the first able to carry a real effect */
+  study(seed, k, n, effect){
+    const rng = mulberry32(seed);
+    const ps = new Float64Array(k), ts = new Float64Array(k);
+    for (let i = 0; i < k; i++){
+      const r = this.ttest(rng, n, i === 0 ? effect : 0);
+      ps[i] = r.p; ts[i] = r.t;
+    }
+    return { ps: ps, ts: ts };
+  },
+
+  /* --- the corrections --------------------------------------------------- */
+  bonferroni(k, alpha){ return alpha/k; },
+  sidak(k, alpha){ return 1 - Math.pow(1 - alpha, 1/k); },
+  /* the step up rule: the largest rank whose p value clears its own line */
+  bhCut(ps, alpha){
+    const s = Array.prototype.slice.call(ps).sort((a, b) => a - b);
+    let cut = 0;
+    for (let i = 0; i < s.length; i++) if (s[i] <= (i + 1)*alpha/s.length) cut = i + 1;
+    return cut === 0 ? 0 : s[cut - 1];
+  },
+  /* the same thing written the long way round, as a check on the short way */
+  bhCutBrute(ps, alpha){
+    const s = Array.prototype.slice.call(ps).sort((a, b) => a - b);
+    for (let r = s.length; r >= 1; r--) if (s[r - 1] <= r*alpha/s.length) return s[r - 1];
+    return 0;
+  },
+  threshold(kind, ps, k, alpha){
+    if (kind === "bonf") return this.bonferroni(k, alpha);
+    if (kind === "sidak") return this.sidak(k, alpha);
+    if (kind === "bh") return this.bhCut(ps, alpha);
+    return alpha;
+  },
+
+  /* --- the family wise rate, in closed form and by simulation ------------ */
+  fwerExact(k, alpha){ return 1 - Math.pow(1 - alpha, k); },
+  bonfExact(k, alpha){ return 1 - Math.pow(1 - alpha/k, k); },
+
+  /* uniform p values are exactly what a true null gives, so the family wise
+     simulation needs no t tests at all; the t tests are what justify that,
+     and assertion 2 is where they are checked                              */
+  simulate(seed, k, families, alpha, withBH){
+    const rng = mulberry32(seed);
+    let none = 0, bonf = 0, sid = 0, bh = 0, sum = 0, sumSq = 0, sumMin = 0;
+    const bonfT = alpha/k, sidT = this.sidak(k, alpha);
+    const buf = new Float64Array(k);
+    for (let f = 0; f < families; f++){
+      let mn = 2, sig = 0;
+      for (let i = 0; i < k; i++){
+        const p = rng(); buf[i] = p;
+        if (p < mn) mn = p;
+        if (p < alpha) sig++;
+      }
+      sum += sig; sumSq += sig*sig; sumMin += mn;
+      if (mn < alpha) none++;
+      if (mn < bonfT) bonf++;
+      if (mn < sidT) sid++;
+      if (withBH && this.bhCut(buf, alpha) > 0) bh++;
+    }
+    return { none: none/families, bonf: bonf/families, sidak: sid/families,
+             bh: withBH ? bh/families : null,
+             meanSig: sum/families, varSig: sumSq/families - (sum/families)*(sum/families),
+             meanMin: sumMin/families, families: families };
+  }
+};
+
+/* the expensive seeded runs are pure functions of their arguments, so one
+   cached copy is identical to recomputing them on every call               */
+const memo = {};
+function once(key, fn){ if (!(key in memo)) memo[key] = fn(); return memo[key]; }
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { k: 20, step: 6, eff: 0, n: 10, corr: "none", study: 0 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const SS = 2;
+let W = 900, H = 470, NARROW = false;
+
+function fitCanvas(){
+  const box = cv.parentElement.getBoundingClientRect().width - 20;
+  W = Math.max(280, Math.min(820, Math.round(box)));
+  NARROW = W < 450;
+  H = NARROW ? Math.max(440, Math.round(W * 1.30))
+             : Math.max(460, Math.min(780, Math.round(W * 1.12)));
+  cv.width = Math.round(W*SS); cv.height = Math.round(H*SS);
+  cv.style.width = "100%"; cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+function text(x, y, s, colour, align, baseline, plate){
+  ctx.textAlign = align || "left"; ctx.textBaseline = baseline || "alphabetic";
+  if (plate){
+    const w = ctx.measureText(s).width;
+    let lx = x; if (ctx.textAlign === "center") lx = x - w/2; if (ctx.textAlign === "right") lx = x - w;
+    ctx.fillStyle = css("--panel"); ctx.fillRect(lx - 3, y - 8, w + 6, 14);
+  }
+  ctx.fillStyle = colour; ctx.fillText(s, x, y);
+}
+
+function current(){
+  const k = state.k, step = Math.min(state.step, k);
+  const st = Model.study(1000 + state.study*7919 + state.n*31 + Math.round(state.eff*100)*97,
+                         k, state.n, state.eff);
+  const shown = Array.prototype.slice.call(st.ps, 0, step);
+  const thr = Model.threshold(state.corr, st.ps, k, ALPHA);
+  const hits = shown.filter(p => p <= thr).length;
+  return { k: k, step: step, ps: st.ps, shown: shown, thr: thr, hits: hits };
+}
+
+/* panel one: every p value revealed so far, on a square root axis so the
+   crowded left hand end where every threshold lives is actually readable */
+function drawStrip(c, top, h){
+  const padL = NARROW ? 32 : 44, padR = NARROW ? 14 : 22;
+  const x0 = padL, x1 = W - padR;
+  const X = (p) => x0 + Math.sqrt(Math.max(0, Math.min(1, p))) * (x1 - x0);
+  ctx.font = (NARROW ? 9 : 10) + "px " + css("--mono");
+  text(x0, top - 10, "EVERY P VALUE SO FAR, ON A SQUARE ROOT AXIS", css("--muted"), "left", "alphabetic");
+
+  const base = top + h;
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(x0, base); ctx.lineTo(x1, base); ctx.stroke();
+  for (const p of [0, 0.05, 0.2, 0.5, 1]){
+    const x = X(p);
+    ctx.strokeStyle = css("--grid");
+    ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, base); ctx.stroke();
+    text(x, base + 13, p === 0 ? "0" : String(p), css("--muted"), "center", "top");
+  }
+
+  /* the line a p value has to fall under to be reported */
+  const tx = X(c.thr);
+  ctx.strokeStyle = css("--alarm"); ctx.lineWidth = 2;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath(); ctx.moveTo(tx, top - 2); ctx.lineTo(tx, base + 3); ctx.stroke();
+  ctx.setLineDash([]);
+  text(tx + 4, top + 8, "THRESHOLD " + c.thr.toPrecision(3), css("--alarm"), "left", "middle", true);
+
+  /* one row per outcome the study will measure, not per outcome revealed:
+     the empty rules below the marks are the chances the study still has left */
+  const rowH = Math.max(3, Math.min(18, (h - 22) / Math.max(1, c.k)));
+  for (let i = 0; i < c.k; i++){
+    const y = top + 20 + rowH*(i + 0.5);
+    if (y > base - 2) break;
+    ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x0 + 1, y); ctx.lineTo(x1 - 1, y); ctx.stroke();
+    if (i >= c.step) continue;
+    const p = c.shown[i], hit = p <= c.thr;
+    ctx.strokeStyle = hit ? css("--alarm") : css("--calm");
+    ctx.lineWidth = hit ? 2.6 : 1.6;
+    const half = Math.max(2.5, Math.min(6, rowH/2 - 0.5));
+    ctx.beginPath();
+    ctx.moveTo(X(p), y - half); ctx.lineTo(X(p), y + half);
+    ctx.stroke();
+    if (i === 0 && state.eff > 0){
+      text(x0 - 5, y, "1st", css("--gold"), "right", "middle");
+    }
+  }
+  return base + 46;
+}
+
+/* panel two: the chance of at least one false alarm against the number of
+   tests, in closed form, with the study's own k marked                     */
+function drawCurve(c, top){
+  const padL = NARROW ? 32 : 44, padR = NARROW ? 14 : 22;
+  const x0 = padL, x1 = W - padR, base = H - (NARROW ? 26 : 24), h = base - top - 16;
+  const X = (k) => x0 + (k - 1)/49 * (x1 - x0);
+  const Y = (v) => base - v*h;
+  ctx.font = (NARROW ? 9 : 10) + "px " + css("--mono");
+  text(x0, top + 2, "CHANCE OF AT LEAST ONE FALSE ALARM", css("--muted"), "left", "alphabetic");
+
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
+  for (const v of [0, 0.25, 0.5, 0.75, 1]){
+    ctx.beginPath(); ctx.moveTo(x0, Y(v)); ctx.lineTo(x1, Y(v)); ctx.stroke();
+    text(x0 - 5, Y(v), v.toFixed(2), css("--muted"), "right", "middle");
+  }
+
+  /* uncorrected */
+  ctx.strokeStyle = css("--alarm"); ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  for (let k = 1; k <= 50; k++){
+    const x = X(k), y = Y(Model.fwerExact(k, ALPHA));
+    k === 1 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  /* corrected, whichever is in force. With no correction in force the two
+     lines are the same line, and drawing the second one would simply hide
+     the first under a colour that means the opposite thing                */
+  if (state.corr !== "none"){
+    const corrected = (k) => state.corr === "bonf" ? Model.bonfExact(k, ALPHA) : ALPHA;
+    ctx.strokeStyle = css("--calm"); ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    for (let k = 1; k <= 50; k++){
+      const x = X(k), y = Y(corrected(k));
+      k === 1 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    text(x1, Y(ALPHA) - 9, "CORRECTED", css("--calm"), "right", "alphabetic", true);
+    text(x1, Y(Model.fwerExact(50, ALPHA)) - 9, "UNCORRECTED", css("--alarm"), "right", "alphabetic", true);
+  }
+
+  const kx = X(c.k), ky = Y(Model.fwerExact(c.k, ALPHA));
+  ctx.strokeStyle = css("--ink"); ctx.lineWidth = 1;
+  ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(kx, base); ctx.lineTo(kx, ky); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.arc(kx, ky, 4.5, 0, Math.PI*2);
+  ctx.fillStyle = css("--panel"); ctx.fill();
+  ctx.strokeStyle = css("--ink"); ctx.lineWidth = 2; ctx.stroke();
+
+  /* the label goes on whichever side of the marker has room */
+  const lab = Model.fwerExact(c.k, ALPHA).toFixed(3) + " AT " + c.k;
+  text(kx + (c.k > 32 ? -8 : 8), ky - 19, lab, css("--ink"),
+       c.k > 32 ? "right" : "left", "middle", true);
+
+  for (const k of [1, 10, 20, 30, 40, 50])
+    text(X(k), base + 13, String(k), css("--muted"), "center", "top");
+  text((x0 + x1)/2, base + (NARROW ? 24 : 24), "TESTS IN THE FAMILY", css("--muted"), "center", "top");
+}
+
+function render(){
+  fitCanvas();
+  const c = current();
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+  const stripH = Math.round(H * 0.50);
+  const after = drawStrip(c, NARROW ? 34 : 36, stripH);
+  drawCurve(c, after);
+
+  el("kout").textContent = String(state.k);
+  el("stepout").textContent = String(c.step);
+  el("effout").textContent = state.eff.toFixed(2);
+  el("nout").textContent = String(state.n);
+
+  el("rT").textContent = c.thr === 0 ? "nothing passes" : c.thr.toPrecision(3);
+  el("rF").textContent = c.hits + " of " + c.step;
+  el("rW").textContent = (state.corr === "none" ? Model.fwerExact(state.k, ALPHA)
+    : state.corr === "bonf" ? Model.bonfExact(state.k, ALPHA) : ALPHA).toFixed(4);
+  el("rE").textContent = (ALPHA * state.k).toFixed(2);
+
+  const real = state.eff > 0;
+  el("cap").textContent = c.hits === 0
+    ? "Nothing has crossed the threshold yet, out of " + c.step + " outcome"
+      + (c.step === 1 ? "" : "s") + " looked at."
+    : c.hits + " of the " + c.step + " outcomes looked at came out significant"
+      + (real ? ", and only the first one has anything real behind it."
+              : ", and not one of them has anything behind it: every group on screen was drawn"
+                + " from the same distribution.");
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parse(input.value); render(); });
+}
+bind("k", "k", (v) => parseInt(v, 10));
+bind("step", "step", (v) => parseInt(v, 10));
+bind("eff", "eff", parseFloat);
+bind("n", "n", (v) => parseInt(v, 10));
+el("corr").addEventListener("change", () => { state.corr = el("corr").value; render(); });
+el("next").addEventListener("click", () => {
+  state.step = state.step >= state.k ? 1 : state.step + 1;
+  el("step").value = String(state.step); render();
+});
+el("study").addEventListener("click", () => { state.study = (state.study + 1) % 997; render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("k").value = String(defaults.k); el("step").value = String(defaults.step);
+  el("eff").value = String(defaults.eff); el("n").value = String(defaults.n);
+  el("corr").value = defaults.corr; render();
+});
+
+let rt;
+addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 90); });
+const mq = matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1 -- the t distribution against published critical values */
+  (function(){
+    const want = { 1: 12.706, 2: 4.303, 5: 2.571, 10: 2.228, 30: 2.042, 100: 1.984 };
+    let worst = 0, rows = [];
+    for (const nu in want){
+      const got = Model.tCrit(0.05, Number(nu));
+      worst = Math.max(worst, Math.abs(got - want[nu]));
+      rows.push(nu + ": " + got.toFixed(4));
+    }
+    push("the t distribution reproduces the published critical values",
+      worst < 5e-4, "two sided five per cent points " + rows.join(", ")
+      + " against 12.706, 4.303, 2.571, 2.228, 2.042, 1.984; worst gap " + worst.toExponential(2));
+  })();
+
+  /* 2 -- p values from real simulated tests on pure noise are uniform */
+  (function(){
+    const r = once("ks", function(){
+      const rng = mulberry32(SEED), N = 20000, ps = new Float64Array(N);
+      for (let i = 0; i < N; i++) ps[i] = Model.ttest(rng, 10, 0).p;
+      const a = Array.prototype.slice.call(ps).sort((x, y) => x - y);
+      let D = 0;
+      for (let i = 0; i < N; i++) D = Math.max(D, Math.abs((i + 1)/N - a[i]), Math.abs(a[i] - i/N));
+      return { D: D, stat: Math.sqrt(N)*D, N: N };
+    });
+    push("p values under the null are uniform on nought to one",
+      r.stat < 1.6276,
+      "Kolmogorov Smirnov statistic " + r.stat.toFixed(4) + " over " + r.N
+      + " simulated t tests, against a one per cent critical value of 1.6276");
+  })();
+
+  /* 3 -- the family wise rate against its closed form. A flat relative
+         tolerance is the wrong yardstick here: at k = 1 the rate is 0.05 and
+         one standard error over 40000 families is already 2.2 per cent of it,
+         so a one per cent band asks the simulation to beat its own sampling
+         floor. The gap is measured in standard errors of that floor instead. */
+  (function(){
+    const r = once("sweep", function(){
+      const out = [];
+      for (const k of [1, 2, 3, 5, 8, 12, 20, 30, 50])
+        out.push(Object.assign({ k: k }, Model.simulate(SEED + k, k, 40000, ALPHA, true)));
+      return out;
+    });
+    let worst = 0, at = 0;
+    for (const row of r){
+      const e = Model.fwerExact(row.k, ALPHA);
+      const se = Math.sqrt(e*(1 - e)/row.families);
+      const z = Math.abs(row.none - e)/se;
+      if (z > worst){ worst = z; at = row.k; }
+    }
+    push("the false alarm rate matches one minus 0.95 to the k",
+      worst < 4,
+      r.length + " values of k at 40000 families each; the largest gap is "
+      + worst.toFixed(2) + " standard errors of the binomial sampling floor, at k = "
+      + at + ", against a bound of 4");
+  })();
+
+  /* 4 -- the headline number, at the full 200000 studies the brief asked for */
+  (function(){
+    const r = once("k20", function(){ return Model.simulate(SEED + 20, 20, 200000, ALPHA, true); });
+    push("twenty tests on noise go off about two thirds of the time",
+      r.none > 0.62 && r.none < 0.66,
+      "simulated " + r.none.toFixed(5) + " over 200000 studies against the exact "
+      + Model.fwerExact(20, ALPHA).toFixed(5));
+  })();
+
+  /* 5 -- Bonferroni really does hold the line */
+  (function(){
+    let worstExact = 0, ok = true;
+    for (let k = 1; k <= 50; k++){
+      const e = Model.bonfExact(k, ALPHA);
+      if (e > ALPHA + 1e-15) ok = false;
+      worstExact = Math.max(worstExact, e);
+    }
+    const r = once("sweep");
+    let worstSim = 0;
+    for (const row of r) worstSim = Math.max(worstSim, row.bonf);
+    push("Bonferroni holds the family wise rate at or under five per cent for every k to fifty",
+      ok && worstSim < ALPHA + 0.004,
+      "the exact rate peaks at " + worstExact.toFixed(6) + " and the simulation at "
+      + worstSim.toFixed(5) + "; the margin allowed for sampling noise is 0.004");
+  })();
+
+  /* 6 -- the brief's claim about Benjamini and Hochberg, restated */
+  (function(){
+    const r = once("sweep");
+    const above = r.filter(row => row.bh > ALPHA);
+    const worst = Math.max.apply(null, r.map(row => Math.abs(row.bh - ALPHA)));
+    const beatsBonf = r.filter(row => row.k > 1).every(row => row.bh > row.bonf);
+    const eff = once("power", function(){
+      const out = [];
+      for (const k of [1, 5, 20, 50]){
+        const rng = mulberry32(SEED + 3000 + k);
+        let bonf = 0, bh = 0, plain = 0, fdrSum = 0, F = 8000;
+        for (let f = 0; f < F; f++){
+          const ps = new Float64Array(k);
+          ps[0] = Model.ttest(rng, 10, 1.2).p;
+          for (let i = 1; i < k; i++) ps[i] = Model.ttest(rng, 10, 0).p;
+          if (ps[0] < ALPHA) plain++;
+          if (ps[0] < ALPHA/k) bonf++;
+          const cut = Model.bhCut(ps, ALPHA);
+          if (cut > 0){
+            let R = 0, V = 0;
+            for (let i = 0; i < k; i++) if (ps[i] <= cut){ R++; if (i !== 0) V++; }
+            fdrSum += V/Math.max(1, R);
+            if (ps[0] <= cut) bh++;
+          }
+        }
+        out.push({ k: k, plain: plain/F, bonf: bonf/F, bh: bh/F, fdr: fdrSum/F });
+      }
+      return out;
+    });
+    const nonNull = eff.filter(row => row.k > 1).every(row => row.fdr < ALPHA);
+    push("Benjamini and Hochberg sits at five per cent under the global null, not below it",
+      above.length > 0 && worst < 0.004 && beatsBonf && nonNull,
+      "the brief asked to assert the rate stays below 0.05; with every hypothesis null it is"
+      + " exactly 0.05 by Simes, and the simulation exceeds 0.05 at " + above.length
+      + " of the " + r.length + " values of k, peaking at "
+      + Math.max.apply(null, r.map(x => x.bh)).toFixed(5)
+      + ". It does reject more often than Bonferroni at every k above one. Once one hypothesis"
+      + " is false the bound bites and the measured discovery rate drops to "
+      + eff.filter(x => x.k === 20)[0].fdr.toFixed(4) + " at twenty tests");
+  })();
+
+  /* 7 -- the count of significant results is binomial */
+  (function(){
+    const r = once("sweep");
+    let wm = 0, wv = 0;
+    for (const row of r){
+      wm = Math.max(wm, Math.abs(row.meanSig - ALPHA*row.k));
+      wv = Math.max(wv, Math.abs(row.varSig - row.k*ALPHA*(1 - ALPHA)));
+    }
+    push("the number of significant results is binomial in k and the level",
+      wm < 0.02 && wv < 0.03,
+      "worst gap from a mean of 0.05k is " + wm.toFixed(5)
+      + " and from a variance of 0.0475k is " + wv.toFixed(5));
+  })();
+
+  /* 8 -- Bonferroni is conservative, Sidak is exact */
+  (function(){
+    const limit = 1 - Math.exp(-ALPHA);
+    let monotone = true, prev = Model.bonfExact(1, ALPHA), worstSid = 0;
+    for (let k = 2; k <= 400; k++){
+      const e = Model.bonfExact(k, ALPHA);
+      if (!(e < prev)) monotone = false;
+      prev = e;
+      if (k <= 50) worstSid = Math.max(worstSid,
+        Math.abs(1 - Math.pow(1 - Model.sidak(k, ALPHA), k) - ALPHA));
+    }
+    push("Bonferroni falls toward one minus e to the minus alpha while Sidak stays exact",
+      monotone && near(prev, limit, 2e-5) && worstSid < 1e-14,
+      "the exact Bonferroni rate decreases with k and reaches " + prev.toFixed(7)
+      + " at k = 400, against the limit " + limit.toFixed(7)
+      + "; Sidak's rate is alpha to " + worstSid.toExponential(2) + " for every k to fifty");
+  })();
+
+  /* 9 -- what the correction costs when there is something real to find */
+  (function(){
+    const eff = once("power");
+    const flat = Math.max.apply(null, eff.map(r => r.plain)) - Math.min.apply(null, eff.map(r => r.plain));
+    const falls = eff.every((r, i) => i === 0 || r.bonf < eff[i - 1].bonf);
+    const bhWins = eff.filter(r => r.k > 1).every(r => r.bh > r.bonf);
+    push("correcting costs power, and Benjamini and Hochberg costs slightly less of it",
+      flat < 0.02 && falls && bhWins,
+      eff.map(r => "k=" + r.k + ": uncorrected " + r.plain.toFixed(3) + ", Bonferroni "
+        + r.bonf.toFixed(3) + ", BH " + r.bh.toFixed(3)).join("; "));
+  })();
+
+  /* 10 -- the expected count, and the expected smallest p value */
+  (function(){
+    const r = once("sweep");
+    let wm = 0;
+    for (const row of r) wm = Math.max(wm, Math.abs(row.meanMin - 1/(row.k + 1)));
+    push("the smallest of k p values averages one over k plus one",
+      wm < 0.004,
+      "worst gap between the simulated mean minimum and 1/(k+1) is " + wm.toExponential(2)
+      + ", which is a second statistic read off the same families as the rate itself");
+  })();
+
+  /* 11 -- the step up rule against the same rule written the long way */
+  (function(){
+    const rng = mulberry32(SEED + 91);
+    let worst = 0, n = 0;
+    for (let f = 0; f < 4000; f++){
+      const k = 1 + Math.floor(rng()*25), ps = new Float64Array(k);
+      for (let i = 0; i < k; i++) ps[i] = rng();
+      worst = Math.max(worst, Math.abs(Model.bhCut(ps, ALPHA) - Model.bhCutBrute(ps, ALPHA)));
+      n++;
+    }
+    push("the step up cut agrees with the same rule written the long way round",
+      n === 4000 && worst === 0,
+      n + " random families, worst disagreement " + worst);
+  })();
+
+  /* 12 -- a threshold is never above the level and never negative */
+  (function(){
+    let ok = true, n = 0;
+    const rng = mulberry32(SEED + 55);
+    for (let k = 1; k <= 50; k++){
+      const ps = new Float64Array(k);
+      for (let i = 0; i < k; i++) ps[i] = rng();
+      for (const kind of ["none", "bonf", "bh", "sidak"]){
+        const thr = Model.threshold(kind, ps, k, ALPHA);
+        if (!Number.isFinite(thr) || thr < 0 || thr > ALPHA + 1e-15) ok = false;
+        n++;
+      }
+    }
+    push("no correction ever produces a threshold above the level it was given",
+      ok && n === 200, n + " combinations of k and correction, all finite and all within"
+      + " nought to 0.05");
+  })();
+
+  /* 13 -- nothing degenerate escapes as a number that is not a number */
+  (function(){
+    let ok = true, n = 0;
+    for (let k = 1; k <= 50; k += 7) for (let nn = 4; nn <= 40; nn += 6)
+      for (const d of [0, 0.6, 1.5]){
+        const st = Model.study(1234 + k + nn, k, nn, d);
+        for (let i = 0; i < k; i++)
+          if (!(Number.isFinite(st.ps[i]) && st.ps[i] >= 0 && st.ps[i] <= 1)) ok = false;
+        n++;
+      }
+    push("every reachable study design gives a p value between nought and one",
+      ok && n > 100, n + " designs across the whole range of all four sliders");
+  })();
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
