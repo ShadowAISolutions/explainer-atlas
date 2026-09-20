@@ -1,0 +1,17 @@
+{
+  "slug": "allometric-scaling-metabolism",
+  "title": "A Mouse Is Not A Small Elephant",
+  "domain": "biology",
+  "difficulty": 2,
+  "summary": "Drag the exponent over fifteen published mammals. Metabolic rate goes as mass to 0.76, not the 2/3 a surface-area argument predicts, and a wrong exponent shows up as a tilt rather than as scatter.",
+  "prerequisites": [],
+  "tags": ["allometry", "kleiber-law", "metabolic-scaling", "power-law", "log-log-regression", "residual-analysis"],
+  "interaction_pattern": "compare-side-by-side",
+  "sources": [
+    { "title": "Kleiber, Body size and metabolic rate, Physiological Reviews 27 (1947) 511-541", "url": "https://journals.physiology.org/doi/10.1152/physrev.1947.27.4.511" },
+    { "title": "Schmidt-Nielsen, Scaling: Why is Animal Size So Important? (Cambridge, 1984)", "url": "https://www.cambridge.org/core/books/scaling/6B2C1F7C0A1BE0E1CF1A78E0C3C0A2DB" },
+    { "title": "West, Brown and Enquist, A general model for the origin of allometric scaling laws in biology, Science 276 (1997) 122-126", "url": "https://www.science.org/doi/10.1126/science.276.5309.122" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 13
+}
