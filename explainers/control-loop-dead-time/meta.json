@@ -1,0 +1,16 @@
+{
+  "slug": "control-loop-dead-time",
+  "title": "The Delay You Cannot Tune Away",
+  "domain": "engineering",
+  "difficulty": 3,
+  "summary": "A delay between acting and seeing is the one thing a controller cannot tune around. Past one gain, set by the delay alone, the loop oscillates whatever you do to it.",
+  "prerequisites": [],
+  "tags": ["control-theory", "feedback", "dead-time", "stability", "phase-margin", "pid"],
+  "interaction_pattern": "tune-to-match",
+  "sources": [
+    { "title": "Ziegler and Nichols, Optimum Settings for Automatic Controllers, Trans. ASME 64 (1942)", "url": "https://doi.org/10.1115/1.4019264" },
+    { "title": "Astrom and Hagglund, Advanced PID Control (ISA, 2006), chapter on dead time and achievable performance", "url": "https://www.isa.org/products/advanced-pid-control" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 12
+}
