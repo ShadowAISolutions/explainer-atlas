@@ -1,0 +1,16 @@
+{
+  "slug": "price-elasticity-revenue",
+  "title": "Raise The Price Until Elasticity Is One",
+  "domain": "economics",
+  "difficulty": 2,
+  "summary": "A price rise earns more on every unit you still sell and loses the units you no longer sell. One number decides which wins, and the revenue peak sits exactly where it is minus one.",
+  "prerequisites": [],
+  "tags": ["economics", "elasticity", "demand", "revenue", "pricing", "markup"],
+  "interaction_pattern": "drag-parameter",
+  "sources": [
+    { "title": "Marshall, Principles of Economics (1890), book III on elasticity of demand", "url": "https://archive.org/details/principlesecono00marsgoog" },
+    { "title": "Lerner, The Concept of Monopoly and the Measurement of Monopoly Power, Review of Economic Studies 1 (1934)", "url": "https://doi.org/10.2307/2967480" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 13
+}

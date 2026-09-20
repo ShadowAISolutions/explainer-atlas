@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Raise The Price Until Elasticity Is One &mdash; Explainer Atlas</title>
+<meta name="description" content="Revenue rises with price only while demand is inelastic, and the revenue peak sits exactly where the elasticity of demand equals minus one.">
+<style>
+:root{
+  --bg:#fbfbf9; --panel:#ffffff; --ink:#171a17; --muted:#5f6660; --line:#dcdfd9;
+  --grid:#eaece7; --rev:#1e6b47; --rev-soft:#e4f0ea; --cost:#8c3b2e; --cost-soft:#f6e8e5;
+  --dem:#2b3a52; --dem-soft:#e6eaf0; --gold:#8a6a10;
+  --radius:6px; --pad:clamp(14px,2.6vw,26px);
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --scale-body:clamp(0.97rem,0.94rem + 0.2vw,1.04rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#101310; --panel:#181c19; --ink:#e7eae6; --muted:#98a09a; --line:#2a2f2b;
+    --grid:#232823; --rev:#5fc294; --rev-soft:#132a20; --cost:#e08575; --cost-soft:#2c1a17;
+    --dem:#8fa6c4; --dem-soft:#182230; --gold:#d3a93f;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+     font:var(--scale-body)/1.6 var(--sans); -webkit-text-size-adjust:100%}
+.wrap{max-width:70rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:2px solid var(--ink); padding-bottom:calc(var(--pad)*0.7)}
+.kicker{margin:0 0 .5em; color:var(--rev); font:700 .72rem/1.3 var(--mono);
+        text-transform:uppercase; letter-spacing:.14em}
+h1{margin:0 0 .35em; font-size:clamp(1.5rem,1.1rem + 2vw,2.2rem); line-height:1.13;
+   letter-spacing:-.018em; font-weight:700}
+.standfirst{margin:0; color:var(--muted); max-width:42em}
+
+/* a rail that runs the whole height of the page, not a box beside the figure */
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:60rem){
+  .layout{grid-template-columns:minmax(0,1fr) 19.5rem}
+  figure.stage{grid-column:1; grid-row:1}
+  .controls{grid-column:2; grid-row:1 / span 2; align-self:start}
+  .prose{grid-column:1; grid-row:2}
+}
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line);
+             border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.84rem; line-height:1.5}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+          padding:var(--pad); display:grid; gap:1.05em; align-content:start}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control label{font:700 .74rem/1.3 var(--mono); text-transform:uppercase; letter-spacing:.1em;
+               color:var(--muted)}
+.control output{font:700 .92rem/1 var(--mono); color:var(--rev); background:var(--rev-soft);
+                padding:.26em .5em; border-radius:4px}
+.control .hint{margin:0; color:var(--muted); font-size:.79rem; line-height:1.45}
+input[type=range]{width:100%; accent-color:var(--rev); min-height:26px}
+select{width:100%; font:inherit; font-size:.93rem; color:inherit; background:var(--bg);
+       border:1px solid var(--line); border-radius:4px; padding:.45em .5em; min-height:40px}
+.check{display:flex; align-items:center; gap:.5em}
+.check input{width:17px; height:17px; accent-color:var(--rev)}
+.check label{text-transform:none; letter-spacing:0; font:600 .88rem/1.3 var(--sans); color:var(--ink)}
+.buttons{display:grid; gap:.45em}
+button{font:600 .85rem/1.2 var(--sans); color:inherit; background:var(--bg);
+       border:1px solid var(--line); border-radius:4px; padding:.65em .7em; min-height:40px; cursor:pointer}
+button:hover{border-color:var(--rev); color:var(--rev)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--rev); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.6rem,1fr)); gap:.5em; margin:0; padding:0}
+.readout div{border:1px solid var(--line); border-radius:4px; padding:.45em .6em}
+.readout dt{margin:0; color:var(--muted); font:.66rem/1.3 var(--mono); text-transform:uppercase; letter-spacing:.08em}
+.readout dd{margin:.15em 0 0; font:700 1rem/1.2 var(--mono)}
+.prose{max-width:40em}
+.prose h2{margin:1.8em 0 .4em; font-size:1.02rem; letter-spacing:-.005em; color:var(--rev)}
+.prose p{margin:0 0 1em}
+.prose .math{font:0.86rem/1.65 var(--mono); background:var(--dem-soft); padding:.7em .85em;
+             border-radius:4px; border-left:3px solid var(--dem); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line);
+            color:var(--muted); font-size:.84rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Economics &middot; Elasticity</p>
+  <h1>Raise The Price Until Elasticity Is One</h1>
+  <p class="standfirst">A price rise adds money on every unit you still sell and
+    loses the units you no longer sell. Which effect wins is not a matter of
+    judgement: one number decides it, and the revenue peak sits exactly where
+    that number is minus one.</p>
+</header>
+
+<div class="layout">
+
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="720" role="img"
+            aria-label="Top: a demand curve with the current price marked and the
+                        revenue drawn as a rectangle under it, with consumer surplus
+                        above it. Bottom: revenue and profit plotted against price,
+                        with the revenue peak marked at the price where elasticity
+                        equals minus one."></canvas>
+    <figcaption>The shaded rectangle is revenue: price times quantity. Drag
+      <em>price</em> and watch it get taller and narrower. The peak on the lower
+      chart is where the two effects exactly cancel, and the elasticity readout
+      is minus one there whatever demand curve you choose.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Price and demand controls">
+    <div class="control">
+      <div class="row">
+        <label for="price">Price</label>
+        <output id="priceout" for="price">40</output>
+      </div>
+      <input type="range" id="price" min="1" max="120" step="1" value="40">
+      <p class="hint">Arrow keys step; Home and End jump to the ends. Everything
+        else on the page is a consequence of this.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="shape">Demand curve</label></div>
+      <select id="shape">
+        <option value="linear" selected>Straight line</option>
+        <option value="exponential">Falling away smoothly</option>
+        <option value="constant">Constant elasticity</option>
+      </select>
+      <p class="hint">All three sell the same amount at a price of twenty. They
+        disagree about everything else.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="steep">Shape</label>
+        <output id="steepout" for="steep">80</output>
+      </div>
+      <input type="range" id="steep" min="26" max="120" step="2" value="80">
+      <p class="hint" id="steephint">For a straight line this is the price at
+        which nobody buys at all.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="cost">Cost per unit</label>
+        <output id="costout" for="cost">0</output>
+      </div>
+      <input type="range" id="cost" min="0" max="60" step="1" value="0">
+      <p class="hint">What each unit costs you to make. Revenue ignores this;
+        profit does not, and the two peaks part company as soon as it is above
+        zero.</p>
+      <div class="check">
+        <input type="checkbox" id="surplus">
+        <label for="surplus">Show what buyers keep</label>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button type="button" id="peak">Take me to the revenue peak</button>
+      <button type="button" id="ppeak">Take me to the profit peak</button>
+      <button type="button" id="reset">Reset</button>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Elasticity</dt><dd id="r1">&mdash;</dd></div>
+      <div><dt>Revenue</dt><dd id="r2">&mdash;</dd></div>
+      <div><dt>A pound more buys</dt><dd id="r3">&mdash;</dd></div>
+      <div><dt>Peak at</dt><dd id="r4">&mdash;</dd></div>
+    </dl>
+  </section>
+
+  <article class="prose" data-role="prose">
+
+    <p>Put the price up by one per cent. Every unit you still sell earns one per
+      cent more, and some buyers walk away. Elasticity is the second half of
+      that sentence written as a number: the percentage change in quantity
+      divided by the percentage change in price that caused it.</p>
+
+    <p class="math">E = (dq/dp) times (p/q)</p>
+
+    <p>It is negative, because demand slopes down, so what people usually mean
+      by elastic and inelastic is its size. Below one in size, the quantity
+      gives way by less than the price rose, and the price rise wins. Above one,
+      the quantity gives way by more, and the price rise loses.</p>
+
+    <h2>Why the peak is exactly at one</h2>
+
+    <p>Revenue is price times quantity, so differentiating the product gives
+      the whole result in one line:</p>
+
+    <p class="math">R = p q(p)
+dR/dp = q + p (dq/dp) = q (1 + E)</p>
+
+    <p>Quantity is positive wherever anyone is buying, so the derivative
+      changes sign exactly when the bracket does, and the bracket is zero when
+      E is minus one. That is not a property of any particular demand curve.
+      Switch between the three on offer, drag the shape slider anywhere, and the
+      peak of the lower chart lands on the elasticity readout showing minus one
+      every time.</p>
+
+    <p>It also tells you what to do without finding the peak at all. Read the
+      elasticity at the price you charge today. If it is smaller than one in
+      size, you are on the left of the hill and a rise earns more. If it is
+      bigger, you are on the right and a cut earns more. The readout marked
+      <em>a pound more buys</em> is that derivative, in money.</p>
+
+    <h2>The curve that has no peak</h2>
+
+    <p>Choose <em>constant elasticity</em> and the hill disappears. If E is the
+      same number everywhere, then either it is never minus one, in which case
+      revenue climbs or falls across the entire range and there is nothing to
+      find, or it is exactly minus one everywhere, in which case revenue is the
+      same at every price and the chart is flat. Set the shape slider to fifty
+      and look. This is the exception the rule needs: the peak is where
+      elasticity passes through one, and a curve whose elasticity never passes
+      through anything has nowhere to put it.</p>
+
+    <h2>Cost moves the answer</h2>
+
+    <p>Raise <em>cost per unit</em> above zero and the profit curve pulls away
+      to the right of the revenue curve. Selling a unit for less than it cost
+      is worse than not selling it, so the price that maximises what you keep
+      is above the price that maximises what comes in. The condition becomes a
+      markup rule: the gap between price and cost, as a share of price, equals
+      one over the size of the elasticity. At an elasticity of minus two you
+      charge half again as much as the unit cost you; at minus ten, a ninth
+      more. Competition is elasticity, and this is the arithmetic of it.</p>
+
+    <p>Tick <em>show what buyers keep</em> and a third region appears above the
+      price line. That is the value buyers got beyond what they paid, and it is
+      largest when the price is lowest. The sum of it and your profit is
+      largest at neither peak: it is largest when the price equals the cost,
+      which is exactly the price at which you make nothing.</p>
+
+    <h2>What to try</h2>
+
+    <p>Leave the straight line and put the price at twenty, then at seventy.
+      Revenue is nearly the same at both and elasticity is nowhere near the
+      same; the peak is at forty, the midpoint of the choke price, which is
+      where a straight line always puts it. Then set cost per unit to thirty
+      and press both peak buttons in turn to see how far apart they have moved.</p>
+
+  </article>
+</div>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+const Q0 = 1000;     /* everyone sells a thousand units at a price of twenty */
+const PREF = 20;     /* the price they all agree on */
+const PMIN = 1, PMAX = 120;
+
+/* ---- MODEL -------------------------------------------------------------- */
+/* Three demand families, each given as q(p) and dq/dp in closed form, so the
+   elasticity is exact rather than differenced. The page's whole claim is a
+   statement about a derivative, so differencing it would be assuming the
+   answer.                                                                   */
+const Model = {
+  q(shape, k, p){
+    if (p <= 0) return NaN;
+    /* a choke price at or below the reference price is not a demand curve
+       anyone could draw -- nobody buys at any price -- and the slider cannot
+       reach it. The model still answers, so that it is total. */
+    if (shape === "linear")      return (k <= PREF || p >= k) ? 0 : Q0 * (k - p) / (k - PREF);
+    if (shape === "exponential") return Q0 * Math.exp(-(p - PREF) / k);
+    return Q0 * Math.pow(p / PREF, -k / 50);          /* constant elasticity */
+  },
+
+  dq(shape, k, p){
+    if (p <= 0) return NaN;
+    if (shape === "linear")      return (k <= PREF || p >= k) ? 0 : -Q0 / (k - PREF);
+    if (shape === "exponential") return -Q0 * Math.exp(-(p - PREF) / k) / k;
+    const e = k / 50;
+    return -e * Q0 * Math.pow(p / PREF, -e - 1) / PREF;
+  },
+
+  /* E = (dq/dp)(p/q) */
+  elasticity(shape, k, p){
+    const q = Model.q(shape, k, p);
+    if (!(q > 0)) return NaN;
+    return Model.dq(shape, k, p) * p / q;
+  },
+
+  revenue(shape, k, p){ const q = Model.q(shape, k, p); return q > 0 ? p * q : 0; },
+  profit(shape, k, c, p){ const q = Model.q(shape, k, p); return q > 0 ? (p - c) * q : 0; },
+
+  /* dR/dp = q(1 + E), in closed form */
+  dRevenue(shape, k, p){
+    const q = Model.q(shape, k, p);
+    if (!(q > 0)) return 0;
+    return q * (1 + Model.elasticity(shape, k, p));
+  },
+
+  /* where elasticity is exactly minus one, solved rather than searched.
+     The constant-elasticity family is told apart here, not fudged: its
+     elasticity is the same everywhere, so unless that number happens to be
+     minus one there is no such price, and the family is reported as having
+     none.                                                                  */
+  unitElasticPrice(shape, k){
+    if (shape === "linear")      return k / 2;
+    if (shape === "exponential") return k;
+    return (Math.abs(k / 50 - 1) < 1e-12) ? Infinity : NaN;   /* every price, or none */
+  },
+
+  /* the same price found by climbing the revenue curve, sharing no algebra
+     with the line above */
+  peakBySearch(f, lo, hi){
+    const phi = (Math.sqrt(5) - 1) / 2;
+    let c = hi - phi * (hi - lo), d = lo + phi * (hi - lo);
+    let fc = f(c), fd = f(d);
+    for (let i = 0; i < 220; i++){
+      if (fc > fd){ hi = d; d = c; fd = fc; c = hi - phi * (hi - lo); fc = f(c); }
+      else { lo = c; c = d; fc = fd; d = lo + phi * (hi - lo); fd = f(d); }
+    }
+    return (lo + hi) / 2;
+  },
+
+  /* the profit peak, from the markup condition (p - c)/p = 1/|E| where it can
+     be solved in closed form, and by search otherwise */
+  profitPeak(shape, k, c){
+    if (shape === "linear"){
+      const p = (k + c) / 2;
+      return Math.min(Math.max(p, PMIN), k - 1e-9);
+    }
+    if (shape === "exponential"){
+      /* q + (p - c) q' = 0 with q' = -q/k gives p = c + k */
+      return c + k;
+    }
+    const e = k / 50;
+    return e > 1 ? c * e / (e - 1) : Infinity;
+  },
+
+  /* consumer surplus: the integral of q from the price upward, by Simpson */
+  consumerSurplus(shape, k, p, upper, n){
+    const hiP = shape === "linear" ? Math.min(upper, k) : upper;
+    if (!(hiP > p)) return 0;
+    const m = n % 2 ? n + 1 : n, h = (hiP - p) / m;
+    let s = Model.q(shape, k, p) + Model.q(shape, k, hiP);
+    for (let i = 1; i < m; i++) s += (i % 2 ? 4 : 2) * Model.q(shape, k, p + i * h);
+    return s * h / 3;
+  },
+
+  /* total surplus at a price, given a unit cost */
+  totalSurplus(shape, k, c, p, upper, n){
+    return Model.consumerSurplus(shape, k, p, upper, n) + Model.profit(shape, k, c, p);
+  },
+
+  /* the midpoint arc elasticity over an interval of width h around p */
+  arcElasticity(shape, k, p, h){
+    const p1 = p - h / 2, p2 = p + h / 2;
+    const q1 = Model.q(shape, k, p1), q2 = Model.q(shape, k, p2);
+    if (!(q1 > 0) || !(q2 > 0)) return NaN;
+    return ((q2 - q1) / ((q1 + q2) / 2)) / ((p2 - p1) / ((p1 + p2) / 2));
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { price: 40, shape: "linear", steep: 80, cost: 0, surplus: false };
+const state = Object.assign({}, defaults);
+
+const el = function(id){ return document.getElementById(id); };
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = function(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); };
+
+function priceCap(){
+  return state.shape === "linear" ? Math.min(PMAX, state.steep - 0.5) : PMAX;
+}
+function clampPrice(p){ return Math.min(Math.max(p, PMIN), priceCap()); }
+
+const SS = 2;
+let W, H, NARROW, PAD, FS, FSS, GUT, PA, PB;
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth;
+  W = Math.max(280, Math.min(900, avail || 700));
+  NARROW = W < 520;
+  PAD = NARROW ? 10 : 15;
+  FS  = NARROW ? 11 : 12.5;
+  FSS = NARROW ? 9  : 10.5;
+  GUT = NARROW ? 40 : 54;
+  const plotW = W - PAD - GUT - (NARROW ? 10 : 18);
+  const aH = Math.round(Math.max(170, Math.min(300, plotW * (NARROW ? 0.80 : 0.46))));
+  const bH = Math.round(Math.max(150, Math.min(260, plotW * (NARROW ? 0.68 : 0.38))));
+  /* each row below holds something that is drawn, so the height is their sum */
+  PA = { x: PAD + GUT, y: PAD + FS + 20, w: plotW, h: aH };
+  const aBot = PA.y + PA.h + FSS + 6 + FSS + 9;     /* tick row, axis-name row */
+  PB = { x: PAD + GUT, y: aBot + FS + 22, w: plotW, h: bH };
+  H = PB.y + PB.h + FSS + 6 + FSS + 9 + FSS + 9 + PAD;   /* ticks, names, legend */
+  cv.width = Math.round(W * SS); cv.height = Math.round(H * SS);
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function pick(list, room){
+  for (let i = 0; i < list.length; i++) if (ctx.measureText(list[i]).width <= room) return list[i];
+  return "";
+}
+
+/* the revenue curve, sampled once per render and shared by both panels */
+function sample(){
+  const hi = priceCap(), n = 220, out = [];
+  for (let i = 0; i <= n; i++){
+    const p = PMIN + (hi - PMIN) * i / n;
+    out.push({ p: p, q: Model.q(state.shape, state.steep, p),
+               r: Model.revenue(state.shape, state.steep, p),
+               pi: Model.profit(state.shape, state.steep, state.cost, p) });
+  }
+  return out;
+}
+
+function render(){
+  fitCanvas();
+  const p = clampPrice(state.price);
+  const S = sample();
+  const C = { ink: css("--ink"), muted: css("--muted"), grid: css("--grid"),
+              rev: css("--rev"), revSoft: css("--rev-soft"), cost: css("--cost"),
+              costSoft: css("--cost-soft"), dem: css("--dem"), demSoft: css("--dem-soft"),
+              gold: css("--gold"), panel: css("--panel") };
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = C.panel; ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "alphabetic";
+
+  drawDemand(S, p, C);
+  drawCurves(S, p, C);
+
+  const E = Model.elasticity(state.shape, state.steep, p);
+  const dR = Model.dRevenue(state.shape, state.steep, p);
+  const up = Model.unitElasticPrice(state.shape, state.steep);
+
+  el("priceout").textContent = String(state.price);
+  el("steepout").textContent = String(state.steep);
+  el("costout").textContent = String(state.cost);
+  el("steephint").textContent =
+    state.shape === "linear" ? "For a straight line this is the price at which nobody buys at all."
+  : state.shape === "exponential" ? "For this curve it is the price at which elasticity reaches one."
+  : "Divided by fifty, this is the elasticity itself, the same at every price.";
+  el("r1").textContent = Number.isFinite(E) ? E.toFixed(3) : "no buyers";
+  el("r2").textContent = Math.round(Model.revenue(state.shape, state.steep, p)).toLocaleString("en");
+  /* Math.round of a very small negative number is negative zero, which prints
+     as "-0" -- a minus sign on a quantity that is exactly nothing, which is
+     what this readout shows at the peak itself. Fold it back to zero, and let
+     zero carry no sign at all. */
+  const dRr = Math.round(dR);
+  const dRz = Object.is(dRr, -0) ? 0 : dRr;
+  el("r3").textContent = Number.isFinite(dR) ? (dRz > 0 ? "+" : "") + dRz.toLocaleString("en") : "nothing";
+  el("r4").textContent = Number.isFinite(up) ? up.toFixed(1)
+                       : (up === Infinity ? "every price" : "no peak");
+}
+
+function drawDemand(S, p, C){
+  const b = PA;
+  let qMax = 0;
+  for (let i = 0; i < S.length; i++) if (Number.isFinite(S[i].q)) qMax = Math.max(qMax, S[i].q);
+  qMax = Math.max(1, qMax) * 1.08;
+  const hi = priceCap();
+  const X = function(price){ return b.x + b.w * (price - PMIN) / (hi - PMIN); };
+  const Y = function(q){ return b.y + b.h * (1 - Math.min(q, qMax) / qMax); };
+
+  ctx.font = "700 " + FS + "px " + css("--sans"); ctx.fillStyle = C.ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["how many units sell, at each price",
+                     "units sold against price", "demand"], b.w + GUT), PAD, b.y - 14);
+
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (let i = 1; i <= 4; i++){
+    const y = b.y + b.h * i / 4;
+    ctx.beginPath(); ctx.moveTo(b.x, y); ctx.lineTo(b.x + b.w, y); ctx.stroke();
+  }
+
+  const q = Model.q(state.shape, state.steep, p);
+
+  /* what buyers keep: everything under the curve and above the price line */
+  if (state.surplus && q > 0){
+    ctx.fillStyle = C.demSoft;
+    ctx.beginPath(); ctx.moveTo(X(p), Y(q));
+    for (let i = 0; i < S.length; i++) if (S[i].p >= p) ctx.lineTo(X(S[i].p), Y(S[i].q));
+    ctx.lineTo(X(hi), Y(0)); ctx.lineTo(X(p), Y(0)); ctx.closePath();
+    ctx.globalAlpha = 0.75; ctx.fill(); ctx.globalAlpha = 1;
+  }
+
+  /* revenue, as the rectangle it literally is */
+  if (q > 0){
+    ctx.fillStyle = C.revSoft;
+    ctx.fillRect(b.x, Y(q), X(p) - b.x, Y(0) - Y(q));
+    ctx.strokeStyle = C.rev; ctx.lineWidth = 1.5;
+    ctx.strokeRect(b.x + 0.5, Y(q) + 0.5, X(p) - b.x - 1, Y(0) - Y(q) - 1);
+    if (state.cost > 0){
+      const yc = Y(q) + (Y(0) - Y(q)) * 0; /* cost band drawn against price axis below */
+      ctx.save();
+      ctx.strokeStyle = C.cost; ctx.setLineDash([4, 3]); ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(X(state.cost), b.y); ctx.lineTo(X(state.cost), Y(0)); ctx.stroke();
+      ctx.restore();
+      void yc;
+    }
+  }
+
+  /* the curve itself, drawn after the fills so nothing sits on top of it */
+  ctx.strokeStyle = C.dem; ctx.lineWidth = 2;
+  ctx.beginPath();
+  let started = false;
+  for (let i = 0; i < S.length; i++){
+    if (!Number.isFinite(S[i].q)) continue;
+    const x = X(S[i].p), y = Y(S[i].q);
+    if (!started){ ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+  }
+  if (started) ctx.stroke();
+
+  if (q > 0){
+    ctx.fillStyle = C.rev;
+    ctx.beginPath(); ctx.arc(X(p), Y(q), NARROW ? 3 : 4, 0, Math.PI * 2); ctx.fill();
+  }
+
+  ctx.strokeStyle = C.muted; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(b.x, b.y + b.h); ctx.lineTo(b.x + b.w, b.y + b.h); ctx.stroke();
+  ctx.font = FSS + "px " + css("--mono"); ctx.fillStyle = C.muted; ctx.textAlign = "right";
+  ctx.fillText(Math.round(qMax).toLocaleString("en"), b.x - 5, b.y + FSS * 0.9);
+  ctx.fillText("0", b.x - 5, b.y + b.h + FSS * 0.36);
+  ctx.textAlign = "left";  ctx.fillText(String(PMIN), b.x, b.y + b.h + FSS + 5);
+  ctx.textAlign = "right"; ctx.fillText(hi.toFixed(0), b.x + b.w, b.y + b.h + FSS + 5);
+  ctx.textAlign = "left";
+  ctx.fillText(pick(["price", "p"], 90), b.x, b.y + b.h + FSS + 5 + FSS + 8);
+  ctx.textAlign = "right";
+  ctx.fillStyle = C.rev;
+  ctx.fillText(pick(["the green rectangle is revenue", "revenue", ""], b.w * 0.7),
+               b.x + b.w, b.y + b.h + FSS + 5 + FSS + 8);
+}
+
+function drawCurves(S, p, C){
+  const b = PB;
+  let top = 0;
+  for (let i = 0; i < S.length; i++){
+    if (Number.isFinite(S[i].r)) top = Math.max(top, S[i].r);
+    if (Number.isFinite(S[i].pi)) top = Math.max(top, S[i].pi);
+  }
+  let bot = 0;
+  for (let i = 0; i < S.length; i++) if (Number.isFinite(S[i].pi)) bot = Math.min(bot, S[i].pi);
+  top = Math.max(1, top) * 1.14;
+  bot = Math.min(0, bot) * 1.1;
+  const hi = priceCap();
+  const X = function(price){ return b.x + b.w * (price - PMIN) / (hi - PMIN); };
+  const Y = function(v){ return b.y + b.h * (1 - (v - bot) / (top - bot)); };
+
+  ctx.font = "700 " + FS + "px " + css("--sans"); ctx.fillStyle = C.ink; ctx.textAlign = "left";
+  ctx.fillText(pick(["what comes in, and what you keep, at each price",
+                     "revenue and profit against price", "revenue and profit"],
+                    b.w + GUT), PAD, b.y - 14);
+
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++){
+    const y = b.y + b.h * i / 4;
+    ctx.beginPath(); ctx.moveTo(b.x, y); ctx.lineTo(b.x + b.w, y); ctx.stroke();
+  }
+  if (bot < 0){
+    ctx.strokeStyle = C.muted; ctx.globalAlpha = 0.45;
+    ctx.beginPath(); ctx.moveTo(b.x, Y(0)); ctx.lineTo(b.x + b.w, Y(0)); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  const line = function(key, colour, width, dash){
+    ctx.strokeStyle = colour; ctx.lineWidth = width; ctx.setLineDash(dash || []);
+    ctx.beginPath();
+    let go = false;
+    for (let i = 0; i < S.length; i++){
+      const v = S[i][key];
+      if (!Number.isFinite(v)) continue;
+      const x = X(S[i].p), y = Y(v);
+      if (!go){ ctx.moveTo(x, y); go = true; } else ctx.lineTo(x, y);
+    }
+    if (go) ctx.stroke();
+    ctx.setLineDash([]);
+  };
+  /* profit is drawn first and thicker-dashed, revenue solid over it: where the
+     two coincide (a cost of zero) the dashes stay visible through the solid
+     line, so a reader is never shown one curve and told there are two */
+  line("pi", C.cost, 2.6, [7, 5]);
+  line("r", C.rev, 2);
+
+  /* the revenue peak, and where elasticity passes through one */
+  const up = Model.unitElasticPrice(state.shape, state.steep);
+  if (Number.isFinite(up) && up > PMIN && up < hi){
+    const rp = Model.revenue(state.shape, state.steep, up);
+    ctx.strokeStyle = C.rev; ctx.setLineDash([2, 3]); ctx.lineWidth = 1; ctx.globalAlpha = 0.7;
+    ctx.beginPath(); ctx.moveTo(X(up), Y(rp)); ctx.lineTo(X(up), b.y + b.h); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+    ctx.fillStyle = C.rev;
+    ctx.beginPath(); ctx.arc(X(up), Y(rp), NARROW ? 3 : 3.8, 0, Math.PI * 2); ctx.fill();
+    ctx.font = "600 " + FSS + "px " + css("--mono");
+    const lab = pick(["elasticity is -1 here", "-1 here", "-1"], b.w * 0.5);
+    const wlab = ctx.measureText(lab).width;
+    const lx = Math.min(Math.max(X(up) + 7, b.x + 2), b.x + b.w - wlab - 2);
+    ctx.fillStyle = C.panel; ctx.globalAlpha = 0.85;
+    ctx.fillRect(lx - 3, Y(rp) - FSS - 7, wlab + 6, FSS + 7);
+    ctx.globalAlpha = 1; ctx.fillStyle = C.rev;
+    ctx.fillText(lab, lx, Y(rp) - 8);
+  }
+
+  /* where the reader is standing */
+  ctx.strokeStyle = C.ink; ctx.globalAlpha = 0.45; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(X(p), b.y); ctx.lineTo(X(p), b.y + b.h); ctx.stroke();
+  ctx.setLineDash([]); ctx.globalAlpha = 1;
+
+  ctx.strokeStyle = C.muted; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(b.x, b.y + b.h); ctx.lineTo(b.x + b.w, b.y + b.h); ctx.stroke();
+  ctx.font = FSS + "px " + css("--mono"); ctx.fillStyle = C.muted; ctx.textAlign = "right";
+  ctx.fillText(Math.round(top).toLocaleString("en"), b.x - 5, b.y + FSS * 0.9);
+  ctx.fillText(Math.round(bot).toLocaleString("en"), b.x - 5, b.y + b.h + FSS * 0.36);
+  ctx.textAlign = "left";  ctx.fillText(String(PMIN), b.x, b.y + b.h + FSS + 5);
+  ctx.textAlign = "right"; ctx.fillText(hi.toFixed(0), b.x + b.w, b.y + b.h + FSS + 5);
+  ctx.textAlign = "left";
+  ctx.fillText(pick(["price", "p"], 90), b.x, b.y + b.h + FSS + 5 + FSS + 8);
+
+  /* a legend row of its own, below the axis names, so nothing lands on
+     anything else no matter how long the labels get */
+  const ly = b.y + b.h + FSS + 5 + FSS + 8 + FSS + 8;
+  ctx.font = FSS + "px " + css("--mono");
+  ctx.strokeStyle = C.rev; ctx.lineWidth = 2.4;
+  ctx.beginPath(); ctx.moveTo(b.x, ly - FSS * 0.33); ctx.lineTo(b.x + 16, ly - FSS * 0.33); ctx.stroke();
+  ctx.fillStyle = C.rev; ctx.textAlign = "left";
+  ctx.fillText("revenue", b.x + 22, ly);
+  const gx = b.x + 22 + ctx.measureText("revenue").width + (NARROW ? 14 : 24);
+  ctx.strokeStyle = C.cost; ctx.lineWidth = 2.4; ctx.setLineDash([6, 4]);
+  ctx.beginPath(); ctx.moveTo(gx, ly - FSS * 0.33); ctx.lineTo(gx + 16, ly - FSS * 0.33); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = C.cost;
+  /* While cost is zero the profit curve lies exactly under the revenue curve,
+     so a legend promising a second line the reader cannot find is a small lie.
+     Say so instead of hiding the entry. */
+  ctx.fillText(state.cost > 0
+    ? pick(["profit, after the cost of each unit", "profit", ""],
+           b.w - (gx - b.x) - 24)
+    : pick(["profit -- the same line until cost rises above zero", "profit (same line)", ""],
+           b.w - (gx - b.x) - 24), gx + 22, ly);
+}
+
+/* ---- controls ----------------------------------------------------------- */
+function bindRange(id, key){
+  el(id).addEventListener("input", function(){
+    state[key] = parseInt(el(id).value, 10); render();
+  });
+}
+bindRange("price", "price");
+bindRange("steep", "steep");
+bindRange("cost", "cost");
+el("shape").addEventListener("change", function(){ state.shape = el("shape").value; render(); });
+el("surplus").addEventListener("change", function(){ state.surplus = el("surplus").checked; render(); });
+
+function goTo(price){
+  const p = Math.round(clampPrice(price));
+  state.price = p; el("price").value = String(p); render();
+}
+el("peak").addEventListener("click", function(){
+  const up = Model.unitElasticPrice(state.shape, state.steep);
+  goTo(Number.isFinite(up) ? up
+     : Model.peakBySearch(function(x){ return Model.revenue(state.shape, state.steep, x); },
+                          PMIN, priceCap()));
+});
+el("ppeak").addEventListener("click", function(){
+  const pp = Model.profitPeak(state.shape, state.steep, state.cost);
+  goTo(Number.isFinite(pp) && pp > 0 ? pp
+     : Model.peakBySearch(function(x){ return Model.profit(state.shape, state.steep, state.cost, x); },
+                          PMIN, priceCap()));
+});
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults);
+  el("price").value = String(defaults.price); el("shape").value = defaults.shape;
+  el("steep").value = String(defaults.steep); el("cost").value = String(defaults.cost);
+  el("surplus").checked = defaults.surplus;
+  render();
+});
+
+let resizing = 0;
+addEventListener("resize", function(){ clearTimeout(resizing); resizing = setTimeout(render, 120); });
+if (matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+const rng = mulberry32(SEED);
+const CASES = (function(){
+  const out = [];
+  for (let i = 0; i < 200; i++){
+    const lin = i % 2 === 0;
+    out.push({ shape: lin ? "linear" : "exponential",
+               k: 24 + rng() * 94,
+               c: rng() < 0.4 ? rng() * 25 : 0 });
+  }
+  return out;
+})();
+
+let PEAK_GAP = null, PEAK_GAP_B = null;
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = function(name, pass, detail){ t.push({ name: name, pass: !!pass, detail: String(detail) }); };
+
+  /* 1 -- the claim, two ways, over 200 seeded curves */
+  push("revenue peaks exactly where elasticity is minus one", (function(){
+    let worst = 0, worstB = 0;
+    for (let i = 0; i < CASES.length; i++){
+      const c = CASES[i];
+      const closed = Model.unitElasticPrice(c.shape, c.k);
+      const hi = c.shape === "linear" ? c.k : c.k * 6;
+      const found = Model.peakBySearch(function(x){ return Model.revenue(c.shape, c.k, x); }, 0.01, hi);
+      worst = Math.max(worst, Math.abs(closed - found) / closed);
+
+      /* Golden section only ever compares values of revenue, and revenue is
+         quadratic about its own maximum, so a price eps away from the peak
+         changes it by eps squared: the search cannot resolve the peak better
+         than roughly the square root of machine precision, near 1.5e-8. A
+         bound below that would be a broken assertion rather than a strict one,
+         so the search is held to its own floor and the sharp check is made a
+         different way -- bracketing the sign change of dR/dp, which compares a
+         derivative against zero and is linear in the displacement, so it closes
+         the whole way to machine precision. */
+      let lo = 0.01, up = hi;
+      for (let j = 0; j < 140; j++){
+        const m = (lo + up) / 2;
+        if (Model.dRevenue(c.shape, c.k, m) > 0) lo = m; else up = m;
+      }
+      worstB = Math.max(worstB, Math.abs(closed - (lo + up) / 2) / closed);
+    }
+    PEAK_GAP = worst; PEAK_GAP_B = worstB;
+    return worst < 1e-7 && worstB < 1e-12;
+  })(), "200 curves against the closed form p* : climbing revenue by golden section lands within " +
+        (PEAK_GAP === null ? "not measured" : PEAK_GAP.toExponential(2)) +
+        " of it, at that method's own floor near 1.5e-8; bracketing the sign change of dR/dp lands within " +
+        (PEAK_GAP_B === null ? "not measured" : PEAK_GAP_B.toExponential(2)));
+
+  /* 2 -- and the identity that makes it true */
+  push("the derivative of revenue really is quantity times one plus elasticity", (function(){
+    let worst = 0;
+    /* its own generator, seeded: the verifier re-runs this suite some sixty
+       times and a shared stream would give a different test every time */
+    const r2 = mulberry32(SEED + 5);
+    for (let i = 0; i < 120; i++){
+      const c = CASES[i], h = 1e-5;
+      const p = 2 + r2() * (c.shape === "linear" ? c.k - 4 : 100);
+      if (!(Model.q(c.shape, c.k, p + h) > 0)) continue;
+      const fd = (Model.revenue(c.shape, c.k, p + h) - Model.revenue(c.shape, c.k, p - h)) / (2 * h);
+      const closed = Model.dRevenue(c.shape, c.k, p);
+      worst = Math.max(worst, Math.abs(fd - closed) / Math.max(1, Math.abs(closed)));
+    }
+    return worst < 1e-6;
+  })(), "closed form against a central difference at 120 seeded prices, worst relative gap under 1e-6");
+
+  /* 3 -- the exception the rule needs, asserted rather than mentioned */
+  push("a constant-elasticity curve has no peak at all, in either direction", (function(){
+    for (let j = 0; j < 40; j++){
+      const k = 20 + j * 2.5, e = k / 50;
+      const rs = [];
+      for (let p = 2; p <= 110; p += 4) rs.push(Model.revenue("constant", k, p));
+      if (Math.abs(e - 1) < 1e-12){
+        for (let i = 1; i < rs.length; i++) if (!near(rs[i], rs[0], 1e-9 * rs[0])) return false;
+      } else {
+        const up = e < 1;
+        for (let i = 1; i < rs.length; i++) if (up ? !(rs[i] > rs[i - 1]) : !(rs[i] < rs[i - 1])) return false;
+      }
+      if (Number.isFinite(Model.unitElasticPrice("constant", k))) return false;
+    }
+    return true;
+  })(), "40 exponents from 0.4 to 2.35: revenue rises throughout below one, falls throughout above it, and is flat to 1e-9 at exactly one");
+
+  /* 4 -- the textbook special case, exactly */
+  push("a straight line puts the peak at half its choke price", (function(){
+    let worst = 0;
+    for (let i = 0; i < CASES.length; i++){
+      const c = CASES[i];
+      if (c.shape !== "linear") continue;
+      worst = Math.max(worst, Math.abs(Model.elasticity("linear", c.k, c.k / 2) + 1));
+    }
+    return worst < 1e-12;
+  })(), "elasticity at half the choke price is minus one to 1e-12, over every linear case");
+
+  /* 5 -- and the other family's own closed form */
+  push("the smoothly falling curve reaches elasticity minus one at its shape number", (function(){
+    for (let i = 0; i < CASES.length; i++){
+      const c = CASES[i];
+      if (c.shape !== "exponential") continue;
+      if (!near(Model.elasticity("exponential", c.k, c.k), -1, 1e-12)) return false;
+      if (!near(Model.elasticity("exponential", c.k, c.k / 2), -0.5, 1e-12)) return false;
+    }
+    return true;
+  })(), "E(k) = -1 and E(k/2) = -0.5 to 1e-12, over every exponential case");
+
+  /* 6 -- surplus is largest at cost, not at either peak */
+  push("everything together is worth most when the price equals the cost", (function(){
+    for (let j = 0; j < 4; j++){
+      const c = CASES[j * 7], cost = 8 + j * 5;
+      const hi = c.shape === "linear" ? c.k : 260;
+      const at = function(p){ return Model.totalSurplus(c.shape, c.k, cost, p, hi, 400); };
+      const best = at(cost);
+      for (let i = 0; i < 100; i++){
+        const p = cost + (i - 50) * 0.4;
+        if (p <= 0.5 || p >= hi) continue;
+        if (at(p) > best * (1 + 1e-9)) return false;
+      }
+    }
+    return true;
+  })(), "Simpson integration at 100 prices around the cost, on four curves: nothing beats the price that equals the cost");
+
+  /* 7 -- the arc measure converges at second order */
+  push("arc elasticity closes on point elasticity as the square of the interval", (function(){
+    const c = { shape: "exponential", k: 60 }, p = 35;
+    const exact = Model.elasticity(c.shape, c.k, p);
+    let prev = Math.abs(Model.arcElasticity(c.shape, c.k, p, 8) - exact), orders = [];
+    for (const h of [4, 2, 1, 0.5]){
+      const err = Math.abs(Model.arcElasticity(c.shape, c.k, p, h) - exact);
+      orders.push(Math.log2(prev / err)); prev = err;
+    }
+    for (let i = 0; i < orders.length; i++) if (!(orders[i] > 1.9 && orders[i] < 2.1)) return false;
+    return true;
+  })(), "halving the interval quarters the gap: measured orders all between 1.9 and 2.1");
+
+  /* 8 -- the markup rule */
+  push("the profit-maximising price satisfies the markup rule", (function(){
+    let worst = 0;
+    for (let i = 0; i < CASES.length; i++){
+      const c = CASES[i];
+      if (!(c.c > 0)) continue;
+      const pp = Model.profitPeak(c.shape, c.k, c.c);
+      if (!Number.isFinite(pp) || !(Model.q(c.shape, c.k, pp) > 0)) continue;
+      const E = Model.elasticity(c.shape, c.k, pp);
+      worst = Math.max(worst, Math.abs((pp - c.c) / pp - 1 / Math.abs(E)));
+    }
+    return worst < 1e-9;
+  })(), "(p - c)/p equals one over the size of the elasticity at the profit peak, to 1e-9");
+
+  /* 9 -- and profit never peaks below revenue, with equality only at zero cost */
+  push("cost moves the best price up, and only cost moves it", (function(){
+    for (let i = 0; i < CASES.length; i++){
+      const c = CASES[i];
+      const rp = Model.unitElasticPrice(c.shape, c.k);
+      if (!near(Model.profitPeak(c.shape, c.k, 0), rp, 1e-9 * rp)) return false;
+      const pp = Model.profitPeak(c.shape, c.k, 12);
+      if (!(pp > rp)) return false;
+    }
+    return true;
+  })(), "at a cost of zero the two peaks are the same price to 1e-9; at a cost of 12 the profit peak is strictly above it, on all 200 curves");
+
+  /* 10 -- the integration agrees with the closed form it can be checked against */
+  push("Simpson's rule reproduces the surplus a straight line gives by area", (function(){
+    let worst = 0;
+    for (let i = 0; i < CASES.length; i++){
+      const c = CASES[i];
+      if (c.shape !== "linear") continue;
+      for (const p of [5, 20, 40]){
+        if (p >= c.k) continue;
+        const q = Model.q("linear", c.k, p);
+        const exact = 0.5 * (c.k - p) * q;                    /* the triangle */
+        const got = Model.consumerSurplus("linear", c.k, p, c.k, 400);
+        worst = Math.max(worst, Math.abs(got - exact) / Math.max(1, exact));
+      }
+    }
+    return worst < 1e-9;
+  })(), "the integral against half base times height, on every linear case at three prices");
+
+  /* 11 -- demand slopes down everywhere the controls reach */
+  push("every curve slopes down, at every price on the page", (function(){
+    const shapes = ["linear", "exponential", "constant"];
+    for (let s = 0; s < shapes.length; s++)
+      for (let k = 26; k <= 120; k += 2)
+        for (let p = PMIN; p <= PMAX; p += 1.5){
+          const q = Model.q(shapes[s], k, p);
+          if (!(q > 0)) continue;
+          const E = Model.elasticity(shapes[s], k, p);
+          if (!(Number.isFinite(E) && E < 0)) return false;
+        }
+    return true;
+  })(), "three shapes by 48 shape settings by 80 prices, elasticity negative wherever anyone is buying");
+
+  /* 12 -- the three curves agree where the page says they agree */
+  push("all three curves sell the same thousand units at a price of twenty", (function(){
+    const shapes = ["linear", "exponential", "constant"];
+    for (let s = 0; s < shapes.length; s++)
+      for (let k = 26; k <= 120; k += 2)
+        if (!near(Model.q(shapes[s], k, PREF), 1000, 1e-9)) return false;
+    return true;
+  })(), "q(20) is 1000 to 1e-9 for every shape at every shape setting");
+
+  /* 13 -- nothing blows up */
+  push("finite at every setting the controls can reach", (function(){
+    const shapes = ["linear", "exponential", "constant"];
+    for (let s = 0; s < shapes.length; s++)
+      for (let k = 26; k <= 120; k += 2)
+        for (let p = PMIN; p <= PMAX; p += 1)
+          for (const c of [0, 30, 60]){
+            const r = Model.revenue(shapes[s], k, p), pi = Model.profit(shapes[s], k, c, p);
+            if (!Number.isFinite(r) || !Number.isFinite(pi)) return false;
+          }
+    return true;
+  })(), "three shapes by 48 shape settings by 120 prices by three costs");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
