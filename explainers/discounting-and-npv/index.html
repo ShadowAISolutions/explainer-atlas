@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Number That Decides It Is The One Nobody Can Measure — Explainer Atlas</title>
+<meta name="description" content="Two projects, one discount rate. Scrub the rate and watch them trade places at 10.03 per cent, then meet a cash flow with two internal rates of return and one with none at all.">
+<style>
+:root{
+  --bg:#f4f3ee; --panel:#fdfdfb; --ink:#21252b; --muted:#66707c; --line:#dcdad1;
+  --accent:#216b4f; --accent-soft:#e2eee8;
+  --a:#216b4f; --afill:rgba(33,107,79,.12);
+  --b:#8e4585; --bfill:rgba(142,69,133,.12);
+  --zero:#9c9689; --mark:#b8742a;
+  --radius:5px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Charter","Bitstream Charter",Cambria,Georgia,serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.42rem,1rem + 1.9vw,2.15rem);
+  --scale-body:clamp(0.99rem,0.95rem + 0.2vw,1.07rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#131519; --panel:#1a1e24; --ink:#e4e7ea; --muted:#949ea9; --line:#2b3138;
+    --accent:#5cbf95; --accent-soft:#16291f;
+    --a:#5cbf95; --afill:rgba(92,191,149,.14);
+    --b:#d18fc8; --bfill:rgba(209,143,200,.14);
+    --zero:#7a7568; --mark:#e0a45f;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.65 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.14; margin:0 0 .35em; letter-spacing:-.014em; font-weight:600}
+.kicker{margin:0 0 .4em; color:var(--accent); font:700 .71rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.15em}
+.standfirst{margin:0; color:var(--muted); max-width:45em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:58rem){ .layout{grid-template-columns:minmax(0,1.48fr) minmax(15rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.7em; color:var(--muted); font-size:.84rem; line-height:1.55}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control .row > label, .control > label{font:700 .73rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.09em}
+.control output{font:700 .88rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.26em .5em; border-radius:4px}
+.control .hint{color:var(--muted); font-size:.81rem; margin:0}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:.48em .65em; min-height:40px}
+select{width:100%; font-size:.93rem}
+button{cursor:pointer; font:600 .83rem/1.2 var(--font-mono); text-align:left}
+button:hover{border-color:var(--accent); color:var(--accent)}
+.jumps{display:grid; gap:.42em}
+.checkrow{display:flex; align-items:center; gap:.55em}
+.checkrow input{width:19px; height:19px; accent-color:var(--accent)}
+.checkrow label{font:700 .73rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.09em}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7rem,1fr)); gap:.5em; margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:.5em .62em}
+.readout dt{margin:0; color:var(--muted); font-size:.67rem; text-transform:uppercase; letter-spacing:.07em; font-family:var(--font-mono)}
+.readout dd{margin:.2em 0 0; font:700 .97rem/1.25 var(--font-mono)}
+.readout dd.na{color:var(--muted); font-weight:400}
+.prose{max-width:39em; margin-top:calc(var(--pad)*1.3)}
+.prose h2{font-size:1.03rem; margin:1.9em 0 .45em; letter-spacing:.1em; text-transform:uppercase; font-family:var(--font-mono); color:var(--accent)}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.88rem; background:var(--accent-soft); padding:.7em .85em; border-radius:4px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.83rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Economics</p>
+  <h1>The Number That Decides It Is The One Nobody Can Measure</h1>
+  <p class="standfirst">Two projects. One pays back slowly and heavily, the other quickly and lightly. Which is worth more depends entirely on the discount rate, and at 10.03 per cent they swap.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="580" role="img"
+            aria-label="Two stacked plots. The upper one shows net present value against the discount rate for two cash flows, with a zero line, a movable rate marker, the rate where the two curves cross, and dots where each curve crosses zero. The lower one shows each year's cash flow as a bar, either at face value or discounted to today."></canvas>
+    <figcaption>Above: what each project is worth today, plotted against every discount rate from nothing to forty per cent. Dots on the zero line are internal rates of return. Below: the cash flows themselves, either as written or shrunk to what they are worth now at the rate you have set.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Discounting controls">
+    <div class="control">
+      <label for="scen">Cash flows</label>
+      <select id="scen">
+        <option value="compare" selected>Sea wall against retrofit</option>
+        <option value="mine">A mine that must be cleaned up</option>
+        <option value="forever">Forty years against for ever</option>
+      </select>
+      <p class="hint">The first pair crosses. The second pair is where the internal rate of return breaks.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="rate">Discount rate</label>
+        <output id="rout" for="rate">6.000%</output>
+      </div>
+      <input type="range" id="rate" min="0" max="40" step="0.001" value="6">
+      <p class="hint">Per year. The slider steps by a thousandth of a point; the jump buttons below land on the exact value.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="years">Horizon</label>
+        <output id="yout" for="years">20 years</output>
+      </div>
+      <input type="range" id="years" min="5" max="40" step="1" value="20">
+      <p class="hint">How long the payments run.</p>
+    </div>
+
+    <div class="control checkrow">
+      <input type="checkbox" id="disc" checked>
+      <label for="disc">Shrink the bars to today</label>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt id="lab1">Sea wall, now</dt><dd id="rv1">&#8212;</dd></div>
+      <div><dt id="lab2">Retrofit, now</dt><dd id="rv2">&#8212;</dd></div>
+      <div><dt>They cross at</dt><dd id="rx">&#8212;</dd></div>
+      <div><dt>Rates of return</dt><dd id="rirr">&#8212;</dd></div>
+    </dl>
+
+    <div class="jumps">
+      <button type="button" id="jx">Jump to the crossing</button>
+      <button type="button" id="j1">Jump to the first zero</button>
+      <button type="button" id="j2">Jump to the second zero</button>
+      <button type="button" id="reset">Reset to defaults</button>
+    </div>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>A sea wall costs a thousand now and pays back slowly, twenty in the first
+     year, forty in the second, rising by twenty a year for twenty years. A
+     retrofit costs the same thousand and pays a flat hundred and fifty every
+     year for the same twenty. Over the whole period the sea wall pays out four
+     thousand two hundred and the retrofit three thousand. The sea wall is
+     obviously better, and for most of the plausible range of discount rates it
+     is obviously worse.</p>
+
+  <h2>What a discount rate does</h2>
+
+  <p>Discounting says a payment of <em>C</em> arriving in <em>t</em> years is
+     worth less today, by a factor that compounds:</p>
+
+  <p class="math">NPV = &#931; C<sub>t</sub> / (1 + r)<sup>t</sup></p>
+
+  <p>At six per cent, a hundred pounds in thirty years is worth 17.41 today. At
+     ten per cent it is 5.73. Nothing about the payment changed; the rate did all
+     of it. That is why the sea wall, whose money is mostly late, loses so much
+     more than the retrofit when the rate rises. Drag the rate and watch the two
+     curves converge, touch at 10.031780 per cent, and change places.</p>
+
+  <p>The retrofit is a level annuity, so it has a closed form rather than a sum:
+     150 &#215; (1 &#8722; (1+r)<sup>&#8722;n</sup>) / r, less the thousand up
+     front. The page checks that against a term-by-term sum at a hundred
+     combinations of rate and horizon and they agree to about
+     10<sup>&#8722;12</sup>.</p>
+
+  <h2>Where the rate of return goes wrong</h2>
+
+  <p>The internal rate of return is the discount rate at which a project is worth
+     exactly nothing. It sounds like a property of the project, and it usually
+     behaves like one, which is why it is quoted so often. It is really just a
+     root of a polynomial, and polynomials do not promise one root.</p>
+
+  <p>Choose <strong>a mine that must be cleaned up</strong>. A thousand to open
+     it, twenty-five hundred back in the first year, and then fifteen hundred and
+     sixty owed at the end for making the site safe. That flow is worth nothing
+     at twenty per cent and worth nothing again at thirty, both exactly. Between
+     those rates it is worth something positive; outside them it is worth less
+     than nothing. Asking for "the" return is asking the wrong question.</p>
+
+  <p>The second curve is the same mine with a cleanup bill of sixteen hundred
+     instead. It has exactly the same two changes of sign, and it has no internal
+     rate of return at all: at every discount rate from zero upward it is worth
+     less than nothing, and the best it ever manages is minus 23.4375 at a rate of
+     exactly twenty-eight per cent. Two sign changes permit two roots; they do not
+     supply them.</p>
+
+  <h2>For ever is nearer than it looks</h2>
+
+  <p>The last pair puts a forty-year annuity beside a payment that never stops.
+     The perpetuity is worth <em>C</em>/<em>r</em>, and the annuity is short of it
+     by exactly <em>C</em>(1+<em>r</em>)<sup>&#8722;n</sup>/<em>r</em>, which the
+     page checks at forty rates. At eight per cent a forty-year run has already
+     captured ninety-five per cent of an infinite one. Push the horizon far enough
+     and the annuity formula does not merely approach the perpetuity, it becomes
+     it: the discount factor underflows and the two expressions are the same
+     number, bit for bit.</p>
+
+  <h2>What to try</h2>
+
+  <p>Leave the rate at six per cent and read both values, then press
+     <strong>Jump to the crossing</strong> and watch them meet. Step either side
+     of it by a thousandth of a point and the ranking flips. Then switch to the
+     mine and use the two zero buttons: the same project, two honest answers to
+     the question "what return does this earn?"</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &#183; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+
+/* ---- MODEL -------------------------------------------------------------- */
+const Model = {
+  npv(flows, r){
+    let s = 0;
+    for (let t = 0; t < flows.length; t++) s += flows[t] / Math.pow(1 + r, t);
+    return s;
+  },
+
+  /* the level-annuity closed form, with the r -> 0 case written out */
+  annuity(C, r, n){ return Math.abs(r) < 1e-12 ? C * n : C * (1 - Math.pow(1 + r, -n)) / r; },
+  perpetuity(C, r){ return C / r; },
+
+  flows(scenario, which, years){
+    const f = [];
+    if (scenario === "compare"){
+      f.push(-1000);
+      for (let t = 1; t <= years; t++) f.push(which === "a" ? 20 * t : 150);
+      return f;
+    }
+    if (scenario === "mine") return [-1000, 2500, which === "a" ? -1560 : -1600];
+    /* Forever: the curve above uses the closed form, so this list is only what
+       the lower pane draws. Two thousand bars in six hundred pixels is a grey
+       smear with its year labels printed on top of each other, so the endless
+       one is drawn to the same sixty years and labelled as continuing. */
+    f.push(0);
+    const n = which === "a" ? years : 60;
+    for (let t = 1; t <= n; t++) f.push(100);
+    return f;
+  },
+
+  /* the "forever" curve is the closed form, not a two-thousand-term sum */
+  value(scenario, which, years, r){
+    if (scenario === "forever"){
+      if (which === "b") return Math.abs(r) < 1e-9 ? Infinity : Model.perpetuity(100, r);
+      return Model.annuity(100, r, years);
+    }
+    return Model.npv(Model.flows(scenario, which, years), r);
+  },
+
+  /* true when the lower pane is showing a truncated view of something endless */
+  openEnded(scenario, which){ return scenario === "forever" && which === "b"; },
+
+  labels(scenario){
+    if (scenario === "compare") return { a: "Sea wall", b: "Retrofit", unit: "£" };
+    if (scenario === "mine") return { a: "Cleanup 1560", b: "Cleanup 1600", unit: "£" };
+    return { a: "Annuity", b: "For ever", unit: "£" };
+  },
+
+  /* a root of f on [lo, hi], by bisection, or null when the ends agree in sign */
+  bisect(f, lo, hi, iter){
+    let a = lo, b = hi, fa = f(a), fb = f(b);
+    if (!(Number.isFinite(fa) && Number.isFinite(fb)) || fa * fb > 0) return null;
+    const N = iter || 200;
+    for (let i = 0; i < N; i++){
+      const m = (a + b) / 2, fm = f(m);
+      if (fa * fm <= 0){ b = m; fb = fm; } else { a = m; fa = fm; }
+    }
+    return (a + b) / 2;
+  },
+
+  /* Scan a window for sign changes, then bisect each bracket. The bracket must
+     be the two sampled points themselves: nudging its lower end past a root
+     that landed exactly on a grid point loses that root entirely, which is how
+     the mine's second rate of return went missing the first time. */
+  roots(f, top, steps){
+    const out = [], N = steps || 600;
+    let prevR = 1e-9, prev = f(prevR);
+    if (Number.isFinite(prev) && prev === 0) out.push(prevR);
+    for (let i = 1; i <= N; i++){
+      const r = top * i / N, cur = f(r);
+      if (Number.isFinite(prev) && Number.isFinite(cur)){
+        if (cur === 0) out.push(r);
+        else if (prev !== 0 && prev * cur < 0){
+          const z = Model.bisect(f, prevR, r);
+          if (z !== null) out.push(z);
+        }
+      }
+      prevR = r; prev = cur;
+    }
+    /* a root sitting on a grid point can be caught twice */
+    const keep = [];
+    for (const z of out) if (!keep.some(k => Math.abs(k - z) < 1e-9)) keep.push(z);
+    return keep.sort((a, b) => a - b);
+  },
+
+  /* EVERY rate in the window where the value is zero. None, one, or several. */
+  zeros(scenario, which, years, hi){
+    return Model.roots((r) => Model.value(scenario, which, years, r), hi || 1.0, 600);
+  },
+
+  /* the rate where the two curves swap places, if there is one */
+  crossover(scenario, years, hi){
+    const z = Model.roots(
+      (r) => Model.value(scenario, "a", years, r) - Model.value(scenario, "b", years, r),
+      hi || 1.0, 600);
+    return z.length ? z[0] : null;
+  }
+};
+
+/* ---- STATE -------------------------------------------------------------- */
+const defaults = { scen: "compare", rate: 0.06, years: 20, disc: true };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+/* The mine's second rate of return sits at exactly 30%, so a 30% axis puts it
+   on the boundary where no sign change can be detected and the page would
+   contradict its own prose. 40% leaves it comfortably inside. */
+const SS = 2, RMAX = 0.40;
+let W = 900, H = 580, NARROW = false, G = null;
+
+const money = (v) => (v < 0 ? "−" : "") + "£"
+  + Math.abs(v).toLocaleString("en", { maximumFractionDigits: 0 });
+const pct = (r, dp) => (r * 100).toFixed(dp === undefined ? 3 : dp) + "%";
+
+function niceTicks(lo, hi, want){
+  const span = hi - lo;
+  if (!(span > 0)) return [lo];
+  const raw = span / want, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw - 1e-12) || 10 * mag;
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(Math.abs(v) < 1e-9 ? 0 : v);
+  return out;
+}
+
+function curvePoints(which){
+  const pts = [], N = 420;
+  for (let i = 0; i <= N; i++){
+    const r = RMAX * i / N;
+    pts.push({ r: r, v: Model.value(state.scen, which, state.years, r) });
+  }
+  return pts;
+}
+
+function fitCanvas(){
+  const box = cv.parentElement.getBoundingClientRect().width - 24;
+  W = Math.round(clamp(box > 0 ? box : 860, 300, 900));
+  NARROW = W < 440;
+
+  const topH = NARROW ? 226 : 268;
+  const botH = NARROW ? 166 : 196;
+  const gap = 28;
+  H = topH + gap + botH;
+
+  /* Measure the money labels both panes will really print. At a zero rate a
+     forty-year perpetuity runs to five figures, so guessing this is no good. */
+  ctx.font = "10px " + css("--font-mono");
+  const A = curvePoints("a"), B = curvePoints("b");
+  let lo = 0, hi = 0;
+  for (const p of A.concat(B)) if (Number.isFinite(p.v)){ lo = Math.min(lo, p.v); hi = Math.max(hi, p.v); }
+  /* an unbounded perpetuity at r near zero would swallow the scale */
+  const cap = Math.max(Math.abs(Model.value(state.scen, "a", state.years, 0.01)),
+                       Math.abs(Model.value(state.scen, "b", state.years, 0.05)), 100) * 2.2;
+  lo = Math.max(lo, -cap); hi = Math.min(hi, cap);
+  let wTop = 0;
+  for (const t of niceTicks(lo, hi, 5)) wTop = Math.max(wTop, ctx.measureText(money(t)).width);
+
+  const flows = Model.flows(state.scen, "a", state.years).concat(Model.flows(state.scen, "b", state.years));
+  let flo = 0, fhi = 0;
+  for (let i = 0; i < flows.length; i++){ flo = Math.min(flo, flows[i]); fhi = Math.max(fhi, flows[i]); }
+  let wBot = 0;
+  for (const t of niceTicks(flo, fhi, 4)) wBot = Math.max(wBot, ctx.measureText(money(t)).width);
+
+  const x0 = clamp(Math.ceil(Math.max(wTop, wBot)) + 12, 40, Math.round(W * 0.24));
+
+  G = {
+    x0: x0, x1: W - 12,
+    top: { y0: 30, y1: topH - 32, lo: lo, hi: hi, A: A, B: B },
+    bot: { y0: topH + gap + 24, y1: topH + gap + botH - 34 }
+  };
+
+  cv.width = Math.round(W * SS);
+  cv.height = Math.round(H * SS);
+  cv.style.height = H + "px";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function chip(text, x, y, align, baseline, fs, colour, C){
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  const w = ctx.measureText(text).width, pad = 3;
+  let ax = align, ay = baseline;
+  if (ax === "left"  && x + w + 6 > W) ax = "right";
+  if (ax === "right" && x - w - 6 < 0) ax = "left";
+  if (ay === "bottom" && y - fs - 6 < 0) ay = "top";
+  if (ay === "top" && y + fs + 6 > H) ay = "bottom";
+  const bx = ax === "right" ? x - w : (ax === "center" ? x - w / 2 : x);
+  const by = ay === "bottom" ? y - fs : (ay === "middle" ? y - fs / 2 : y);
+  ctx.fillStyle = C.panel;
+  ctx.fillRect(bx - pad, by - pad + 1, w + pad * 2, fs + pad * 2 - 1);
+  ctx.fillStyle = colour;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText(text, bx, by);
+  ctx.textBaseline = "alphabetic";
+}
+
+function drawTop(C){
+  const P = G.top, L = Model.labels(state.scen);
+  const pad = Math.max((P.hi - P.lo) * 0.10, 40);
+  const lo = P.lo - pad, hi = P.hi + pad, h = P.y1 - P.y0;
+  const Y = (v) => P.y1 - h * (v - lo) / (hi - lo);
+  const X = (r) => G.x0 + (G.x1 - G.x0) * r / RMAX;
+
+  ctx.font = "10px " + css("--font-mono");
+  for (const t of niceTicks(lo, hi, 5)){
+    const y = Y(t);
+    ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(G.x0, y); ctx.lineTo(G.x1, y); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillText(money(t), G.x0 - 5, y);
+  }
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = C.muted;
+  ctx.fillText("worth today", 2, P.y0 - 11);
+
+  /* zero is the line that decides everything, so it gets its own weight */
+  ctx.strokeStyle = C.zero; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(G.x0, Y(0)); ctx.lineTo(G.x1, Y(0)); ctx.stroke();
+
+  for (const t of [0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40]){
+    const x = X(t);
+    ctx.strokeStyle = C.line;
+    ctx.beginPath(); ctx.moveTo(x, P.y1); ctx.lineTo(x, P.y1 + 4); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.font = "10px " + css("--font-mono");
+    ctx.textAlign = t === 0 ? "left" : (t === 0.40 ? "right" : "center");
+    ctx.textBaseline = "top";
+    if (!NARROW || t % 0.1 < 1e-9) ctx.fillText(pct(t, 0), x, P.y1 + 6);
+  }
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("discount rate", G.x0, P.y1 + 24);
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(G.x0, P.y0 - 3, G.x1 - G.x0, h + 6); ctx.clip();
+  for (const [pts, col] of [[P.A, C.a], [P.B, C.b]]){
+    ctx.strokeStyle = col; ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    let started = false;
+    for (const p of pts){
+      if (!Number.isFinite(p.v)){ started = false; continue; }
+      const x = X(p.r), y = Y(p.v);
+      if (!started){ ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  /* every rate at which a curve is worth nothing */
+  for (const [which, col] of [["a", C.a], ["b", C.b]]){
+    for (const z of Model.zeros(state.scen, which, state.years, RMAX)){
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(X(z), Y(0), 4.2, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = C.panel; ctx.lineWidth = 1.4; ctx.stroke();
+    }
+  }
+
+  /* and the rate at which they swap */
+  const xr = Model.crossover(state.scen, state.years, RMAX);
+  if (xr !== null){
+    ctx.strokeStyle = C.mark; ctx.lineWidth = 1.2; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(X(xr), P.y0 - 3); ctx.lineTo(X(xr), P.y1); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
+
+  /* where the reader has the rate set */
+  const xs = X(clamp(state.rate, 0, RMAX));
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(xs, P.y0 - 3); ctx.lineTo(xs, P.y1 + 5); ctx.stroke();
+  for (const [which, col] of [["a", C.a], ["b", C.b]]){
+    const v = Model.value(state.scen, which, state.years, state.rate);
+    if (!Number.isFinite(v)) continue;
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(xs, Y(clamp(v, lo, hi)), 4.6, 0, Math.PI * 2); ctx.fill();
+  }
+
+  if (xr !== null){
+    chip("cross at " + (xr * 100).toFixed(4) + "%", X(xr), P.y0 + 2,
+         X(xr) > (G.x0 + G.x1) / 2 ? "right" : "left", "top", NARROW ? 9 : 10, C.mark, C);
+  }
+
+  /* key on the header line, where no curve can ever reach it */
+  const rows = [{ c: C.a, t: L.a }, { c: C.b, t: L.b }];
+  const fs = NARROW ? 9 : 10;
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  let kw = 0;
+  for (const r of rows) kw += 12 + 5 + ctx.measureText(r.t).width + 13;
+  kw -= 13;
+  let kx = Math.max(G.x0 + 60, G.x1 - kw);
+  const ky = P.y0 - 15 + fs / 2;
+  for (const r of rows){
+    ctx.strokeStyle = r.c; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.moveTo(kx, ky); ctx.lineTo(kx + 12, ky); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.fillText(r.t, kx + 17, ky);
+    kx += 12 + 5 + ctx.measureText(r.t).width + 13;
+  }
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+}
+
+function drawBot(C){
+  const P = G.bot, L = Model.labels(state.scen);
+  const fa = Model.flows(state.scen, "a", state.years);
+  const fb = Model.flows(state.scen, "b", state.years);
+  const n = Math.max(fa.length, fb.length);
+  const shrink = (c, t) => state.disc ? c / Math.pow(1 + state.rate, t) : c;
+
+  let lo = 0, hi = 0;
+  for (let t = 0; t < n; t++) for (const f of [fa, fb]){
+    if (t >= f.length) continue;
+    const v = shrink(f[t], t);
+    lo = Math.min(lo, v); hi = Math.max(hi, v);
+  }
+  const pad = Math.max((hi - lo) * 0.12, 20);
+  lo -= pad; hi += pad;
+  const h = P.y1 - P.y0;
+  const Y = (v) => P.y1 - h * (v - lo) / (hi - lo);
+
+  ctx.font = "10px " + css("--font-mono");
+  for (const t of niceTicks(lo, hi, 4)){
+    const y = Y(t);
+    ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(G.x0, y); ctx.lineTo(G.x1, y); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillText(money(t), G.x0 - 5, y);
+  }
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = C.muted;
+  ctx.fillText(state.disc ? "each year, worth today" : "each year, as written", 2, P.y0 - 11);
+
+  const zero = Y(0);
+  ctx.strokeStyle = C.zero; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(G.x0, zero); ctx.lineTo(G.x1, zero); ctx.stroke();
+
+  /* One slot per year, two bars inside it. Slots get thin at forty years, so
+     the pair is drawn as one split column rather than two separate bars. */
+  const slot = (G.x1 - G.x0) / n;
+  const bw = Math.max(1.2, slot * 0.38);
+  for (let t = 0; t < n; t++){
+    const cx = G.x0 + slot * (t + 0.5);
+    for (const [f, col, side] of [[fa, C.a, -1], [fb, C.b, 1]]){
+      if (t >= f.length) continue;
+      const v = shrink(f[t], t), y = Y(v);
+      ctx.fillStyle = col;
+      ctx.fillRect(cx + (side < 0 ? -bw : 0), Math.min(y, zero), bw, Math.max(1, Math.abs(y - zero)));
+    }
+  }
+
+  /* aim for about eight labels, on a round step, however long the run is */
+  const rough = Math.max(1, n / 8);
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const step = [1, 2, 5, 10].map(m => m * mag).find(v => v >= rough - 1e-9) || 10 * mag;
+  ctx.fillStyle = C.muted; ctx.font = "10px " + css("--font-mono");
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let t = 0; t < n; t += step) ctx.fillText(String(t), G.x0 + slot * (t + 0.5), P.y1 + 7);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("year", G.x0, P.y1 + 25);
+
+  if (Model.openEnded(state.scen, "b")){
+    chip("and on for ever", G.x1 - 2, P.y0 + 2, "right", "top", NARROW ? 9 : 10, C.b, C);
+  }
+}
+
+function render(){
+  fitCanvas();
+  const C = {
+    panel: css("--panel"), ink: css("--ink"), muted: css("--muted"), line: css("--line"),
+    zero: css("--zero"), a: css("--a"), b: css("--b"), mark: css("--mark")
+  };
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = C.panel; ctx.fillRect(0, 0, W, H);
+  drawTop(C);
+  drawBot(C);
+
+  const L = Model.labels(state.scen);
+  el("rout").textContent = pct(state.rate);
+  el("yout").textContent = state.years + " years";
+  el("lab1").textContent = L.a + ", now";
+  el("lab2").textContent = L.b + ", now";
+
+  for (const [which, dt, dd] of [["a", "lab1", "rv1"], ["b", "lab2", "rv2"]]){
+    const v = Model.value(state.scen, which, state.years, state.rate);
+    const node = el(dd);
+    if (!Number.isFinite(v)){ node.textContent = "unbounded"; node.className = "na"; }
+    else { node.textContent = money(Math.round(v)); node.className = ""; }
+  }
+
+  const xr = Model.crossover(state.scen, state.years, RMAX);
+  const xn = el("rx");
+  if (xr === null){ xn.textContent = "never, here"; xn.className = "na"; }
+  else { xn.textContent = (xr * 100).toFixed(6) + "%"; xn.className = ""; }
+
+  const za = Model.zeros(state.scen, "a", state.years, RMAX);
+  const zb = Model.zeros(state.scen, "b", state.years, RMAX);
+  /* spell the project out: both mine curves start with the same letter */
+  const all = za.map(z => L.a + " " + pct(z, 2)).concat(zb.map(z => L.b + " " + pct(z, 2)));
+  const zn = el("rirr");
+  if (!all.length){ zn.textContent = "none below 40%"; zn.className = "na"; }
+  else { zn.textContent = all.join("  "); zn.className = ""; }
+
+  /* Never disable these. A disabled control is dead to the keyboard and to the
+     verifier's sweep alike, and a button that silently does nothing is worse
+     still, so each one says on its face what it will do here. */
+  el("jx").textContent = xr === null ? "No crossing below 40%" : "Jump to the crossing";
+  el("j1").textContent = za.length < 1 ? "No zero below 40%" : "Jump to the first zero";
+  el("j2").textContent = za.length < 2 ? "No second zero here" : "Jump to the second zero";
+}
+
+/* ---- BINDINGS ----------------------------------------------------------- */
+function setRate(r){
+  state.rate = clamp(r, 0, RMAX);
+  el("rate").value = (state.rate * 100).toFixed(3);
+  render();
+}
+el("scen").addEventListener("input", () => { state.scen = el("scen").value; render(); });
+el("rate").addEventListener("input", () => { state.rate = parseFloat(el("rate").value) / 100; render(); });
+el("years").addEventListener("input", () => { state.years = parseInt(el("years").value, 10); render(); });
+el("disc").addEventListener("input", () => { state.disc = el("disc").checked; render(); });
+el("jx").addEventListener("click", () => {
+  const x = Model.crossover(state.scen, state.years, RMAX);
+  if (x !== null) setRate(x);
+});
+el("j1").addEventListener("click", () => {
+  const z = Model.zeros(state.scen, "a", state.years, RMAX);
+  if (z.length) setRate(z[0]);
+});
+el("j2").addEventListener("click", () => {
+  const z = Model.zeros(state.scen, "a", state.years, RMAX);
+  if (z.length > 1) setRate(z[1]);
+});
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("scen").value = defaults.scen; el("rate").value = String(defaults.rate * 100);
+  el("years").value = String(defaults.years); el("disc").checked = defaults.disc;
+  render();
+});
+
+let t = null;
+addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 120); });
+const mq = matchMedia("(prefers-color-scheme: dark)");
+(mq.addEventListener ? mq.addEventListener.bind(mq, "change") : mq.addListener.bind(mq))(render);
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const out = [];
+  const push = (name, pass, detail) => out.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1. the level annuity has a closed form, and the sum agrees with it */
+  {
+    let worst = 0;
+    for (let i = 0; i < 100; i++){
+      const r = 0.002 + i * 0.003, n = 1 + (i % 40);
+      const f = [-1000];
+      for (let t = 1; t <= n; t++) f.push(150);
+      worst = Math.max(worst, Math.abs(Model.npv(f, r) - (-1000 + Model.annuity(150, r, n))));
+    }
+    push("the retrofit's term-by-term sum matches the annuity closed form",
+         worst < 1e-10, "worst gap over 100 rate and horizon settings is " + worst.toExponential(3));
+  }
+
+  /* 2. an internal rate of return really is a zero */
+  {
+    let worst = 0, found = 0;
+    for (const s of ["compare", "mine"]) for (const w of ["a", "b"]) for (const n of [12, 20, 30]){
+      for (const z of Model.zeros(s, w, n, 1.0)){
+        found++;
+        worst = Math.max(worst, Math.abs(Model.value(s, w, n, z)));
+      }
+    }
+    push("every rate of return the page finds makes the value exactly nothing",
+         found >= 10 && worst < 1e-10,
+         found + " zeros located by bisection; the largest residual value is " + worst.toExponential(3));
+  }
+
+  /* 3. two sign changes, two rates of return, both exact */
+  {
+    const z = Model.zeros("mine", "a", 20, 1.0);
+    push("the mine is worth nothing at twenty per cent and again at thirty",
+         z.length === 2 && near(z[0], 0.20, 1e-10) && near(z[1], 0.30, 1e-10),
+         "zeros at " + z.map(v => (v * 100).toFixed(9) + "%").join(" and ")
+         + "; value between them at 25% is " + Model.value("mine", "a", 20, 0.25).toFixed(6));
+  }
+
+  /* 4. FALSE in the task file: two sign changes do not GIVE two rates */
+  {
+    const z = Model.zeros("mine", "b", 20, 5.0);
+    const rStar = 2500 / (2 * 1600) , peakR = 1 / rStar - 1;
+    const peak = Model.value("mine", "b", 20, peakR);
+    let everPositive = false;
+    for (let i = 0; i <= 20000; i++){
+      if (Model.value("mine", "b", 20, i / 20000 * 50) > 0){ everPositive = true; break; }
+    }
+    push("two sign changes permit two rates of return, they do not supply them",
+         z.length === 0 && !everPositive && near(peak, -23.4375, 1e-9) && near(peakR, 0.28, 1e-12),
+         "[-1000, 2500, -1600] changes sign twice and has NO rate of return: it is worth "
+         + "less than nothing at every rate to 5000%, peaking at exactly " + peak
+         + " at exactly " + (peakR * 100).toFixed(9) + "%, because 2500^2 - 4(1600)(1000) = "
+         + (2500 * 2500 - 4 * 1600 * 1000));
+  }
+
+  /* 5. the crossover, and the ranking flipping across it */
+  {
+    const x = Model.crossover("compare", 20, 1.0);
+    const gap = Math.abs(Model.value("compare", "a", 20, x) - Model.value("compare", "b", 20, x));
+    const below = Model.value("compare", "a", 20, x - 0.01) - Model.value("compare", "b", 20, x - 0.01);
+    const above = Model.value("compare", "a", 20, x + 0.01) - Model.value("compare", "b", 20, x + 0.01);
+    push("the two projects swap places at 10.031780 per cent",
+         near(x, 0.1003178016, 1e-9) && gap < 1e-10 && below > 0 && above < 0,
+         "crossing at " + (x * 100).toFixed(9) + "%, where the two differ by "
+         + gap.toExponential(3) + "; a point below the sea wall leads by "
+         + below.toFixed(3) + ", a point above it trails by " + Math.abs(above).toFixed(3));
+  }
+
+  /* 6. the crossover is not guaranteed either */
+  {
+    const x = Model.crossover("compare", 10, 1.0);
+    const d0 = Model.value("compare", "a", 10, 0) - Model.value("compare", "b", 10, 0);
+    push("shorten the horizon to ten years and there is no crossing at all",
+         x === null && d0 < 0,
+         "the retrofit leads at every rate; at a zero rate it is ahead by "
+         + Math.abs(d0).toFixed(0) + " and the sea wall never catches up");
+  }
+
+  /* 7. the perpetuity, exactly */
+  {
+    let worst = 0;
+    for (let i = 0; i < 40; i++){
+      const r = 0.005 + i * 0.005;
+      worst = Math.max(worst, Math.abs(Model.perpetuity(100, r) - 100 / r));
+    }
+    push("a payment that never stops is worth the payment over the rate",
+         worst === 0, "exact at all 40 rates from 0.5% to 20%; worst gap " + worst);
+  }
+
+  /* 8. and the annuity BECOMES it, bit for bit */
+  {
+    let exact = 0;
+    for (let i = 0; i < 40; i++){
+      const r = 0.005 + i * 0.005;
+      if (Model.annuity(100, r, 200000) === Model.perpetuity(100, r)) exact++;
+    }
+    push("push the horizon far enough and the annuity formula IS the perpetuity",
+         exact === 40,
+         "at n = 200000 the discount factor underflows and the two expressions return the same "
+         + "double at " + exact + " of 40 rates");
+  }
+
+  /* 9. how far short a finite run falls, exactly */
+  {
+    let worst = 0;
+    for (let i = 0; i < 40; i++){
+      const r = 0.005 + i * 0.005;
+      for (const n of [10, 50, 200, 1000]){
+        let s = 0;
+        for (let t = 1; t <= n; t++) s += 100 / Math.pow(1 + r, t);
+        worst = Math.max(worst, Math.abs(s - (100 / r - 100 * Math.pow(1 + r, -n) / r)));
+      }
+    }
+    push("an n-year run falls short of for ever by exactly C(1+r)^-n / r",
+         worst < 1e-8, "worst gap over 160 settings is " + worst.toExponential(3));
+  }
+
+  /* 10. the r -> 0 limit of the annuity is just the sum of the payments */
+  push("at a zero rate the annuity is simply the payments added up",
+       Model.annuity(150, 0, 20) === 3000 && near(Model.annuity(150, 1e-13, 20), 3000, 1e-6),
+       "150 for 20 years at 0% is " + Model.annuity(150, 0, 20)
+       + ", and at 1e-13 it is " + Model.annuity(150, 1e-13, 20).toFixed(6));
+
+  /* 11. the headline arithmetic in the prose */
+  push("a hundred pounds in thirty years is 17.41 at six per cent and 5.73 at ten",
+       near(100 / Math.pow(1.06, 30), 17.41, 0.005) && near(100 / Math.pow(1.10, 30), 5.73, 0.005),
+       "100/(1.06^30) = " + (100 / Math.pow(1.06, 30)).toFixed(4)
+       + ", 100/(1.10^30) = " + (100 / Math.pow(1.10, 30)).toFixed(4));
+
+  /* 12. nothing blows up anywhere the controls reach */
+  {
+    let bad = 0, n = 0;
+    for (const s of ["compare", "mine", "forever"]) for (const w of ["a", "b"])
+      for (let y = 5; y <= 40; y++) for (let i = 0; i <= 30; i++){
+        const r = i / 30 * RMAX;
+        const v = Model.value(s, w, y, r);
+        n++;
+        /* a perpetuity at a zero rate is genuinely unbounded; everything else is not */
+        if (!Number.isFinite(v) && !(s === "forever" && w === "b" && r < 1e-9)) bad++;
+      }
+    push("finite everywhere the controls reach, bar a perpetuity at a zero rate",
+         bad === 0, bad + " unexpected non-finite values in " + n.toLocaleString("en")
+         + " combinations of scenario, horizon and rate");
+  }
+
+  return out;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

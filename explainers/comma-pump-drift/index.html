@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sing It Round Again And You Are Flat — Explainer Atlas</title>
+<meta name="description" content="Step a singer through I vi ii V in pure intervals and the tonic comes back a syntonic comma flat, every time round. Temper something, or drift forever.">
+<style>
+:root{
+  --bg:#f0e9dc; --panel:#faf6ee; --ink:#2b2119; --muted:#6d6053; --line:#ddd1bd;
+  --accent:#8a5a2b; --accent-soft:#eee1cc;
+  --drift:#b5502f; --driftfill:rgba(181,80,47,.14); --ref:#4f7350; --rule:#cdbfa7;
+  --radius:3px; --pad:clamp(14px,3vw,26px);
+  --font-body:Iowan Old Style,Palatino,"Palatino Linotype","Book Antiqua",Georgia,serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.5rem,1.05rem + 2.1vw,2.35rem);
+  --scale-body:clamp(1rem,0.96rem + 0.22vw,1.09rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#191410; --panel:#211a14; --ink:#ece2d3; --muted:#a2947f; --line:#382d23;
+    --accent:#d3a267; --accent-soft:#2c2318;
+    --drift:#e8845f; --driftfill:rgba(232,132,95,.15); --ref:#82ab83; --rule:#4a3c2e;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.68 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:62rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--rule); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.12; margin:0 0 .35em; letter-spacing:-.012em; font-weight:600}
+.kicker{margin:0 0 .45em; color:var(--accent); font:600 .72rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.16em}
+.standfirst{margin:0; color:var(--muted); max-width:43em; font-style:italic}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:57rem){ .layout{grid-template-columns:minmax(0,1.42fr) minmax(15.5rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.7em; color:var(--muted); font-size:.85rem; line-height:1.55}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control .row > label, .control > label{font:600 .74rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.1em; color:var(--ink)}
+.control output{font:600 .88rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.26em .5em; border-radius:3px}
+.control .hint{color:var(--muted); font-size:.82rem; margin:0; font-style:italic}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:3px; padding:.48em .65em; min-height:40px}
+select{width:100%; font-size:.94rem}
+button{cursor:pointer; font:600 .84rem/1.2 var(--font-mono)}
+button:hover{border-color:var(--accent); color:var(--accent)}
+.walk{display:grid; grid-template-columns:1fr 1fr 1fr; gap:.42em}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:3px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7rem,1fr)); gap:.5em; margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:3px; padding:.5em .62em}
+.readout dt{margin:0; color:var(--muted); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; font-family:var(--font-mono)}
+.readout dd{margin:.2em 0 0; font:600 1rem/1.25 var(--font-mono)}
+.prose{max-width:38em; margin-top:calc(var(--pad)*1.3)}
+.prose h2{font-size:1.02rem; margin:1.9em 0 .45em; letter-spacing:.12em; text-transform:uppercase; font-family:var(--font-mono); color:var(--accent)}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.88rem; background:var(--accent-soft); padding:.7em .85em; border-radius:3px; border-left:3px solid var(--accent); overflow-x:auto; font-style:normal}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--rule); color:var(--muted); font-size:.84rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Music theory</p>
+  <h1>Sing It Round Again And You Are Flat</h1>
+  <p class="standfirst">Take a choir through I&#8202;&#8211;&#8202;vi&#8202;&#8211;&#8202;ii&#8202;&#8211;&#8202;V and back, tuning every chord pure against the one before. They land a fifth of a semitone below where they started, and they will do it again every time round.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="560" role="img"
+            aria-label="Two stacked plots. The upper one is a staircase of the root pitch in cents as the progression is stepped through, each step labelled with the interval taken. The lower one is a bar chart of how far the tonic has drifted after each completed cycle, against a dashed line marking the gap one time round leaves."></canvas>
+    <figcaption>Above: where the root actually sits, in cents, step by step. Below: how far the starting note has moved after each completed time round. The dashed line is what one time round adds. Step through with the buttons, then change the tuning underneath the same progression.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Progression controls">
+    <div class="control">
+      <label for="prog">Progression</label>
+      <select id="prog">
+        <option value="pump" selected>I &#8211; vi &#8211; ii &#8211; V &#8211; I</option>
+        <option value="plain">I &#8211; IV &#8211; V &#8211; I</option>
+        <option value="circle">Twelve fifths, back to the start</option>
+      </select>
+      <p class="hint">The first one is the comma pump. The second is not.</p>
+    </div>
+
+    <div class="control">
+      <label for="tuning">Tuning</label>
+      <select id="tuning">
+        <option value="just" selected>Just &#8212; every interval pure</option>
+        <option value="meantone">Quarter-comma meantone</option>
+        <option value="equal">Equal temperament</option>
+      </select>
+      <p class="hint">Pure intervals are small whole-number ratios. The other two shrink the fifth.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="cycles">Times round</label>
+        <output id="cyout" for="cycles">4</output>
+      </div>
+      <input type="range" id="cycles" min="1" max="20" step="1" value="4">
+      <p class="hint">How many times the progression repeats.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="step">Step</label>
+        <output id="stout" for="step">0 of 16</output>
+      </div>
+      <input type="range" id="step" min="0" max="16" step="1" value="0">
+      <p class="hint">Walk the progression one chord at a time.</p>
+    </div>
+
+    <div class="walk">
+      <button type="button" id="back">&#8592; Back</button>
+      <button type="button" id="fwd">Next &#8594;</button>
+      <button type="button" id="end">To end</button>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Root now</dt><dd id="rroot">&#8212;</dd></div>
+      <div><dt>Interval taken</dt><dd id="rint">&#8212;</dd></div>
+      <div><dt>Drift so far</dt><dd id="rdrift">&#8212;</dd></div>
+      <div><dt>Per time round</dt><dd id="rcom">&#8212;</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Four chords, each tuned honestly against the last. C major, then A minor
+     holding the A the sopranos already have, then D minor holding its A, then G
+     holding its D, then home to C. Nobody sings a bad interval. Every step is a
+     ratio of small whole numbers, the kind a voice finds by itself when it locks
+     onto a chord. And the C they land on is not the C they left.</p>
+
+  <h2>Following the ratios</h2>
+
+  <p>Track the root. C down a pure minor third to A is a factor of 5/6. A up a pure
+     fourth to D is 4/3. D up a pure fourth to G is 4/3 again. G down a pure fifth
+     back to C is 2/3. Multiply them and the answer is not 1.</p>
+
+  <p class="math">5/6 &#215; 4/3 &#215; 4/3 &#215; 2/3 = 160/162 = 80/81</p>
+
+  <p>The tonic has been multiplied by 80/81, which is one syntonic comma flat:
+     21.506 cents, about a fifth of a semitone, comfortably audible. Nothing has
+     gone wrong. Each interval was exactly what it claimed to be. It is the
+     round trip that does not close.</p>
+
+  <p>Push <strong>Times round</strong> up and the drift is strictly additive,
+     because cents are logarithms: <em>n</em> times round is <em>n</em> commas,
+     checked here out to twenty. After four cycles a choir has sunk 86 cents,
+     most of a semitone, and after twenty they are more than a third of the way
+     to the note below.</p>
+
+  <h2>Two different commas</h2>
+
+  <p>Switch the progression to <strong>twelve fifths</strong> and a second gap
+     appears. Stack twelve pure fifths and you pass every note in the chromatic
+     scale and arrive back at a C seven octaves up &#8212; except that (3/2)<sup>12</sup>
+     is 531441/524288 times 2<sup>7</sup>, sharp by 23.460 cents. That is the
+     Pythagorean comma, and it is a different number from the syntonic comma
+     because it comes from a different journey. Just intonation fails to close
+     both loops, and it fails by different amounts.</p>
+
+  <h2>What tempering buys</h2>
+
+  <p>Now leave the progression alone and change the <strong>tuning</strong>.
+     Quarter-comma meantone shrinks every fifth to 696.578 cents &#8212; the
+     fourth root of 5, chosen so that four of them stacked give a major third of
+     386.314 cents, which is exactly pure. The comma pump closes: the drift is
+     zero, flat along the bottom of the lower plot. But twelve of those fifths
+     now fall 41.059 cents short of seven octaves, and the gap has to go
+     somewhere, so one fifth on the keyboard is left howling. That is the wolf.</p>
+
+  <p>Equal temperament takes the other bargain. Every fifth is 700 cents, two
+     cents flat, which is one twelfth of the Pythagorean comma each. Both loops
+     close exactly, and no interval except the octave is pure: the major third is
+     400 cents against a true 386.314, nearly fourteen cents sharp, which is why
+     a piano chord has a shimmer a choir does not.</p>
+
+  <h2>What to try</h2>
+
+  <p>Run <strong>I&#8202;&#8211;&#8202;vi&#8202;&#8211;&#8202;ii&#8202;&#8211;&#8202;V</strong>
+     in just intonation for ten cycles and read the drift. Then switch to
+     <strong>I&#8202;&#8211;&#8202;IV&#8202;&#8211;&#8202;V</strong>, which closes
+     perfectly in just intonation, and notice that the pump is a property of the
+     route and not of pure tuning as such. Then go back to the pump and try each
+     tuning in turn: the two tempered ones hold, and only the pure one walks away.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &#183; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+
+/* ---- MODEL -------------------------------------------------------------- */
+/* A motion carries its pure ratio AND its position on the chain of fifths.
+   Just intonation uses the ratio; every regular temperament is generated by
+   its fifth, so it uses (fifths, oct). The whole page is the gap between them. */
+const Model = {
+  cents(ratio){ return 1200 * Math.log2(ratio); },
+
+  SYNTONIC: 81 / 80,
+  PYTHAGOREAN: 531441 / 524288,
+
+  /* the generating fifth of each tuning, in cents */
+  fifth(tuning){
+    if (tuning === "equal") return 700;
+    if (tuning === "meantone") return 1200 * Math.log2(Math.pow(5, 0.25));
+    return 1200 * Math.log2(3 / 2);
+  },
+
+  progressions: {
+    pump: {
+      label: "I vi ii V I",
+      chords: ["C", "Am", "Dm", "G", "C"],
+      moves: [
+        { name: "down a minor third", sym: "5/6",  j: 5 / 6, f: 3,  o: -2, to: "Am" },
+        { name: "up a fourth",        sym: "4/3",  j: 4 / 3, f: -1, o: 1,  to: "Dm" },
+        { name: "up a fourth",        sym: "4/3",  j: 4 / 3, f: -1, o: 1,  to: "G"  },
+        { name: "down a fifth",       sym: "2/3",  j: 2 / 3, f: -1, o: 0,  to: "C"  }
+      ]
+    },
+    plain: {
+      label: "I IV V I",
+      chords: ["C", "F", "G", "C"],
+      moves: [
+        { name: "up a fourth",        sym: "4/3",  j: 4 / 3, f: -1, o: 1,  to: "F" },
+        { name: "up a major second",  sym: "9/8",  j: 9 / 8, f: 2,  o: -1, to: "G" },
+        { name: "down a fifth",       sym: "2/3",  j: 2 / 3, f: -1, o: 0,  to: "C" }
+      ]
+    },
+    circle: {
+      label: "twelve fifths",
+      chords: ["C", "G", "D", "A", "E", "B", "F♯", "C♯", "G♯", "D♯", "A♯", "E♯", "C"],
+      moves: (function(){
+        const names = ["G", "D", "A", "E", "B", "F♯", "C♯", "G♯", "D♯", "A♯", "E♯", "B♯"];
+        const out = names.map(n => ({ name: "up a fifth", sym: "3/2", j: 3 / 2, f: 1, o: 0, to: n }));
+        out.push({ name: "down seven octaves", sym: "1/128", j: 1 / 128, f: 0, o: -7, to: "C" });
+        return out;
+      })()
+    }
+  },
+
+  /* how big one move is, in cents, under a given tuning */
+  moveCents(move, tuning){
+    if (tuning === "just") return Model.cents(move.j);
+    return move.f * Model.fifth(tuning) + move.o * 1200;
+  },
+
+  /* the running root pitch after every step of `cycles` times round */
+  walk(progKey, tuning, cycles){
+    const prog = Model.progressions[progKey], n = prog.moves.length;
+    const path = [{ pitch: 0, chord: prog.chords[0], move: null, cycle: 0, index: 0 }];
+    let pitch = 0;
+    for (let c = 0; c < cycles; c++){
+      for (let i = 0; i < n; i++){
+        const mv = prog.moves[i];
+        pitch += Model.moveCents(mv, tuning);
+        path.push({ pitch: pitch, chord: mv.to, move: mv, cycle: c + 1, index: path.length });
+      }
+    }
+    return path;
+  },
+
+  /* drift of the tonic after each completed time round */
+  drifts(progKey, tuning, cycles){
+    const n = Model.progressions[progKey].moves.length;
+    const path = Model.walk(progKey, tuning, cycles), out = [];
+    for (let c = 1; c <= cycles; c++) out.push(path[c * n].pitch);
+    return out;
+  },
+
+  /* the gap one time round leaves, in cents */
+  closure(progKey, tuning){
+    let s = 0;
+    for (const mv of Model.progressions[progKey].moves) s += Model.moveCents(mv, tuning);
+    return s;
+  },
+
+  /* What that gap is called. It is NOT always a comma: twelve meantone fifths
+     fall short of seven octaves by the amount the wolf fifth is left sharp. */
+  closureName(progKey, tuning){
+    if (Math.abs(Model.closure(progKey, tuning)) < 1e-9) return "closes exactly";
+    if (progKey === "pump" && tuning === "just") return "one syntonic comma";
+    if (progKey === "circle" && tuning === "just") return "one Pythagorean comma";
+    if (progKey === "circle" && tuning === "meantone") return "the wolf's excess";
+    return "one time round";
+  }
+};
+
+/* ---- STATE -------------------------------------------------------------- */
+const defaults = { prog: "pump", tuning: "just", cycles: 4, step: 0 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+const SS = 2;
+let W = 900, H = 560, NARROW = false, G = null;
+
+function totalSteps(){ return Model.progressions[state.prog].moves.length * state.cycles; }
+
+function niceTicks(lo, hi, want){
+  const span = hi - lo;
+  if (!(span > 0)) return [lo];
+  const raw = span / want, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw - 1e-12) || 10 * mag;
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(Math.abs(v) < 1e-9 ? 0 : v);
+  return out;
+}
+const fmtC = (v) => Math.abs(v) < 1e-9 ? "0"
+  : (v > 0 ? "+" : "−") + Math.abs(v).toFixed(Math.abs(v - Math.round(v)) < 1e-9 ? 0 : 1);
+
+function fitCanvas(){
+  const box = cv.parentElement.getBoundingClientRect().width - 24;
+  W = Math.round(clamp(box > 0 ? box : 860, 300, 900));
+  NARROW = W < 440;
+
+  const topH = NARROW ? 210 : 250;
+  const botH = NARROW ? 168 : 190;
+  const gap = 26;
+  H = topH + gap + botH;
+
+  /* Measure the widest label each pane will actually print, not a guess.
+     The root pane can run to four digits plus a sign at twelve fifths. */
+  ctx.font = "10px " + css("--font-mono");
+  const path = Model.walk(state.prog, state.tuning, state.cycles);
+  let lo = 0, hi = 0;
+  for (const p of path){ lo = Math.min(lo, p.pitch); hi = Math.max(hi, p.pitch); }
+  let wTop = 0;
+  for (const t of niceTicks(lo, hi, 5)) wTop = Math.max(wTop, ctx.measureText(fmtC(t)).width);
+  const dr = Model.drifts(state.prog, state.tuning, state.cycles);
+  let dlo = 0, dhi = 0;
+  for (const d of dr){ dlo = Math.min(dlo, d); dhi = Math.max(dhi, d); }
+  let wBot = 0;
+  for (const t of niceTicks(dlo, dhi, 4)) wBot = Math.max(wBot, ctx.measureText(fmtC(t)).width);
+  const x0 = clamp(Math.ceil(Math.max(wTop, wBot)) + 12, 34, Math.round(W * 0.2));
+
+  G = {
+    x0: x0, x1: W - 12,
+    top: { y0: 34, y1: topH - 30, lo: lo, hi: hi },
+    bot: { y0: topH + gap + 22, y1: topH + gap + botH - 30, lo: dlo, hi: dhi }
+  };
+
+  cv.width = Math.round(W * SS);
+  cv.height = Math.round(H * SS);
+  cv.style.height = H + "px";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function chip(text, x, y, align, baseline, fs, colour, C){
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  const w = ctx.measureText(text).width, pad = 3;
+  let ax = align, ay = baseline;
+  if (ax === "left"  && x + w + 6 > W) ax = "right";
+  if (ax === "right" && x - w - 6 < 0) ax = "left";
+  if (ay === "bottom" && y - fs - 6 < 0) ay = "top";
+  if (ay === "top" && y + fs + 6 > H) ay = "bottom";
+  const bx = ax === "right" ? x - w : (ax === "center" ? x - w / 2 : x);
+  const by = ay === "bottom" ? y - fs : (ay === "middle" ? y - fs / 2 : y);
+  ctx.fillStyle = C.panel;
+  ctx.fillRect(bx - pad, by - pad + 1, w + pad * 2, fs + pad * 2 - 1);
+  ctx.fillStyle = colour;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText(text, bx, by);
+  ctx.textBaseline = "alphabetic";
+}
+
+function paneAxis(P, ticks, title, C){
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  ctx.font = "10px " + css("--font-mono");
+  const h = P.y1 - P.y0, span = (P.hi - P.lo) || 1;
+  const Y = (v) => P.y1 - h * (v - P.lo) / span;
+  for (const t of ticks){
+    const y = Y(t);
+    ctx.strokeStyle = Math.abs(t) < 1e-9 ? C.rule : C.line;
+    ctx.beginPath(); ctx.moveTo(G.x0, y); ctx.lineTo(G.x1, y); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillText(fmtC(t), G.x0 - 5, y);
+  }
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = C.muted;
+  ctx.fillText(title, 2, P.y0 - 11);
+  return Y;
+}
+
+function drawTop(path, C){
+  const P = G.top, n = path.length - 1;
+  const pad = Math.max((P.hi - P.lo) * 0.14, 30);
+  P.lo -= pad; P.hi += pad;
+  const Y = paneAxis(P, niceTicks(P.lo, P.hi, 5), "root pitch, cents from the start", C);
+  const X = (i) => G.x0 + (G.x1 - G.x0) * (n ? i / n : 0.5);
+
+  /* faint rules where each time round ends, so the staircase reads as cycles */
+  const perN = Model.progressions[state.prog].moves.length;
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  const everyCycle = state.cycles > 12 ? Math.ceil(state.cycles / 12) : 1;
+  for (let c = 1; c <= state.cycles; c++){
+    if (c % everyCycle) continue;
+    const x = X(c * perN);
+    ctx.beginPath(); ctx.moveTo(x, P.y0 - 4); ctx.lineTo(x, P.y1 + 4); ctx.stroke();
+  }
+
+  /* the staircase: hold each pitch, then jump */
+  ctx.save();
+  ctx.beginPath(); ctx.rect(G.x0, P.y0 - 4, G.x1 - G.x0, P.y1 - P.y0 + 8); ctx.clip();
+  ctx.strokeStyle = C.accent; ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  for (let i = 0; i <= n; i++){
+    const x = X(i), y = Y(path[i].pitch);
+    if (i === 0) ctx.moveTo(x, y);
+    else { ctx.lineTo(x, Y(path[i - 1].pitch)); ctx.lineTo(x, y); }
+  }
+  ctx.stroke();
+
+  /* every return to the tonic, as a dot on the drift */
+  ctx.fillStyle = C.drift;
+  for (let c = 0; c <= state.cycles; c++){
+    const i = c * perN;
+    ctx.beginPath(); ctx.arc(X(i), Y(path[i].pitch), 3.4, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+
+  /* where the walker is standing */
+  const s = clamp(state.step, 0, n), xs = X(s), ys = Y(path[s].pitch);
+  ctx.strokeStyle = C.drift; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(xs, P.y0 - 4); ctx.lineTo(xs, P.y1 + 4); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = C.drift;
+  ctx.beginPath(); ctx.arc(xs, ys, 5, 0, Math.PI * 2); ctx.fill();
+
+  /* name the chord under the marker, and the interval that got there */
+  const here = path[s];
+  chip(here.chord, xs, P.y1 + 16, xs > (G.x0 + G.x1) / 2 ? "right" : "left", "top",
+       NARROW ? 10 : 11, C.ink, C);
+  if (here.move){
+    chip(here.move.name + "  " + here.move.sym, xs, P.y1 + 30,
+         xs > (G.x0 + G.x1) / 2 ? "right" : "left", "top", NARROW ? 9 : 10, C.muted, C);
+  }
+}
+
+function drawBot(C){
+  const P = G.bot;
+  const dr = Model.drifts(state.prog, state.tuning, state.cycles);
+  const comma = Model.closure(state.prog, state.tuning);
+  let lo = Math.min(0, P.lo, comma), hi = Math.max(0, P.hi, comma);
+  const pad = Math.max((hi - lo) * 0.18, 4);
+  P.lo = lo - pad; P.hi = hi + pad;
+  const Y = paneAxis(P, niceTicks(P.lo, P.hi, 4), "drift of the tonic after each time round, cents", C);
+
+  const per = Math.max(1, dr.length);
+  const bw = (G.x1 - G.x0) / per;
+  const zero = Y(0);
+  const done = Math.floor(clamp(state.step, 0, totalSteps()) / Model.progressions[state.prog].moves.length);
+
+  for (let c = 0; c < dr.length; c++){
+    const x = G.x0 + bw * c + bw * 0.18, w = bw * 0.64, y = Y(dr[c]);
+    ctx.fillStyle = (c < done) ? C.drift : C.driftfill;
+    ctx.fillRect(x, Math.min(y, zero), w, Math.max(1.2, Math.abs(y - zero)));
+    if (c >= done){ ctx.strokeStyle = C.drift; ctx.lineWidth = 1;
+      ctx.strokeRect(x + .5, Math.min(y, zero) + .5, w - 1, Math.max(1.2, Math.abs(y - zero)) - 1); }
+  }
+
+  /* what one time round adds, whatever it is called */
+  const nameC = Model.closureName(state.prog, state.tuning);
+  if (Math.abs(comma) > 1e-9){
+    ctx.strokeStyle = C.ref; ctx.lineWidth = 1.4; ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(G.x0, Y(comma)); ctx.lineTo(G.x1, Y(comma)); ctx.stroke();
+    ctx.setLineDash([]);
+    /* Put it on the far side of the line from zero: every bar lies between the
+       two, so that side is the only one guaranteed clear at the first cycle. */
+    /* Number only. The full name is in the readout: a chip long enough to
+       spell it out would lie across half the bars, and every bar after the
+       first crosses this line, so there is no clear side to put it on. */
+    const cLab = (comma > 0 ? "+" : "−") + Math.abs(comma).toFixed(3);
+    chip(cLab, G.x0 + 4, comma < 0 ? Y(comma) + 4 : Y(comma) - 4, "left",
+         comma < 0 ? "top" : "bottom", NARROW ? 9 : 10, C.ref, C);
+  } else {
+    chip(nameC + " " + String.fromCharCode(8212) + " nothing drifts",
+         G.x0 + 4, Y(0) - 4, "left", "bottom", NARROW ? 9 : 10, C.ref, C);
+  }
+
+  /* the cycle counter along the foot */
+  ctx.fillStyle = C.muted; ctx.font = "10px " + css("--font-mono");
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  const everyN = dr.length > 10 ? Math.ceil(dr.length / 10) : 1;
+  for (let c = 0; c < dr.length; c++){
+    if (c % everyN) continue;
+    ctx.fillText(String(c + 1), G.x0 + bw * (c + 0.5), P.y1 + 7);
+  }
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("times round", G.x0, P.y1 + 24);
+}
+
+function render(){
+  fitCanvas();
+  const C = {
+    panel: css("--panel"), ink: css("--ink"), muted: css("--muted"), line: css("--line"),
+    rule: css("--rule"), accent: css("--accent"), drift: css("--drift"),
+    driftfill: css("--driftfill"), ref: css("--ref")
+  };
+  const path = Model.walk(state.prog, state.tuning, state.cycles);
+  const n = path.length - 1;
+
+  const sl = el("step");
+  sl.max = String(n);
+  if (state.step > n) state.step = n;
+  sl.value = String(state.step);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = C.panel; ctx.fillRect(0, 0, W, H);
+  drawTop(path, C);
+  drawBot(C);
+
+  el("cyout").textContent = String(state.cycles);
+  el("stout").textContent = state.step + " of " + n;
+
+  const here = path[state.step];
+  el("rroot").textContent = here.chord + "  " + fmtC(here.pitch);
+  el("rint").textContent = here.move ? here.move.sym + "  " + here.move.name : "at the start";
+
+  const per = Model.progressions[state.prog].moves.length;
+  const done = Math.floor(state.step / per);
+  const drift = done ? Model.drifts(state.prog, state.tuning, done)[done - 1] : 0;
+  el("rdrift").textContent = fmtC(drift) + " cents";
+  const gap = Model.closure(state.prog, state.tuning);
+  el("rcom").textContent = Math.abs(gap) < 1e-9 ? "nothing"
+    : (gap > 0 ? "+" : "−") + Math.abs(gap).toFixed(3) + "  "
+      + Model.closureName(state.prog, state.tuning).replace(/^one /, "");
+}
+
+/* ---- BINDINGS ----------------------------------------------------------- */
+function setStep(v){ state.step = clamp(v, 0, totalSteps()); render(); }
+el("prog").addEventListener("input", () => { state.prog = el("prog").value; state.step = 0; render(); });
+el("tuning").addEventListener("input", () => { state.tuning = el("tuning").value; render(); });
+el("cycles").addEventListener("input", () => {
+  state.cycles = parseInt(el("cycles").value, 10);
+  state.step = Math.min(state.step, totalSteps());
+  render();
+});
+el("step").addEventListener("input", () => { state.step = parseInt(el("step").value, 10); render(); });
+el("back").addEventListener("click", () => setStep(state.step - 1));
+el("fwd").addEventListener("click", () => setStep(state.step + 1));
+el("end").addEventListener("click", () => setStep(totalSteps()));
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("prog").value = defaults.prog; el("tuning").value = defaults.tuning;
+  el("cycles").value = String(defaults.cycles); el("step").value = String(defaults.step);
+  render();
+});
+
+let t = null;
+addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 120); });
+const mq = matchMedia("(prefers-color-scheme: dark)");
+(mq.addEventListener ? mq.addEventListener.bind(mq, "change") : mq.addListener.bind(mq))(render);
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const out = [];
+  const push = (name, pass, detail) => out.push({ name, pass: !!pass, detail: String(detail) });
+  const SC = Model.cents(Model.SYNTONIC), PC = Model.cents(Model.PYTHAGOREAN);
+
+  /* 1. the comma itself, as a ratio and in cents */
+  push("the syntonic comma is 81/80, which is 21.506 cents",
+       Model.SYNTONIC === 81 / 80 && near(SC, 21.506, 0.001),
+       "81/80 = " + (81 / 80) + ", " + SC.toFixed(6) + " cents");
+
+  /* 2. one time round the pump, from the ratios */
+  {
+    let r = 1;
+    for (const mv of Model.progressions.pump.moves) r *= mv.j;
+    push("I vi ii V in pure intervals lands on 80/81 of the starting pitch",
+         Math.abs(r - 80 / 81) < 1e-15 && near(Model.closure("pump", "just"), -SC, 1e-12),
+         "product of 5/6, 4/3, 4/3, 2/3 = " + r + " against 80/81 = " + (80 / 81)
+         + "; that is " + Model.closure("pump", "just").toFixed(9) + " cents");
+  }
+
+  /* 3. twelve pure fifths against seven octaves */
+  {
+    const r = Math.pow(3 / 2, 12) / Math.pow(2, 7);
+    push("twelve pure fifths overshoot seven octaves by 531441/524288",
+         Math.abs(r - Model.PYTHAGOREAN) < 1e-12 && near(PC, 23.460, 0.001)
+         && near(Model.closure("circle", "just"), PC, 1e-9),
+         "(3/2)^12 / 2^7 = " + r + " against 531441/524288 = " + Model.PYTHAGOREAN
+         + "; " + PC.toFixed(6) + " cents");
+  }
+
+  /* 4. equal temperament shares that comma out twelve ways */
+  push("each equal-tempered fifth is flat by exactly one twelfth of the Pythagorean comma",
+       near(Model.fifth("just") - 700, PC / 12, 0.001)
+       && near(Model.fifth("just") - 700, 1.955, 0.001),
+       "pure fifth " + Model.fifth("just").toFixed(6) + " cents, less 700 = "
+       + (Model.fifth("just") - 700).toFixed(6) + "; comma / 12 = " + (PC / 12).toFixed(6));
+
+  /* 5. n times round is n commas, because cents are logarithms */
+  {
+    let worst = 0;
+    for (let n = 1; n <= 20; n++){
+      const d = Model.drifts("pump", "just", n)[n - 1];
+      worst = Math.max(worst, Math.abs(d + n * SC));
+    }
+    push("drift after n times round is exactly n commas, out to twenty",
+         worst < 1e-9, "worst gap over n = 1..20 is " + worst.toExponential(3) + " cents");
+  }
+
+  /* 6. the drift is a property of the route, not of pure tuning */
+  {
+    let r = 1;
+    for (const mv of Model.progressions.plain.moves) r *= mv.j;
+    push("I IV V closes exactly in the same pure tuning that breaks the pump",
+         Math.abs(r - 1) < 1e-15 && Math.abs(Model.closure("plain", "just")) < 1e-12,
+         "4/3 x 9/8 x 2/3 = " + r + ", drift " + Model.closure("plain", "just").toExponential(3)
+         + " cents, against the pump's " + Model.closure("pump", "just").toFixed(3));
+  }
+
+  /* 7. both tempered tunings close the pump, and equal closes the circle too */
+  push("tempering closes the pump; only equal temperament also closes the circle",
+       Math.abs(Model.closure("pump", "meantone")) < 1e-12
+       && Math.abs(Model.closure("pump", "equal")) < 1e-12
+       && Math.abs(Model.closure("circle", "equal")) < 1e-9
+       && Math.abs(Model.closure("circle", "meantone") + 41.059) < 0.001,
+       "pump: meantone " + Model.closure("pump", "meantone").toExponential(2)
+       + ", equal " + Model.closure("pump", "equal").toExponential(2)
+       + "; circle: equal " + Model.closure("circle", "equal").toExponential(2)
+       + ", meantone " + Model.closure("circle", "meantone").toFixed(3) + " (the wolf)");
+
+  /* 8. what quarter-comma meantone is buying */
+  {
+    const f = Model.fifth("meantone"), third = 4 * f - 2400;
+    push("the quarter-comma fifth is the one that makes the major third exactly pure",
+         near(f, 696.578, 0.001) && near(third, Model.cents(5 / 4), 1e-9)
+         && near(third, 386.314, 0.001),
+         "fifth " + f.toFixed(6) + " cents, four of them less two octaves = " + third.toFixed(6)
+         + " against a pure 5/4 at " + Model.cents(5 / 4).toFixed(6));
+  }
+
+  /* 9. and what equal temperament pays for closing both loops */
+  push("the equal-tempered major third is 13.686 cents sharp of pure",
+       near(400 - Model.cents(5 / 4), 13.686, 0.001) && near(Model.cents(5 / 4), 386.314, 0.001),
+       "400 against " + Model.cents(5 / 4).toFixed(6) + " is "
+       + (400 - Model.cents(5 / 4)).toFixed(6) + " cents");
+
+  /* 10. the two commas are genuinely different numbers */
+  push("the syntonic and Pythagorean commas differ by the schisma",
+       near(PC - SC, 1.954, 0.001) && near(PC - SC, Model.cents(32805 / 32768), 1e-9),
+       PC.toFixed(6) + " less " + SC.toFixed(6) + " = " + (PC - SC).toFixed(6)
+       + " cents, which is 32805/32768 at " + Model.cents(32805 / 32768).toFixed(6));
+
+  /* 11. the walk and the closed form agree, step for step */
+  {
+    let worst = 0;
+    for (const p of ["pump", "plain", "circle"]) for (const t of ["just", "meantone", "equal"])
+      for (let c = 1; c <= 8; c++){
+        const d = Model.drifts(p, t, c)[c - 1];
+        worst = Math.max(worst, Math.abs(d - c * Model.closure(p, t)));
+      }
+    push("stepping through and multiplying out give the same answer",
+         worst < 1e-9, "worst gap across 3 progressions x 3 tunings x 8 cycles is "
+         + worst.toExponential(3) + " cents");
+  }
+
+  /* 12. nothing blows up anywhere the controls reach */
+  {
+    let bad = 0, n = 0;
+    for (const p of ["pump", "plain", "circle"]) for (const t of ["just", "meantone", "equal"])
+      for (let c = 1; c <= 20; c++){
+        for (const pt of Model.walk(p, t, c)){ n++; if (!Number.isFinite(pt.pitch)) bad++; }
+      }
+    push("finite everywhere the controls reach",
+         bad === 0, bad + " non-finite pitches in " + n.toLocaleString("en")
+         + " steps across every progression, tuning and cycle count");
+  }
+
+  return out;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

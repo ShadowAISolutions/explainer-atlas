@@ -43,6 +43,67 @@ files in `AUDIT/` before starting any batch.
 
 ## Batches
 
+### batch/018 - 2026-09-20
+- merged: antenna-radiation-pattern, comma-pump-drift, discounting-and-npv,
+  syllable-weight-and-stress, evolutionarily-stable-strategy
+- blocked: none
+- patterns: spatial-explore, step-through, time-scrubber, build-from-parts,
+  perturb-and-observe
+- queue: 37 remaining, above the refill threshold of 20. AUDIT/004 falls due
+  after batch/020.
+- learned:
+  - **A disabled button does not just look dead, it hangs the verifier.** The
+    control sweep clicks every button inside `[data-role="controls"]`, and
+    Playwright waits for an element to become enabled before clicking, so a
+    `disabled` button costs a 30-second timeout and fails the page. The NPV page
+    hit this by greying out "jump to the second zero" when a cash flow had only
+    one. The fix is better anyway: leave the button live and make its label say
+    what it will do - "No second zero here" - so the reader learns something
+    from a control that has nothing to do.
+  - **The stage column is about 513 pixels wide at a 1280 viewport, not 1280.**
+    Two pages this batch set their narrow-layout threshold at 520 and 560, which
+    meant the wide layout and the full-length labels never appeared in the
+    verifier's own main screenshot - the page was reviewed in phone mode at desk
+    width without anyone noticing. Keep the threshold at or below about 440, and
+    check the 1280 screenshot actually shows the wide layout.
+  - **A pane header and its key share one line, so measure before drawing.** The
+    stable-strategy page printed "above zero / below zero" straight through the
+    end of its own header. Headers go left, keys go right, and the key is
+    dropped when the header reaches it - never printed over. A key should never
+    be the only place a colour is explained, which makes dropping it safe.
+  - **Label an endpoint on the side outside the line's own vertical span.** At
+    the left end of a monotone line the safe side is above when that end is the
+    higher one and below when it is the lower one; at the right end it reverses.
+    Choosing by the sign of the value instead puts the label exactly where the
+    line is heading, which is what happened twice before the rule was written
+    down. Same family as batch/017's "a key in the corner the data vacates".
+  - **An empty frame is a defect the verifier cannot see.** The stable-strategy
+    page opened with a blank trajectory pane because nothing had been simulated
+    yet, and a pane that is blank until the reader finds the right button is a
+    third of the figure wasted. Every parameter change now plays the dynamics
+    out, so moving a slider always answers "and then what", and the button
+    extends the run rather than starting it.
+  - **Fit a plot axis to the ground the data actually covers.** The same pane
+    was still blank on a 0-100 per cent axis when the share only ever moved
+    between 1.0 and 0.31 per cent. Scaling the axis to the run's own maximum
+    turned a flat line on the floor into the decay curve the page is about.
+  - **Four more false task-file assertions, running total 39.** Task 134 claimed
+    `arccos(-phi/kd)` gives the main lobe of a two-element array - most settings
+    have several lobes, and the formula misses one by up to 143.7 degrees - and
+    that the number of nulls follows from the spacing alone, when it depends on
+    the phase too (the same spacing gives 2, 1 and 1 nulls at three phases).
+    Task 122 claimed two sign changes in a cash flow give two internal rates of
+    return; `[-1000, 2500, -1600]` has two sign changes, a negative discriminant
+    and no real rate at all. Task 140 claimed the hawk-dove stable share is V/C
+    full stop; that holds only while a fight costs more than the prize, and
+    above that the stable answer is pure hawk. Each page asserts the true
+    statement **and** the counterexample, as since batch/014.
+  - **The screenshot review found a real defect on all five pages again**, the
+    twelfth batch running: a key sitting on its own header, a label on the curve
+    it named, a trace sentence truncated off the right edge, indigo meaning both
+    "heavy syllable" and "stress on the penult" in the same figure, and a plot
+    pane that drew nothing at all. Not one of them was visible to `verify.mjs`.
+
 ### batch/017 — 2026-09-20
 - merged: taylor-series-remainder, photoelectric-threshold,
   branch-prediction-cost, allometric-scaling-metabolism,

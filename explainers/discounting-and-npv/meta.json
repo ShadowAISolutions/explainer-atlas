@@ -1,0 +1,17 @@
+{
+  "slug": "discounting-and-npv",
+  "title": "The Number That Decides It Is The One Nobody Can Measure",
+  "domain": "economics",
+  "difficulty": 2,
+  "summary": "Scrub the discount rate and watch two projects trade places at 10.03 per cent, then meet a cash flow with two internal rates of return and another, with the same two sign changes, that has none.",
+  "prerequisites": [],
+  "tags": ["net-present-value", "discounting", "internal-rate-of-return", "annuity", "perpetuity", "cost-benefit"],
+  "interaction_pattern": "time-scrubber",
+  "sources": [
+    { "title": "Brealey, Myers and Allen, Principles of Corporate Finance, chapters 2 and 5", "url": "https://www.mheducation.com/highered/product/principles-corporate-finance-brealey-myers/M9781260013900.html" },
+    { "title": "HM Treasury, The Green Book: appraisal and evaluation in central government", "url": "https://www.gov.uk/government/publications/the-green-book-appraisal-and-evaluation-in-central-governent" },
+    { "title": "Hazen, A new perspective on multiple internal rates of return, The Engineering Economist 48 (2003) 31-51", "url": "https://doi.org/10.1080/00137910308965050" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 12
+}

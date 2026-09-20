@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Only Thing It Cannot Beat Is A Copy Of Itself &#8212; Explainer Atlas</title>
+<meta name="description" content="Inject a mutant into a population and watch one line decide its fate: the fitness gap runs from what happens when the mutant is rare to what happens when it is everything.">
+<style>
+:root{
+  --bg:#e7eee9; --panel:#f8fbf8; --ink:#15211b; --muted:#5b6b62; --line:#ccdad1;
+  --accent:#1f6b4a; --accent-soft:#dbeae1; --warn:#a8531c;
+  --hawk:#bf4a16; --dove:#245e86; --mut:#7a3ea8; --zero:#8d9b93;
+  --radius:9px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.5rem,1.05rem + 2vw,2.25rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.05rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#101815; --panel:#16201c; --ink:#e3ece7; --muted:#93a59b; --line:#25332c;
+    --accent:#5fc295; --accent-soft:#14261e; --warn:#e2a06a;
+    --hawk:#f08a4e; --dove:#6fb2df; --mut:#c49ae8; --zero:#6c7d74;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.6 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.12; margin:0 0 .4em; letter-spacing:-.018em}
+.kicker{margin:0 0 .35em; color:var(--accent); font:600 .74rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.13em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.85rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.82rem; margin:0}
+.checkrow{display:flex; align-items:center; gap:.55em}
+.checkrow label{font-weight:600}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+input[type=checkbox]{accent-color:var(--accent); width:18px; height:18px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .7em; min-height:40px}
+select{width:100%}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.07em}
+.readout dd{margin:.18em 0 0; font:600 1rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.12rem; margin:1.75em 0 .45em; letter-spacing:-.008em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.92rem; background:var(--accent-soft); padding:.7em .85em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Game theory</p>
+  <h1>The Only Thing It Cannot Beat Is A Copy Of Itself</h1>
+  <p class="standfirst">Drop a handful of mutants into a settled population. Whether they die out is decided by one straight line, and the two ends of that line ask completely different questions.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1040" height="760" role="img"
+            aria-label="Three panels: a bar showing what share of the population is mutant, a straight line giving the mutant's fitness advantage as a function of that share, and the path the share takes over successive generations."></canvas>
+    <figcaption>Top: the population, mutants on the left. Middle: the mutant's fitness minus the incumbent's, drawn against how common the mutant is. Below zero means the mutants are losing. Bottom: where that pushes the share, generation by generation.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <label for="game">Game</label>
+      <select id="game">
+        <option value="hd" selected>Hawk and Dove</option>
+        <option value="weak">Two ways to be polite</option>
+        <option value="pd">Prisoner's dilemma</option>
+      </select>
+      <p class="hint" id="ghint">A contest over something worth V, where fighting costs C.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="V">Value of the resource, V</label>
+        <output id="Vout" for="V">2.00</output>
+      </div>
+      <input type="range" id="V" min="0.2" max="8" step="0.05" value="2">
+      <p class="hint">Hawk and Dove only. The other two games have fixed payoffs.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="C">Cost of a fight, C</label>
+        <output id="Cout" for="C">5.00</output>
+      </div>
+      <input type="range" id="C" min="0.2" max="8" step="0.05" value="5">
+      <p class="hint">Push C below V and the stable answer stops being a mix.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="inc">Incumbent plays hawk with probability</label>
+        <output id="incout" for="inc">0.40</output>
+      </div>
+      <input type="range" id="inc" min="0" max="1" step="0.005" value="0.4">
+      <p class="hint" id="inchint">The resident strategy everyone currently uses.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="q">Mutant plays hawk with probability</label>
+        <output id="qout" for="q">1.00</output>
+      </div>
+      <input type="range" id="q" min="0" max="1" step="0.005" value="1">
+      <p class="hint">The one thing the newcomers do differently.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="eps">Mutants injected</label>
+        <output id="epsout" for="eps">1.0%</output>
+      </div>
+      <input type="range" id="eps" min="0.002" max="0.35" step="0.002" value="0.01">
+      <p class="hint">What share of the population arrives as mutants.</p>
+    </div>
+
+    <div class="control checkrow">
+      <input type="checkbox" id="trail" checked>
+      <label for="trail">Draw the whole path</label>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Mutant share now</dt><dd id="rx">1.00%</dd></div>
+      <div><dt>Gap when rare</dt><dd id="rg0">0.0000</dd></div>
+      <div><dt>Gap when everything</dt><dd id="rg1">0.0000</dd></div>
+      <div><dt>Verdict</dt><dd id="rv">&#8212;</dd></div>
+    </dl>
+
+    <button type="button" id="run">Run 1000 more generations</button>
+    <button type="button" id="snap">Put the incumbent at the stable strategy</button>
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>A population has settled on one way of behaving. A few individuals turn up
+     doing something else. Either they fade out over a few generations and the
+     population is unchanged, or they spread and the old way is gone. A strategy
+     is called evolutionarily stable when no rare newcomer can spread against it,
+     and the whole of that definition is visible in the middle panel: the mutant's
+     fitness minus the incumbent's, drawn against how common the mutant is.</p>
+
+  <p>That gap is a straight line, and it is worth being precise about why. Write
+     the payoff to a player using strategy a against one using b as E(a, b). If a
+     share x of the population is mutant, a mutant meets another mutant a fraction
+     x of the time and an incumbent the rest of the time, so the two fitnesses are
+     mixtures with weights x and 1 minus x. Subtract them and every term is either
+     constant or proportional to x. The line is fixed by its ends.</p>
+
+  <p class="math">gap(x) = (1&#8722;x)&#183;[E(q,p) &#8722; E(p,p)] + x&#183;[E(q,q) &#8722; E(p,q)]</p>
+
+  <p>The left end asks whether a lone mutant, surrounded entirely by incumbents,
+     does better than an incumbent does. The right end asks something quite
+     different: in a world made of mutants, would a single incumbent be doing
+     better? Those are the two conditions in the textbook definition, and they are
+     the two endpoints of one line. Stability just means the line sits below zero
+     for small x.</p>
+
+  <h2>Being unbeatable without being the best reply to yourself</h2>
+
+  <p>Set the game to Hawk and Dove and press the button that moves the incumbent
+     to the stable strategy. The left end of the line drops to exactly zero. That
+     is not a coincidence or a rounding artefact. At the mix where hawk and dove
+     earn the same, <em>every</em> strategy earns the same, because any mix of two
+     equally good options is just as good. A lone mutant is doing precisely as
+     well as the residents. It has no way in.</p>
+
+  <p>So the first condition gives nothing, and the whole weight falls on the
+     second. It comes out beautifully: the incumbent's advantage in a field of
+     mutants is exactly C&#183;(p* &#8722; q)&#178;&#8239;/&#8239;2, a square, so it is positive for
+     every mutant that differs at all. The further the newcomers stray, the worse
+     they do &#8212; against each other. The stable mix is not the best answer to
+     itself. It is merely the only thing that cannot be improved on from the
+     outside, which turns out to be the property that matters.</p>
+
+  <h2>Where Nash is not enough</h2>
+
+  <p>Switch to the second game. Two habits pay identically against the resident
+     habit, so neither can be undercut and both are Nash equilibria. But one of
+     them copes with meeting itself and the other does not. Start from the one
+     that does not and the left end of the line is zero again &#8212; and the right
+     end is positive. The mutants cannot get in quickly, but they are never pushed
+     back either, and drift is enough: the bottom panel shows one per cent
+     crawling, then turning over the whole population inside five hundred
+     generations. Every stable strategy is a Nash
+     equilibrium; this is a Nash equilibrium that is not stable.</p>
+
+  <h2>What to try</h2>
+
+  <p>Leave the incumbent at the stable mix and sweep the mutant slider from end to
+     end: the left endpoint never moves off zero, and the right endpoint traces a
+     parabola. Then drag the incumbent away from the mix by a little and the left
+     endpoint lifts off zero &#8212; now invasion is easy, and the population is
+     dragged back toward V&#8239;/&#8239;C from wherever you put it. Finally raise V
+     above C. The cost of fighting no longer exceeds the prize, V&#8239;/&#8239;C is
+     larger than one and is not a share of anything, and the stable answer is no
+     longer a mix at all: it is hawk, every time.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &#183; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+
+/* ---- MODEL ------------------------------------------------------------- */
+/* A strategy is a single number: the probability of playing the first of the
+   two moves. Payoffs live in a 2x2 matrix read as A[mine][theirs].          */
+const Model = {
+  DT: 0.25,
+
+  games: {
+    hd:   { title: "Hawk and Dove", one: "hawk", two: "dove", vc: true,
+            blurb: "A contest over something worth V, where fighting costs C." },
+    weak: { title: "Two ways to be polite", one: "firm", two: "yielding", vc: false,
+            blurb: "Both moves earn the same against a yielder. Only one copes with meeting itself." },
+    pd:   { title: "Prisoner's dilemma", one: "defect", two: "cooperate", vc: false,
+            blurb: "Defecting is better whatever the other player does, so the first condition settles it." }
+  },
+
+  matrix(game, V, C){
+    if (game === "weak") return [[1, 1], [0, 1]];
+    if (game === "pd")   return [[1, 5], [0, 3]];
+    return [[(V - C) / 2, V], [0, V / 2]];
+  },
+
+  /* expected payoff to a player using mix x against one using mix y */
+  E(A, x, y){
+    return x * (A[0][0] * y + A[0][1] * (1 - y))
+         + (1 - x) * (A[1][0] * y + A[1][1] * (1 - y));
+  },
+
+  /* the mutant's fitness minus the incumbent's, at mutant share x.
+     Written as the interpolation between the two ESS conditions. */
+  gap(A, p, q, x){
+    return (1 - x) * (Model.E(A, q, p) - Model.E(A, p, p))
+         + x * (Model.E(A, q, q) - Model.E(A, p, q));
+  },
+
+  /* The same number built the other way round: form each type's fitness in a
+     population that is x mutant, then subtract. Used to check gap(). */
+  gapDirect(A, p, q, x){
+    const fm = (1 - x) * Model.E(A, q, p) + x * Model.E(A, q, q);
+    const fi = (1 - x) * Model.E(A, p, p) + x * Model.E(A, p, q);
+    return fm - fi;
+  },
+
+  step(A, p, q, x, dt){
+    const nx = x + (dt === undefined ? Model.DT : dt) * x * (1 - x) * Model.gap(A, p, q, x);
+    return nx < 0 ? 0 : (nx > 1 ? 1 : nx);
+  },
+
+  run(A, p, q, x0, n, dt){
+    const out = [x0];
+    let x = x0;
+    for (let i = 0; i < n; i++){ x = Model.step(A, p, q, x, dt); out.push(x); }
+    return out;
+  },
+
+  /* the interior mix at which both moves earn the same, if there is one */
+  equalizer(A){
+    const den = (A[0][0] - A[1][0]) - (A[0][1] - A[1][1]);
+    if (Math.abs(den) < 1e-12) return null;
+    const p = -(A[0][1] - A[1][1]) / den;
+    return (p > 1e-9 && p < 1 - 1e-9) ? p : null;
+  },
+
+  /* p is an ESS if no other strategy can spread against it. Checked by the
+     definition itself rather than by simulating: scan every rival. */
+  isESS(A, p, steps){
+    const N = steps || 400;
+    for (let k = 0; k <= N; k++){
+      const q = k / N;
+      if (Math.abs(q - p) < 1e-9) continue;
+      const first = Model.E(A, p, p) - Model.E(A, q, p);
+      if (first < -1e-12) return false;
+      if (first <= 1e-12 && Model.E(A, p, q) - Model.E(A, q, q) <= 1e-12) return false;
+    }
+    return true;
+  },
+
+  essList(A, steps){
+    const out = [];
+    const eq = Model.equalizer(A);
+    if (eq !== null && Model.isESS(A, eq, steps)) out.push(eq);
+    for (const p of [0, 1]) if (Model.isESS(A, p, steps)) out.push(p);
+    return out;
+  },
+
+  /* symmetric Nash: nothing does strictly better against p than p does */
+  isNash(A, p, steps){
+    const N = steps || 400;
+    for (let k = 0; k <= N; k++)
+      if (Model.E(A, k / N, p) - Model.E(A, p, p) > 1e-9) return false;
+    return true;
+  },
+
+  /* Hawk and Dove has a closed form, but only while a fight costs more than
+     the prize is worth. Above that the honest answer is pure hawk. */
+  hawkDoveStable(V, C){ return V >= C ? 1 : V / C; },
+
+  /* and at that mix the incumbent's edge among mutants is exactly a square */
+  hawkDoveEdge(V, C, q){
+    const p = V / C;
+    return (C / 2) * (p - q) * (p - q);
+  }
+};
+
+/* ---- STATE ------------------------------------------------------------- */
+const defaults = { game: "hd", V: 2, C: 5, inc: 0.4, q: 1, eps: 0.01, trail: true };
+const state = Object.assign({}, defaults);
+state.hist = [defaults.eps];
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+let W = 1040, H = 760, NARROW = false;
+const G = { x0: 0, x1: 0, pop: {}, gap: {}, traj: {} };
+
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function palette(){
+  return { bg: css("--panel"), ink: css("--ink"), muted: css("--muted"), line: css("--line"),
+           accent: css("--accent"), hawk: css("--hawk"), dove: css("--dove"),
+           mut: css("--mut"), zero: css("--zero"), panel: css("--panel") };
+}
+
+/* A label with its own opaque backing, flipped to the other side of its
+   anchor when it would run past the frame. Always drawn left-aligned from a
+   pre-computed x, because setting textAlign as well double-shifts the text. */
+function chip(text, x, y, align, baseline, fs, colour, C){
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  const w = ctx.measureText(text).width, h = fs + 5;
+  let bx = align === "right" ? x - w : (align === "center" ? x - w / 2 : x);
+  if (bx + w > W - 2) bx = Math.min(W - 2 - w, x - w - 6);
+  if (bx < 2) bx = 2;
+  const by = baseline === "middle" ? y - h / 2 : (baseline === "bottom" ? y - h : y);
+  ctx.fillStyle = C.panel;
+  ctx.globalAlpha = 0.9;
+  ctx.fillRect(bx - 3, by - 1, w + 6, h + 2);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = colour;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText(text, bx, by + 2);
+  ctx.textBaseline = "alphabetic";
+  return { x: bx, w: w };
+}
+
+function fitCanvas(){
+  const host = cv.parentElement;
+  const avail = Math.floor(host.clientWidth - 24);
+  W = Math.max(300, Math.min(1040, avail > 0 ? avail : 1040));
+  NARROW = W < 440;
+
+  const fs = NARROW ? 9 : 10;
+  ctx.font = fs + "px " + css("--font-mono");
+  /* the left margin is whatever the widest axis label actually needs */
+  const lm = Math.ceil(Math.max(ctx.measureText("-00.00").width, ctx.measureText("100%").width)) + 12;
+  G.x0 = lm;
+  G.x1 = W - (NARROW ? 8 : 14);
+
+  const popH  = NARROW ? 54 : 62;
+  const gapH  = NARROW ? 186 : 238;
+  const trajH = NARROW ? 160 : 206;
+  const head  = NARROW ? 20 : 23;
+  const foot  = NARROW ? 22 : 24;
+
+  let y = 6;
+  G.pop  = { y0: y + head, y1: y + head + popH };  y = G.pop.y1 + foot + 10;
+  G.gap  = { y0: y + head, y1: y + head + gapH };  y = G.gap.y1 + foot + 10;
+  G.traj = { y0: y + head, y1: y + head + trajH }; y = G.traj.y1 + foot;
+
+  H = y + 4;
+  cv.width = Math.round(W * SS); cv.height = Math.round(H * SS);
+  cv.style.width = "100%"; cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+/* ---- DRAWING ----------------------------------------------------------- */
+/* Header on the left of the line above the frame, key on the right of the
+   same line. Keys belong outside the frame, but the two then share one line,
+   so the key is measured against the header and dropped rather than printed
+   over it. Nothing in a key is ever the only place a colour is explained. */
+function headerKey(text, items, P, C){
+  const fs = NARROW ? 9 : 10;
+  ctx.font = fs + "px " + css("--font-mono");
+  ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(text, 2, P.y0 - 8);
+  if (!items || !items.length) return;
+  const hw = 2 + ctx.measureText(text).width;
+
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  let kw = 0;
+  for (const it of items) kw += 11 + 4 + ctx.measureText(it.t).width + 12;
+  kw -= 12;
+  const kx0 = G.x1 - kw;
+  if (kx0 < hw + 14) return;
+
+  let kx = kx0;
+  const ky = P.y0 - 16;
+  for (const it of items){
+    ctx.fillStyle = it.c; ctx.fillRect(kx, ky, 11, 8);
+    ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.fillText(it.t, kx + 15, ky + 8);
+    kx += 11 + 4 + ctx.measureText(it.t).width + 12;
+  }
+}
+
+/* keeps an exact zero from printing as a minus sign and four noughts */
+function sig(v, d){
+  const s = v.toFixed(d);
+  return /^-0\.?0*$/.test(s) ? s.slice(1) : s;
+}
+
+function drawPopulation(C, g){
+  const P = G.pop, w = G.x1 - G.x0, h = P.y1 - P.y0;
+  const x = state.hist[state.hist.length - 1];
+  headerKey("the population, mutants on the left",
+            [{ c: C.mut, t: "mutant" }, { c: C.accent, t: "incumbent" }], P, C);
+
+  ctx.fillStyle = C.accent; ctx.fillRect(G.x0, P.y0, w, h);
+  ctx.fillStyle = C.mut;    ctx.fillRect(G.x0, P.y0, Math.max(x > 0 ? 1.2 : 0, w * x), h);
+
+  /* the ruling that separates them, and the number on it */
+  ctx.strokeStyle = C.panel; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(G.x0 + w * x, P.y0); ctx.lineTo(G.x0 + w * x, P.y1); ctx.stroke();
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  ctx.strokeRect(G.x0 + 0.5, P.y0 + 0.5, w - 1, h - 1);
+
+  const pct = (x * 100).toFixed(x < 0.1 ? 2 : 1) + "%";
+  chip(pct + " mutant", G.x0 + w * x + 6, (P.y0 + P.y1) / 2,
+       x > 0.6 ? "right" : "left", "middle", NARROW ? 9 : 11, C.ink, C);
+
+  ctx.font = (NARROW ? 9 : 10) + "px " + css("--font-mono");
+  ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("generation " + (state.hist.length - 1), G.x0, P.y1 + 6);
+  ctx.textAlign = "right";
+  ctx.fillText(g.verdict, G.x1, P.y1 + 6);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+}
+
+function drawGap(C, g){
+  const P = G.gap, w = G.x1 - G.x0, h = P.y1 - P.y0;
+  headerKey("the mutant's fitness minus the incumbent's", null, P, C);
+
+  const m = Math.max(1e-9, Math.abs(g.g0), Math.abs(g.g1)) * 1.5;
+  const X = u => G.x0 + w * u;
+  const Y = v => P.y0 + h * (0.5 - 0.5 * v / m);
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(G.x0, P.y0, w, h); ctx.clip();
+
+  /* zero is the only line that matters, so give it weight */
+  ctx.strokeStyle = C.zero; ctx.lineWidth = 1.3; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(G.x0, Y(0)); ctx.lineTo(G.x1, Y(0)); ctx.stroke();
+
+  /* the line itself, coloured by which side of zero each end sits on */
+  const seg = 160;
+  for (let i = 0; i < seg; i++){
+    const u0 = i / seg, u1 = (i + 1) / seg;
+    const v0 = Model.gap(g.A, state.inc, state.q, u0), v1 = Model.gap(g.A, state.inc, state.q, u1);
+    ctx.strokeStyle = (v0 + v1) / 2 > 0 ? C.hawk : C.dove;
+    ctx.lineWidth = 2.6;
+    ctx.beginPath(); ctx.moveTo(X(u0), Y(v0)); ctx.lineTo(X(u1), Y(v1)); ctx.stroke();
+  }
+
+  /* where the population actually is on that line */
+  const xs = state.hist[state.hist.length - 1];
+  const vs = Model.gap(g.A, state.inc, state.q, xs);
+  ctx.fillStyle = C.mut;
+  ctx.beginPath(); ctx.arc(X(xs), Y(vs), 5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = C.panel; ctx.lineWidth = 1.6; ctx.stroke();
+  ctx.restore();
+
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  ctx.strokeRect(G.x0 + 0.5, P.y0 + 0.5, w - 1, h - 1);
+
+  /* The two ends are the two conditions, so each gets named. The line is
+     straight and monotone, so the safe side of an endpoint is whichever side
+     is outside the line's own vertical span: at the higher end that is above,
+     at the lower end below. Putting the label on the other side parks it
+     exactly where the line is going. */
+  const fs = NARROW ? 9 : 10, chH = fs + 5;
+  const endChip = (text, ax, align, v, above, colour) => {
+    let y = above ? Y(v) - 9 - fs : Y(v) + 9;
+    y = Math.max(P.y0 + 3, Math.min(P.y1 - chH - 3, y));
+    chip(text, ax, y, align, "top", fs, colour, C);
+  };
+  endChip("when rare: " + sig(g.g0, 4), G.x0 + 6, "left", g.g0,
+          g.g0 >= g.g1, g.g0 > 1e-12 ? C.hawk : C.dove);
+  endChip("when everything: " + sig(g.g1, 4), G.x1 - 6, "right", g.g1,
+          g.g1 > g.g0, g.g1 > 1e-12 ? C.hawk : C.dove);
+
+  /* axes */
+  ctx.font = fs + "px " + css("--font-mono");
+  ctx.fillStyle = C.muted; ctx.textBaseline = "top";
+  ctx.textAlign = "left";  ctx.fillText("0%", G.x0, P.y1 + 6);
+  ctx.textAlign = "center"; ctx.fillText("mutant share", (G.x0 + G.x1) / 2, P.y1 + 6);
+  ctx.textAlign = "right"; ctx.fillText("100%", G.x1, P.y1 + 6);
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText("+" + m.toFixed(2), G.x0 - 6, P.y0 + 8);
+  ctx.fillText("0", G.x0 - 6, Y(0));
+  ctx.fillText("-" + m.toFixed(2), G.x0 - 6, P.y1 - 8);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+}
+
+function drawTrajectory(C, g){
+  const P = G.traj, w = G.x1 - G.x0, h = P.y1 - P.y0;
+  const hist = state.hist, n = Math.max(1, hist.length - 1);
+  headerKey("the mutant share, generation by generation", null, P, C);
+
+  let top = 0;
+  for (const v of hist) if (v > top) top = v;
+  top = Math.max(0.01, Math.min(1, top * 1.15));
+  const X = i => G.x0 + w * (i / n);
+  const Y = v => P.y1 - h * (v / top);
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(G.x0, P.y0, w, h); ctx.clip();
+
+  /* gridlines at the two ends and the middle */
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(G.x0, Y(top / 2)); ctx.lineTo(G.x1, Y(top / 2)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  if (state.trail && hist.length > 1){
+    ctx.strokeStyle = C.mut; ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    for (let i = 0; i < hist.length; i++){
+      const px = X(i), py = Y(hist[i]);
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = C.mut;
+  ctx.beginPath(); ctx.arc(X(hist.length - 1), Y(hist[hist.length - 1]), 4.5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = C.panel; ctx.lineWidth = 1.6; ctx.stroke();
+
+  /* where it started, so the direction of travel is unmistakable */
+  ctx.strokeStyle = C.zero; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(G.x0, Y(hist[0])); ctx.lineTo(G.x1, Y(hist[0])); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  ctx.strokeRect(G.x0 + 0.5, P.y0 + 0.5, w - 1, h - 1);
+
+  const fs = NARROW ? 9 : 10;
+  ctx.font = fs + "px " + css("--font-mono");
+  ctx.fillStyle = C.muted;
+  const pc = v => (v * 100).toFixed(v < 0.1 ? (v < 0.01 ? 2 : 1) : 0) + "%";
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText(pc(top), G.x0 - 6, P.y0 + 7);
+  ctx.fillText(pc(top / 2), G.x0 - 6, (P.y0 + P.y1) / 2);
+  ctx.fillText("0%", G.x0 - 6, P.y1 - 7);
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("0", G.x0, P.y1 + 6);
+  ctx.textAlign = "right";
+  ctx.fillText(n + " generation" + (n === 1 ? "" : "s"), G.x1, P.y1 + 6);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+}
+
+/* ---- RENDER ------------------------------------------------------------ */
+function current(){
+  const A = Model.matrix(state.game, state.V, state.C);
+  const g0 = Model.gap(A, state.inc, state.q, 0);
+  const g1 = Model.gap(A, state.inc, state.q, 1);
+  let verdict;
+  if (Math.abs(state.inc - state.q) < 1e-9) verdict = "the mutant is the incumbent";
+  else if (g0 > 1e-9) verdict = "mutants spread";
+  else if (g0 < -1e-9) verdict = "mutants die out";
+  else if (g1 < -1e-9) verdict = "mutants die out, slowly";
+  else if (g1 > 1e-9) verdict = "mutants drift in";
+  else verdict = "nothing separates them";
+  return { A: A, g0: g0, g1: g1, verdict: verdict };
+}
+
+function render(){
+  fitCanvas();
+  const C = palette(), g = current();
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = C.panel; ctx.fillRect(0, 0, W, H);
+
+  drawPopulation(C, g);
+  drawGap(C, g);
+  drawTrajectory(C, g);
+
+  const G0 = Model.games[state.game];
+  el("Vout").textContent = state.V.toFixed(2);
+  el("Cout").textContent = state.C.toFixed(2);
+  el("incout").textContent = state.inc.toFixed(3);
+  el("qout").textContent = state.q.toFixed(3);
+  el("epsout").textContent = (state.eps * 100).toFixed(1) + "%";
+  el("ghint").textContent = G0.blurb;
+  el("inchint").textContent = "The resident strategy: plays " + G0.one + " this often, "
+                           + G0.two + " otherwise.";
+
+  const x = state.hist[state.hist.length - 1];
+  el("rx").textContent = (x * 100).toFixed(x < 0.1 ? 2 : 1) + "%";
+  el("rg0").textContent = sig(g.g0, 4);
+  el("rg1").textContent = sig(g.g1, 4);
+  el("rv").textContent = g.verdict;
+
+  /* the snap button says what it will actually do, rather than going dead */
+  const list = Model.essList(g.A, 200);
+  el("snap").textContent = list.length === 0
+    ? "This game has no stable strategy"
+    : (Math.abs(list[0] - state.inc) < 5e-3
+        ? "The incumbent is already stable"
+        : "Put the incumbent at the stable strategy");
+}
+
+const RUN = 1000;
+function advance(n){
+  const A = Model.matrix(state.game, state.V, state.C);
+  let x = state.hist[state.hist.length - 1];
+  for (let i = 0; i < n; i++){ x = Model.step(A, state.inc, state.q, x); state.hist.push(x); }
+  if (state.hist.length > 6001) state.hist = state.hist.slice(state.hist.length - 6001);
+}
+function reseed(){ state.hist = [state.eps]; advance(RUN); }
+reseed();
+
+function bindRange(id, keyName, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[keyName] = parse(input.value); reseed(); render(); });
+}
+bindRange("V", "V", parseFloat);
+bindRange("C", "C", parseFloat);
+bindRange("inc", "inc", parseFloat);
+bindRange("q", "q", parseFloat);
+bindRange("eps", "eps", parseFloat);
+
+el("game").addEventListener("input", () => { state.game = el("game").value; reseed(); render(); });
+el("trail").addEventListener("input", () => { state.trail = el("trail").checked; render(); });
+
+el("run").addEventListener("click", () => { advance(RUN); render(); });
+
+el("snap").addEventListener("click", () => {
+  const A = Model.matrix(state.game, state.V, state.C);
+  const list = Model.essList(A, 200);
+  if (list.length){
+    state.inc = Math.round(list[0] * 200) / 200;
+    el("inc").value = String(state.inc);
+  }
+  reseed(); render();
+});
+
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("game").value = defaults.game;
+  el("V").value = defaults.V; el("C").value = defaults.C;
+  el("inc").value = defaults.inc; el("q").value = defaults.q;
+  el("eps").value = defaults.eps; el("trail").checked = defaults.trail;
+  reseed(); render();
+});
+
+let t = 0;
+addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 90); });
+if (matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+render();
+
+/* ---- SELFTEST ---------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+  const rnd = mulberry32(SEED);
+  const M = Model;
+
+  /* 1. Hawk and Dove: at V/C the two moves earn exactly the same. */
+  (function(){
+    let worst = 0;
+    const r = mulberry32(11);
+    for (let k = 0; k < 40; k++){
+      const V = 0.2 + r() * 4, C = V + 0.05 + r() * 6;
+      const A = M.matrix("hd", V, C), p = V / C;
+      worst = Math.max(worst, Math.abs(M.E(A, 1, p) - M.E(A, 0, p)));
+    }
+    push("hawk and dove: hawk and dove earn the same at V/C",
+         worst <= 1e-12,
+         "worst payoff difference over 40 settings " + worst.toExponential(2) + ", expected 0");
+  })();
+
+  /* 2. The task file says the stable share is V/C full stop. It is not: that
+        holds only while C exceeds V. Assert the rule and the counterexample. */
+  (function(){
+    let bad = 0;
+    const r = mulberry32(12);
+    for (let k = 0; k < 400; k++){
+      const V = 0.2 + r() * 8, C = 0.2 + r() * 8;
+      if (C > V && !near(M.hawkDoveStable(V, C), V / C, 1e-15)) bad++;
+    }
+    const A = M.matrix("hd", 3, 2);
+    const hawkWins = M.E(A, 1, 1) - M.E(A, 0, 1);
+    push("V/C is the stable share only while C exceeds V",
+         bad === 0 && M.hawkDoveStable(3, 2) === 1 && hawkWins > 0 && M.isESS(A, 1, 200),
+         "at V=3 C=2 the ratio is 1.5, not a share; pure hawk is the stable answer and "
+         + "beats dove in its own field by " + hawkWins.toFixed(4));
+  })();
+
+  /* 3. Two independent routes to the same gap: the interpolation between the
+        two ESS conditions, and the raw difference of the two fitnesses. */
+  (function(){
+    let worst = 0;
+    const r = mulberry32(13);
+    for (let k = 0; k < 300; k++){
+      const game = ["hd", "weak", "pd"][k % 3];
+      const V = 0.2 + r() * 8, C = 0.2 + r() * 8;
+      const A = M.matrix(game, V, C), p = r(), q = r(), x = r();
+      worst = Math.max(worst, Math.abs(M.gap(A, p, q, x) - M.gapDirect(A, p, q, x)));
+    }
+    push("the gap built two ways agrees",
+         worst <= 1e-12,
+         "interpolation versus raw fitness difference, worst gap over 300 draws "
+         + worst.toExponential(2));
+  })();
+
+  /* 4. It is a straight line, so the midpoint is the mean of the ends. */
+  (function(){
+    let worst = 0;
+    const r = mulberry32(14);
+    for (let k = 0; k < 300; k++){
+      const A = M.matrix(["hd", "weak", "pd"][k % 3], 0.2 + r() * 8, 0.2 + r() * 8);
+      const p = r(), q = r();
+      const mid = M.gap(A, p, q, 0.5), ends = (M.gap(A, p, q, 0) + M.gap(A, p, q, 1)) / 2;
+      worst = Math.max(worst, Math.abs(mid - ends));
+    }
+    push("the gap is linear in the mutant share",
+         worst <= 1e-12,
+         "midpoint versus the mean of the two ends, worst gap " + worst.toExponential(2));
+  })();
+
+  /* 5. At the stable mix the first condition is exactly a tie: every mutant
+        does precisely as well as the residents when it is rare. */
+  (function(){
+    let worst = 0;
+    const r = mulberry32(15);
+    for (let k = 0; k < 200; k++){
+      const V = 0.2 + r() * 4, C = V + 0.05 + r() * 6;
+      const A = M.matrix("hd", V, C), p = V / C;
+      worst = Math.max(worst, Math.abs(M.gap(A, p, r(), 0)));
+    }
+    push("at the stable mix a rare mutant does exactly as well as the residents",
+         worst <= 1e-12,
+         "worst first-condition gap over 200 mutants " + worst.toExponential(2) + ", expected 0");
+  })();
+
+  /* 6. So everything rests on the second, which is exactly C(p*-q)^2/2. */
+  (function(){
+    let worst = 0, least = Infinity;
+    const r = mulberry32(16);
+    for (let k = 0; k < 300; k++){
+      const V = 0.2 + r() * 4, C = V + 0.05 + r() * 6, p = V / C;
+      let q = r(); if (Math.abs(q - p) < 1e-3) q = (q + 0.37) % 1;
+      const A = M.matrix("hd", V, C);
+      const edge = -M.gap(A, p, q, 1);
+      worst = Math.max(worst, Math.abs(edge - M.hawkDoveEdge(V, C, q)));
+      least = Math.min(least, edge);
+    }
+    push("the incumbent's edge among mutants is exactly C(p*-q)squared/2",
+         worst <= 1e-12 && least > 0,
+         "closed form versus the model, worst gap " + worst.toExponential(2)
+         + "; smallest edge over 300 mutants " + least.toExponential(2) + ", always positive");
+  })();
+
+  /* 7. Injecting one per cent at the stable mix shrinks it. */
+  (function(){
+    let bad = 0, least = Infinity;
+    const r = mulberry32(17);
+    for (let k = 0; k < 300; k++){
+      const V = 0.2 + r() * 4, C = V + 0.05 + r() * 6, p = V / C;
+      let q = r(); if (Math.abs(q - p) < 1e-3) q = (q + 0.37) % 1;
+      const A = M.matrix("hd", V, C);
+      const after = M.step(A, p, q, 0.01);
+      if (!(after < 0.01)) bad++;
+      least = Math.min(least, 0.01 - after);
+    }
+    push("a one per cent mutant share at the stable mix shrinks",
+         bad === 0 && least > 0,
+         "300 seeded perturbations, none grew; smallest single-generation fall "
+         + least.toExponential(2));
+  })();
+
+  /* 8. Every evolutionarily stable strategy is a Nash equilibrium. */
+  (function(){
+    let found = 0, notNash = 0;
+    const r = mulberry32(18);
+    for (let k = 0; k < 500; k++){
+      const A = [[r() * 10 - 5, r() * 10 - 5], [r() * 10 - 5, r() * 10 - 5]]
+                  .map(row => row.map(v => Math.round(v * 100) / 100));
+      for (const p of M.essList(A, 120)){ found++; if (!M.isNash(A, p, 120)) notNash++; }
+    }
+    push("every stable strategy is a Nash equilibrium",
+         found >= 300 && notNash === 0,
+         found + " stable strategies across 500 random games, of which "
+         + notNash + " failed the Nash test");
+  })();
+
+  /* 9. The converse fails, and the page shows the game where it fails. */
+  (function(){
+    const A = M.matrix("weak", 0, 0);
+    const nash = M.isNash(A, 0, 400), ess = M.isESS(A, 0, 400);
+    const g0 = M.gap(A, 0, 1, 0), g1 = M.gap(A, 0, 1, 1);
+    push("a Nash equilibrium that is not stable",
+         nash && !ess && near(g0, 0, 1e-12) && near(g1, 1, 1e-12),
+         "yielding is Nash but not stable: rare firm mutants gain exactly "
+         + g0.toFixed(4) + ", and in a firm world a yielder loses " + g1.toFixed(4));
+  })();
+
+  /* 10. ...and the invasion actually happens, from one per cent. */
+  (function(){
+    const A = M.matrix("weak", 0, 0);
+    let x = 0.01, mono = true, prev = x, steps = -1;
+    for (let i = 0; i < 1000; i++){
+      x = M.step(A, 0, 1, x);
+      if (x < prev - 1e-15) mono = false;
+      prev = x;
+      if (steps < 0 && x > 0.999) steps = i + 1;
+    }
+    push("and those mutants take the population over",
+         mono && steps > 0 && x > 0.999,
+         "from one per cent the share rose every generation and passed 99.9 per cent "
+         + "after " + steps + " generations, ending at " + (x * 100).toFixed(4) + " per cent");
+  })();
+
+  /* 11. In the prisoner's dilemma the first condition already settles it. */
+  (function(){
+    const A = M.matrix("pd", 0, 0);
+    let worstBest = -Infinity;
+    for (let k = 0; k <= 200; k++){
+      const q = k / 200; if (q === 1) continue;
+      worstBest = Math.max(worstBest, M.gap(A, 1, q, 0));
+    }
+    push("defecting is stable on the first condition alone",
+         M.isESS(A, 1, 400) && worstBest < -1e-9 && !M.isESS(A, 0, 400),
+         "every one of 200 rare mutants is already behind before meeting its own kind; "
+         + "the best of them still loses " + (-worstBest).toExponential(2));
+  })();
+
+  /* 12. The replicator finds V/C from wherever it starts. */
+  (function(){
+    let worst = 0;
+    const r = mulberry32(19);
+    for (let k = 0; k < 300; k++){
+      const V = 0.3 + r() * 3, C = V + 0.4 + r() * 5;
+      const A = M.matrix("hd", V, C), p = V / C;
+      /* the population's own mix, not a two-type split: run the share of hawks */
+      let x = 0.002 + r() * 0.996;
+      for (let i = 0; i < 4000; i++){
+        const f1 = M.E(A, 1, x), f2 = M.E(A, 0, x);
+        x += 0.25 * x * (1 - x) * (f1 - (x * f1 + (1 - x) * f2));
+        if (x < 1e-15) x = 1e-15; else if (x > 1 - 1e-15) x = 1 - 1e-15;
+      }
+      worst = Math.max(worst, Math.abs(x - p));
+    }
+    push("the replicator dynamic converges on V/C",
+         worst <= 1e-8,
+         "worst distance from V/C over 300 seeded starting points after 4000 generations "
+         + worst.toExponential(2));
+  })();
+
+  /* 13. Nothing blows up anywhere on the controls. */
+  (function(){
+    let bad = 0, n = 0;
+    for (const game of ["hd", "weak", "pd"])
+      for (let vi = 0; vi <= 8; vi++) for (let ci = 0; ci <= 8; ci++)
+        for (let pi = 0; pi <= 6; pi++) for (let qi = 0; qi <= 6; qi++){
+          const A = M.matrix(game, 0.2 + vi * 0.975, 0.2 + ci * 0.975);
+          const p = pi / 6, q = qi / 6;
+          let x = 0.01;
+          for (let i = 0; i < 60; i++){
+            x = M.step(A, p, q, x); n++;
+            if (!Number.isFinite(x) || x < 0 || x > 1){ bad++; i = 60; }
+          }
+        }
+    push("the share stays a share across every control setting",
+         bad === 0,
+         n.toLocaleString("en") + " generations swept, " + bad
+         + " left the zero-to-one range or went non-finite");
+  })();
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

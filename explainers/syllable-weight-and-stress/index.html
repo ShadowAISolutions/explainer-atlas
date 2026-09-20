@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Four Thousand Words, Two Places To Put The Stress — Explainer Atlas</title>
+<meta name="description" content="Build a Latin word one syllable at a time and watch the stress jump. The whole rule is three states read backwards, and it collapses 2 to the n weight patterns into exactly two answers.">
+<style>
+:root{
+  --bg:#eeecf2; --panel:#fbfafd; --ink:#232036; --muted:#63607a; --line:#d7d4e2;
+  --accent:#4c3d8f; --accent-soft:#e4e0f2;
+  --heavy:#4c3d8f; --heavyfill:rgba(76,61,143,.15);
+  --light:#8f8aa3; --lightfill:rgba(143,138,163,.10);
+  --stress:#c0392b; --alt:#1f7a6a;
+  --radius:6px; --pad:clamp(14px,3vw,26px);
+  --font-body:Palatino,"Palatino Linotype","Book Antiqua",Georgia,serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.45rem,1.02rem + 1.95vw,2.2rem);
+  --scale-body:clamp(0.99rem,0.95rem + 0.2vw,1.07rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#15131c; --panel:#1c1926; --ink:#e6e3f0; --muted:#9a95b0; --line:#2e2a3d;
+    --accent:#a696ee; --accent-soft:#221d33;
+    --heavy:#a696ee; --heavyfill:rgba(166,150,238,.18);
+    --light:#7b7690; --lightfill:rgba(123,118,144,.14);
+    --stress:#ef7a6b; --alt:#4fbfa8;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.66 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:63rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.13; margin:0 0 .35em; letter-spacing:-.012em; font-weight:600}
+.kicker{margin:0 0 .4em; color:var(--accent); font:700 .71rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.15em}
+.standfirst{margin:0; color:var(--muted); max-width:44em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:58rem){ .layout{grid-template-columns:minmax(0,1.45fr) minmax(15rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.7em; color:var(--muted); font-size:.84rem; line-height:1.55}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1em}
+.control{display:grid; gap:.3em}
+.control > label{font:700 .73rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.09em}
+.control .hint{color:var(--muted); font-size:.81rem; margin:0}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:5px; padding:.48em .65em; min-height:40px}
+select{width:100%; font-size:.93rem}
+button{cursor:pointer; font:600 .83rem/1.2 var(--font-mono); text-align:center}
+button:hover{border-color:var(--accent); color:var(--accent)}
+.build{display:grid; grid-template-columns:1fr 1fr; gap:.42em}
+.checkrow{display:flex; align-items:center; gap:.55em}
+.checkrow input{width:19px; height:19px; accent-color:var(--accent)}
+.checkrow label{font:700 .73rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.09em}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:5px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7rem,1fr)); gap:.5em; margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:5px; padding:.5em .62em}
+.readout dt{margin:0; color:var(--muted); font-size:.67rem; text-transform:uppercase; letter-spacing:.07em; font-family:var(--font-mono)}
+.readout dd{margin:.2em 0 0; font:700 .97rem/1.25 var(--font-mono)}
+.prose{max-width:39em; margin-top:calc(var(--pad)*1.3)}
+.prose h2{font-size:1.03rem; margin:1.9em 0 .45em; letter-spacing:.1em; text-transform:uppercase; font-family:var(--font-mono); color:var(--accent)}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.88rem; background:var(--accent-soft); padding:.7em .85em; border-radius:5px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.83rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Linguistics</p>
+  <h1>Four Thousand Words, Two Places To Put The Stress</h1>
+  <p class="standfirst">Latin decides where to stress a word by counting back from the end and asking one question about one syllable. Build a word and watch the accent jump the moment that syllable gets heavy.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="560" role="img"
+            aria-label="A word drawn as a row of syllable blocks, heavy ones filled and light ones hollow, with the stress mark above the stressed syllable and the names ultima, penult and antepenult beneath the last three. Below it, the rule reading the word from the right in three steps. At the foot, a strip with one thin column for every possible weight pattern of this length, coloured by where the stress lands."></canvas>
+    <figcaption>Top: the word, last syllable on the right. Filled blocks are heavy, hollow ones light. Middle: how the Latin rule reads it, right to left. Bottom: every possible weight pattern of this length, one thin column each, coloured by where the stress ends up. Under the Latin rule there are only ever two, whatever the length.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Word building controls">
+    <div class="control">
+      <label for="word">Start from a real word</label>
+      <select id="word">
+        <option value="own" selected>Build your own</option>
+      </select>
+      <p class="hint">Pick one, then keep adding syllables to it.</p>
+    </div>
+
+    <div class="build">
+      <button type="button" id="addL">+ light</button>
+      <button type="button" id="addH">+ heavy</button>
+      <button type="button" id="drop">remove last</button>
+      <button type="button" id="flip">flip the last</button>
+    </div>
+
+    <div class="control">
+      <label for="rule">Rule</label>
+      <select id="rule">
+        <option value="latin" selected>Latin &#8212; weight sensitive</option>
+        <option value="penult">Penultimate always &#8212; as in Polish</option>
+        <option value="initial">Initial always &#8212; as in Finnish</option>
+      </select>
+      <p class="hint">The other two ignore weight entirely. Watch where they disagree.</p>
+    </div>
+
+    <div class="control checkrow">
+      <input type="checkbox" id="trace" checked>
+      <label for="trace">Show the rule reading it</label>
+    </div>
+
+    <div class="control checkrow">
+      <input type="checkbox" id="compare">
+      <label for="compare">Mark the Latin answer too</label>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Word</dt><dd id="rword">&#8212;</dd></div>
+      <div><dt>Stress falls on</dt><dd id="rpos">&#8212;</dd></div>
+      <div><dt>Patterns this long</dt><dd id="rpat">&#8212;</dd></div>
+      <div><dt>Distinct answers</dt><dd id="rout">&#8212;</dd></div>
+    </dl>
+
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>A Latin speaker never had to memorise where the accent went. Given the word,
+     the rule produces it, and the rule is short enough to say out loud: if the
+     word has one or two syllables, stress the first; otherwise look at the
+     second-from-last syllable, and if it is heavy stress that, and if it is
+     light stress the one before it.</p>
+
+  <h2>Heavy and light</h2>
+
+  <p>A syllable is <em>heavy</em> if it has a long vowel, a diphthong, or a
+     consonant closing it. It is <em>light</em> if it is a short vowel with
+     nothing after it. That is the only property of a syllable the rule can see.
+     Not which vowel, not which consonants, not what the word means &#8212; just
+     whether the syllable is, in the old metaphor, long by nature or long by
+     position.</p>
+
+  <p>So <em>a&#183;m&#299;&#183;cus</em> has a long <em>&#299;</em> in its second
+     syllable, which is therefore heavy, and the stress lands there:
+     a&#8202;<strong>M&#298;</strong>&#8202;cus. But
+     <em>fa&#183;ci&#183;lis</em> has a short open <em>ci</em>, so the rule skips
+     back one more and gives <strong>FA</strong>&#8202;ci&#8202;lis. Two words of
+     the same length, one syllable different in weight, and the accent moves.</p>
+
+  <h2>Three states, read backwards</h2>
+
+  <p>Written as a machine rather than a sentence, the rule reads the word from the
+     right and needs three states and no memory beyond which state it is in:</p>
+
+  <p class="math">ultima &#8594; skip it<br>
+penult &#8594; heavy? stress here : step back<br>
+antepenult &#8594; stress here, whatever its weight</p>
+
+  <p>It never reaches a fourth state, which is why Latin stress never falls
+     further back than the third syllable from the end. The page checks this
+     exhaustively: over all 510 weight patterns from one to eight syllables, the
+     accent lands on the antepenult or later every single time. The machine and a
+     direct index calculation are written separately here and agree on all 8,190
+     patterns up to twelve syllables.</p>
+
+  <h2>The collapse</h2>
+
+  <p>A word of <em>n</em> syllables has 2<sup><em>n</em></sup> possible weight
+     patterns. A twelve-syllable word has 4,096 of them. The rule maps every one
+     of those onto one of exactly two answers: the penult or the antepenult.
+     Everything else about the word &#8212; ten of its twelve syllables and all
+     of their weights &#8212; makes no difference whatever.</p>
+
+  <p>That is what the strip along the bottom shows. One thin column per pattern,
+     coloured by where the stress fell. However many syllables you add, there are
+     never more than two colours, and for one- and two-syllable words there is
+     only one.</p>
+
+  <h2>Where the rules part company</h2>
+
+  <p>Switch to <strong>penultimate always</strong>, the Polish pattern, and the
+     two rules agree on every word with a heavy penult and disagree on every word
+     with a light one. Not approximately: exactly. Of the 510 patterns up to eight
+     syllables, 252 have a light penult, and those 252 are precisely the ones on
+     which the two rules give different answers. A weight-sensitive rule is a
+     quantity-insensitive rule plus one exception, and the exception has a
+     perfectly crisp shape.</p>
+
+  <h2>What to try</h2>
+
+  <p>Start from <em>facilis</em>, whose penult is light, and press
+     <strong>flip the last</strong> twice to see the stress sit still &#8212; the
+     ultima is the one syllable whose weight the rule never asks about. Then
+     build a word of six light syllables and make the fifth one heavy: the accent
+     jumps one place to the right and stops there, no matter what you do to the
+     other five.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &#183; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+
+/* ---- MODEL -------------------------------------------------------------- */
+const Model = {
+  /* Latin stress, written as a direct index calculation. 0 is the first
+     syllable. Weights are "H" or "L", read left to right. */
+  latin(w){
+    const n = w.length;
+    if (n <= 2) return 0;
+    return w[n - 2] === "H" ? n - 2 : n - 3;
+  },
+
+  /* The same rule written as the three-state machine the prose describes,
+     reading the word from the right. Kept separate on purpose: the selftest
+     runs one against the other over every pattern up to twelve syllables. */
+  automaton(w){
+    const n = w.length;
+    if (n <= 2) return 0;
+    let i = n - 1, state = "ultima";
+    for (;;){
+      if (state === "ultima"){ state = "penult"; i--; continue; }
+      if (state === "penult"){
+        if (w[i] === "H") return i;
+        state = "antepenult"; i--; continue;
+      }
+      return i;
+    }
+  },
+
+  /* the trace the middle pane draws */
+  steps(w){
+    const n = w.length, out = [];
+    /* Kept short on purpose: each of these is printed beside the syllable it
+       is about, which can sit anywhere along the line, so a long sentence has
+       nowhere to go at phone width. */
+    if (n === 1){ out.push({ i: 0, say: "one syllable: stress here", stop: true }); return out; }
+    if (n === 2){ out.push({ i: 0, say: "two syllables: stress the first", stop: true }); return out; }
+    out.push({ i: n - 1, say: "ultima: never asked about", stop: false });
+    if (w[n - 2] === "H"){
+      out.push({ i: n - 2, say: "penult heavy: stress here", stop: true });
+    } else {
+      out.push({ i: n - 2, say: "penult light: step back", stop: false });
+      out.push({ i: n - 3, say: "antepenult: stress here", stop: true });
+    }
+    return out;
+  },
+
+  penultAlways(w){ return w.length === 1 ? 0 : w.length - 2; },
+  initialAlways(){ return 0; },
+
+  apply(rule, w){
+    if (rule === "penult") return Model.penultAlways(w);
+    if (rule === "initial") return Model.initialAlways(w);
+    return Model.latin(w);
+  },
+
+  /* every weight pattern of length n, as arrays of "H" and "L" */
+  patterns(n){
+    const out = [];
+    for (let m = 0; m < (1 << n); m++){
+      const w = [];
+      for (let i = 0; i < n; i++) w.push((m >> (n - 1 - i)) & 1 ? "H" : "L");
+      out.push(w);
+    }
+    return out;
+  },
+
+  /* how many places the stress can land, over all patterns of length n */
+  outcomes(n){
+    const set = new Set();
+    for (const w of Model.patterns(Math.min(n, 14))) set.add(Model.latin(w));
+    return set.size;
+  },
+  outcomesClosedForm(n){ return n < 3 ? 1 : 2; },
+
+  /* names counted back from the end */
+  positionName(i, n){
+    const back = n - 1 - i;
+    if (back === 0) return "ultima";
+    if (back === 1) return "penult";
+    if (back === 2) return "antepenult";
+    return (back + 1) + "th from the end";
+  },
+
+  /* attested Latin words, with the stress the grammarians record */
+  words: [
+    { w: "a-mī-cus",        p: "LHL",  s: 1, gloss: "friend" },
+    { w: "fa-ci-lis",            p: "LLL",  s: 0, gloss: "easy" },
+    { w: "pu-el-la",             p: "LHL",  s: 1, gloss: "girl" },
+    { w: "do-mi-nus",            p: "LLL",  s: 0, gloss: "master" },
+    { w: "re-fē-cit",       p: "LHL",  s: 1, gloss: "he remade" },
+    { w: "ca-pi-ti-bus",         p: "LLLL", s: 1, gloss: "to the heads" },
+    { w: "a-gri-co-la",          p: "LLLL", s: 1, gloss: "farmer" },
+    { w: "ma-gis-ter",           p: "LHL",  s: 1, gloss: "teacher" },
+    { w: "rē-gī-na",   p: "HHL",  s: 1, gloss: "queen" },
+    { w: "ta-bu-la",             p: "LLL",  s: 0, gloss: "board" },
+    { w: "pe-rī-cu-lum",    p: "LHLL", s: 1, gloss: "danger" },
+    { w: "im-pe-rā-tor",    p: "HLHL", s: 2, gloss: "commander" },
+    { w: "ar-ma",                p: "HL",   s: 0, gloss: "arms" },
+    { w: "rēx",             p: "H",    s: 0, gloss: "king" },
+    { w: "pu-el-lā-rum",    p: "LHHL", s: 2, gloss: "of the girls" },
+    { w: "au-di-ō",         p: "HLH",  s: 0, gloss: "I hear" },
+    { w: "se-nā-tus",       p: "LHL",  s: 1, gloss: "senate" },
+    { w: "cōn-si-li-um",    p: "HLLH", s: 1, gloss: "counsel" }
+  ],
+
+  /* a plausible shape for a syllable the reader built rather than chose */
+  invent(i, weight){
+    const ons = ["ta", "pa", "ka", "ma", "na", "sa", "ra", "la"][i % 8];
+    if (weight === "L") return ons;
+    /* heavy two ways, alternating, so both routes to weight are on screen */
+    return i % 2 === 0 ? ons[0] + "ā" : ons + "n";
+  }
+};
+
+/* ---- STATE -------------------------------------------------------------- */
+const defaults = { syls: ["L", "L", "L"], text: null, rule: "latin", trace: true, compare: false };
+const state = { syls: defaults.syls.slice(), text: null, rule: "latin", trace: true, compare: false };
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+const SS = 2, MAXSYL = 9;
+let W = 900, H = 560, NARROW = false, G = null;
+
+/* the text of each syllable: the real word's, or one invented to fit */
+function syllableText(){
+  if (state.text && state.text.length === state.syls.length) return state.text.slice();
+  const out = [];
+  for (let i = 0; i < state.syls.length; i++) out.push(Model.invent(i, state.syls[i]));
+  return out;
+}
+
+function fitCanvas(){
+  const box = cv.parentElement.getBoundingClientRect().width - 24;
+  W = Math.round(clamp(box > 0 ? box : 860, 300, 900));
+  NARROW = W < 440;
+
+  const wordH = NARROW ? 150 : 172;
+  const traceH = state.trace ? (NARROW ? 112 : 124) : 16;
+  const gridH = NARROW ? 96 : 110;
+  H = wordH + traceH + gridH;
+
+  G = {
+    word: { y0: 26, y1: wordH - 10 },
+    trace: { y0: wordH + 8, y1: wordH + traceH - 10 },
+    grid: { y0: wordH + traceH + 26, y1: wordH + traceH + gridH - 24 },
+    x0: 10, x1: W - 10
+  };
+
+  cv.width = Math.round(W * SS);
+  cv.height = Math.round(H * SS);
+  cv.style.height = H + "px";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function chip(text, x, y, align, baseline, fs, colour, C){
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  const w = ctx.measureText(text).width, pad = 3;
+  let ax = align, ay = baseline;
+  if (ax === "left"  && x + w + 6 > W) ax = "right";
+  if (ax === "right" && x - w - 6 < 0) ax = "left";
+  if (ay === "bottom" && y - fs - 6 < 0) ay = "top";
+  if (ay === "top" && y + fs + 6 > H) ay = "bottom";
+  const bx = ax === "right" ? x - w : (ax === "center" ? x - w / 2 : x);
+  const by = ay === "bottom" ? y - fs : (ay === "middle" ? y - fs / 2 : y);
+  ctx.fillStyle = C.panel;
+  ctx.fillRect(bx - pad, by - pad + 1, w + pad * 2, fs + pad * 2 - 1);
+  ctx.fillStyle = colour;
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText(text, bx, by);
+  ctx.textBaseline = "alphabetic";
+}
+
+/* geometry of the syllable blocks, shared by the word pane and the trace */
+function blocks(){
+  const n = state.syls.length;
+  const avail = G.x1 - G.x0;
+  const gap = NARROW ? 5 : 8;
+  const bw = Math.min((avail - gap * (n - 1)) / n, NARROW ? 62 : 86);
+  const total = bw * n + gap * (n - 1);
+  const left = G.x0 + (avail - total) / 2;
+  const out = [];
+  for (let i = 0; i < n; i++) out.push({ x: left + i * (bw + gap), w: bw });
+  return out;
+}
+
+function drawWord(C){
+  const P = G.word, n = state.syls.length, B = blocks();
+  const txt = syllableText();
+  const stressed = Model.apply(state.rule, state.syls);
+  const latin = Model.latin(state.syls);
+
+  const bh = NARROW ? 50 : 58;
+  const by = P.y0 + (NARROW ? 32 : 36);
+
+  ctx.font = "10px " + css("--font-mono");
+  ctx.fillStyle = C.muted;
+  ctx.fillText("the word, last syllable on the right", 2, P.y0 - 12);
+
+  for (let i = 0; i < n; i++){
+    const b = B[i], heavy = state.syls[i] === "H";
+    ctx.fillStyle = heavy ? C.heavyfill : C.lightfill;
+    ctx.fillRect(b.x, by, b.w, bh);
+    ctx.strokeStyle = heavy ? C.heavy : C.light;
+    ctx.lineWidth = heavy ? 2 : 1;
+    ctx.strokeRect(b.x + 1, by + 1, b.w - 2, bh - 2);
+
+    ctx.fillStyle = C.ink;
+    ctx.font = (NARROW ? 19 : 23) + "px " + css("--font-body");
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(txt[i], b.x + b.w / 2, by + bh / 2 - 6);
+
+    ctx.font = "600 " + (NARROW ? 9 : 10) + "px " + css("--font-mono");
+    ctx.fillStyle = heavy ? C.heavy : C.light;
+    ctx.fillText(heavy ? "heavy" : "light", b.x + b.w / 2, by + bh - 12);
+
+    /* the names only exist for the last three */
+    const back = n - 1 - i;
+    if (back <= 2){
+      ctx.fillStyle = C.muted;
+      ctx.font = (NARROW ? 8 : 9) + "px " + css("--font-mono");
+      ctx.textBaseline = "top";
+      const name = ["ultima", "penult", "antepen."][back];
+      ctx.fillText(NARROW && back === 2 ? "antep." : name, b.x + b.w / 2, by + bh + 6);
+    }
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  }
+
+  /* the accent itself */
+  const sb = B[stressed];
+  ctx.fillStyle = C.stress;
+  ctx.font = "700 " + (NARROW ? 22 : 26) + "px " + css("--font-body");
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("ˈ", sb.x + sb.w / 2, by - 6);
+  ctx.strokeStyle = C.stress; ctx.lineWidth = 2.4;
+  ctx.beginPath(); ctx.moveTo(sb.x + 3, by - 3); ctx.lineTo(sb.x + sb.w - 3, by - 3); ctx.stroke();
+  ctx.textAlign = "left";
+
+  /* where Latin would have put it, when a different rule is running */
+  if (state.compare && state.rule !== "latin"){
+    const lb = B[latin];
+    ctx.strokeStyle = C.alt; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(lb.x + 3, by + bh + (NARROW ? 20 : 22));
+    ctx.lineTo(lb.x + lb.w - 3, by + bh + (NARROW ? 20 : 22));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    chip(latin === stressed ? "Latin agrees" : "Latin says here",
+         lb.x + lb.w / 2, by + bh + (NARROW ? 24 : 26), "center", "top",
+         NARROW ? 9 : 10, C.alt, C);
+  }
+}
+
+function drawTrace(C){
+  if (!state.trace) return;
+  const P = G.trace, B = blocks(), n = state.syls.length;
+  const steps = Model.steps(state.syls);
+  const fs = NARROW ? 9 : 10;
+  const rowH = (P.y1 - P.y0 - 14) / Math.max(1, steps.length);
+
+  ctx.font = "10px " + css("--font-mono");
+  ctx.fillStyle = C.muted;
+  ctx.fillText("how the Latin rule reads it, right to left", 2, P.y0 - 2);
+
+  /* The trace always walks the Latin automaton. Red belongs to the rule that
+     is actually running, so when that is not Latin the trace switches to the
+     same teal as the dashed "Latin says here" marker above it. Otherwise two
+     different answers would both be drawn in red. */
+  const stopCol = state.rule === "latin" ? C.stress : C.alt;
+
+  steps.forEach((st, k) => {
+    const y = P.y0 + 14 + rowH * (k + 0.5);
+    const b = B[st.i];
+    const col = st.stop ? stopCol : C.muted;
+
+    /* a tick under the syllable this step is looking at */
+    ctx.strokeStyle = col; ctx.lineWidth = st.stop ? 2.2 : 1.4;
+    ctx.beginPath();
+    ctx.moveTo(b.x + b.w / 2, y - rowH / 2 + 2);
+    ctx.lineTo(b.x + b.w / 2, y + 3);
+    ctx.stroke();
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(b.x + b.w / 2, y + 4, st.stop ? 4 : 2.6, 0, Math.PI * 2); ctx.fill();
+
+    /* and the sentence, kept off the tick */
+    const mid = (G.x0 + G.x1) / 2;
+    const cx = b.x + b.w / 2;
+    chip((k + 1) + ". " + st.say, cx > mid ? cx - 10 : cx + 10, y + 4,
+         cx > mid ? "right" : "left", "middle", fs, col, C);
+  });
+}
+
+function drawGrid(C){
+  const P = G.grid, n = state.syls.length;
+  const count = 1 << n;
+  const pats = Model.patterns(n);
+  const w = G.x1 - G.x0, h = P.y1 - P.y0;
+  const cw = w / count;
+
+  ctx.font = "10px " + css("--font-mono");
+  ctx.fillStyle = C.muted;
+  const gh = "every weight pattern of " + n + " syllable" + (n === 1 ? "" : "s");
+  /* the tail runs off the right edge at phone width; the key below names the
+     colours anyway, so drop it rather than let it truncate */
+  ctx.fillText(NARROW ? gh : gh + ", coloured by where the stress lands", 2, P.y0 - 12);
+
+  /* two colours, chosen by how far back the accent went */
+  const seen = new Map();
+  for (let m = 0; m < count; m++){
+    const s = Model.apply(state.rule, pats[m]);
+    const back = n - 1 - s;
+    /* indigo is reserved for weight; these two are stress positions */
+    const col = back === 1 ? C.alt : (back === 2 ? C.stress : C.muted);
+    seen.set(back, col);
+    ctx.fillStyle = col;
+    ctx.fillRect(G.x0 + cw * m, P.y0, Math.max(0.7, cw - (cw > 3 ? 0.6 : 0)), h);
+  }
+
+  /* where the reader's own word sits in that strip */
+  let mine = 0;
+  for (let i = 0; i < n; i++) mine = (mine << 1) | (state.syls[i] === "H" ? 1 : 0);
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 1.6;
+  ctx.strokeRect(G.x0 + cw * mine - 0.5, P.y0 - 2.5, Math.max(2, cw) + 1, h + 5);
+
+  ctx.fillStyle = C.muted; ctx.font = "10px " + css("--font-mono");
+  ctx.textBaseline = "top";
+  ctx.fillText(count.toLocaleString("en") + " pattern" + (count === 1 ? "" : "s"), G.x0, P.y1 + 6);
+
+  /* name the colours, on the right of the same line */
+  const names = [];
+  for (const [back, col] of Array.from(seen.entries()).sort((a, b) => a[0] - b[0])){
+    names.push({ c: col, t: ["ultima", "penult", "antepenult"][back] || (back + 1) + "th back" });
+  }
+  ctx.font = "600 " + (NARROW ? 9 : 10) + "px " + css("--font-mono");
+  let kw = 0;
+  for (const r of names) kw += 11 + 4 + ctx.measureText(r.t).width + 12;
+  kw -= 12;
+  let kx = Math.max(G.x0 + 90, G.x1 - kw);
+  for (const r of names){
+    ctx.fillStyle = r.c;
+    ctx.fillRect(kx, P.y1 + 7, 11, 8);
+    ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillText(r.t, kx + 15, P.y1 + 6);
+    kx += 11 + 4 + ctx.measureText(r.t).width + 12;
+  }
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+}
+
+function render(){
+  fitCanvas();
+  const C = {
+    panel: css("--panel"), ink: css("--ink"), muted: css("--muted"), line: css("--line"),
+    heavy: css("--heavy"), heavyfill: css("--heavyfill"),
+    light: css("--light"), lightfill: css("--lightfill"),
+    stress: css("--stress"), alt: css("--alt")
+  };
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = C.panel; ctx.fillRect(0, 0, W, H);
+  drawWord(C);
+  drawTrace(C);
+  drawGrid(C);
+
+  const n = state.syls.length;
+  const s = Model.apply(state.rule, state.syls);
+  const txt = syllableText();
+  el("rword").textContent = txt.map((t, i) => i === s ? t.toUpperCase() : t).join("·");
+  el("rpos").textContent = Model.positionName(s, n);
+  el("rpat").textContent = (1 << n).toLocaleString("en");
+  el("rout").textContent = state.rule === "latin"
+    ? String(Model.outcomes(n))
+    : "1 (weight ignored)";
+
+  el("drop").disabled = false;
+  el("addL").textContent = n >= MAXSYL ? "full" : "+ light";
+  el("addH").textContent = n >= MAXSYL ? "full" : "+ heavy";
+  el("drop").textContent = n <= 1 ? "just one left" : "remove last";
+}
+
+/* ---- BINDINGS ----------------------------------------------------------- */
+function add(weight){
+  if (state.syls.length >= MAXSYL) return;
+  state.syls.push(weight);
+  state.text = null;                  /* it is no longer the word it started as */
+  el("word").value = "own";
+  render();
+}
+el("addL").addEventListener("click", () => add("L"));
+el("addH").addEventListener("click", () => add("H"));
+el("drop").addEventListener("click", () => {
+  if (state.syls.length <= 1) return;
+  state.syls.pop(); state.text = null; el("word").value = "own"; render();
+});
+el("flip").addEventListener("click", () => {
+  const i = state.syls.length - 1;
+  state.syls[i] = state.syls[i] === "H" ? "L" : "H";
+  state.text = null; el("word").value = "own"; render();
+});
+
+/* the real words go into the select from the model, so the two cannot drift */
+(function(){
+  const sel = el("word");
+  Model.words.forEach((w, i) => {
+    const o = document.createElement("option");
+    o.value = String(i);
+    o.textContent = w.w.replace(/-/g, "·") + " — " + w.gloss;
+    sel.appendChild(o);
+  });
+})();
+el("word").addEventListener("input", () => {
+  const v = el("word").value;
+  if (v === "own"){ state.text = null; render(); return; }
+  const w = Model.words[parseInt(v, 10)];
+  state.syls = w.p.split("");
+  state.text = w.w.split("-");
+  render();
+});
+el("rule").addEventListener("input", () => { state.rule = el("rule").value; render(); });
+el("trace").addEventListener("input", () => { state.trace = el("trace").checked; render(); });
+el("compare").addEventListener("input", () => { state.compare = el("compare").checked; render(); });
+el("reset").addEventListener("click", () => {
+  state.syls = defaults.syls.slice(); state.text = null;
+  state.rule = defaults.rule; state.trace = defaults.trace; state.compare = defaults.compare;
+  el("word").value = "own"; el("rule").value = defaults.rule;
+  el("trace").checked = defaults.trace; el("compare").checked = defaults.compare;
+  render();
+});
+
+let t = null;
+addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 120); });
+const mq = matchMedia("(prefers-color-scheme: dark)");
+(mq.addEventListener ? mq.addEventListener.bind(mq, "change") : mq.addListener.bind(mq))(render);
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+window.__SELFTEST = function(){
+  const out = [];
+  const push = (name, pass, detail) => out.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1. the attested words */
+  {
+    let bad = 0, worst = "";
+    for (const w of Model.words){
+      if (Model.latin(w.p.split("")) !== w.s){ bad++; worst = w.w; }
+    }
+    push("the rule reproduces the recorded stress of every Latin word listed",
+         bad === 0 && Model.words.length === 18,
+         Model.words.length + " attested words from rēx to cōnsilium, " + bad
+         + " disagreements" + (worst ? " (first at " + worst + ")" : ""));
+  }
+
+  /* 2. and every pattern, against a brute-force reading of the same rule */
+  {
+    let n = 0, bad = 0;
+    for (let k = 1; k <= 8; k++) for (const w of Model.patterns(k)){
+      n++;
+      /* brute force: score every position by the rule's own conditions */
+      const L = w.length;
+      let want;
+      if (L <= 2) want = 0;
+      else {
+        want = -1;
+        for (let i = L - 1; i >= 0; i--){
+          const back = L - 1 - i;
+          if (back === 0) continue;
+          if (back === 1){ if (w[i] === "H"){ want = i; break; } continue; }
+          want = i; break;
+        }
+      }
+      if (Model.latin(w) !== want) bad++;
+    }
+    push("the rule agrees with a brute-force scan on every pattern to eight syllables",
+         n === 510 && bad === 0, n + " weight patterns tested, " + bad + " disagreements");
+  }
+
+  /* 3. it can never reach past the antepenult */
+  {
+    let n = 0, bad = 0, deepest = 0;
+    for (let k = 1; k <= 8; k++) for (const w of Model.patterns(k)){
+      n++;
+      const back = w.length - 1 - Model.latin(w);
+      deepest = Math.max(deepest, back);
+      if (back > 2) bad++;
+    }
+    push("the accent never falls further back than the antepenult",
+         n === 510 && bad === 0 && deepest === 2,
+         "over all " + n + " patterns to eight syllables the furthest back it ever goes is "
+         + deepest + " from the end, and it does so " + bad + " times further");
+  }
+
+  /* 4. the machine and the index calculation are the same function */
+  {
+    let n = 0, bad = 0;
+    for (let k = 1; k <= 12; k++) for (const w of Model.patterns(k)){
+      n++;
+      if (Model.automaton(w) !== Model.latin(w)) bad++;
+    }
+    push("the three-state machine and the direct calculation agree everywhere",
+         n === 8190 && bad === 0,
+         n.toLocaleString("en") + " patterns up to twelve syllables, " + bad + " disagreements");
+  }
+
+  /* 5. the collapse: 2^n patterns, at most two answers */
+  {
+    let ok = 0;
+    const seen = [];
+    for (let k = 1; k <= 12; k++){
+      const got = Model.outcomes(k);
+      seen.push(got);
+      if (got === Model.outcomesClosedForm(k)) ok++;
+    }
+    push("however long the word, the rule has exactly two answers, or one",
+         ok === 12 && seen.join() === "1,1,2,2,2,2,2,2,2,2,2,2",
+         "distinct stress positions for 1 to 12 syllables: " + seen.join(", ")
+         + "; at twelve syllables that is " + (1 << 12).toLocaleString("en")
+         + " patterns mapping onto 2 answers");
+  }
+
+  /* 6. where a quantity-insensitive rule parts company, exactly */
+  {
+    let differ = 0, lightPenult = 0, mismatched = 0, total = 0;
+    for (let k = 1; k <= 8; k++) for (const w of Model.patterns(k)){
+      total++;
+      const d = Model.latin(w) !== Model.penultAlways(w);
+      const lp = w.length >= 3 && w[w.length - 2] === "L";
+      if (d) differ++;
+      if (lp) lightPenult++;
+      if (d !== lp) mismatched++;
+    }
+    push("Latin and a penult-always rule differ on exactly the light-penult words",
+         mismatched === 0 && differ === 252 && lightPenult === 252 && total === 510,
+         "of " + total + " patterns, " + differ + " get a different answer and " + lightPenult
+         + " have a light penult; the two sets agree on all " + total + " (" + mismatched
+         + " exceptions)");
+  }
+
+  /* 7. that count is 2^(n-1) at every length */
+  {
+    const got = [], want = [];
+    for (let k = 3; k <= 8; k++){
+      let c = 0;
+      for (const w of Model.patterns(k)) if (w[k - 2] === "L") c++;
+      got.push(c); want.push(1 << (k - 1));
+    }
+    push("the number of light-penult words of length n is 2 to the n minus one",
+         got.join() === want.join(),
+         "lengths 3 to 8 give " + got.join(", ") + " against 2^(n-1) = " + want.join(", "));
+  }
+
+  /* 8. the ultima's weight is the one thing that never matters */
+  {
+    let n = 0, changed = 0;
+    for (let k = 1; k <= 10; k++) for (const w of Model.patterns(k)){
+      n++;
+      const flipped = w.slice();
+      flipped[k - 1] = flipped[k - 1] === "H" ? "L" : "H";
+      if (Model.latin(w) !== Model.latin(flipped)) changed++;
+    }
+    push("flipping the last syllable's weight never moves the stress",
+         changed === 0,
+         "over " + n.toLocaleString("en") + " patterns to ten syllables, flipping the ultima "
+         + "changed the answer " + changed + " times");
+  }
+
+  /* 9. the penult's weight is the one thing that always can */
+  {
+    let tested = 0, moved = 0;
+    for (let k = 3; k <= 10; k++) for (const w of Model.patterns(k)){
+      tested++;
+      const flipped = w.slice();
+      flipped[k - 2] = flipped[k - 2] === "H" ? "L" : "H";
+      if (Model.latin(w) !== Model.latin(flipped)) moved++;
+    }
+    push("flipping the penult's weight always moves it, for three syllables or more",
+         moved === tested,
+         "over " + tested.toLocaleString("en") + " patterns of three or more syllables, flipping "
+         + "the penult moved the accent every time");
+  }
+
+  /* 10. the trace ends where the rule says */
+  {
+    let n = 0, bad = 0;
+    for (let k = 1; k <= 9; k++) for (const w of Model.patterns(k)){
+      n++;
+      const st = Model.steps(w);
+      const last = st[st.length - 1];
+      if (!last.stop || last.i !== Model.latin(w)) bad++;
+      if (st.length > 3) bad++;
+    }
+    push("the trace the page draws always ends on the syllable the rule picks",
+         bad === 0,
+         n.toLocaleString("en") + " patterns to nine syllables, never more than three steps, "
+         + bad + " traces ending anywhere else");
+  }
+
+  /* 11. seeded agreement, as the task asked, on long random words */
+  {
+    const rng = mulberry32(SEED);
+    let n = 0, bad = 0;
+    for (let i = 0; i < 5000; i++){
+      const k = 1 + Math.floor(rng() * 12);
+      const w = [];
+      for (let j = 0; j < k; j++) w.push(rng() < 0.5 ? "H" : "L");
+      n++;
+      if (Model.automaton(w) !== Model.latin(w)) bad++;
+    }
+    push("machine and calculation agree on five thousand seeded words too",
+         n === 5000 && bad === 0, n + " random patterns of one to twelve syllables, " + bad
+         + " disagreements");
+  }
+
+  /* 12. every answer is a real syllable of the word */
+  {
+    let n = 0, bad = 0;
+    for (const rule of ["latin", "penult", "initial"])
+      for (let k = 1; k <= 9; k++) for (const w of Model.patterns(k)){
+        n++;
+        const s = Model.apply(rule, w);
+        if (!Number.isInteger(s) || s < 0 || s >= k) bad++;
+      }
+    push("every rule always names a syllable that exists",
+         bad === 0, bad + " out-of-range answers in " + n.toLocaleString("en")
+         + " rule and pattern combinations");
+  }
+
+  return out;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
