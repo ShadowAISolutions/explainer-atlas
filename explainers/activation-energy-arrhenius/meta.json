@@ -1,0 +1,17 @@
+{
+  "slug": "activation-energy-arrhenius",
+  "title": "Ten Degrees Doubles It, But Only Near Room Temperature",
+  "domain": "chemistry",
+  "difficulty": 2,
+  "summary": "The Arrhenius law is exponential in one over temperature, not in temperature. Nudge the rail ten kelvin at a time and watch a rule of thumb everyone learns as a constant slide from 2.70 down to 1.29.",
+  "prerequisites": [],
+  "tags": ["arrhenius", "activation-energy", "reaction-kinetics", "q10", "catalysis", "linear-regression"],
+  "interaction_pattern": "perturb-and-observe",
+  "sources": [
+    { "title": "Arrhenius, Uber die Reaktionsgeschwindigkeit bei der Inversion von Rohrzucker durch Sauren, Z. Phys. Chem. 4 (1889) 226-248", "url": "https://www.degruyter.com/document/doi/10.1515/zpch-1889-0416/html" },
+    { "title": "Atkins and de Paula, Physical Chemistry, 11th ed., chapter 17 (reaction dynamics)", "url": "https://global.oup.com/academic/product/atkins-physical-chemistry-9780198769866" },
+    { "title": "CODATA 2018 recommended value of the molar gas constant R", "url": "https://physics.nist.gov/cgi-bin/cuu/Value?r" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 12
+}
