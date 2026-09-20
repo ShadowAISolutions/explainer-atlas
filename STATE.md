@@ -14,6 +14,16 @@ files in `AUDIT/` before starting any batch.
   patch script — and concatenate it. If you must check a file, `cat -A` shows
   what is really there.
 
+- **A canvas whose height is a constant while its width tracks its container is
+  only ever checked at one end.** Every legibility check the loop has run asked
+  what happens as the canvas gets *narrower*, and task 082 swept every
+  pre-batch/004 page that way and still missed a page whose last drawn label
+  falls off the bottom as the canvas gets *wider*: the drawing grows to fill the
+  width, the layout runs longer than the height constant allows, and the final
+  line is cut in half by the bottom edge. Derive the height from the width, or
+  from where the layout actually ends, and read the 1280 screenshot back as well
+  as the 390 one. Found by AUDIT/003 on `special-relativity-time-dilation`.
+
 ## Decisions
 
 - **2026-09-19** — The atlas lives in its own repository rather than inside
@@ -39,7 +49,11 @@ files in `AUDIT/` before starting any batch.
 - blocked: none
 - patterns: spatial-explore, perturb-and-observe, step-through, live-code,
   guess-then-reveal
-- queue: refilled from 12 to 52 (forty new tasks, numbered 101-140)
+- queue: refilled from 12 to 52 (forty new tasks, numbered 101-140), then 53
+  with the repair task AUDIT/003 filed
+- audit: AUDIT/003 — mean 4.60, running average 4.56. One score of 2, on
+  `special-relativity-time-dilation`, filed as queue/141. Visual
+  distinctiveness is the weakest axis in all three audits so far.
 - learned:
   - **Two series drawn on the same axes in two colours hide one another where
     they agree.** It happened twice in one batch: the p-hacking page drew the
