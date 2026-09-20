@@ -1,0 +1,17 @@
+{
+  "slug": "nash-equilibrium-mixed",
+  "title": "Your Own Payoffs Don't Set Your Own Odds",
+  "domain": "game-theory",
+  "difficulty": 3,
+  "summary": "When no pure strategy is safe both players randomise, and each one's mixing probability is read off the opponent's payoffs rather than their own. Drag a payoff and watch the wrong line move.",
+  "prerequisites": [],
+  "tags": ["game-theory", "nash-equilibrium", "mixed-strategy", "best-response", "zero-sum", "indifference"],
+  "interaction_pattern": "spatial-explore",
+  "sources": [
+    { "title": "Nash, Equilibrium Points in N-Person Games, PNAS 1950", "url": "https://www.pnas.org/doi/10.1073/pnas.36.1.48" },
+    { "title": "Maynard Smith and Price, The Logic of Animal Conflict, Nature 1973 (hawk and dove)", "url": "https://www.nature.com/articles/246015a0" },
+    { "title": "Robinson, An Iterative Method of Solving a Game, Annals of Mathematics 1951 (fictitious play)", "url": "https://www.jstor.org/stable/1969530" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 13
+}
