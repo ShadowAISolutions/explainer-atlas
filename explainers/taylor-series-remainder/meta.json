@@ -1,0 +1,16 @@
+{
+  "slug": "taylor-series-remainder",
+  "title": "Every Extra Term Buys A Little More Distance",
+  "domain": "mathematics",
+  "difficulty": 2,
+  "summary": "A truncated Taylor series is the function minus a remainder you can bound before computing anything. Add terms and watch the trusted interval widen, until a singularity stops it widening for good.",
+  "prerequisites": [],
+  "tags": ["taylor-series", "lagrange-remainder", "truncation-error", "radius-of-convergence", "approximation", "numerical-analysis"],
+  "interaction_pattern": "build-from-parts",
+  "sources": [
+    { "title": "Rudin, Principles of Mathematical Analysis, 3rd ed., Theorem 5.15 (Taylor's theorem)", "url": "https://archive.org/details/rudin-principles-of-mathematical-analysis" },
+    { "title": "NIST Digital Library of Mathematical Functions, section 1.4(vi), Taylor's theorem with remainder", "url": "https://dlmf.nist.gov/1.4" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 13
+}
