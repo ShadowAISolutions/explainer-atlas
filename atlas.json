@@ -1,6 +1,6 @@
 {
   "generated_at": "2026-09-20",
-  "count": 70,
+  "count": 75,
   "domains": {
     "biology": [
       "enzyme-michaelis-menten",
@@ -33,16 +33,19 @@
       "greenhouse-energy-balance",
       "plate-tectonics-seafloor-age",
       "radiometric-dating",
-      "river-meander-migration"
+      "river-meander-migration",
+      "tree-rings-and-climate"
     ],
     "economics": [
       "auction-formats-revenue",
       "comparative-advantage-ppf",
       "compound-interest-doubling",
+      "price-elasticity-revenue",
       "supply-demand-tax-incidence"
     ],
     "engineering": [
       "beam-bending-moment",
+      "control-loop-dead-time",
       "gear-train-ratio",
       "heat-sink-fin-efficiency",
       "pid-controller"
@@ -66,7 +69,8 @@
       "levenshtein-distance",
       "markov-text-order",
       "phoneme-vowel-space-formants",
-      "sound-change-chain-shift"
+      "sound-change-chain-shift",
+      "zipf-law-word-frequency"
     ],
     "mathematics": [
       "eulers-identity-rotation",
@@ -92,6 +96,7 @@
     ],
     "statistics": [
       "bayes-base-rate",
+      "bootstrap-resampling",
       "central-limit-theorem",
       "confidence-interval-coverage",
       "multiple-comparisons-p-hacking",
@@ -102,16 +107,16 @@
   "interaction_patterns": {
     "build-from-parts": 7,
     "compare-side-by-side": 6,
-    "drag-parameter": 6,
-    "draw-input": 5,
+    "drag-parameter": 7,
+    "draw-input": 6,
     "guess-then-reveal": 6,
     "live-code": 4,
     "perturb-and-observe": 7,
-    "race-two-methods": 5,
+    "race-two-methods": 6,
     "spatial-explore": 7,
     "step-through": 6,
-    "time-scrubber": 6,
-    "tune-to-match": 5
+    "time-scrubber": 7,
+    "tune-to-match": 6
   },
   "explainers": [
     {
@@ -341,6 +346,35 @@
       "assertions_count": 13
     },
     {
+      "slug": "bootstrap-resampling",
+      "title": "The Bootstrap Is Not A Coverage Machine",
+      "domain": "statistics",
+      "difficulty": 3,
+      "summary": "Resampling your own data gives an interval for any statistic at all, with no formula. Race it against the textbook formula and it loses, which tells you exactly what the bootstrap is really for.",
+      "prerequisites": [],
+      "tags": [
+        "bootstrap",
+        "resampling",
+        "confidence-interval",
+        "coverage",
+        "monte-carlo",
+        "heavy-tails"
+      ],
+      "interaction_pattern": "race-two-methods",
+      "sources": [
+        {
+          "title": "Efron, Bootstrap Methods: Another Look at the Jackknife, Annals of Statistics 7 (1979)",
+          "url": "https://doi.org/10.1214/aos/1176344552"
+        },
+        {
+          "title": "Efron and Tibshirani, An Introduction to the Bootstrap (Chapman and Hall, 1993), chapters 12 to 14 on interval coverage",
+          "url": "https://doi.org/10.1201/9780429246593"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 14
+    },
+    {
       "slug": "cache-line-stride",
       "title": "You Asked For One Number And Paid For Sixteen",
       "domain": "computer-science",
@@ -559,6 +593,35 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 13
+    },
+    {
+      "slug": "control-loop-dead-time",
+      "title": "The Delay You Cannot Tune Away",
+      "domain": "engineering",
+      "difficulty": 3,
+      "summary": "A delay between acting and seeing is the one thing a controller cannot tune around. Past one gain, set by the delay alone, the loop oscillates whatever you do to it.",
+      "prerequisites": [],
+      "tags": [
+        "control-theory",
+        "feedback",
+        "dead-time",
+        "stability",
+        "phase-margin",
+        "pid"
+      ],
+      "interaction_pattern": "tune-to-match",
+      "sources": [
+        {
+          "title": "Ziegler and Nichols, Optimum Settings for Automatic Controllers, Trans. ASME 64 (1942)",
+          "url": "https://doi.org/10.1115/1.4019264"
+        },
+        {
+          "title": "Astrom and Hagglund, Advanced PID Control (ISA, 2006), chapter on dead time and achievable performance",
+          "url": "https://www.isa.org/products/advanced-pid-control"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 12
     },
     {
       "slug": "coriolis-deflection",
@@ -1758,6 +1821,35 @@
       "assertions_count": 12
     },
     {
+      "slug": "price-elasticity-revenue",
+      "title": "Raise The Price Until Elasticity Is One",
+      "domain": "economics",
+      "difficulty": 2,
+      "summary": "A price rise earns more on every unit you still sell and loses the units you no longer sell. One number decides which wins, and the revenue peak sits exactly where it is minus one.",
+      "prerequisites": [],
+      "tags": [
+        "economics",
+        "elasticity",
+        "demand",
+        "revenue",
+        "pricing",
+        "markup"
+      ],
+      "interaction_pattern": "drag-parameter",
+      "sources": [
+        {
+          "title": "Marshall, Principles of Economics (1890), book III on elasticity of demand",
+          "url": "https://archive.org/details/principlesecono00marsgoog"
+        },
+        {
+          "title": "Lerner, The Concept of Monopoly and the Measurement of Monopoly Power, Review of Economic Studies 1 (1934)",
+          "url": "https://doi.org/10.2307/2967480"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 13
+    },
+    {
       "slug": "prisoners-dilemma-iterated",
       "title": "Write a Strategy, Enter the Tournament",
       "domain": "game-theory",
@@ -2214,6 +2306,68 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 13
+    },
+    {
+      "slug": "tree-rings-and-climate",
+      "title": "Sliding One Log Along Another",
+      "domain": "earth-science",
+      "difficulty": 3,
+      "summary": "A tree ring is a year. Slide an undated timber along a dated chronology until the pattern locks and you have dated it to the year, until the noise wins and the lock is a confident lie.",
+      "prerequisites": [],
+      "tags": [
+        "dendrochronology",
+        "tree-rings",
+        "cross-dating",
+        "detrending",
+        "correlation",
+        "palaeoclimate"
+      ],
+      "interaction_pattern": "time-scrubber",
+      "sources": [
+        {
+          "title": "Douglass, Crossdating in Dendrochronology, Journal of Forestry 39 (1941)",
+          "url": "https://doi.org/10.1093/jof/39.10.825"
+        },
+        {
+          "title": "Cook and Kairiukstis (eds), Methods of Dendrochronology (Kluwer, 1990), chapters on standardisation and crossdating",
+          "url": "https://doi.org/10.1007/978-94-015-7879-0"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 12
+    },
+    {
+      "slug": "zipf-law-word-frequency",
+      "title": "Even Noise Slopes Down",
+      "domain": "linguistics",
+      "difficulty": 3,
+      "summary": "Word frequency really does fall off as roughly one over rank. But sorting counts by size and fitting a line slopes downward whether there is a law underneath or not, and on a short passage it slopes nearly as steeply on noise.",
+      "prerequisites": [],
+      "tags": [
+        "linguistics",
+        "zipf",
+        "power-law",
+        "rank-statistics",
+        "sampling-bias",
+        "null-model"
+      ],
+      "interaction_pattern": "draw-input",
+      "sources": [
+        {
+          "title": "Zipf, Human Behavior and the Principle of Least Effort (1949)",
+          "url": "https://archive.org/details/humanbehaviorpri0000zipf"
+        },
+        {
+          "title": "Baayen, Word Frequency Distributions (2001), on estimation from finite samples",
+          "url": "https://link.springer.com/book/10.1007/978-94-010-0844-0"
+        },
+        {
+          "title": "Clauset, Shalizi and Newman, Power-law distributions in empirical data, SIAM Review 51 (2009)",
+          "url": "https://arxiv.org/abs/0706.1062"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 14
     }
   ]
 }
