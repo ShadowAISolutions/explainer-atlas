@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Delay You Cannot Tune Away &mdash; Explainer Atlas</title>
+<meta name="description" content="A controller can be tuned out of almost anything except a delay between acting and seeing. Past one gain, set by the delay alone, the loop oscillates whatever you do.">
+<style>
+:root{
+  --bg:#eef1f5; --panel:#ffffff; --sunk:#e4e9ef;
+  --ink:#0f1720; --muted:#5b6673; --line:#cfd7e0; --grid:#dde3ea;
+  --steel:#1f5f8b; --steel-soft:#dceaf4;
+  --hot:#bf3d18; --hot-soft:#f7e3dc;
+  --aim:#7a8593;
+  --radius:4px; --pad:clamp(13px,2.6vw,22px);
+  --sans:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0d1218; --panel:#141b23; --sunk:#0b1016;
+    --ink:#e6ebf1; --muted:#8e9aa8; --line:#26303b; --grid:#1d2630;
+    --steel:#64b5e6; --steel-soft:#122635;
+    --hot:#f08055; --hot-soft:#2c1712;
+    --aim:#7d8a98;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:clamp(0.97rem,0.93rem + 0.2vw,1.04rem)/1.6 var(--sans); -webkit-text-size-adjust:100%}
+.wrap{max-width:63rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:calc(var(--pad) * .8); border-bottom:2px solid var(--ink)}
+.kicker{margin:0 0 .5em; color:var(--hot); font:700 .7rem/1 var(--mono); text-transform:uppercase; letter-spacing:.16em}
+h1{margin:0 0 .35em; font:700 clamp(1.5rem,1.05rem + 2.1vw,2.2rem)/1.12 var(--sans); letter-spacing:-.018em}
+.standfirst{margin:0; max-width:44em; color:var(--muted)}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:58rem){
+  .layout{grid-template-columns:17.5rem minmax(0,1fr); align-items:start}
+  .controls{grid-column:1; grid-row:1}
+  figure.stage{grid-column:2; grid-row:1}
+}
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.65em; color:var(--muted); font-size:.85rem; line-height:1.5}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--pad); display:grid; gap:1em; align-content:start}
+.control{display:grid; gap:.25em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font:700 .72rem/1.3 var(--mono); text-transform:uppercase; letter-spacing:.1em; color:var(--muted)}
+.control output{font:700 .88rem/1 var(--mono); color:var(--steel); background:var(--steel-soft); padding:.22em .45em; border-radius:3px}
+.hint{margin:.1em 0 0; color:var(--muted); font-size:.78rem; line-height:1.45}
+input[type=range]{width:100%; accent-color:var(--steel); min-height:26px; margin:.1em 0}
+select,button{font:inherit; color:inherit; background:var(--sunk); border:1px solid var(--line); border-radius:3px; padding:.45em .6em; min-height:38px; width:100%}
+button{cursor:pointer; font:700 .84rem/1 var(--sans)}
+button:hover{border-color:var(--steel); color:var(--steel)}
+.chk{display:flex; align-items:center; gap:.55em; font-size:.88rem}
+.chk input{accent-color:var(--steel); width:17px; height:17px}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--hot); outline-offset:2px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(6.4rem,1fr)); gap:.4em; margin:0; padding:0}
+.readout div{background:var(--sunk); border-radius:3px; padding:.42em .55em}
+.readout dt{margin:0; color:var(--muted); font:.66rem/1.25 var(--mono); text-transform:uppercase; letter-spacing:.07em}
+.readout dd{margin:.15em 0 0; font:700 .98rem/1.15 var(--mono)}
+.prose{max-width:38em; margin-top:calc(var(--pad) * 1.3)}
+/* At full width the page is an instrument panel over a wide figure, and a
+   single 38em measure under it would leave half the page blank. Two columns
+   of the same measure fill it without making the lines any longer to read. */
+@media (min-width:64rem){
+  .prose{max-width:none; columns:2; column-gap:3.2rem; column-rule:1px solid var(--line)}
+  .prose > *{break-inside:avoid}
+  .prose h2{break-after:avoid}
+  .prose h2:first-of-type{margin-top:0}
+}
+.prose h2{margin:1.9em 0 .4em; font:700 1.08rem/1.3 var(--sans); color:var(--steel); letter-spacing:-.005em}
+.prose p{margin:0 0 1em}
+.prose .math{font:.88rem/1.7 var(--mono); background:var(--sunk); padding:.7em .8em; border-left:3px solid var(--steel); border-radius:0 3px 3px 0; overflow-x:auto}
+footer.page{margin-top:calc(var(--pad) * 1.8); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.84rem}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important; transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">engineering &middot; feedback control</p>
+  <h1>The Delay You Cannot Tune Away</h1>
+  <p class="standfirst">A controller can be tuned out of almost anything: a sluggish valve, a heavy tank, a weak
+     actuator. It cannot be tuned out of a delay between acting and seeing the result. Past one particular gain,
+     set by the delay alone, the loop oscillates whatever you do to it.</p>
+</header>
+
+<div class="layout">
+
+  <section class="controls" data-role="controls" aria-label="Loop and controller settings">
+    <div class="control">
+      <div class="row"><label for="gain">Controller gain</label><output id="gainout" for="gain">2.00</output></div>
+      <input type="range" id="gain" min="0.2" max="14" step="0.05" value="2">
+      <p class="hint">How hard the controller pushes on the error. Arrow keys step; Home and End jump to the ends.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="delay">Dead time</label><output id="delayout" for="delay">0.40 s</output></div>
+      <input type="range" id="delay" min="0" max="2" step="0.02" value="0.4">
+      <p class="hint">How long the plant ignores you before anything at all begins to move.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="lag">Lag</label><output id="lagout" for="lag">1.00 s</output></div>
+      <input type="range" id="lag" min="0.3" max="2.5" step="0.05" value="1">
+      <p class="hint">How slowly it then responds once it has started. Delay and lag are not the same thing, and the loop treats them very differently.</p>
+    </div>
+
+    <div class="control">
+      <div class="row"><label for="aim">Aim for</label></div>
+      <select id="aim">
+        <option value="1.2" selected>Settled in about a second</option>
+        <option value="0.6">Settled as fast as possible</option>
+        <option value="2.5">Settled gently</option>
+      </select>
+      <p class="hint">The grey line you are trying to land on.</p>
+    </div>
+
+    <label class="chk" for="ghost"><input type="checkbox" id="ghost"> Show the same gain with no delay</label>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Match</dt><dd id="r1">&mdash;</dd></div>
+      <div><dt>Critical gain</dt><dd id="r2">&mdash;</dd></div>
+      <div><dt>Gain margin</dt><dd id="r3">&mdash;</dd></div>
+      <div><dt>Short by</dt><dd id="r4">&mdash;</dd></div>
+      <div><dt>Ringing</dt><dd id="r5">&mdash;</dd></div>
+      <div><dt>Phase margin</dt><dd id="r6">&mdash;</dd></div>
+    </dl>
+
+    <button type="button" id="best">Tune to the best match</button>
+    <button type="button" id="crit">Take me to the critical gain</button>
+    <button type="button" id="reset">Reset</button>
+  </section>
+
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="620" role="img"
+            aria-label="Above, the step response of a delayed feedback loop against the target curve it is being tuned to match. Below, a map of critical gain against dead time, shading the region of gains that stay stable."></canvas>
+    <figcaption>Above: the setpoint steps to 1 at time zero and the loop chases it. The shaded strip at the
+      left is the dead time, during which nothing whatever happens. Below: every gain under the curve settles,
+      every gain over it grows. Drag <em>dead time</em> and watch the ceiling come down on you.</figcaption>
+  </figure>
+
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Turn the gain up. At first the loop gets better: it reaches the grey line sooner and sits closer to it.
+     Then it overshoots, then it rings, and somewhere near four and a half it stops settling at all and swings
+     forever. Nothing about the controller changed except one number, and nothing about the plant changed at
+     all. The ceiling you just hit belongs to the dead time.</p>
+
+  <p>Dead time and lag both make a plant slow, and they are not the same slowness. A lag responds immediately
+     and weakly: push the input and the output starts moving on the same instant, just gently. Dead time
+     responds not at all and then fully: push the input and for four tenths of a second the output does not
+     know you exist. Drag <em>lag</em> from 1 to its top and the ceiling rises from 4.59 to 10.46; drag
+     <em>dead time</em> to its top instead and the ceiling falls to 1.52. Drag dead time all the way to zero
+     and the ceiling does not merely rise, it stops existing: the loop is stable at every gain there is, no
+     matter how sluggish the lag.</p>
+
+  <h2>Where the ceiling comes from</h2>
+
+  <p>Feedback works by acting on the error it can see. Every lag in the path means the error it can see is out
+     of date, and out-of-date corrections arrive pointing the wrong way. At one particular frequency the
+     round trip through the plant delays a wave by exactly half a cycle, so a correction that left as a push
+     comes back as a pull. Whether that matters depends only on how big the wave is when it gets back. For a
+     first order plant with a delay, that frequency solves</p>
+
+  <p class="math">delay &times; w + arctan(w &times; lag) = pi</p>
+
+  <p>and the gain at which the returning wave is exactly as large as the one that left is</p>
+
+  <p class="math">critical gain = sqrt(1 + (w &times; lag)^2)</p>
+
+  <p>Below it the wave shrinks on every trip round and the ringing dies. Above it the wave grows on every
+     trip and the ringing does not. There is no tuning of a proportional controller that escapes this,
+     because the gain is the whole of the tuning.</p>
+
+  <h2>Doubling the delay does not halve the ceiling</h2>
+
+  <p>It is tempting, and it is wrong. Double the dead time and the offending frequency does not halve: the
+     arctangent term takes up part of the budget, and it gives some of that part back as the frequency falls.
+     The ceiling therefore always drops by <em>less</em> than half. At the defaults, doubling the dead time
+     from 0.4 to 0.8 takes the critical gain from 4.59 to 2.64, a factor of 0.577, not 0.5. The shorter the
+     delay the closer the factor creeps toward a half, and it never arrives. With a very short delay the
+     ceiling approaches pi &times; lag / (2 &times; delay), which is the only regime where halving is nearly
+     right.</p>
+
+  <h2>Phase margin is not damping here</h2>
+
+  <p>The tuning rule everyone is taught says the damping ratio is roughly the phase margin in degrees divided
+     by a hundred: sixty degrees of margin buys a damping of about 0.6. That rule is about a second order
+     system with no delay, and this loop is not one. Dead time makes the phase fall in a straight line
+     forever, so a loop can show a comfortable phase margin at the crossover frequency and still be nearly
+     undamped at the frequency that actually rings. Set dead time to 2, lag to 0.75 and gain to 1.20: the
+     margin readout says 45 degrees, which the rule reads as a damping of 0.45, and the mode that rings has a
+     damping of 0.04. The margin is real. What it is worth is not what the rule says.</p>
+
+  <h2>The error you are left holding</h2>
+
+  <p>A proportional controller only pushes when there is an error, so it can never quite arrive: the output
+     settles at gain / (1 + gain) and leaves 1 / (1 + gain) on the table. Wanting that gap small is exactly
+     what makes you want high gain, and the dead time is what forbids it. That tension is the whole of
+     process control. An integral term removes the offset without raising the gain, which is why it exists,
+     and it costs phase of its own, which is why it is never free.</p>
+
+  <h2>What to try</h2>
+
+  <p>Press <em>tune to the best match</em> at the default delay: the best gain is 2.71 and the match is 72
+     per cent. Drag dead time to 1.2 and press it again: 1.40 and 55 per cent. The tuning is optimal both
+     times and the result is worse, because the ceiling came down. Then set dead time to zero. The ceiling
+     leaves the lower chart entirely and the best gain climbs to 4.97, but the match only reaches 79 per
+     cent, because a proportional controller still settles short and no gain on the slider closes that gap.
+     Tick <em>show the same gain with no delay</em> at any setting to see how much of the trouble on screen
+     is the delay and how much was always going to be there.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+
+const GAIN_MIN = 0.2, GAIN_MAX = 14, DELAY_MAX = 2, WINDOW = 8;
+
+/* ---- MODEL --------------------------------------------------------------
+   Plant: unity gain, one lag of time constant "lag", preceded by "delay"
+   seconds of dead time.  Controller: proportional gain only.
+       open loop  L(s) = gain * exp(-delay*s) / (lag*s + 1)
+   Everything below is a pure function of (delay, lag, gain).             */
+
+const Model = {
+
+  /* The frequency at which the round trip inverts a wave: the phase of L
+     reaches minus pi.  delay*w + atan(w*lag) = pi.  The left side climbs
+     from 0 and passes pi before w = pi/delay, so a bisection on that
+     bracket cannot miss.  With no dead time the arctangent alone never
+     reaches pi and there is no such frequency at all.                    */
+  crossFrequency(delay, lag){
+    if (!(delay > 0) || !(lag > 0)) return Infinity;
+    const f = function(w){ return delay * w + Math.atan(w * lag) - Math.PI; };
+    let lo = 0, hi = Math.PI / delay;
+    for (let i = 0; i < 200; i++){
+      const m = (lo + hi) / 2;
+      if (f(m) < 0) lo = m; else hi = m;
+    }
+    return (lo + hi) / 2;
+  },
+
+  /* The gain that makes the returning wave exactly as big as the one that
+     left: |L| = 1 at that frequency.                                     */
+  criticalGain(delay, lag){
+    if (!(delay > 0) || !(lag > 0)) return Infinity;
+    const w = Model.crossFrequency(delay, lag) * lag;
+    return Math.sqrt(1 + w * w);
+  },
+
+  /* Gain crossover and phase margin: where |L| = 1, how much phase is left
+     before minus pi.  |L| = 1 needs gain > 1, otherwise the magnitude is
+     under one everywhere and the margin is the whole half turn.          */
+  gainCrossFrequency(delay, lag, gain){
+    return gain > 1 ? Math.sqrt(gain * gain - 1) / lag : 0;
+  },
+  phaseMargin(delay, lag, gain){
+    if (!(gain > 1)) return Math.PI;
+    const wg = Model.gainCrossFrequency(delay, lag, gain);
+    return Math.PI - delay * wg - Math.atan(wg * lag);
+  },
+
+  /* The closed loop characteristic function, (lag*s + 1) + gain*exp(-delay*s),
+     evaluated in the complex plane, and its derivative.  Its roots are the
+     modes of the loop; the rightmost one decides everything.             */
+  charAt(delay, lag, gain, sr, si){
+    const e = Math.exp(-delay * sr), c = Math.cos(delay * si), s = Math.sin(delay * si);
+    const er = e * c, ei = -e * s;
+    return { re: lag * sr + 1 + gain * er, im: lag * si + gain * ei,
+             dre: lag - gain * delay * er, dim: -gain * delay * ei };
+  },
+
+  /* Newton from a seed, with the result checked against the equation it is
+     supposed to solve.  Newton on a transcendental function lands on
+     stationary points as happily as on roots, so an unverified answer is
+     not an answer; a seed that fails the check is discarded.             */
+  rootNear(delay, lag, gain, sr, si){
+    for (let i = 0; i < 200; i++){
+      const F = Model.charAt(delay, lag, gain, sr, si);
+      const d2 = F.dre * F.dre + F.dim * F.dim;
+      if (!(d2 > 1e-300)) return null;
+      const dr = (F.re * F.dre + F.im * F.dim) / d2;
+      const di = (F.im * F.dre - F.re * F.dim) / d2;
+      sr -= dr; si -= di;
+      if (!Number.isFinite(sr) || !Number.isFinite(si)) return null;
+      if (Math.hypot(dr, di) < 1e-16) break;
+    }
+    const F = Model.charAt(delay, lag, gain, sr, si);
+    const scale = 1 + gain + lag * Math.hypot(sr, si);
+    return Math.hypot(F.re, F.im) < 1e-8 * scale ? { re: sr, im: Math.abs(si) } : null;
+  },
+
+  /* The rightmost root: the slowest-decaying (or fastest-growing) mode.
+     With no dead time the equation is linear and the single root is exact. */
+  dominantRoot(delay, lag, gain){
+    if (!(delay > 0)) return { re: -(1 + gain) / lag, im: 0 };
+    const w = Model.crossFrequency(delay, lag);
+    const seeds = [[0, w], [0.2 / lag, w], [-0.2 / lag, w],
+                   [0, w * 0.75], [0, w * 1.3], [0.05, w * 1.05]];
+    let best = null;
+    for (let i = 0; i < seeds.length; i++){
+      const r = Model.rootNear(delay, lag, gain, seeds[i][0], seeds[i][1]);
+      if (r && (best === null || r.re > best.re)) best = r;
+    }
+    return best || { re: 0, im: w };
+  },
+
+  /* The damping ratio of that mode, the thing the phase margin rule claims
+     to predict.                                                          */
+  dampingRatio(delay, lag, gain){
+    const r = Model.dominantRoot(delay, lag, gain);
+    const m = Math.hypot(r.re, r.im);
+    return m > 0 ? -r.re / m : 1;
+  },
+
+  /* What a proportional controller is left holding: it only pushes while an
+     error remains, so it settles at gain/(1+gain).                        */
+  steadyState(gain){ return gain / (1 + gain); },
+  offset(gain){ return 1 / (1 + gain); },
+
+  /* The target the reader is tuning against. */
+  target(t, aim){ return t <= 0 ? 0 : 1 - Math.exp(-t / aim); }
+};
+
+/* ---- SIMULATION ---------------------------------------------------------
+   The lag is advanced by its exact zero-order-hold step, so the only
+   approximation in the whole simulation is that the dead time has to be a
+   whole number of samples.  The step is chosen so that it is: the sample
+   count is picked first and the step is the dead time divided by it, which
+   makes the simulated dead time equal to the slider's, exactly, at every
+   setting.                                                              */
+const Sim = {
+  grid(delay, lag, samples){
+    const n = samples || 80;
+    if (!(delay > 0)) return { h: lag / (n * 5), d: 0 };
+    if (delay <= lag / 2) return { h: delay / n, d: n };
+    const d = Math.ceil(delay * 2 * n / lag);
+    return { h: delay / d, d: d };
+  },
+
+  /* Unit step on the setpoint at t = 0, loop at rest before it. */
+  run(delay, lag, gain, span, samples){
+    const g = Sim.grid(delay, lag, samples), h = g.h, d = g.d;
+    const a = Math.exp(-h / lag);
+    const n = Math.max(8, Math.min(240000, Math.round(span / h)));
+    const buf = new Float64Array(d + 1);
+    const y = new Float64Array(n + 1);
+    let cur = 0, bi = 0;
+    for (let i = 0; i <= n; i++){
+      y[i] = cur;
+      buf[bi] = gain * (1 - cur);
+      cur = a * cur + (1 - a) * buf[(bi - d + 2 * (d + 1)) % (d + 1)];
+      if (!Number.isFinite(cur)) cur = 1e300;
+      else if (cur > 1e300) cur = 1e300;
+      else if (cur < -1e300) cur = -1e300;
+      bi = (bi + 1) % (d + 1);
+    }
+    return { y: y, h: h, n: n, d: d };
+  },
+
+  /* How far the response drifts from the settled value in the last quarter
+     of a run compared with the second quarter: under one it is dying out,
+     over one it is taking off.                                           */
+  envelopeRatio(delay, lag, gain, span){
+    const r = Sim.run(delay, lag, gain, span);
+    const q = Math.floor(r.n / 4), ss = Model.steadyState(gain);
+    let e1 = 0, e2 = 0;
+    for (let i = q; i < 2 * q; i++) e1 = Math.max(e1, Math.abs(r.y[i] - ss));
+    for (let i = r.n - q; i <= r.n; i++) e2 = Math.max(e2, Math.abs(r.y[i] - ss));
+    return e1 > 0 ? e2 / e1 : 0;
+  },
+
+  /* The period of the ringing, read off the upward crossings of the settled
+     value in the second half of a run.                                   */
+  ringPeriod(delay, lag, gain, span){
+    const r = Sim.run(delay, lag, gain, span), ss = Model.steadyState(gain);
+    const xs = [];
+    for (let i = Math.floor(r.n / 2); i < r.n; i++){
+      const A = r.y[i] - ss, B = r.y[i + 1] - ss;
+      if (A < 0 && B >= 0) xs.push((i - A / (B - A)) * r.h);
+    }
+    return xs.length >= 2 ? (xs[xs.length - 1] - xs[0]) / (xs.length - 1) : NaN;
+  },
+
+  /* Root mean square distance from the target over the window on screen,
+     reported against the mismatch of doing nothing at all, so that zero per
+     cent means "no better than leaving the valve shut".                  */
+  match(delay, lag, gain, aim){
+    const r = Sim.run(delay, lag, gain, WINDOW);
+    let se = 0, s0 = 0;
+    for (let i = 0; i <= r.n; i++){
+      const tgt = Model.target(i * r.h, aim);
+      const e = r.y[i] - tgt;
+      se += e * e; s0 += tgt * tgt;
+    }
+    if (!(s0 > 0) || !Number.isFinite(se)) return 0;
+    const v = 100 * (1 - Math.sqrt(se / s0));
+    return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0;
+  },
+
+  /* The gain that matches best, found by scanning the slider's own range and
+     then closing in.  A scan first because the mismatch is not guaranteed to
+     have one hump, and the reader is entitled to the real best, not a local
+     one.                                                                  */
+  bestGain(delay, lag, aim){
+    let bg = GAIN_MIN, bv = -1;
+    for (let i = 0; i <= 240; i++){
+      const k = GAIN_MIN + (GAIN_MAX - GAIN_MIN) * i / 240;
+      const v = Sim.match(delay, lag, k, aim);
+      if (v > bv){ bv = v; bg = k; }
+    }
+    let lo = Math.max(GAIN_MIN, bg - 0.12), hi = Math.min(GAIN_MAX, bg + 0.12);
+    for (let i = 0; i < 26; i++){
+      const m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;
+      if (Sim.match(delay, lag, m1, aim) < Sim.match(delay, lag, m2, aim)) lo = m1; else hi = m2;
+    }
+    return (lo + hi) / 2;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { gain: 2, delay: 0.4, lag: 1, aim: 1.2, ghost: false };
+const state = Object.assign({}, defaults);
+
+const el = function(id){ return document.getElementById(id); };
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function pick(opts, room){
+  for (let i = 0; i < opts.length; i++) if (ctx.measureText(opts[i]).width <= room) return opts[i];
+  return "";
+}
+
+let W, H, NARROW, PAD, FS, FSS, LM, RM, PA, PB, aEnd;
+
+function fitCanvas(){
+  const host = cv.parentElement;
+  const avail = host ? host.clientWidth - 20 : 880;
+  W = Math.max(320, Math.min(1000, Math.round(avail) || 880));
+  NARROW = W < 560;
+  PAD = NARROW ? 8 : 12;
+  FS  = NARROW ? 12 : 13;
+  FSS = NARROW ? 10 : 11;
+  LM  = NARROW ? 34 : 48;
+  RM  = NARROW ? 10 : 16;
+
+  const rows = FSS + 5 + FSS + 8 + FSS + 8;      /* ticks, axis name, legend */
+  PA = { x: LM, y: PAD + FS + 12, w: W - LM - RM, h: NARROW ? 176 : 224 };
+  aEnd = PA.y + PA.h + rows;
+  PB = { x: LM, y: aEnd + 16 + FS + 10, w: W - LM - RM, h: NARROW ? 142 : 180 };
+  /* The legend under the lower panel is the last thing this canvas paints, so
+     the height is measured from where that row actually lands rather than
+     from a constant that only happens to be big enough at one width. */
+  H = PB.y + PB.h + rows + PAD;
+
+  cv.width = Math.round(W * SS);
+  cv.height = Math.round(H * SS);
+  cv.style.width = "100%";
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function colours(){
+  return { panel: css("--panel"), sunk: css("--sunk"), ink: css("--ink"),
+           muted: css("--muted"), line: css("--line"), grid: css("--grid"),
+           steel: css("--steel"), steelSoft: css("--steel-soft"),
+           hot: css("--hot"), hotSoft: css("--hot-soft"), aim: css("--aim") };
+}
+
+function frame(C, p){
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(p.x + .5, p.y); ctx.lineTo(p.x + .5, p.y + p.h + .5); ctx.lineTo(p.x + p.w, p.y + p.h + .5);
+  ctx.stroke();
+}
+function gridlines(C, p, k){
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (let i = 1; i < k; i++){
+    const y = Math.round(p.y + p.h * i / k) + .5;
+    ctx.beginPath(); ctx.moveTo(p.x, y); ctx.lineTo(p.x + p.w, y); ctx.stroke();
+  }
+}
+function heading(C, p, text){
+  ctx.font = "700 " + FS + "px " + css("--sans");
+  ctx.fillStyle = C.ink; ctx.textAlign = "left";
+  ctx.fillText(text, p.x - LM + PAD, p.y - 11);
+}
+function axisRow(C, p, leftTick, rightTick, name){
+  ctx.font = FSS + "px " + css("--mono"); ctx.fillStyle = C.muted;
+  ctx.textAlign = "left";  ctx.fillText(leftTick, p.x, p.y + p.h + FSS + 5);
+  ctx.textAlign = "right"; ctx.fillText(rightTick, p.x + p.w, p.y + p.h + FSS + 5);
+  ctx.textAlign = "left";  ctx.fillText(name, p.x, p.y + p.h + FSS + 5 + FSS + 8);
+}
+function swatch(C, x, y, colour, dash, label){
+  ctx.strokeStyle = colour; ctx.lineWidth = 2.2; ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.moveTo(x, y - FSS * 0.33); ctx.lineTo(x + 15, y - FSS * 0.33); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = colour; ctx.textAlign = "left"; ctx.fillText(label, x + 21, y);
+  return x + 21 + ctx.measureText(label).width + (NARROW ? 12 : 22);
+}
+
+function drawResponse(C, run, ghost){
+  const p = PA;
+  let top = 1.45, bot = -0.2;
+  for (let i = 0; i <= run.n; i++){
+    const v = run.y[i];
+    if (Number.isFinite(v)){ if (v > top) top = v; if (v < bot) bot = v; }
+  }
+  top = Math.min(top * 1.06, 2.8); bot = Math.max(bot * 1.06, -1.4);
+  if (top < 1.45) top = 1.45;
+  const X = function(t){ return p.x + p.w * t / WINDOW; };
+  const Y = function(v){ return p.y + p.h * (top - v) / (top - bot); };
+
+  /* the dead time, during which the plant has not heard the news yet */
+  if (state.delay > 0){
+    const dx = Math.max(1, X(Math.min(state.delay, WINDOW)) - p.x);
+    ctx.fillStyle = C.sunk;
+    ctx.fillRect(p.x, p.y, dx, p.h);
+    /* A tenth of a second of dead time is a hairline on an eight second axis,
+       so the strip is named whenever the name fits beside it rather than only
+       when it happens to be wide. */
+    ctx.font = FSS + "px " + css("--mono"); ctx.fillStyle = C.muted;
+    const label = pick(["dead time", "delay"], p.w - dx - 8);
+    if (label){
+      ctx.textAlign = dx > ctx.measureText(label).width + 10 ? "right" : "left";
+      ctx.fillText(label, p.x + dx + (ctx.textAlign === "right" ? -4 : 4), p.y + FSS + 3);
+    }
+  }
+  gridlines(C, p, 4);
+
+  /* the setpoint */
+  ctx.strokeStyle = C.muted; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(p.x, Y(1)); ctx.lineTo(p.x + p.w, Y(1)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* the target being tuned to */
+  ctx.strokeStyle = C.aim; ctx.lineWidth = 2.2; ctx.setLineDash([7, 5]);
+  ctx.beginPath();
+  for (let i = 0; i <= 200; i++){
+    const t = WINDOW * i / 200, y = Y(Model.target(t, state.aim));
+    if (i === 0) ctx.moveTo(X(t), y); else ctx.lineTo(X(t), y);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  /* the same gain without any dead time at all */
+  if (ghost){
+    ctx.strokeStyle = C.steel; ctx.lineWidth = 1.4; ctx.setLineDash([2, 4]); ctx.globalAlpha = .85;
+    ctx.beginPath();
+    for (let i = 0; i <= ghost.n; i++){
+      const y = Y(Math.max(bot, Math.min(top, ghost.y[i])));
+      if (i === 0) ctx.moveTo(X(0), y); else ctx.lineTo(X(i * ghost.h), y);
+    }
+    ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+  }
+
+  /* the loop itself */
+  ctx.save();
+  ctx.beginPath(); ctx.rect(p.x, p.y, p.w, p.h); ctx.clip();
+  ctx.strokeStyle = C.steel; ctx.lineWidth = 2.4; ctx.lineJoin = "round";
+  ctx.beginPath();
+  const step = Math.max(1, Math.floor(run.n / (p.w * SS)));
+  for (let i = 0; i <= run.n; i += step){
+    const y = Y(Math.max(bot - 1, Math.min(top + 1, run.y[i])));
+    if (i === 0) ctx.moveTo(X(0), y); else ctx.lineTo(X(i * run.h), y);
+  }
+  ctx.stroke();
+  ctx.restore();
+  frame(C, p);
+
+  ctx.font = FSS + "px " + css("--mono"); ctx.fillStyle = C.muted; ctx.textAlign = "right";
+  ctx.fillText("1.0", p.x - 5, Y(1) + FSS * 0.36);
+  ctx.fillText("0", p.x - 5, Y(0) + FSS * 0.36);
+  axisRow(C, p, "0 s", WINDOW + " s", pick(["seconds after the setpoint steps", "seconds"], p.w - 60));
+
+  const ly = p.y + p.h + FSS + 5 + FSS + 8 + FSS + 8;
+  ctx.font = FSS + "px " + css("--mono");
+  let x = swatch(C, p.x, ly, C.steel, [], pick(["what the loop does", "loop"], p.w * .45));
+  x = swatch(C, x, ly, C.aim, [7, 5], pick(["what you are aiming at", "target"], p.w - (x - p.x) - 30));
+  if (ghost && x < p.x + p.w - 40) swatch(C, x, ly, C.steel, [2, 4], pick(["same gain, no delay", "no delay"], p.x + p.w - x - 8));
+}
+
+function drawMap(C, best){
+  const p = PB;
+  const X = function(d){ return p.x + p.w * d / DELAY_MAX; };
+  const Y = function(g){ return p.y + p.h * (1 - g / GAIN_MAX); };
+
+  /* the whole panel is the unstable side; the stable side is painted back
+     over it under the curve, so the boundary needs drawing only once */
+  ctx.fillStyle = C.hotSoft; ctx.fillRect(p.x, p.y, p.w, p.h);
+  const N = 220;
+  ctx.fillStyle = C.steelSoft;
+  ctx.beginPath(); ctx.moveTo(p.x, p.y + p.h);
+  for (let i = 0; i <= N; i++){
+    const d = DELAY_MAX * i / N;
+    const k = Math.min(GAIN_MAX * 1.2, Model.criticalGain(d, state.lag));
+    ctx.lineTo(X(d), Y(Math.min(k, GAIN_MAX)));
+  }
+  ctx.lineTo(p.x + p.w, p.y + p.h); ctx.closePath(); ctx.fill();
+
+  gridlines(C, p, 4);
+
+  ctx.strokeStyle = C.hot; ctx.lineWidth = 2.4; ctx.lineJoin = "round";
+  ctx.save(); ctx.beginPath(); ctx.rect(p.x, p.y, p.w, p.h); ctx.clip();
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++){
+    const d = DELAY_MAX * i / N;
+    const k = Model.criticalGain(d, state.lag);
+    const y = Y(Math.min(k, GAIN_MAX * 1.4));
+    if (i === 0) ctx.moveTo(X(d), y); else ctx.lineTo(X(d), y);
+  }
+  ctx.stroke();
+  ctx.restore();
+
+  /* the best match available at this delay, so the reader can see the gain
+     they want sitting under a ceiling that is coming down */
+  if (Number.isFinite(best)){
+    const bx = X(state.delay), by = Y(Math.min(best, GAIN_MAX));
+    ctx.strokeStyle = C.muted; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.arc(bx, by, 4.5, 0, Math.PI * 2); ctx.stroke();
+    ctx.font = FSS + "px " + css("--mono");
+    const right = bx + 9 + ctx.measureText("best match").width < p.x + p.w;
+    const txt = pick(["best match", "best"], right ? p.x + p.w - bx - 12 : bx - p.x - 12);
+    if (txt){
+      /* This label sits inside the shaded map and the ceiling curve runs
+         through wherever it happens to land, so it carries its own plate
+         rather than being read through a red line. */
+      const tw = ctx.measureText(txt).width, tx = bx + (right ? 9 : -9 - tw);
+      ctx.fillStyle = C.panel; ctx.globalAlpha = .82;
+      ctx.fillRect(tx - 2, by - FSS * 0.78, tw + 4, FSS * 1.22);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = C.muted; ctx.textAlign = "left";
+      ctx.fillText(txt, tx, by + FSS * 0.34);
+    }
+  }
+
+  /* where the reader is standing */
+  const px = X(state.delay), py = Y(Math.min(state.gain, GAIN_MAX));
+  ctx.strokeStyle = C.steel; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(px, p.y + p.h); ctx.lineTo(px, py); ctx.stroke();
+  ctx.setLineDash([]);
+  const over = state.gain > Model.criticalGain(state.delay, state.lag);
+  ctx.fillStyle = over ? C.hot : C.steel;
+  ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI * 2); ctx.fill();
+
+  frame(C, p);
+
+  ctx.font = FSS + "px " + css("--mono"); ctx.fillStyle = C.muted; ctx.textAlign = "right";
+  ctx.fillText(String(GAIN_MAX), p.x - 5, p.y + FSS * 0.9);
+  ctx.fillText("0", p.x - 5, p.y + p.h + FSS * 0.36);
+  axisRow(C, p, "0 s", DELAY_MAX.toFixed(1) + " s",
+          pick(["dead time, with lag held at " + state.lag.toFixed(2) + " s", "dead time"], p.w - 70));
+
+  /* At the narrow width the left margin is not wide enough to hold a rotated
+     axis name and the gain ticks side by side, so the name is dropped there
+     rather than laid on top of them. */
+  if (!NARROW){
+  ctx.save();
+  ctx.translate(p.x - LM + PAD + FSS, p.y + p.h / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = "center"; ctx.fillStyle = C.muted; ctx.font = FSS + "px " + css("--mono");
+  ctx.fillText(pick(["controller gain", "gain"], p.h - 8), 0, 0);
+  ctx.restore();
+  }
+
+  const ly = p.y + p.h + FSS + 5 + FSS + 8 + FSS + 8;
+  ctx.font = FSS + "px " + css("--mono");
+  let x = swatch(C, p.x, ly, C.hot, [], pick(["the critical gain", "ceiling"], p.w * .45));
+  ctx.fillStyle = C.muted; ctx.textAlign = "left";
+  ctx.fillText(pick(["under it the ringing dies, over it the ringing grows", "under: settles. over: grows"],
+                    p.x + p.w - x - 4), x, ly);
+}
+
+function drawTitles(C){
+  heading(C, PA, pick(["chasing the setpoint", "the response"], W - 30));
+  heading(C, PB, pick(["how much gain this loop allows", "the gain ceiling"], W - 30));
+}
+
+function render(){
+  fitCanvas();
+  const C = colours();
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = C.panel; ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "alphabetic";
+
+  const run = Sim.run(state.delay, state.lag, state.gain, WINDOW);
+  const ghost = state.ghost ? Sim.run(0, state.lag, state.gain, WINDOW) : null;
+  const best = Sim.bestGain(state.delay, state.lag, state.aim);
+
+  drawResponse(C, run, ghost);
+  drawMap(C, best);
+  drawTitles(C);
+
+  const crit = Model.criticalGain(state.delay, state.lag);
+  const pm = Model.phaseMargin(state.delay, state.lag, state.gain) * 180 / Math.PI;
+  const zeta = Model.dampingRatio(state.delay, state.lag, state.gain);
+  const per = Number.isFinite(zeta) && zeta < 1 && zeta > -1
+    ? Math.exp(-2 * Math.PI * zeta / Math.sqrt(1 - zeta * zeta)) : 0;
+
+  el("gainout").textContent = state.gain.toFixed(2);
+  el("delayout").textContent = state.delay.toFixed(2) + " s";
+  el("lagout").textContent = state.lag.toFixed(2) + " s";
+
+  el("r1").textContent = Math.round(Sim.match(state.delay, state.lag, state.gain, state.aim)) + "%";
+  el("r2").textContent = Number.isFinite(crit) ? crit.toFixed(2) : "none";
+  el("r3").textContent = Number.isFinite(crit) ? (crit / state.gain).toFixed(2) + "x" : "unlimited";
+  el("r4").textContent = (100 * Model.offset(state.gain)).toFixed(1) + "%";
+  el("r5").textContent = Number.isFinite(per) && per > 0 && per < 1e6
+    ? (per >= 1 ? "x" + Math.min(999, per).toFixed(2) : per.toFixed(2)) + " / cycle" : "none";
+  el("r6").textContent = Math.max(0, pm).toFixed(0) + " deg";
+}
+
+/* ---- controls ----------------------------------------------------------- */
+function bindRange(id, key){
+  el(id).addEventListener("input", function(){
+    state[key] = parseFloat(el(id).value); render();
+  });
+}
+bindRange("gain", "gain");
+bindRange("delay", "delay");
+bindRange("lag", "lag");
+el("aim").addEventListener("change", function(){ state.aim = parseFloat(el("aim").value); render(); });
+el("ghost").addEventListener("change", function(){ state.ghost = el("ghost").checked; render(); });
+
+function setGain(k){
+  const v = Math.max(GAIN_MIN, Math.min(GAIN_MAX, k));
+  state.gain = Math.round(v * 20) / 20;
+  el("gain").value = String(state.gain);
+  render();
+}
+el("best").addEventListener("click", function(){
+  setGain(Sim.bestGain(state.delay, state.lag, state.aim));
+});
+el("crit").addEventListener("click", function(){
+  const k = Model.criticalGain(state.delay, state.lag);
+  setGain(Number.isFinite(k) ? k : GAIN_MAX);
+});
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults);
+  el("gain").value = String(defaults.gain);
+  el("delay").value = String(defaults.delay);
+  el("lag").value = String(defaults.lag);
+  el("aim").value = String(defaults.aim);
+  el("ghost").checked = false;
+  render();
+});
+
+let rt = null;
+window.addEventListener("resize", function(){
+  clearTimeout(rt); rt = setTimeout(render, 90);
+});
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+else if (mq.addListener) mq.addListener(render);
+
+render();
+
+/* ---- SELFTEST ------------------------------------------------------------
+   The verifier re-runs this whole suite at every position of every control,
+   so the expensive sweeps are computed once and remembered.  That is sound
+   because every one of them is a pure function of constants.              */
+const memo = {};
+function once(key, fn){
+  if (!Object.prototype.hasOwnProperty.call(memo, key)) memo[key] = fn();
+  return memo[key];
+}
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+function e2(x){ return Number.isFinite(x) ? x.toExponential(2) : "not finite"; }
+let OFFSET_GAP = NaN;
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = function(name, pass, detail){ t.push({ name: name, pass: !!pass, detail: String(detail) }); };
+
+  /* 1 -- the ceiling, derived twice with no algebra in common */
+  const A1 = once("A1", function(){
+    let worst = 0, worstLo = -Infinity, worstHi = Infinity;
+    for (let i = 0; i < 40; i++){
+      const delay = 0.05 + (i % 8) * 0.27, lag = 0.35 + Math.floor(i / 8) * 0.52;
+      const k = Model.criticalGain(delay, lag);
+      worst = Math.max(worst, Math.abs(Model.dominantRoot(delay, lag, k).re));
+      worstLo = Math.max(worstLo, Model.dominantRoot(delay, lag, 0.85 * k).re);
+      worstHi = Math.min(worstHi, Model.dominantRoot(delay, lag, 1.15 * k).re);
+    }
+    return { worst: worst, lo: worstLo, hi: worstHi };
+  });
+  push("the critical gain is exactly where the loop stops decaying",
+       A1.worst < 1e-9 && A1.lo < -1e-4 && A1.hi > 1e-4,
+       "40 settings: solving for the half-turn frequency, against Newton on the closed loop characteristic " +
+       "equation. At the critical gain the slowest mode sits on the axis to " + e2(A1.worst) +
+       "; at 85 per cent of it every mode decays, at 115 per cent one grows");
+
+  /* 2 -- and the simulation agrees, without using either derivation */
+  const A2 = once("A2", function(){
+    let bad = 0, worstDecay = 0, weakestGrowth = Infinity;
+    for (let i = 0; i < 60; i++){
+      const delay = 0.07 + (i % 10) * 0.21, lag = 0.4 + Math.floor(i / 10) * 0.42;
+      const k = Model.criticalGain(delay, lag);
+      const per = 2 * Math.PI / Model.crossFrequency(delay, lag);
+      const sLo = Model.dominantRoot(delay, lag, 0.8 * k).re;
+      const sHi = Model.dominantRoot(delay, lag, 1.25 * k).re;
+      const lo = Sim.envelopeRatio(delay, lag, 0.8 * k, Math.max(24 * per, 10 / Math.abs(sLo)));
+      const hi = Sim.envelopeRatio(delay, lag, 1.25 * k, Math.max(24 * per, 10 / Math.abs(sHi)));
+      worstDecay = Math.max(worstDecay, lo);
+      weakestGrowth = Math.min(weakestGrowth, hi);
+      if (!(lo < 0.5 && hi > 2)) bad++;
+    }
+    return { bad: bad, decay: worstDecay, growth: weakestGrowth };
+  });
+  push("a simulated loop settles below that gain and runs away above it",
+       A2.bad === 0 && A2.decay < 0.5 && A2.growth > 2,
+       "60 settings stepped and integrated: at four fifths of the critical gain the swing shrinks to at worst " +
+       e2(A2.decay) + " of its earlier size; at five fourths it grows by at least " + e2(A2.growth) + " times");
+
+  /* 3 -- the tempting rule, and why it is wrong */
+  const A3 = once("A3", function(){
+    let worst = 1, bestR = 0, n = 0;
+    for (let i = 0; i < 24; i++){
+      const delay = 0.04 + (i % 8) * 0.24, lag = 0.4 + Math.floor(i / 8) * 0.7;
+      const r = Model.criticalGain(2 * delay, lag) / Model.criticalGain(delay, lag);
+      worst = Math.min(worst, r); bestR = Math.max(bestR, r); n++;
+    }
+    const tail = [];
+    for (let j = 0; j < 5; j++){
+      const d = 0.5 / Math.pow(4, j);
+      tail.push(Model.criticalGain(2 * d, 1) / Model.criticalGain(d, 1));
+    }
+    let falling = true;
+    for (let j = 1; j < tail.length; j++) if (!(tail[j] < tail[j - 1])) falling = false;
+    return { worst: worst, best: bestR, n: n, tail: tail, falling: falling };
+  });
+  push("doubling the dead time never halves the critical gain",
+       A3.worst > 0.5 && A3.falling && A3.tail[A3.tail.length - 1] > 0.5 && A3.tail[A3.tail.length - 1] < 0.501,
+       "over " + A3.n + " settings the ceiling falls to between " + A3.worst.toFixed(4) + " and " +
+       A3.best.toFixed(4) + " of its old value, never to a half. Shrinking the dead time drives the factor " +
+       "down toward a half without reaching it: " + A3.tail.map(function(x){ return x.toFixed(5); }).join(", "));
+
+  /* 4 -- with no dead time the ceiling is not merely high, it is absent */
+  push("with no dead time there is no ceiling at all", (function(){
+    if (Number.isFinite(Model.criticalGain(0, 1))) return false;
+    if (Number.isFinite(Model.crossFrequency(0, 1))) return false;
+    for (let k = 1; k <= 1e6; k *= 10){
+      for (const lag of [0.3, 1, 2.5]){
+        const r = Model.dominantRoot(0, lag, k);
+        if (!(r.re < 0) || !near(r.re, -(1 + k) / lag, 1e-9 * (1 + k) / lag)) return false;
+        if (r.im !== 0) return false;
+      }
+    }
+    return true;
+  })(), "the half-turn frequency does not exist, and the single closed loop root is -(1+gain)/lag, " +
+        "real and negative at every gain up to a million");
+
+  /* 5 -- phase margin is exactly zero at the ceiling */
+  push("the phase margin closes to nothing exactly at the critical gain", (function(){
+    let worst = 0;
+    for (let i = 0; i < 40; i++){
+      const delay = 0.06 + (i % 8) * 0.25, lag = 0.35 + Math.floor(i / 8) * 0.5;
+      const k = Model.criticalGain(delay, lag);
+      worst = Math.max(worst, Math.abs(Model.phaseMargin(delay, lag, k)));
+      if (!(Model.phaseMargin(delay, lag, 0.9 * k) > 0)) return false;
+      if (!(Model.phaseMargin(delay, lag, 1.1 * k) < 0)) return false;
+    }
+    return worst < 1e-9;
+  })(), "40 settings: the margin is zero at the ceiling to better than 1e-9, positive below it and negative above");
+
+  /* 6 -- the rule of thumb the margin is usually read through */
+  const A6 = once("A6", function(){
+    let n = 0, sum = 0, worst = 0, wc = null;
+    for (let i = 0; i < 120; i++){
+      const delay = 0.05 + (i % 20) * 0.19, lag = 0.4 + Math.floor(i / 20) * 0.36;
+      const k = Model.criticalGain(delay, lag);
+      for (let f = 0.25; f <= 0.95; f += 0.1){
+        const gain = k * f;
+        if (!(gain > 1)) continue;
+        const pm = Model.phaseMargin(delay, lag, gain) * 180 / Math.PI;
+        if (pm < 20 || pm > 70) continue;
+        const zeta = Model.dampingRatio(delay, lag, gain);
+        if (!(zeta > 0)) continue;
+        const err = Math.abs(zeta - pm / 100) / zeta;
+        n++; sum += err;
+        if (err > worst){ worst = err; wc = { delay: delay, lag: lag, gain: gain, pm: pm, zeta: zeta }; }
+      }
+    }
+    return { n: n, mean: sum / n, worst: worst, wc: wc };
+  });
+  push("the phase margin rule of thumb is not within five per cent here, ever",
+       A6.n > 200 && A6.mean > 0.5 && A6.worst > 3 && A6.wc !== null,
+       "over " + A6.n + " settings with a margin between 20 and 70 degrees, the damping ratio the rule " +
+       "predicts is out by " + (100 * A6.mean).toFixed(0) + " per cent on average. Worst case: a dead time of " +
+       (A6.wc ? A6.wc.delay.toFixed(2) : "?") + " s with a lag of " + (A6.wc ? A6.wc.lag.toFixed(2) : "?") +
+       " s at a gain of " + (A6.wc ? A6.wc.gain.toFixed(3) : "?") + " shows a margin of " +
+       (A6.wc ? A6.wc.pm.toFixed(1) : "?") + " degrees, so the rule promises a damping of " +
+       (A6.wc ? (A6.wc.pm / 100).toFixed(3) : "?") + " and the loop delivers " +
+       (A6.wc ? A6.wc.zeta.toFixed(4) : "?"));
+
+  /* 7 -- the ringing the simulation shows is the frequency that was solved for */
+  const A7 = once("A7", function(){
+    let worst = 0;
+    for (let i = 0; i < 12; i++){
+      const delay = 0.1 + i * 0.16, lag = 0.4 + (i % 4) * 0.5;
+      const w = Model.crossFrequency(delay, lag), per = 2 * Math.PI / w;
+      const k = Model.criticalGain(delay, lag);
+      const got = Sim.ringPeriod(delay, lag, k, 40 * per);
+      worst = Math.max(worst, Math.abs(got - per) / per);
+    }
+    return worst;
+  });
+  push("the loop rings at the frequency the half-turn condition names",
+       A7 < 0.01, "12 settings at the critical gain: the period counted off the simulated trace and 2 pi over " +
+       "the solved frequency differ by at most " + (100 * A7).toFixed(2) + " per cent, which is the cost of " +
+       "chopping the dead time into a whole number of samples");
+
+  /* 8 -- the offset a proportional controller cannot close */
+  push("a proportional loop settles short of the setpoint by exactly one over one plus the gain", (function(){
+    let worst = 0;
+    for (const gain of [0.2, 0.5, 1, 2, 3.5, 7, 14]){
+      if (!near(Model.offset(gain), 1 / (1 + gain), 1e-15)) return false;
+      for (const delay of [0, 0.3, 1.1]){
+        const k = Model.criticalGain(delay, 1);
+        if (gain >= k) continue;
+        /* A settled value is only settled once the slowest mode has actually
+           died, and just under the ceiling that mode is nearly undamped: the
+           window is set from the decay rate rather than fixed, or the test
+           would be measuring how long it waited. */
+        const sig = Math.abs(Model.dominantRoot(delay, 1, gain).re);
+        const r = Sim.run(delay, 1, gain, Math.max(160, Math.min(4000, 26 / sig)));
+        worst = Math.max(worst, Math.abs((1 - r.y[r.n]) - Model.offset(gain)));
+      }
+    }
+    OFFSET_GAP = worst;
+    return worst < 1e-9;
+  })(), "closed form against the settled end of the simulated trace, worst gap " + e2(OFFSET_GAP) +
+        " over every stable combination of seven gains and three dead times");
+
+  /* 9 -- the ceiling moves the way the picture says it does */
+  push("more dead time always lowers the ceiling, more lag always raises it", (function(){
+    for (let j = 0; j < 8; j++){
+      const lag = 0.3 + j * 0.3;
+      let prev = Infinity;
+      for (let d = 0.02; d <= DELAY_MAX + 1e-9; d += 0.02){
+        const k = Model.criticalGain(d, lag);
+        if (!(k < prev)) return false;
+        prev = k;
+      }
+    }
+    for (let j = 0; j < 8; j++){
+      const delay = 0.1 + j * 0.25;
+      let prev = 0;
+      for (let L = 0.3; L <= 2.5 + 1e-9; L += 0.05){
+        const k = Model.criticalGain(delay, L);
+        if (!(k > prev)) return false;
+        prev = k;
+      }
+    }
+    return true;
+  })(), "strictly monotone across the whole of both sliders: 8 lags by 100 dead times, and 8 dead times by 45 lags");
+
+  /* 10 -- what the ceiling becomes when the delay is small */
+  const A10 = once("A10", function(){
+    const out = [];
+    for (let j = 0; j < 5; j++){
+      const d = 0.5 / Math.pow(5, j);
+      const k = Model.criticalGain(d, 1), a = Math.PI / (2 * d);
+      out.push({ d: d, rel: Math.abs(k - a) / a });
+    }
+    return out;
+  });
+  push("a short dead time gives a ceiling of pi times lag over twice the dead time", (function(){
+    for (let j = 1; j < A10.length; j++) if (!(A10[j].rel < A10[j - 1].rel * 0.4)) return false;
+    return A10[A10.length - 1].rel < 1e-3;
+  })(), "the relative error of the approximation falls with the dead time: " +
+        A10.map(function(o){ return o.d.toFixed(4) + " s gives " + e2(o.rel); }).join("; "));
+
+  /* 11 -- the tuning the reader is offered never asks for a gain the loop
+     cannot hold, because a gain over the ceiling never matches anything */
+  const A11 = once("A11", function(){
+    let worstRatio = 0, checked = 0;
+    for (let i = 0; i < 12; i++){
+      const delay = 0.15 + i * 0.15, lag = 0.4 + (i % 3) * 0.55;
+      const k = Model.criticalGain(delay, lag);
+      if (!(k < GAIN_MAX)) continue;
+      const best = Sim.bestGain(delay, lag, 1.2);
+      worstRatio = Math.max(worstRatio, best / k); checked++;
+    }
+    return { ratio: worstRatio, checked: checked };
+  });
+  push("the best available tuning always sits under the ceiling",
+       A11.checked >= 8 && A11.ratio < 1,
+       A11.checked + " settings where the ceiling is inside the gain slider: the best matching gain reaches at " +
+       "most " + A11.ratio.toFixed(4) + " of the critical gain, because a gain above it cannot match anything");
+
+  /* 12 -- total over every setting the controls can reach */
+  push("finite at every setting the controls can reach", (function(){
+    for (let d = 0; d <= DELAY_MAX + 1e-9; d += 0.1){
+      for (let L = 0.3; L <= 2.5 + 1e-9; L += 0.25){
+        const k = Model.criticalGain(d, L);
+        if (!(k > 0) || (d > 0 && !Number.isFinite(k))) return false;
+        for (let g = GAIN_MIN; g <= GAIN_MAX + 1e-9; g += 1.15){
+          const pm = Model.phaseMargin(d, L, g);
+          const z = Model.dampingRatio(d, L, g);
+          const m = Sim.match(d, L, g, 1.2);
+          if (!Number.isFinite(pm) || !Number.isFinite(z) || !Number.isFinite(m)) return false;
+          if (!(m >= 0 && m <= 100)) return false;
+        }
+      }
+    }
+    return true;
+  })(), "21 dead times by 9 lags by 13 gains, plus the three target choices: every readout a finite number");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, Sim: Sim,
+                   seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

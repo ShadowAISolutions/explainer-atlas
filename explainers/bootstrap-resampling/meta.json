@@ -1,0 +1,16 @@
+{
+  "slug": "bootstrap-resampling",
+  "title": "The Bootstrap Is Not A Coverage Machine",
+  "domain": "statistics",
+  "difficulty": 3,
+  "summary": "Resampling your own data gives an interval for any statistic at all, with no formula. Race it against the textbook formula and it loses, which tells you exactly what the bootstrap is really for.",
+  "prerequisites": [],
+  "tags": ["bootstrap", "resampling", "confidence-interval", "coverage", "monte-carlo", "heavy-tails"],
+  "interaction_pattern": "race-two-methods",
+  "sources": [
+    { "title": "Efron, Bootstrap Methods: Another Look at the Jackknife, Annals of Statistics 7 (1979)", "url": "https://doi.org/10.1214/aos/1176344552" },
+    { "title": "Efron and Tibshirani, An Introduction to the Bootstrap (Chapman and Hall, 1993), chapters 12 to 14 on interval coverage", "url": "https://doi.org/10.1201/9780429246593" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 14
+}

@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Bootstrap Is Not A Coverage Machine &mdash; Explainer Atlas</title>
+<meta name="description" content="Resampling your own data gives an interval for any statistic at all, with no formula. Race it against the textbook formula and it loses the race it was never entered in.">
+<style>
+:root{
+  --bg:#f8f5ef; --panel:#fffdf9; --sunk:#efeae0; --rule:#1c1714;
+  --ink:#1c1714; --muted:#6b6259; --line:#ddd5c8; --grid:#e9e2d6;
+  --form:#6d3f97; --form-soft:#ece4f4;
+  --boot:#0f6d66; --boot-soft:#dcefed;
+  --miss:#a83a2a;
+  --pad:clamp(13px,2.6vw,24px);
+  --sans:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#15120f; --panel:#1d1915; --sunk:#12100d; --rule:#e9e3da;
+    --ink:#ece6dd; --muted:#9a9085; --line:#332c25; --grid:#241f1a;
+    --form:#c39aea; --form-soft:#241a31;
+    --boot:#5cc9bd; --boot-soft:#0e2624;
+    --miss:#e8836f;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:clamp(0.98rem,0.94rem + 0.2vw,1.05rem)/1.62 var(--sans);
+  font-variant-numeric:tabular-nums; -webkit-text-size-adjust:100%}
+.wrap{max-width:62rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:calc(var(--pad) * .7)}
+.kicker{margin:0 0 .5em; color:var(--muted); font:600 .72rem/1 var(--mono); text-transform:uppercase; letter-spacing:.2em}
+h1{margin:0 0 .3em; font:600 clamp(1.55rem,1.05rem + 2.3vw,2.45rem)/1.1 var(--sans); letter-spacing:-.022em}
+.standfirst{margin:0; max-width:40em; color:var(--muted); font-size:1.03em}
+
+/* The controls are a bench of instruments laid out in a row above the figure,
+   not a sidebar beside it: this page is one wide experiment, and the reader
+   sets it up and then watches it run underneath. */
+.controls{margin-top:var(--pad); padding:calc(var(--pad) * .8) var(--pad);
+  background:var(--panel); border-top:2px solid var(--rule); border-bottom:1px solid var(--line);
+  display:grid; gap:.9em 1.6em; grid-template-columns:1fr}
+@media (min-width:40rem){ .controls{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (min-width:58rem){ .controls{grid-template-columns:repeat(4,minmax(0,1fr))} }
+.control{display:grid; gap:.2em; align-content:start}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.control label{font:600 .7rem/1.3 var(--mono); text-transform:uppercase; letter-spacing:.11em; color:var(--muted)}
+.control output{font:700 .85rem/1 var(--mono); color:var(--ink)}
+.hint{margin:.05em 0 0; color:var(--muted); font-size:.76rem; line-height:1.4}
+input[type=range]{width:100%; accent-color:var(--boot); min-height:24px; margin:.15em 0}
+select,button{font:inherit; color:inherit; background:var(--sunk); border:1px solid var(--line); border-radius:2px; padding:.4em .55em; min-height:38px; width:100%}
+button{cursor:pointer; font:600 .82rem/1 var(--sans)}
+button:hover{border-color:var(--ink)}
+.buttons{display:grid; gap:.45em; align-content:start}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--miss); outline-offset:2px}
+
+figure.stage{margin:0; background:var(--panel); border-bottom:1px solid var(--line); padding:var(--pad) 0}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin:.8em auto 0; max-width:44em; color:var(--muted); font-size:.85rem; line-height:1.5; padding:0 var(--pad)}
+
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.4rem,1fr)); gap:1px;
+  margin:0; padding:0; background:var(--line); border-bottom:1px solid var(--line)}
+.readout div{background:var(--panel); padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font:.68rem/1.3 var(--mono); text-transform:uppercase; letter-spacing:.08em}
+.readout dd{margin:.15em 0 0; font:700 1rem/1.2 var(--mono)}
+
+/* One narrow measure, centred under a full width figure. */
+.prose{max-width:37em; margin:calc(var(--pad) * 1.6) auto 0}
+.prose h2{margin:1.9em 0 .4em; font:600 1.1rem/1.3 var(--sans); letter-spacing:-.008em}
+.prose h2::before{content:""; display:block; width:2.2em; border-top:2px solid var(--rule); margin-bottom:.5em}
+.prose p{margin:0 0 1em}
+.prose .math{font:.86rem/1.7 var(--mono); background:var(--sunk); padding:.7em .85em; border-radius:2px; overflow-x:auto}
+footer.page{max-width:37em; margin:calc(var(--pad) * 1.8) auto 0; padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.84rem}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important; transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">statistics &middot; resampling</p>
+  <h1>The Bootstrap Is Not A Coverage Machine</h1>
+  <p class="standfirst">Resampling your own data gives you an interval for any statistic at all, with no
+     formula and no distribution theory. Race it against the textbook formula on the one statistic the
+     textbook covers, and it loses &mdash; which tells you exactly what the bootstrap is really for.</p>
+</header>
+
+<section class="controls" data-role="controls" aria-label="Experiment settings">
+  <div class="control">
+    <div class="row"><label for="stat">Statistic</label></div>
+    <select id="stat">
+      <option value="mean" selected>The mean</option>
+      <option value="median">The median</option>
+      <option value="sd">The standard deviation</option>
+      <option value="iqr">The interquartile range</option>
+    </select>
+    <p class="hint">The textbook has a formula for two of these. The bootstrap does not care which.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="pop">The data come from</label></div>
+    <select id="pop">
+      <option value="normal" selected>A normal population</option>
+      <option value="uniform">A uniform population</option>
+      <option value="lognormal">A lognormal population</option>
+      <option value="pareto">A Pareto population, heavy tailed</option>
+      <option value="t3">A t population with 3 degrees of freedom</option>
+    </select>
+    <p class="hint">The truth is known here, which is the only reason coverage can be measured at all.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="n">Sample size</label><output id="nout" for="n">25</output></div>
+    <input type="range" id="n" min="6" max="120" step="1" value="25">
+    <p class="hint">How many numbers you actually have. Arrow keys step; Home and End jump to the ends.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="b">Resamples</label><output id="bout" for="b">400</output></div>
+    <input type="range" id="b" min="50" max="1200" step="50" value="400">
+    <p class="hint">How many times the sample is drawn from itself. More does not buy coverage, only smoothness.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="conf">Confidence asked for</label><output id="confout" for="conf">95%</output></div>
+    <input type="range" id="conf" min="80" max="99" step="1" value="95">
+    <p class="hint">The number on the label. The chart below shows what it is worth.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="trials">Samples in the race</label><output id="trialsout" for="trials">400</output></div>
+    <input type="range" id="trials" min="100" max="900" step="100" value="400">
+    <p class="hint">Fresh samples drawn to measure how often each interval actually contains the truth.</p>
+  </div>
+
+  <div class="control buttons">
+    <button type="button" id="draw">Draw another sample</button>
+    <button type="button" id="hard">Show me where both fail</button>
+  </div>
+
+  <div class="control buttons">
+    <button type="button" id="reset">Reset</button>
+  </div>
+</section>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Bootstrap interval</dt><dd id="r1">&mdash;</dd></div>
+  <div><dt>Formula interval</dt><dd id="r2">&mdash;</dd></div>
+  <div><dt>Bootstrap coverage</dt><dd id="r3">&mdash;</dd></div>
+  <div><dt>Formula coverage</dt><dd id="r4">&mdash;</dd></div>
+  <div><dt>True value</dt><dd id="r5">&mdash;</dd></div>
+  <div><dt>Width, boot over formula</dt><dd id="r6">&mdash;</dd></div>
+</dl>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="900" height="600" role="img"
+          aria-label="Above, the distribution of one statistic over many resamples of a single sample, with the bootstrap interval and the textbook interval drawn beneath it against the true value. Below, the measured coverage of both methods over many fresh samples, against the confidence level that was asked for."></canvas>
+  <figcaption>Above: one sample, resampled from itself over and over. The histogram is what the statistic does
+    under that resampling, and the two bars under it are the two intervals, with the true value marked.
+    Below: the race. Both methods are run on hundreds of fresh samples and scored on how often they actually
+    contain the truth. The line is the confidence that was asked for.</figcaption>
+</figure>
+
+<article class="prose" data-role="prose">
+  <p>You have twenty-five numbers and you want to know how far the mean of them could be from the mean of
+     whatever produced them. The textbook answer needs a distribution, a standard error and a table of
+     critical values. The bootstrap answer needs none of those. Treat the sample as if it were the
+     population, draw twenty-five numbers from it with replacement, take the mean of those, and do it four
+     hundred times. The middle 95 per cent of the answers is your interval. No algebra anywhere.</p>
+
+  <p>It is a genuinely remarkable idea and it works on anything: the median, the interquartile range, a
+     trimmed mean, the ratio of two things, the output of a model you cannot differentiate. Switch
+     <em>statistic</em> and the bootstrap carries on without comment while the formula column goes blank.
+     That is what the bootstrap is for.</p>
+
+  <h2>Now watch it lose the race</h2>
+
+  <p>On normal data with twenty-five points, asked for 95 per cent, the textbook interval contains the true
+     mean 94.6 per cent of the time and the bootstrap interval contains it 92.5 per cent of the time,
+     measured over three thousand fresh samples. One Monte Carlo standard error at that many samples is half
+     a point, so the shortfall is five of them: the bootstrap is not unlucky and it is not noisy, it is
+     systematically short. Drag <em>sample size</em> down to ten and it falls to 88 per cent. Drag it up to
+     a hundred and twenty and it is still only 94.</p>
+
+  <p>Two things cause it, and both are exact. The bootstrap resamples from the sample, so the spread it
+     sees is the sample's own spread with the divisor n rather than n minus one. That makes its standard
+     error smaller than the textbook one by a factor of</p>
+
+  <p class="math">sqrt((n - 1) / n) = 0.9798 at n = 25</p>
+
+  <p>which is 2.0 per cent, every time, no matter how many resamples you take. And the percentile bootstrap
+     cuts its interval at the quantiles of what it saw, which behave like the quantiles of a normal
+     distribution, while the formula uses Student's t: 1.960 against 2.064 at twenty-four degrees of
+     freedom, another 5.0 per cent. Multiply the two and you predict a bootstrap interval at 0.9305 of the
+     formula's width. The measured figure over nine hundred samples is 0.9241. The whole of the shortfall is
+     accounted for before any data are drawn.</p>
+
+  <h2>The rescue that is not one</h2>
+
+  <p>The obvious defence is that the formula only wins because the data really are normal, and that the
+     bootstrap comes into its own when they are not. Select the <em>Pareto</em> population and watch.
+     Coverage falls to about 83 per cent &mdash; for both of them, with the bootstrap a point behind. On the
+     lognormal it is 86 per cent for the bootstrap and 88 for the formula. The heavy tail breaks the bootstrap
+     exactly as it breaks the
+     formula, and for the same reason: a sample of twenty-five from a distribution whose extreme values
+     matter has probably not seen one yet, and resampling from it cannot conjure the tail it never drew.
+     Press <em>show me where both fail</em> to land on that setting directly.</p>
+
+  <h2>What it is actually worth</h2>
+
+  <p>The bootstrap does not buy accuracy. It buys <em>scope</em>. It gives you an interval where there was
+     no interval to be had, and that interval is about as trustworthy as a formula-based one would have been
+     if a formula had existed: roughly right on well-behaved data, optimistic on small samples, and badly
+     wrong on heavy tails. Knowing the size of each of those failures is the difference between using the
+     bootstrap and believing it.</p>
+
+  <p>The fixes exist and they are not free. Using the quantiles the other way round gives the basic interval,
+     correcting for skew and bias gives the accelerated one, and bootstrapping a studentised quantity gets
+     closest of all at the cost of a bootstrap inside every bootstrap. All of them sharpen the same tool.
+     None of them makes a sample of twenty-five know about a tail it has never seen.</p>
+
+  <h2>What to try</h2>
+
+  <p>Leave everything at the defaults and drag <em>resamples</em> from 50 upward. Coverage climbs from about
+     90 to about 92 per cent over the first couple of hundred, because at sixty draws the 2.5 per cent cut
+     falls between the second and third smallest of them and is itself a coarse guess. Past two hundred it
+     stops moving: the histogram keeps smoothing and the coverage does not improve. Then set the statistic to
+     <em>the median</em> on normal data. The formula column empties, and the bootstrap interval is about a
+     quarter wider than the mean's, which is the square root of pi over two that the theory predicts, and
+     which you would have had no way to price at all without resampling.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+
+/* The 0.75 quantile of a standard normal.  Named here once because three
+   population truths are built out of it, and checked in the selftest against
+   the normal integral rather than trusted.                                 */
+const Z75 = 0.6744897501960817;
+
+/* ---- SPECIAL FUNCTIONS --------------------------------------------------
+   Needed only by the formula side of the race: Student's t for the mean and
+   chi squared for the standard deviation.  Both are checked in the selftest
+   against published table values.                                        */
+const Sf = {
+  gammln(z){
+    const g = [76.18009172947146, -86.50532032941677, 24.01409824083091,
+               -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+    let x = z, y = z, tmp = x + 5.5;
+    tmp -= (x + 0.5) * Math.log(tmp);
+    let ser = 1.000000000190015;
+    for (let j = 0; j < 6; j++) ser += g[j] / ++y;
+    return -tmp + Math.log(2.5066282746310005 * ser / x);
+  },
+  betacf(a, b, x){
+    const qab = a + b, qap = a + 1, qam = a - 1;
+    let c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < 1e-30) d = 1e-30;
+    d = 1 / d;
+    let h = d;
+    for (let m = 1; m <= 300; m++){
+      const m2 = 2 * m;
+      let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < 1e-30) d = 1e-30;
+      c = 1 + aa / c; if (Math.abs(c) < 1e-30) c = 1e-30;
+      d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < 1e-30) d = 1e-30;
+      c = 1 + aa / c; if (Math.abs(c) < 1e-30) c = 1e-30;
+      d = 1 / d;
+      const del = d * c; h *= del;
+      if (Math.abs(del - 1) < 1e-14) break;
+    }
+    return h;
+  },
+  ibeta(a, b, x){
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    const bt = Math.exp(Sf.gammln(a + b) - Sf.gammln(a) - Sf.gammln(b) +
+                        a * Math.log(x) + b * Math.log(1 - x));
+    return x < (a + 1) / (a + b + 2)
+      ? bt * Sf.betacf(a, b, x) / a
+      : 1 - bt * Sf.betacf(b, a, 1 - x) / b;
+  },
+  tCdf(t, df){
+    const x = df / (df + t * t), half = 0.5 * Sf.ibeta(df / 2, 0.5, x);
+    return t > 0 ? 1 - half : half;
+  },
+  /* The two sided critical value: the (1+level)/2 quantile of t on df. */
+  tCrit(df, level){
+    if (!(df > 0)) return NaN;
+    const target = 1 - (1 - level) / 2;
+    let lo = 0, hi = 400;
+    for (let i = 0; i < 200; i++){
+      const m = (lo + hi) / 2;
+      if (Sf.tCdf(m, df) < target) lo = m; else hi = m;
+    }
+    return (lo + hi) / 2;
+  },
+  /* Regularised lower incomplete gamma, series below the turning point and
+     continued fraction above it. */
+  gammap(a, x){
+    if (x <= 0) return 0;
+    if (x < a + 1){
+      let ap = a, sum = 1 / a, del = sum;
+      for (let i = 0; i < 400; i++){
+        ap++; del *= x / ap; sum += del;
+        if (Math.abs(del) < Math.abs(sum) * 1e-15) break;
+      }
+      return sum * Math.exp(-x + a * Math.log(x) - Sf.gammln(a));
+    }
+    let b = x + 1 - a, c = 1e300, d = 1 / b, h = d;
+    for (let i = 1; i <= 400; i++){
+      const an = -i * (i - a);
+      b += 2; d = an * d + b; if (Math.abs(d) < 1e-30) d = 1e-30;
+      c = b + an / c; if (Math.abs(c) < 1e-30) c = 1e-30;
+      d = 1 / d;
+      const del = d * c; h *= del;
+      if (Math.abs(del - 1) < 1e-15) break;
+    }
+    return 1 - Math.exp(-x + a * Math.log(x) - Sf.gammln(a)) * h;
+  },
+  chi2Cdf(x, k){ return Sf.gammap(k / 2, x / 2); },
+  chi2Inv(p, k){
+    let lo = 0, hi = Math.max(40, 4 * k + 40);
+    while (Sf.chi2Cdf(hi, k) < p) hi *= 2;
+    for (let i = 0; i < 200; i++){
+      const m = (lo + hi) / 2;
+      if (Sf.chi2Cdf(m, k) < p) lo = m; else hi = m;
+    }
+    return (lo + hi) / 2;
+  },
+  /* The complementary error function to about 1.2e-7, and the normal integral
+     built on it.  Used only to check that Z75 is the quantile it claims to be. */
+  erfc(x){
+    const z = Math.abs(x), t = 1 / (1 + 0.5 * z);
+    const y = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 +
+      t * (0.09678418 + t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 +
+      t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))));
+    return x >= 0 ? y : 2 - y;
+  },
+  normCdf(z){ return 1 - 0.5 * Sf.erfc(z / Math.SQRT2); }
+};
+
+/* ---- POPULATIONS --------------------------------------------------------
+   Every one of these has a known mean, median, standard deviation and
+   interquartile range in closed form, which is the only reason coverage can
+   be measured at all: you cannot score an interval without a truth.      */
+function normalDraw(r){
+  let u = 0, v = 0;
+  while (u === 0) u = r();
+  while (v === 0) v = r();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+const PARETO_A = 2.5;
+const T3_75 = Sf.tCrit(3, 0.5);     /* the 0.75 quantile of t on 3 df */
+
+const POPS = {
+  normal: {
+    label: "normal",
+    draw: normalDraw,
+    truth: { mean: 0, median: 0, sd: 1, iqr: 2 * Z75 }
+  },
+  uniform: {
+    label: "uniform",
+    draw: function(r){ return r(); },
+    truth: { mean: 0.5, median: 0.5, sd: Math.sqrt(1 / 12), iqr: 0.5 }
+  },
+  lognormal: {
+    label: "lognormal",
+    draw: function(r){ return Math.exp(normalDraw(r)); },
+    truth: { mean: Math.exp(0.5), median: 1,
+             sd: Math.sqrt((Math.E - 1) * Math.E),
+             iqr: Math.exp(Z75) - Math.exp(-Z75) }
+  },
+  pareto: {
+    label: "Pareto",
+    draw: function(r){ let u = r(); if (u >= 1) u = 1 - 1e-12; return Math.pow(1 - u, -1 / PARETO_A); },
+    truth: { mean: PARETO_A / (PARETO_A - 1),
+             median: Math.pow(2, 1 / PARETO_A),
+             sd: Math.sqrt(PARETO_A / ((PARETO_A - 1) * (PARETO_A - 1) * (PARETO_A - 2))),
+             iqr: Math.pow(4, 1 / PARETO_A) - Math.pow(4 / 3, 1 / PARETO_A) }
+  },
+  t3: {
+    label: "t on 3 df",
+    draw: function(r){
+      const z = normalDraw(r);
+      let c = 0;
+      for (let i = 0; i < 3; i++){ const g = normalDraw(r); c += g * g; }
+      return z / Math.sqrt(c / 3);
+    },
+    truth: { mean: 0, median: 0, sd: Math.sqrt(3), iqr: 2 * T3_75 }
+  }
+};
+
+/* ---- STATISTICS ---------------------------------------------------------- */
+function mean(a, n){ let s = 0; for (let i = 0; i < n; i++) s += a[i]; return s / n; }
+function sdOf(a, n){
+  const m = mean(a, n);
+  let s = 0;
+  for (let i = 0; i < n; i++){ const d = a[i] - m; s += d * d; }
+  return n > 1 ? Math.sqrt(s / (n - 1)) : 0;
+}
+/* The ordinary linear-interpolation quantile: the one R calls type 7 and
+   every spreadsheet calls PERCENTILE.  Defined on a sorted array. */
+function quantile(sorted, n, p){
+  if (n === 0) return NaN;
+  if (n === 1) return sorted[0];
+  const h = (n - 1) * p, lo = Math.floor(h), hi = Math.min(n - 1, lo + 1);
+  return sorted[lo] + (h - lo) * (sorted[hi] - sorted[lo]);
+}
+const scratch = new Float64Array(4096);
+function sortedCopy(a, n){
+  const s = n <= scratch.length ? scratch.subarray(0, n) : new Float64Array(n);
+  for (let i = 0; i < n; i++) s[i] = a[i];
+  s.sort();
+  return s;
+}
+const STATS = {
+  mean:   { label: "the mean",   fn: function(a, n){ return mean(a, n); } },
+  median: { label: "the median", fn: function(a, n){ const s = sortedCopy(a, n); return quantile(s, n, 0.5); } },
+  sd:     { label: "the standard deviation", fn: function(a, n){ return sdOf(a, n); } },
+  iqr:    { label: "the interquartile range",
+            fn: function(a, n){ const s = sortedCopy(a, n); return quantile(s, n, 0.75) - quantile(s, n, 0.25); } }
+};
+
+/* ---- THE TWO METHODS ----------------------------------------------------- */
+const Method = {
+
+  sample(popKey, n, seed){
+    const r = mulberry32(seed), draw = POPS[popKey].draw;
+    const x = new Float64Array(n);
+    for (let i = 0; i < n; i++) x[i] = draw(r);
+    return x;
+  },
+
+  /* Draw the sample from itself B times, recompute the statistic each time,
+     and cut the middle of what comes back.  That is the whole method. */
+  bootstrap(x, n, statKey, B, level, seed){
+    const st = STATS[statKey].fn, r = mulberry32(seed);
+    const out = new Float64Array(B), buf = new Float64Array(n);
+    for (let b = 0; b < B; b++){
+      for (let i = 0; i < n; i++) buf[i] = x[(r() * n) | 0];
+      out[b] = st(buf, n);
+    }
+    const s = Float64Array.from(out);
+    s.sort();
+    const a = (1 - level) / 2;
+    return { draws: out, sorted: s,
+             lo: quantile(s, B, a), hi: quantile(s, B, 1 - a),
+             se: sdOf(s, B), centre: mean(s, B) };
+  },
+
+  /* The textbook interval, where the textbook has one.  For the mean it is
+     Student's t on the sample standard error; for the standard deviation it
+     is the chi squared interval, which assumes the data are normal and says
+     so.  For the median and the interquartile range it returns nothing,
+     which is the honest answer and the reason the bootstrap exists.      */
+  formula(x, n, statKey, level){
+    if (statKey === "mean"){
+      if (n < 2) return null;
+      const m = mean(x, n), s = sdOf(x, n);
+      const half = Sf.tCrit(n - 1, level) * s / Math.sqrt(n);
+      return { lo: m - half, hi: m + half, note: "Student's t" };
+    }
+    if (statKey === "sd"){
+      if (n < 2) return null;
+      const s = sdOf(x, n), a = (1 - level) / 2, k = n - 1;
+      const hiChi = Sf.chi2Inv(1 - a, k), loChi = Sf.chi2Inv(a, k);
+      return { lo: Math.sqrt(k * s * s / hiChi), hi: Math.sqrt(k * s * s / loChi),
+               note: "chi squared, normal theory" };
+    }
+    return null;
+  },
+
+  /* The race.  Draw a fresh sample, build both intervals, ask whether each
+     one contains the true value, and keep score.  Seeded throughout, so the
+     same settings always give the same result.                           */
+  race(popKey, statKey, n, B, level, trials, seed){
+    const truth = POPS[popKey].truth[statKey];
+    let covB = 0, covF = 0, wB = 0, wF = 0, haveF = 0;
+    for (let t = 0; t < trials; t++){
+      const x = Method.sample(popKey, n, seed + t * 7919);
+      const bs = Method.bootstrap(x, n, statKey, B, level, seed + t * 104729 + 3);
+      if (bs.lo <= truth && truth <= bs.hi) covB++;
+      wB += bs.hi - bs.lo;
+      const f = Method.formula(x, n, statKey, level);
+      if (f){
+        haveF++;
+        if (f.lo <= truth && truth <= f.hi) covF++;
+        wF += f.hi - f.lo;
+      }
+    }
+    return { truth: truth, trials: trials,
+             boot: covB / trials, widthB: wB / trials,
+             form: haveF ? covF / haveF : NaN, widthF: haveF ? wF / haveF : NaN,
+             hasFormula: haveF > 0,
+             /* the standard error of a coverage estimate measured this way */
+             mcSe: Math.sqrt(Math.max(1e-9, (covB / trials) * (1 - covB / trials) / trials) ) };
+  }
+};
+
+const Model = { Sf: Sf, POPS: POPS, STATS: STATS, Method: Method,
+                quantile: quantile, sd: sdOf, mean: mean, Z75: Z75, PARETO_A: PARETO_A };
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { stat: "mean", pop: "normal", n: 25, b: 400, conf: 95, trials: 400, shot: 0 };
+const state = Object.assign({}, defaults);
+
+const el = function(id){ return document.getElementById(id); };
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+function css(k){ return getComputedStyle(document.documentElement).getPropertyValue(k).trim(); }
+function pick(opts, room){
+  for (let i = 0; i < opts.length; i++) if (ctx.measureText(opts[i]).width <= room) return opts[i];
+  return "";
+}
+function fmt(v){
+  if (!Number.isFinite(v)) return "none";
+  const a = Math.abs(v);
+  return a >= 100 ? v.toFixed(0) : a >= 1 ? v.toFixed(2) : v.toFixed(3);
+}
+
+let W, H, NARROW, PAD, FS, FSS, LM, RM, BH, HIST, BAR1, BAR2, RACE, aEnd;
+
+function fitCanvas(){
+  const host = cv.parentElement;
+  const avail = host ? host.clientWidth : 880;   /* the figure has no side padding */
+  W = Math.max(320, Math.min(1000, Math.round(avail) || 880));
+  NARROW = W < 560;
+  PAD = NARROW ? 8 : 14;
+  FS  = NARROW ? 12 : 13;
+  FSS = NARROW ? 10 : 11;
+  LM  = NARROW ? 8 : 12;
+  RM  = NARROW ? 8 : 14;
+  BH  = NARROW ? 15 : 19;
+
+  HIST = { x: LM, y: PAD + FS + 12, w: W - LM - RM, h: NARROW ? 124 : 158 };
+  /* The histogram's own tick row and the first interval's label are both
+     flush left, so they need a clear line between them rather than merely
+     consecutive baselines. */
+  const afterHist = HIST.y + HIST.h + FSS + 6;
+  BAR1 = { x: LM, y: afterHist + FSS + 12, w: W - LM - RM, h: BH };
+  BAR2 = { x: LM, y: BAR1.y + BH + 8 + FSS + 4, w: W - LM - RM, h: BH };
+  aEnd = BAR2.y + BH + FSS + 10;
+
+  RACE = { x: LM, y: aEnd + 20 + FS + 18, w: W - LM - RM, h: NARROW ? 86 : 104 };
+  /* The race panel's tick row is the last thing painted, so the height is
+     measured from where that row lands rather than from a round number. */
+  H = RACE.y + RACE.h + FSS + 6 + FSS + 8 + PAD;
+
+  cv.width = Math.round(W * SS);
+  cv.height = Math.round(H * SS);
+  cv.style.width = "100%"; cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function C(){
+  return { panel: css("--panel"), sunk: css("--sunk"), ink: css("--ink"), muted: css("--muted"),
+           line: css("--line"), grid: css("--grid"), form: css("--form"), formSoft: css("--form-soft"),
+           boot: css("--boot"), bootSoft: css("--boot-soft"), miss: css("--miss") };
+}
+
+function drawHistogram(c, bs, f, truth){
+  const p = HIST;
+  let lo = bs.sorted[0], hi = bs.sorted[bs.sorted.length - 1];
+  const pts = [bs.lo, bs.hi, truth];
+  if (f){ pts.push(f.lo); pts.push(f.hi); }
+  for (let i = 0; i < pts.length; i++){
+    if (Number.isFinite(pts[i])){ if (pts[i] < lo) lo = pts[i]; if (pts[i] > hi) hi = pts[i]; }
+  }
+  if (!(hi > lo)) { hi = lo + 1; lo -= 1; }
+  const padx = (hi - lo) * 0.06;
+  lo -= padx; hi += padx;
+  const X = function(v){ return p.x + p.w * (v - lo) / (hi - lo); };
+
+  const bins = NARROW ? 34 : 56;
+  const counts = new Int32Array(bins);
+  for (let i = 0; i < bs.draws.length; i++){
+    const k = Math.floor(bins * (bs.draws[i] - lo) / (hi - lo));
+    if (k >= 0 && k < bins) counts[k]++;
+  }
+  let top = 1;
+  for (let i = 0; i < bins; i++) if (counts[i] > top) top = counts[i];
+
+  ctx.fillStyle = c.bootSoft;
+  const bw = p.w / bins;
+  for (let i = 0; i < bins; i++){
+    const h = p.h * counts[i] / top;
+    if (h > 0) ctx.fillRect(p.x + i * bw, p.y + p.h - h, Math.max(1, bw - 0.6), h);
+  }
+  ctx.strokeStyle = c.line; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(p.x, p.y + p.h + .5); ctx.lineTo(p.x + p.w, p.y + p.h + .5); ctx.stroke();
+
+  /* The truth, which is the only thing on the page that is not an estimate.
+     It is drawn in three pieces rather than one: the label rows between the
+     panels carry the interval endpoints as text, and a dashed rule through
+     them strikes the digits out. */
+  ctx.strokeStyle = c.ink; ctx.lineWidth = 1.6; ctx.setLineDash([4, 3]);
+  const spans = [[p.y - 4, p.y + p.h + 2], [BAR1.y - 2, BAR1.y + BAR1.h + 2],
+                 [BAR2.y - 2, BAR2.y + BAR2.h + 4]];
+  ctx.beginPath();
+  for (let i = 0; i < spans.length; i++){
+    ctx.moveTo(X(truth), spans[i][0]); ctx.lineTo(X(truth), spans[i][1]);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font = FSS + "px " + css("--mono"); ctx.fillStyle = c.ink;
+  const tx = X(truth), rightRoom = p.x + p.w - tx;
+  ctx.textAlign = rightRoom > 70 ? "left" : "right";
+  ctx.fillText(pick(["the truth", "truth"], Math.max(rightRoom, tx - p.x) - 8),
+               tx + (rightRoom > 70 ? 5 : -5), p.y + FSS);
+
+  ctx.font = FSS + "px " + css("--mono"); ctx.fillStyle = c.muted;
+  ctx.textAlign = "left";  ctx.fillText(fmt(lo), p.x, p.y + p.h + FSS + 5);
+  ctx.textAlign = "right"; ctx.fillText(fmt(hi), p.x + p.w, p.y + p.h + FSS + 5);
+  return X;
+}
+
+function drawInterval(c, box, X, iv, colour, label, truth){
+  ctx.font = FSS + "px " + css("--mono"); ctx.textAlign = "left";
+  if (!iv){
+    ctx.fillStyle = c.muted;
+    ctx.fillText(label + ": no formula exists for this statistic", box.x, box.y - 5);
+    ctx.strokeStyle = c.line; ctx.setLineDash([3, 4]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(box.x, box.y + box.h / 2 + .5);
+    ctx.lineTo(box.x + box.w, box.y + box.h / 2 + .5); ctx.stroke();
+    ctx.setLineDash([]);
+    return;
+  }
+  const covers = iv.lo <= truth && truth <= iv.hi;
+  ctx.fillStyle = colour;
+  ctx.fillText(label + ": " + fmt(iv.lo) + " to " + fmt(iv.hi) + (covers ? "" : "  -- misses"),
+               box.x, box.y - 5);
+  const a = Math.max(box.x, Math.min(box.x + box.w, X(iv.lo)));
+  const b = Math.max(box.x, Math.min(box.x + box.w, X(iv.hi)));
+  ctx.fillStyle = colour; ctx.globalAlpha = covers ? 0.28 : 0.18;
+  ctx.fillRect(a, box.y, Math.max(2, b - a), box.h);
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = covers ? colour : c.miss; ctx.lineWidth = covers ? 1.6 : 2.2;
+  ctx.strokeRect(a + .5, box.y + .5, Math.max(2, b - a) - 1, box.h - 1);
+}
+
+function drawRace(c, race, level){
+  const p = RACE, LOW = 0.6;
+  const X = function(v){ return p.x + p.w * (Math.max(LOW, Math.min(1, v)) - LOW) / (1 - LOW); };
+
+  ctx.fillStyle = c.sunk; ctx.fillRect(p.x, p.y, p.w, p.h);
+  ctx.strokeStyle = c.grid; ctx.lineWidth = 1;
+  for (let v = 0.65; v < 1.0001; v += 0.05){
+    const x = Math.round(X(v)) + .5;
+    ctx.beginPath(); ctx.moveTo(x, p.y); ctx.lineTo(x, p.y + p.h); ctx.stroke();
+  }
+
+  const rows = [
+    { v: race.boot, colour: c.boot, label: "the bootstrap" },
+    { v: race.form, colour: c.form, label: "the formula" }
+  ];
+  const rh = (p.h - 12) / 2;
+  for (let i = 0; i < rows.length; i++){
+    const y = p.y + 6 + i * rh, row = rows[i];
+    if (!Number.isFinite(row.v)){
+      ctx.font = FSS + "px " + css("--mono"); ctx.fillStyle = c.muted; ctx.textAlign = "left";
+      ctx.fillText(row.label + ": nothing to race, there is no formula for this statistic",
+                   p.x + 8, y + rh * 0.62);
+      continue;
+    }
+    ctx.fillStyle = row.colour; ctx.globalAlpha = 0.85;
+    ctx.fillRect(p.x, y + 4, Math.max(2, X(row.v) - p.x), rh - 12);
+    ctx.globalAlpha = 1;
+    ctx.font = "700 " + FSS + "px " + css("--mono");
+    const txt = row.label + "  " + (100 * row.v).toFixed(1) + "%";
+    const inside = X(row.v) - p.x > ctx.measureText(txt).width + 16;
+    ctx.textAlign = inside ? "right" : "left";
+    ctx.fillStyle = inside ? c.panel : c.ink;
+    ctx.fillText(txt, X(row.v) + (inside ? -8 : 8), y + rh / 2 + FSS * 0.34 - 2);
+  }
+
+  /* the level that was asked for, which is the only number the reader chose */
+  const lx = Math.round(X(level)) + .5;
+  ctx.strokeStyle = c.ink; ctx.lineWidth = 1.8; ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(lx, p.y - 3); ctx.lineTo(lx, p.y + p.h + 3); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle = c.line; ctx.lineWidth = 1;
+  ctx.strokeRect(p.x + .5, p.y + .5, p.w - 1, p.h - 1);
+
+  ctx.font = FSS + "px " + css("--mono"); ctx.fillStyle = c.muted;
+  ctx.textAlign = "left";  ctx.fillText("60%", p.x, p.y + p.h + FSS + 6);
+  ctx.textAlign = "right"; ctx.fillText("100%", p.x + p.w, p.y + p.h + FSS + 6);
+  ctx.textAlign = "left";
+  ctx.fillText(pick(["how often the interval actually contained the truth, over " + race.trials +
+                     " fresh samples", "measured coverage over " + race.trials + " samples",
+                     "measured coverage"], p.w - 4),
+               p.x, p.y + p.h + FSS + 6 + FSS + 8);
+
+  /* the asked-for level, named where it will not sit on a bar label */
+  ctx.font = FSS + "px " + css("--mono"); ctx.fillStyle = c.ink;
+  const room = p.x + p.w - lx;
+  ctx.textAlign = room > 58 ? "left" : "right";
+  ctx.fillText(pick(["asked for " + (100 * level).toFixed(0) + "%", (100 * level).toFixed(0) + "%"],
+                    Math.max(room, lx - p.x) - 8),
+               lx + (room > 58 ? 5 : -5), p.y - 6);
+}
+
+function heading(c, y, text){
+  ctx.font = "600 " + FS + "px " + css("--sans");
+  ctx.fillStyle = c.ink; ctx.textAlign = "left";
+  ctx.fillText(text, LM, y);
+}
+
+/* Every race is a pure function of its settings, and the verifier re-renders
+   at nine positions of every control, so results are kept once computed. */
+const raceMemo = {};
+function racedNow(){
+  const key = [state.pop, state.stat, state.n, state.b, state.conf, state.trials].join("|");
+  if (!Object.prototype.hasOwnProperty.call(raceMemo, key)){
+    raceMemo[key] = Method.race(state.pop, state.stat, state.n,
+                                Math.min(state.b, 400), state.conf / 100, state.trials, SEED + 17);
+  }
+  return raceMemo[key];
+}
+
+function render(){
+  fitCanvas();
+  const c = C();
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "alphabetic";
+
+  const level = state.conf / 100;
+  const truth = POPS[state.pop].truth[state.stat];
+  const x = Method.sample(state.pop, state.n, SEED + 991 * (state.shot + 1));
+  const bs = Method.bootstrap(x, state.n, state.stat, state.b, level, SEED + 5 + state.shot);
+  const f = Method.formula(x, state.n, state.stat, level);
+  const race = racedNow();
+
+  heading(c, PAD + FS, pick(["one sample, resampled from itself " + state.b + " times",
+                             "one sample, resampled " + state.b + " times",
+                             "the resampled statistic"], W - 2 * LM));
+  const X = drawHistogram(c, bs, f, truth);
+  drawInterval(c, BAR1, X, { lo: bs.lo, hi: bs.hi }, c.boot, "the bootstrap", truth);
+  drawInterval(c, BAR2, X, f, c.form, "the formula", truth);
+  ctx.font = FSS + "px " + css("--mono"); ctx.fillStyle = c.muted; ctx.textAlign = "left";
+  ctx.fillText(pick([STATS[state.stat].label + " of a sample of " + state.n + " from a " +
+                     POPS[state.pop].label + " population",
+                     STATS[state.stat].label + ", n = " + state.n], W - 2 * LM),
+               LM, BAR2.y + BAR2.h + FSS + 8);
+
+  heading(c, RACE.y - 18, pick(["the race: how often each interval really contained the truth",
+                                "how often each one really contained the truth",
+                                "the race"], W - 2 * LM));
+  drawRace(c, race, level);
+
+  el("nout").textContent = String(state.n);
+  el("bout").textContent = String(state.b);
+  el("confout").textContent = state.conf + "%";
+  el("trialsout").textContent = String(state.trials);
+
+  el("r1").textContent = fmt(bs.lo) + " to " + fmt(bs.hi);
+  el("r2").textContent = f ? fmt(f.lo) + " to " + fmt(f.hi) : "none exists";
+  el("r3").textContent = (100 * race.boot).toFixed(1) + "%";
+  el("r4").textContent = Number.isFinite(race.form) ? (100 * race.form).toFixed(1) + "%" : "no formula";
+  el("r5").textContent = fmt(truth);
+  el("r6").textContent = Number.isFinite(race.widthF) && race.widthF > 0
+    ? (race.widthB / race.widthF).toFixed(3) : "no formula";
+}
+
+/* ---- controls ----------------------------------------------------------- */
+function bindRange(id, key){
+  el(id).addEventListener("input", function(){
+    state[key] = parseInt(el(id).value, 10); render();
+  });
+}
+bindRange("n", "n"); bindRange("b", "b"); bindRange("conf", "conf"); bindRange("trials", "trials");
+el("stat").addEventListener("change", function(){ state.stat = el("stat").value; render(); });
+el("pop").addEventListener("change", function(){ state.pop = el("pop").value; render(); });
+el("draw").addEventListener("click", function(){ state.shot = (state.shot + 1) % 64; render(); });
+el("hard").addEventListener("click", function(){
+  state.pop = "pareto"; state.stat = "mean"; state.n = 25; state.conf = 95;
+  el("pop").value = "pareto"; el("stat").value = "mean";
+  el("n").value = "25"; el("conf").value = "95";
+  render();
+});
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults);
+  el("stat").value = defaults.stat; el("pop").value = defaults.pop;
+  el("n").value = String(defaults.n); el("b").value = String(defaults.b);
+  el("conf").value = String(defaults.conf); el("trials").value = String(defaults.trials);
+  render();
+});
+
+let rt = null;
+window.addEventListener("resize", function(){ clearTimeout(rt); rt = setTimeout(render, 90); });
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+else if (mq.addListener) mq.addListener(render);
+
+render();
+
+/* ---- SELFTEST ------------------------------------------------------------ */
+const Z975 = 1.959963984540054;      /* the 0.975 quantile of a standard normal */
+const memo = {};
+function once(key, fn){
+  if (!Object.prototype.hasOwnProperty.call(memo, key)) memo[key] = fn();
+  return memo[key];
+}
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+function pc(x){ return (100 * x).toFixed(1) + "%"; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = function(name, pass, detail){ t.push({ name: name, pass: !!pass, detail: String(detail) }); };
+
+  /* 1 -- the formula side, against printed tables */
+  push("Student's t critical values match the published table", (function(){
+    const tab = [[1, 0.95, 12.706205], [2, 0.95, 4.302653], [5, 0.95, 2.570582],
+                 [9, 0.95, 2.262157], [24, 0.95, 2.063899], [29, 0.95, 2.045230],
+                 [60, 0.95, 2.000298], [24, 0.99, 2.796940], [9, 0.90, 1.833113]];
+    for (let i = 0; i < tab.length; i++)
+      if (!near(Sf.tCrit(tab[i][0], tab[i][1]), tab[i][2], 1e-6)) return false;
+    return true;
+  })(), "nine entries from the two sided t table, 1 to 60 degrees of freedom at 90, 95 and 99 per cent, to 1e-6");
+
+  push("chi squared quantiles match the published table", (function(){
+    const tab = [[0.975, 24, 39.36408], [0.025, 24, 12.40115], [0.95, 10, 18.30704],
+                 [0.05, 10, 3.940299], [0.5, 1, 0.4549364], [0.99, 30, 50.89218]];
+    for (let i = 0; i < tab.length; i++)
+      if (!near(Sf.chi2Inv(tab[i][0], tab[i][1]), tab[i][2], 1e-4)) return false;
+    return true;
+  })(), "six entries from the chi squared table, 1 to 30 degrees of freedom, to 1e-4");
+
+  push("the two normal quantiles the truths are built from are the right ones",
+       near(Sf.normCdf(Z75), 0.75, 3e-7) && near(Sf.normCdf(Z975), 0.975, 3e-7) &&
+       near(2 * T3_75, POPS.t3.truth.iqr, 1e-12),
+       "the normal integral at 0.6744897502 is 0.75 and at 1.9599639845 is 0.975, to the accuracy of the " +
+       "approximation used; the t population's quartile comes from the same solver as the critical values");
+
+  /* 2 -- the quantile rule itself, which both methods lean on */
+  push("the quantile rule is the ordinary interpolating one", (function(){
+    const a = Float64Array.from([1, 2, 3, 4, 5]);
+    if (!near(quantile(a, 5, 0), 1, 1e-15) || !near(quantile(a, 5, 1), 5, 1e-15)) return false;
+    if (!near(quantile(a, 5, 0.5), 3, 1e-15)) return false;
+    if (!near(quantile(a, 5, 0.25), 2, 1e-15)) return false;
+    if (!near(quantile(a, 5, 0.1), 1.4, 1e-15)) return false;
+    const b = Float64Array.from([1, 2, 3, 4]);
+    if (!near(quantile(b, 4, 0.5), 2.5, 1e-15)) return false;
+    if (!near(quantile(b, 4, 0.75), 3.25, 1e-15)) return false;
+    return true;
+  })(), "on 1..5 and 1..4: the ends, the median, the quartiles and a tenth, all exact");
+
+  /* 3 -- the headline: the bootstrap does not deliver what it says on the tin */
+  const A = once("A", function(){
+    return Method.race("normal", "mean", 25, 300, 0.95, 3000, SEED + 101);
+  });
+  push("the percentile bootstrap does not cover 95 per cent of the time",
+       A.boot < 0.94 && A.form > 0.94 && (0.95 - A.boot) > 3 * A.mcSe,
+       "3000 fresh normal samples of 25, asked for 95 per cent: the bootstrap contained the true mean " +
+       pc(A.boot) + " of the time and the formula " + pc(A.form) + ". One Monte Carlo standard error here " +
+       "is " + pc(A.mcSe) + ", so the shortfall is " + ((0.95 - A.boot) / A.mcSe).toFixed(1) + " of them");
+
+  /* 4 -- and it is a small sample failure, not noise */
+  const B = once("B", function(){
+    const out = [];
+    for (const n of [10, 25, 60, 120])
+      out.push({ n: n, r: Method.race("normal", "mean", n, 300, 0.95, 2000, SEED + 211 + n) });
+    return out;
+  });
+  push("the shortfall is a small sample failure, and the sample has to be large to cure it", (function(){
+    for (let i = 0; i < B.length; i++) if (!(B[i].r.boot < 0.95)) return false;
+    /* Each neighbouring pair differs by about one Monte Carlo standard error,
+       so claiming a monotone climb here would be claiming to see through the
+       noise. What the run does support is the two ends and the two halves. */
+    const se = Math.sqrt(0.93 * 0.07 / 2000);
+    if (!(B[B.length - 1].r.boot - B[0].r.boot > 3 * se)) return false;
+    const small = (B[0].r.boot + B[1].r.boot) / 2, large = (B[2].r.boot + B[3].r.boot) / 2;
+    return large > small;
+  })(), "coverage against sample size over 2000 samples each: " +
+        B.map(function(o){ return "n=" + o.n + " " + pc(o.r.boot); }).join(", ") +
+        ". Every one is short of the 95 per cent asked for, and the two large sizes beat the two small ones, " +
+        "but neighbouring pairs sit within a Monte Carlo standard error of " +
+        pc(Math.sqrt(0.93 * 0.07 / 2000)) + " of each other, so no step-by-step climb is claimed");
+
+  /* 5 -- the first of the two exact reasons */
+  const D = once("D", function(){
+    const n = 25, x = Method.sample("normal", n, SEED + 33);
+    const bs = Method.bootstrap(x, n, "mean", 40000, 0.95, SEED + 34);
+    const m = mean(x, n);
+    let ss = 0;
+    for (let i = 0; i < n; i++){ const d = x[i] - m; ss += d * d; }
+    const plug = Math.sqrt(ss / n) / Math.sqrt(n);          /* divisor n */
+    const text = Math.sqrt(ss / (n - 1)) / Math.sqrt(n);    /* divisor n - 1 */
+    return { boot: bs.se, plug: plug, text: text, n: n };
+  });
+  push("the bootstrap standard error goes to the sample's own spread, not the textbook's",
+       near(D.boot / D.plug, 1, 0.01) &&
+       near(D.plug / D.text, Math.sqrt((D.n - 1) / D.n), 1e-14) &&
+       !(Math.abs(1 - D.plug / D.text) < 0.02),
+       "at 40000 resamples the bootstrap standard error is " + D.boot.toFixed(6) + " against a plug-in value " +
+       "of " + D.plug.toFixed(6) + " and a textbook value of " + D.text.toFixed(6) + ". The middle and the " +
+       "right differ by exactly sqrt((n-1)/n) = " + Math.sqrt((D.n - 1) / D.n).toFixed(6) + ", which is " +
+       (100 * (1 - Math.sqrt((D.n - 1) / D.n))).toFixed(2) + " per cent, and no number of resamples changes it");
+
+  /* 6 -- the second reason, and the two together predict the gap */
+  const E = once("E", function(){
+    const n = 25;
+    const pred = Math.sqrt((n - 1) / n) * Z975 / Sf.tCrit(n - 1, 0.95);
+    const r = Method.race("normal", "mean", n, 600, 0.95, 900, SEED + 404);
+    return { pred: pred, got: r.widthB / r.widthF, n: n };
+  });
+  push("the narrower interval is predicted before any data are drawn",
+       near(E.got, E.pred, 0.02) && E.pred < 0.97,
+       "sqrt((n-1)/n) for the spread times 1.959964 over 2.063899 for the cut gives " + E.pred.toFixed(4) +
+       "; measured over 900 samples the bootstrap interval is " + E.got.toFixed(4) + " of the formula's width, " +
+       "so the shortfall is accounted for and is nowhere near the three per cent it is often assumed to be");
+
+  /* 7 -- where the bootstrap genuinely earns its keep, and what it costs */
+  const F = once("F", function(){
+    const out = [];
+    for (const n of [25, 200]){
+      const a = Method.race("normal", "mean", n, 500, 0.95, 600, SEED + 707 + n);
+      const b = Method.race("normal", "median", n, 500, 0.95, 600, SEED + 707 + n);
+      out.push({ n: n, ratio: b.widthB / a.widthB });
+    }
+    return out;
+  });
+  push("the median costs width, and the price is the one the theory names",
+       F[0].ratio > 1.15 && F[1].ratio > 1.15 &&
+       Math.abs(F[0].ratio - Math.sqrt(Math.PI / 2)) < 0.08 &&
+       Math.abs(F[1].ratio - Math.sqrt(Math.PI / 2)) < 0.08,
+       "on normal data the bootstrap interval for the median is " + F[0].ratio.toFixed(3) + " times the mean's " +
+       "at n=25 and " + F[1].ratio.toFixed(3) + " times at n=200, both sitting on the asymptotic sqrt(pi/2) = " +
+       Math.sqrt(Math.PI / 2).toFixed(4) + ". There is no textbook interval for the median to compare against, " +
+       "which is the whole point");
+
+  /* 8 -- the rescue that is not one */
+  const G = once("G", function(){
+    const out = {};
+    for (const p of ["pareto", "lognormal"])
+      out[p] = Method.race(p, "mean", 25, 300, 0.95, 1200, SEED + 909);
+    return out;
+  });
+  push("on a heavy tail the bootstrap fails too, and no better than the formula",
+       G.pareto.boot < 0.9 && G.pareto.form < 0.9 && G.lognormal.boot < 0.9 && G.lognormal.form < 0.9 &&
+       G.pareto.boot <= G.pareto.form + 0.01 && G.lognormal.boot <= G.lognormal.form + 0.01,
+       "1200 samples of 25 at a nominal 95 per cent. Pareto: bootstrap " + pc(G.pareto.boot) + ", formula " +
+       pc(G.pareto.form) + ". Lognormal: bootstrap " + pc(G.lognormal.boot) + ", formula " +
+       pc(G.lognormal.form) + ". Both are badly short and the bootstrap is not the better of the two");
+
+  /* 9 -- what resampling actually is */
+  const H = once("H", function(){
+    const n = 40, r = mulberry32(SEED + 55), reps = 4000;
+    const counts = new Int32Array(n);
+    let missing = 0;
+    for (let b = 0; b < reps; b++){
+      const seen = new Int32Array(n);
+      for (let i = 0; i < n; i++){ const k = (r() * n) | 0; counts[k]++; seen[k]++; }
+      for (let i = 0; i < n; i++) if (seen[i] === 0) missing++;
+    }
+    let tot = 0;
+    for (let i = 0; i < n; i++) tot += counts[i];
+    return { avg: tot / (reps * n), missing: missing / (reps * n), pred: Math.pow(1 - 1 / n, n) };
+  });
+  push("a resample is a multinomial draw, and it leaves a third of the sample out",
+       near(H.avg, 1, 1e-12) && near(H.missing, H.pred, 0.01) && near(H.pred, 1 / Math.E, 0.02),
+       "4000 resamples of 40 points: each point appears " + H.avg.toFixed(6) + " times on average, exactly " +
+       "once as it must, and " + pc(H.missing) + " of points never appear at all against the predicted " +
+       pc(H.pred) + ", which tends to one over e = " + (1 / Math.E).toFixed(4));
+
+  /* 10 -- resamples buy precision, never correctness */
+  const I = once("I", function(){
+    const out = [];
+    for (const B of [60, 240, 960])
+      out.push({ B: B, r: Method.race("normal", "mean", 25, B, 0.95, 1500, SEED + 313) });
+    return out;
+  });
+  push("resamples matter until there are a few hundred of them, and then stop mattering", (function(){
+    for (let i = 0; i < I.length; i++) if (!(I[i].r.boot < 0.945)) return false;
+    /* Sixty resamples is not a finer version of the same answer: the 2.5 per
+       cent cut falls between the second and third smallest of sixty draws, so
+       the interval end is itself a coarse guess. That costs real coverage. */
+    if (!(I[1].r.boot - I[0].r.boot > 0.015)) return false;
+    return Math.abs(I[2].r.boot - I[1].r.boot) < 0.015;
+  })(), "coverage against the number of resamples, 1500 samples each: " +
+        I.map(function(o){ return o.B + " gives " + pc(o.r.boot); }).join(", ") +
+        ". Going from 60 to 240 buys real coverage because the cut itself was too coarse; going from 240 to " +
+        "960 buys none, only a smoother histogram, and the shortfall survives all of it");
+
+  /* 11 -- the same settings always give the same answer */
+  push("everything on this page is seeded", (function(){
+    const a = Method.bootstrap(Method.sample("lognormal", 30, 4242), 30, "iqr", 250, 0.9, 77);
+    const b = Method.bootstrap(Method.sample("lognormal", 30, 4242), 30, "iqr", 250, 0.9, 77);
+    if (a.lo !== b.lo || a.hi !== b.hi) return false;
+    const r1 = Method.race("uniform", "sd", 20, 120, 0.9, 120, 31337);
+    const r2 = Method.race("uniform", "sd", 20, 120, 0.9, 120, 31337);
+    return r1.boot === r2.boot && r1.widthB === r2.widthB;
+  })(), "an interval and a whole race, each built twice from the same seed, agree bit for bit");
+
+  /* 12 -- total over every setting the controls can reach */
+  push("finite at every setting the controls can reach", (function(){
+    for (const popKey of Object.keys(POPS)){
+      for (const statKey of Object.keys(STATS)){
+        if (!Number.isFinite(POPS[popKey].truth[statKey])) return false;
+        for (const n of [6, 25, 120]){
+          for (const conf of [80, 95, 99]){
+            const x = Method.sample(popKey, n, 9001 + n + conf);
+            const bs = Method.bootstrap(x, n, statKey, 50, conf / 100, 7);
+            if (!Number.isFinite(bs.lo) || !Number.isFinite(bs.hi) || !Number.isFinite(bs.se)) return false;
+            const f = Method.formula(x, n, statKey, conf / 100);
+            if (f && (!Number.isFinite(f.lo) || !Number.isFinite(f.hi))) return false;
+            if (f && !(f.hi >= f.lo)) return false;
+          }
+        }
+      }
+    }
+    return true;
+  })(), "5 populations by 4 statistics by 3 sample sizes by 3 confidence levels: every truth, every interval " +
+        "and every standard error a finite number, with no interval inside out");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
