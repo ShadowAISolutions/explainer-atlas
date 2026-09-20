@@ -43,6 +43,55 @@ files in `AUDIT/` before starting any batch.
 
 ## Batches
 
+### batch/016 — 2026-09-20
+- merged: zipf-law-word-frequency, price-elasticity-revenue,
+  control-loop-dead-time, bootstrap-resampling, tree-rings-and-climate
+- blocked: none
+- patterns: draw-input, drag-parameter, tune-to-match, race-two-methods,
+  time-scrubber
+- queue: 47 remaining, above the refill threshold of 20. AUDIT/004 falls due
+  after batch/020.
+- learned:
+  - **A tolerance below a method's own floor is a broken assertion, not a
+    strict one — and loosening it is the second-best fix.** The elasticity page
+    asserted the revenue peak's location to 1e-9 and golden section cannot get
+    there: revenue is quadratic about its own maximum, so a price eps away
+    changes it by eps squared, and a search that only ever compares function
+    values cannot resolve the peak better than sqrt(machine eps), near 1.5e-8.
+    The better fix is a second route that is *linear* in the displacement:
+    bracketing the sign change of dRevenue compares a derivative against zero
+    and closes to 2.95e-16. Assert both, hold each to its own floor, and put
+    the reason in the assertion's detail line so the loose bound reads as
+    understood rather than as a retreat.
+  - **A Monte Carlo assertion must state its own noise floor, or it is
+    claiming to see through noise.** Three assertions on the bootstrap page
+    failed for this alone: a monotone coverage trend across steps smaller than
+    the standard error (88.8, 93.5, 92.1, 94.3 — the dip is 1.9 SE), a
+    convergence the numbers did not support, and a "more resamples never help"
+    claim that 60 to 240 resamples refutes outright. Each was rewritten to
+    claim only the ends and the halves, with sqrt(p(1-p)/N) quoted in the
+    detail. A headline that clears its shortfall by 2.5 SE is not a finding;
+    raising the trial count until it clears by 5 is cheaper than arguing.
+  - **A grid search's resolution leaks into whatever it feeds.** The tree-ring
+    page detrends each core by fitting a negative exponential; the geometric
+    b-scan (ratio 1.12) left the decay rate up to 6% out, which is enough to
+    leave a visible trend in a series whose entire purpose is to be flat.
+    Golden-section refinement inside the bracketing interval closed the fit to
+    1e-6. Any scan that hands its answer to a later stage needs a refinement
+    step, not just a finer grid.
+  - **Seven more task-file claims were false, bringing the running count to
+    28** — four of them on one page. Where the false claims cluster, they are
+    usually pointing at the page's real subject: the bootstrap page's four
+    became its thesis and its title. Every page in this batch asserts the
+    counterexample alongside the corrected statement.
+  - **Past a method's breakdown point, the failure can invert rather than
+    scatter.** Cross-dating by correlation degrades gracefully up to about 0.45
+    noise, and then the median margin goes *negative* — a wrong offset
+    correlates better than the true one, so the method returns a confident
+    wrong answer with nothing on the chart to flag it. Worth looking for
+    whenever a page asserts that a method "degrades": check whether it degrades
+    or whether it starts lying.
+
 ### batch/015 — 2026-09-20
 - merged: nash-equilibrium-mixed, le-chatelier-equilibrium-shift,
   multiple-comparisons-p-hacking, cache-line-stride, entropy-of-english-guessing
