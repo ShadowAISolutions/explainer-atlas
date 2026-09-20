@@ -43,6 +43,62 @@ files in `AUDIT/` before starting any batch.
 
 ## Batches
 
+### batch/017 — 2026-09-20
+- merged: taylor-series-remainder, photoelectric-threshold,
+  branch-prediction-cost, allometric-scaling-metabolism,
+  activation-energy-arrhenius
+- blocked: none
+- patterns: build-from-parts, guess-then-reveal, live-code,
+  compare-side-by-side, perturb-and-observe
+- queue: 42 remaining, above the refill threshold of 20. AUDIT/004 falls due
+  after batch/020.
+- learned:
+  - **A floating label on a plot is a collision waiting to happen; a key in the
+    corner the data vacates is not.** Three pages this batch put a name beside
+    the thing it named and had to be fixed twice each: the allometric page ran
+    "quarter power", "surface area" and "Elephant" into one corner, and the
+    Arrhenius page put its slope-and-Ea key over the two fastest measurements.
+    Both resolved the same way — one `keyBox(rows, corner)` that picks its
+    corner from the sign of the fitted slope, because a rising cloud always
+    vacates the top left and a falling one the bottom left. Where a label must
+    float next to a point, give it an opaque backing in the panel colour and
+    flip it to the other side of the point when it is near the frame edge.
+    Cheaper than discovering the collision in a screenshot for the third time.
+  - **Measure the labels the plate will really draw, not the ones you imagine.**
+    The allometric page reserved its left margin against `"10000"` while the
+    axis actually renders `"100,000"`, so the widest tick ran off the canvas and
+    sat underneath the rotated axis name. Build the candidate list by running
+    the real tick generator over every quantity the controls can select, then
+    `ctx.measureText` that. Same defect class as batch/016's amputated minus
+    sign, one level up: there the margin was constant, here it was measured
+    against the wrong string.
+  - **Whole decades are the wrong grain on a log axis under about 2.5 decades.**
+    Heart rate spans 1.5 decades across the mammal table and rendered with a
+    single labelled gridline. Subdivide with 1-2-3-5-7 mantissas below that
+    threshold and the same axis carries eight. Worth having as a rule because
+    the defect only appears when a control switches the quantity being plotted,
+    which is exactly the state a one-shot screenshot does not catch.
+  - **A preset button whose value the slider step cannot represent is a quiet
+    lie.** The Arrhenius and allometric pages both offer "surface area" buttons
+    that should set 2/3; with `step="0.005"` the control snapped to 0.665 while
+    the key still read 0.667. Choose the step so every named preset is
+    reachable exactly, or the plate contradicts its own legend.
+  - **Five more false assertions in the task files, running total 35.** Task 117
+    claimed lifetime heartbeats are constant across mammals to within a factor
+    of three: the fifteen-row table spans 5.333 (sheep 5.52e8 to human 2.95e9).
+    The page asserts the true spread, the counterexample, and the structure
+    behind it — drop the three primates and the remaining twelve span 2.143,
+    inside three, because primates average 3.437 times more lifetime beats than
+    non-primates of any size. Task 127 asserted the Arrhenius plot has
+    correlation +1; the slope is -Ea/R, so it is -1, and a page written to the
+    task file would have failed its own selftest on the sign.
+  - **The screenshot review found a real defect on all five pages again**, the
+    eleventh batch running. Every one was invisible to the verifier: a legend
+    overlapping itself, a colour meaning two things at once, an unlabelled pair
+    of curves, a caption promising a hairline too short to see. The verifier
+    proves the arithmetic and catches overflow; it cannot see a label sitting on
+    a curve, and nothing has changed that.
+
 ### batch/016 — 2026-09-20
 - merged: zipf-law-word-frequency, price-elasticity-revenue,
   control-loop-dead-time, bootstrap-resampling, tree-rings-and-climate

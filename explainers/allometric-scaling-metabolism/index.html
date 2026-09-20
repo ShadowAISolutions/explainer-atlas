@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Mouse Is Not A Small Elephant — Explainer Atlas</title>
+<meta name="description" content="Fit the exponent yourself on fifteen published mammals. Metabolic rate goes as mass to about three quarters, not the two thirds a surface-area argument predicts.">
+<style>
+:root{
+  --paper:#f6f1e4; --plate:#fffdf7; --ink:#2c261c; --muted:#7a6f5d; --rule:#ddd2ba;
+  --rule-soft:#eae1cd; --met:#9c3a2c; --heart:#2c6a6a; --fitline:#3b4a8c; --flag:#8a6d1f;
+  --pad:clamp(14px,3vw,26px);
+  --font-body:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --font-label:ui-sans-serif,"Avenir Next","Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#15120c; --plate:#1d1913; --ink:#eee5d3; --muted:#a0937f; --rule:#3a3324;
+    --rule-soft:#2a2418; --met:#e0765f; --heart:#63b8b3; --fitline:#8c9ae4; --flag:#d8b45f;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:clamp(1rem,.96rem + .2vw,1.08rem)/1.66 var(--font-body);-webkit-text-size-adjust:100%}
+.wrap{max-width:62rem;margin:0 auto;padding:var(--pad)}
+header.page{padding-bottom:1.1em;border-bottom:2px solid var(--ink)}
+.kicker{margin:0 0 .5em;color:var(--met);font:600 .72rem/1.3 var(--font-label);
+  text-transform:uppercase;letter-spacing:.16em}
+h1{margin:0 0 .35em;font-size:clamp(1.6rem,1.1rem + 2.3vw,2.5rem);line-height:1.12;
+  font-weight:600;letter-spacing:-.012em}
+.standfirst{margin:0;color:var(--muted);max-width:44em;font-size:1.03em}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* ---- specimen cards: the comparison is the hero, so it sits first ------- */
+.specimens{margin:var(--pad) 0 0;padding:0;border:0;display:grid;gap:14px;
+  grid-template-columns:1fr}
+@media (min-width:40rem){ .specimens{grid-template-columns:1fr 1fr} }
+.card{background:var(--plate);border:1px solid var(--rule);border-radius:2px;
+  padding:14px 16px 16px;box-shadow:0 1px 0 var(--rule-soft)}
+.card .pick{display:grid;gap:.3em;margin-bottom:.8em}
+.card label{font:600 .68rem/1.3 var(--font-label);text-transform:uppercase;
+  letter-spacing:.14em;color:var(--muted)}
+.card select{width:100%;font:600 1.1rem/1.3 var(--font-body);color:inherit;
+  background:transparent;border:0;border-bottom:1px solid var(--rule);
+  border-radius:0;padding:.15em 0 .3em;min-height:38px}
+.card .massbar{height:7px;background:var(--rule-soft);border-radius:1px;overflow:hidden;margin:.1em 0 .9em}
+.card .massbar i{display:block;height:100%;background:var(--met)}
+.card.b .massbar i{background:var(--heart)}
+.figs{margin:0;padding:0;display:grid;gap:.45em}
+.figs div{display:flex;justify-content:space-between;align-items:baseline;gap:.8em;
+  border-bottom:1px dotted var(--rule);padding-bottom:.3em}
+.figs dt{margin:0;font:.74rem/1.3 var(--font-label);text-transform:uppercase;
+  letter-spacing:.08em;color:var(--muted)}
+.figs dd{margin:0;font:600 .97rem/1.3 var(--font-mono);white-space:nowrap}
+.verdict{grid-column:1/-1;margin:0;padding:.75em .9em;background:var(--plate);
+  border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:2px;
+  font-size:.95em;color:var(--ink)}
+
+/* ---- the plate ---------------------------------------------------------- */
+figure.stage{margin:var(--pad) 0 0;padding:10px 10px 0;background:var(--plate);
+  border:1px solid var(--rule);border-radius:2px}
+figure.stage canvas{display:block;width:100%;height:auto;touch-action:pan-y}
+figcaption{margin:.5em 2px .9em;color:var(--muted);font-size:.87em;font-style:italic;
+  line-height:1.5}
+
+/* ---- apparatus band ----------------------------------------------------- */
+.controls{margin:14px 0 0;padding:var(--pad);background:var(--plate);
+  border:1px solid var(--rule);border-radius:2px;
+  display:grid;gap:1.1em 1.6em;grid-template-columns:1fr}
+@media (min-width:44rem){ .controls{grid-template-columns:1fr 1fr} }
+@media (min-width:62rem){ .controls{grid-template-columns:1.4fr 1fr 1fr} }
+.control{display:grid;gap:.32em;align-content:start}
+.control .row{display:flex;justify-content:space-between;align-items:baseline;gap:.7em}
+.control > label,.control > .grouplab,.control .row > label{font:600 .68rem/1.3 var(--font-label);
+  text-transform:uppercase;letter-spacing:.14em;color:var(--muted)}
+.control output{font:600 .92rem/1 var(--font-mono);color:var(--met)}
+.control .hint{margin:0;color:var(--muted);font-size:.82em;line-height:1.45}
+input[type=range]{width:100%;accent-color:var(--met);min-height:26px}
+select,button{font:inherit;color:inherit;background:var(--paper);
+  border:1px solid var(--rule);border-radius:2px;padding:.5em .7em;min-height:40px}
+.control select{width:100%;font-size:.96em}
+button{cursor:pointer;font:600 .8rem/1 var(--font-label);letter-spacing:.06em;
+  text-transform:uppercase;min-height:38px}
+button:hover{border-color:var(--met);color:var(--met)}
+.btnrow{display:flex;flex-wrap:wrap;gap:.5em}
+.chk{display:flex;align-items:center;gap:.55em;font-size:.93em;text-transform:none;
+  letter-spacing:0;font-family:var(--font-body);font-weight:400;color:var(--ink)}
+.chk input{width:18px;height:18px;accent-color:var(--met);flex:none}
+
+/* ---- plate legend: the fit's own numbers, under the plate --------------- */
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:0;
+  margin:14px 0 0;padding:0;border:1px solid var(--rule);border-radius:2px;
+  background:var(--plate);overflow:hidden}
+.legend div{padding:.65em .85em;border-right:1px solid var(--rule-soft)}
+.legend div:last-child{border-right:0}
+.legend dt{margin:0;font:.68rem/1.3 var(--font-label);text-transform:uppercase;
+  letter-spacing:.12em;color:var(--muted)}
+.legend dd{margin:.25em 0 0;font:600 1.12rem/1.2 var(--font-mono);letter-spacing:-.01em}
+
+/* ---- prose -------------------------------------------------------------- */
+.prose{max-width:38em;margin:calc(var(--pad)*1.5) auto 0;counter-reset:sec}
+.prose h2{margin:2em 0 .5em;font-size:1.1rem;font-weight:600;letter-spacing:.01em}
+.prose h2::before{counter-increment:sec;content:counter(sec) ". ";color:var(--met);
+  font-family:var(--font-mono);font-size:.92em}
+.prose p{margin:0 0 1.05em}
+.prose .math{font:.93rem/1.7 var(--font-mono);background:transparent;padding:.75em 0 .75em 1em;
+  border-left:3px solid var(--met);overflow-x:auto;color:var(--ink)}
+.prose em{font-style:italic}
+footer.page{max-width:38em;margin:calc(var(--pad)*1.8) auto 0;padding-top:1em;
+  border-top:1px solid var(--rule);color:var(--muted);font-size:.86em}
+footer.page a{color:var(--met)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--met);
+  outline-offset:2px;border-radius:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Biology · allometry</p>
+  <h1>A Mouse Is Not A Small Elephant</h1>
+  <p class="standfirst">Geometry says a body's heat loss should follow its surface, and so metabolism should go as mass to the two thirds. Fifteen published mammals spanning five decades of size say otherwise. Drag the exponent until the line lies flat through them and read what you get.</p>
+</header>
+
+<section class="specimens" data-role="controls" aria-label="Choose two mammals to compare">
+  <div class="card a">
+    <div class="pick">
+      <label for="left">Specimen on the left</label>
+      <select id="left"></select>
+    </div>
+    <div class="massbar" aria-hidden="true"><i id="lbar" style="width:2%"></i></div>
+    <dl class="figs">
+      <div><dt>Body mass</dt><dd id="lmass">&mdash;</dd></div>
+      <div><dt>Metabolic rate</dt><dd id="lbmr">&mdash;</dd></div>
+      <div><dt>Per kilogram</dt><dd id="lspec">&mdash;</dd></div>
+      <div><dt>Resting heart rate</dt><dd id="lhr">&mdash;</dd></div>
+      <div><dt>Beats in a lifetime</dt><dd id="lbeat">&mdash;</dd></div>
+    </dl>
+  </div>
+  <div class="card b">
+    <div class="pick">
+      <label for="right">Specimen on the right</label>
+      <select id="right"></select>
+    </div>
+    <div class="massbar" aria-hidden="true"><i id="rbar" style="width:100%"></i></div>
+    <dl class="figs">
+      <div><dt>Body mass</dt><dd id="rmass">&mdash;</dd></div>
+      <div><dt>Metabolic rate</dt><dd id="rbmr">&mdash;</dd></div>
+      <div><dt>Per kilogram</dt><dd id="rspec">&mdash;</dd></div>
+      <div><dt>Resting heart rate</dt><dd id="rhr">&mdash;</dd></div>
+      <div><dt>Beats in a lifetime</dt><dd id="rbeat">&mdash;</dd></div>
+    </dl>
+  </div>
+  <p class="verdict" id="verdict" aria-live="polite">&mdash;</p>
+</section>
+
+<figure class="stage" data-role="stage">
+  <canvas id="plate" width="900" height="520" role="img"
+    aria-label="A logarithmic plot of fifteen mammals, body mass along the bottom and the chosen quantity up the side, with a straight line whose slope is the exponent you set, and optional reference lines at the quarter-power and surface-area slopes."></canvas>
+  <figcaption id="cap">Both axes are logarithmic, so a power law is a straight line and its exponent is the slope. The solid line carries the exponent you set, pivoted through the middle of the data. Switch to residuals to see what a wrong exponent leaves behind: a slope that is too shallow does not scatter the points, it tilts them.</figcaption>
+</figure>
+
+<section class="controls" data-role="controls" aria-label="Plot controls">
+  <div class="control">
+    <div class="row">
+      <label for="expo">Exponent on mass</label>
+      <output id="expoout" for="expo">0.750</output>
+    </div>
+    <input type="range" id="expo" min="-0.6" max="1.2" step="0.001" value="0.75">
+    <p class="hint">The slope of the line. Arrow keys step by 0.001; Home and End jump to the ends. The three buttons set it exactly.</p>
+  </div>
+
+  <div class="control">
+    <label for="quantity">Quantity up the side</label>
+    <select id="quantity">
+      <option value="bmr" selected>Metabolic rate (kcal/day)</option>
+      <option value="hr">Resting heart rate (beats/min)</option>
+      <option value="life">Maximum lifespan (years)</option>
+      <option value="beats">Beats in a lifetime</option>
+    </select>
+    <p class="hint">Each column of the table gets its own exponent. Only one of them is close to zero.</p>
+  </div>
+
+  <div class="control">
+    <span class="grouplab">Plate options</span>
+    <p class="chk"><input type="checkbox" id="resid"><label class="chk" for="resid">Show residuals instead</label></p>
+    <p class="chk"><input type="checkbox" id="guides" checked><label class="chk" for="guides">Mark the two rival laws</label></p>
+    <div class="btnrow">
+      <button type="button" id="bfit">Least squares</button>
+      <button type="button" id="bq">Quarter power</button>
+      <button type="button" id="bs">Surface area</button>
+    </div>
+  </div>
+</section>
+
+<dl class="legend" aria-live="polite">
+  <div><dt>Your exponent</dt><dd id="g1">&mdash;</dd></div>
+  <div><dt>Best fit</dt><dd id="g2">&mdash;</dd></div>
+  <div><dt>Typical error</dt><dd id="g3">&mdash;</dd></div>
+  <div><dt>Residual tilt</dt><dd id="g4">&mdash;</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+  <p>An elephant is about 182,500 times the mass of a mouse. If a body were a furnace whose output scaled with its bulk, the elephant would burn 182,500 times as much. The fifteen mammals in the table say 13,500 times. Something between mass and metabolism is losing four orders of magnitude, and the question is what exponent describes the loss.</p>
+
+  <h2>The argument that fails</h2>
+  <p>Heat leaves through skin. Skin is area, and area on a shape held to fixed proportions goes as the square of a length while mass goes as the cube, so area goes as mass to the two thirds. A resting animal must shed heat as fast as it makes it, so metabolic rate ought to follow area: an exponent of exactly 0.667. This is clean, physical, and about a century of measurement disagrees with it.</p>
+
+  <p>Set the exponent to 0.667 and switch the plate to residuals. The points do not scatter around the line, they <em>ramp</em> across it: the mouse sits 0.271 of a decade below and the elephant 0.353 above, and the correlation between residual and body mass is 0.931. That climb is the signature of a slope that is too shallow. A wrong exponent never looks like noise. It looks like a tilt.</p>
+
+  <h2>What the data gives instead</h2>
+  <p class="math">log(metabolic rate) = 1.8328 + 0.7618 × log(body mass)</p>
+  <p>Least squares on the fifteen mammals returns an exponent of 0.7618, with the line accounting for 99.76 per cent of the variance across five and a quarter decades of mass. It is 0.0118 away from three quarters and 0.0951 away from two thirds &mdash; eight times nearer the quarter power. Forcing the slope to 0.75 costs almost nothing: typical error rises from 12.3 to 13.0 per cent. Forcing it to 0.667 costs a great deal: 37.4 per cent, with the tilt above.</p>
+
+  <p>Two thirds and three quarters sound close, and over one decade of mass they are. Over the range in this table they diverge by a factor of 2.74, which is the difference between a plausible ration for a horse and a starving one. The largest single miss the fitted line makes is the elephant, high by a factor of 1.33 &mdash; that datum comes from a single animal measured in 1936, and it is the one number here a careful reader should hold loosely.</p>
+
+  <h2>What a quarter power does to time</h2>
+  <p>Divide both sides by mass. Metabolic rate per kilogram goes as mass to the <em>minus</em> 0.238, so a gram of mouse burns 13.5 times as hard as a gram of elephant. Tissue does not have one metabolic speed; it has the speed its owner's size permits.</p>
+
+  <p>Switch the quantity to heart rate. The fitted exponent is &minus;0.2501, within 0.0001 of minus a quarter, which is what it must be if each beat moves a volume of blood proportional to body size and the blood has to carry that metabolism. Switch to lifespan and the exponent is +0.2374, the same quarter with the sign flipped. Multiply a rate of minus a quarter by a duration of plus a quarter and the exponents cancel: a lifetime's heartbeats should not depend on size at all.</p>
+
+  <h2>Where the tidy story breaks</h2>
+  <p>It nearly does not. Fit lifetime beats against mass directly and the exponent is &minus;0.0126, flat enough that the trend predicts only a 14 per cent fall from mouse to elephant, with an R-squared of 0.005 &mdash; mass explains essentially nothing. But flat is not constant. The actual spread across these fifteen is a factor of 5.33, from a sheep at 5.52 × 10<sup>8</sup> beats to a human at 2.95 × 10<sup>9</sup>, so the often-repeated claim that mammals get about a billion beats to within a factor of three is false on this table.</p>
+
+  <p>It fails for a reason worth knowing. Drop the three primates and the remaining twelve span 2.14, comfortably inside a factor of three, from the sheep up to the cat. Primates average 3.44 times more lifetime beats than non-primates of any size. The quarter-power machinery is intact; primates simply live far longer than their metabolism buys them, and a human most of all.</p>
+
+  <h2>What to try</h2>
+  <p>Put the mouse on the left and the elephant on the right, then drag the exponent from 0.5 to 1.0 and watch the line pivot through the middle of the data. Press <em>Surface area</em>, switch to residuals, and look at the ramp. Press <em>Least squares</em> and watch it flatten to nothing &mdash; the fitted slope is the one that leaves no tilt, which is all least squares means. Then set the quantity to beats in a lifetime and find the three points sitting above the rest.</p>
+</article>
+
+<footer class="page">
+  <p>Figures are representative published values for resting metabolic rate, resting heart rate and maximum recorded lifespan, rounded from the standard compilations (Kleiber 1947; Brody 1945; Schmidt-Nielsen 1984). The fitted exponents are robust to the exact choices; the elephant is the least certain entry.</p>
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+const SEED = 20260117;
+
+/* ---------------------------------------------------------------------------
+   The table. Representative published resting values: body mass in kilograms,
+   basal metabolic rate in kcal per day, resting heart rate in beats per minute,
+   maximum recorded lifespan in years. Rounded from the standard compilations.
+   Nothing on this page is computed from a scaling law -- every figure below is
+   a measurement, and the exponents are what fitting them returns.
+--------------------------------------------------------------------------- */
+const TABLE = [
+  { name:"Mouse",       mass:0.021,  bmr:3.6,     hr:600, life:3,  primate:false },
+  { name:"Rat",         mass:0.282,  bmr:28.1,    hr:350, life:4,  primate:false },
+  { name:"Guinea pig",  mass:0.410,  bmr:35.1,    hr:280, life:7,  primate:false },
+  { name:"Rabbit",      mass:2.98,   bmr:167,     hr:205, life:10, primate:false },
+  { name:"Cat",         mass:3.0,    bmr:152,     hr:150, life:15, primate:false },
+  { name:"Macaque",     mass:4.2,    bmr:207,     hr:190, life:27, primate:true  },
+  { name:"Dog",         mass:14.1,   bmr:534,     hr:100, life:13, primate:false },
+  { name:"Goat",        mass:27.0,   bmr:750,     hr:90,  life:15, primate:false },
+  { name:"Chimpanzee",  mass:38.0,   bmr:1090,    hr:115, life:45, primate:true  },
+  { name:"Sheep",       mass:46.4,   bmr:1254,    hr:75,  life:14, primate:false },
+  { name:"Human",       mass:70.0,   bmr:1700,    hr:70,  life:80, primate:true  },
+  { name:"Pig",         mass:128.0,  bmr:2400,    hr:70,  life:18, primate:false },
+  { name:"Cow",         mass:465.0,  bmr:5600,    hr:60,  life:22, primate:false },
+  { name:"Horse",       mass:650.0,  bmr:9977,    hr:44,  life:30, primate:false },
+  { name:"Elephant",    mass:3833.0, bmr:48700,   hr:30,  life:65, primate:false }
+];
+
+const MIN_PER_YEAR = 60 * 24 * 365.25;
+
+const QUANTITY = {
+  bmr:   { label:"Metabolic rate",     unit:"kcal/day",  quarter:0.75,  area:2/3,
+           get:(r)=>r.bmr },
+  hr:    { label:"Resting heart rate", unit:"beats/min", quarter:-0.25, area:-1/3,
+           get:(r)=>r.hr },
+  life:  { label:"Maximum lifespan",   unit:"years",     quarter:0.25,  area:1/3,
+           get:(r)=>r.life },
+  beats: { label:"Beats in a lifetime",unit:"beats",     quarter:0,     area:0,
+           get:(r)=>r.hr * MIN_PER_YEAR * r.life }
+};
+const QKEYS = ["bmr","hr","life","beats"];
+
+/* ---- MODEL: ordinary least squares in log-log space, and nothing else ---- */
+const Model = {
+  logMass(){ return TABLE.map((r)=>Math.log10(r.mass)); },
+  values(key){ const q = QUANTITY[key]; return TABLE.map((r)=>q.get(r)); },
+  logValues(key){ return Model.values(key).map(Math.log10); },
+
+  /* least squares slope and intercept of ys on xs, plus the variance it explains */
+  fit(xs, ys){
+    const n = xs.length;
+    let sx = 0, sy = 0;
+    for (let i = 0; i < n; i++){ sx += xs[i]; sy += ys[i]; }
+    const mx = sx / n, my = sy / n;
+    let sxy = 0, sxx = 0;
+    for (let i = 0; i < n; i++){ sxy += (xs[i]-mx)*(ys[i]-my); sxx += (xs[i]-mx)*(xs[i]-mx); }
+    const slope = sxy / sxx, intercept = my - slope*mx;
+    let ssr = 0, sst = 0;
+    for (let i = 0; i < n; i++){
+      const p = intercept + slope*xs[i];
+      ssr += (ys[i]-p)*(ys[i]-p); sst += (ys[i]-my)*(ys[i]-my);
+    }
+    return { slope, intercept, r2: sst > 0 ? 1 - ssr/sst : 1, ssr, mx, my, n };
+  },
+
+  /* a slope the user chose, with the only intercept that centres its residuals */
+  held(xs, ys, slope){
+    const n = xs.length;
+    let sa = 0;
+    for (let i = 0; i < n; i++) sa += ys[i] - slope*xs[i];
+    const intercept = sa / n;
+    const res = new Array(n);
+    let ssr = 0;
+    for (let i = 0; i < n; i++){ res[i] = ys[i] - (intercept + slope*xs[i]); ssr += res[i]*res[i]; }
+    return { slope, intercept, res, ssr, rmse: Math.sqrt(ssr/n) };
+  },
+
+  corr(xs, ys){
+    const n = xs.length;
+    let sx = 0, sy = 0;
+    for (let i = 0; i < n; i++){ sx += xs[i]; sy += ys[i]; }
+    const mx = sx/n, my = sy/n;
+    let sxy = 0, sxx = 0, syy = 0;
+    for (let i = 0; i < n; i++){
+      sxy += (xs[i]-mx)*(ys[i]-my); sxx += (xs[i]-mx)*(xs[i]-mx); syy += (ys[i]-my)*(ys[i]-my);
+    }
+    return sxx > 0 && syy > 0 ? sxy/Math.sqrt(sxx*syy) : 0;
+  },
+
+  /* everything the plate and the legend need, for one quantity and one slope */
+  analyse(key, slope){
+    const xs = Model.logMass(), ys = Model.logValues(key);
+    const best = Model.fit(xs, ys);
+    const user = Model.held(xs, ys, slope);
+    return { xs, ys, best, user, tilt: Model.corr(xs, user.res),
+             factor: Math.pow(10, user.rmse) };
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { expo:0.75, quantity:"bmr", resid:false, guides:true, left:0, right:14 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("plate"), ctx = cv.getContext("2d");
+const SS = 2;
+let W = 900, Hpx = 520, NARROW = false, G = null;
+
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+
+function fmtNum(v){
+  if (!Number.isFinite(v)) return "--";
+  const a = Math.abs(v);
+  if (a >= 1e6 || (a > 0 && a < 0.01)){
+    const e = Math.floor(Math.log10(a));
+    return (v/Math.pow(10,e)).toFixed(2) + "e" + e;
+  }
+  if (a >= 100) return Math.round(v).toLocaleString("en");
+  if (a >= 10) return v.toFixed(1);
+  return v.toFixed(a >= 1 ? 2 : 3);
+}
+function fmtMass(kg){
+  if (kg < 1) return Math.round(kg*1000).toLocaleString("en") + " g";
+  return (kg < 10 ? kg.toFixed(2) : Math.round(kg).toLocaleString("en")) + " kg";
+}
+function times(r){
+  if (!Number.isFinite(r) || r <= 0) return "--";
+  return (r >= 1000 ? Math.round(r).toLocaleString("en") : r >= 10 ? r.toFixed(0) : r.toFixed(2)) + "×";
+}
+
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth - 20;
+  W = clamp(avail > 0 ? avail : 880, 300, 1040);
+  NARROW = W < 560;
+  Hpx = Math.round(clamp(W * (NARROW ? 0.88 : 0.56), 250, 560));
+  /* The left margin is whatever the axis labels actually need, measured from the
+     labels this page will really draw. Guessing at the widest string is how
+     "100,000" ends up underneath the rotated axis name and off the left edge.
+     Every quantity is measured, so the frame does not jump when one is chosen. */
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.font = (NARROW ? "10px " : "11px ") + "ui-monospace,SFMono-Regular,Menlo,monospace";
+  let widest = 0;
+  const seen = [];
+  for (const k of QKEYS){
+    const ys = Model.logValues(k);
+    const lo = Math.min.apply(null,ys), hi = Math.max.apply(null,ys);
+    const pad = Math.max((hi-lo)*0.10, 0.12);
+    for (const v of axisTicks(lo-pad, hi+pad)) seen.push(tickLabel(v));
+  }
+  seen.push("+0.00", "-0.00");
+  for (const lab of seen) widest = Math.max(widest, ctx.measureText(lab).width);
+  const NAMEBAND = 15;   /* the rotated axis name lives here, left of every tick */
+  const x0 = clamp(NAMEBAND + Math.ceil(widest) + 10, 40, Math.round(W*0.34));
+  G = { x0, x1: W - (NARROW ? 12 : 22), y0: NARROW ? 16 : 20, y1: Hpx - (NARROW ? 40 : 44) };
+  cv.width = Math.round(W*SS); cv.height = Math.round(Hpx*SS);
+  ctx.setTransform(SS,0,0,SS,0,0);
+}
+
+/* Ticks for a log axis. Whole decades are the right grain over four decades of
+   mass and far too coarse over one: heart rate spans 1.5 decades, which is a
+   single labelled gridline unless the narrow case subdivides. */
+function axisTicks(lo, hi){
+  const span = hi - lo, out = [];
+  const a = Math.floor(lo), b = Math.ceil(hi);
+  if (span > 6){ for (let e = a; e <= b; e += 2) out.push(Math.pow(10,e)); }
+  else if (span > 2.5){ for (let e = a; e <= b; e++) out.push(Math.pow(10,e)); }
+  else {
+    for (let e = a; e <= b; e++)
+      for (const m of [1,2,3,5,7]) out.push(m*Math.pow(10,e));
+  }
+  return out.filter(function(v){
+    const l = Math.log10(v);
+    return l >= lo - 1e-9 && l <= hi + 1e-9;
+  });
+}
+function tickLabel(v){
+  if (v >= 1e6 || (v > 0 && v < 0.01)){
+    const e = Math.floor(Math.log10(v) + 1e-9);
+    const m = v / Math.pow(10, e);
+    return (Math.abs(m-1) < 1e-9 ? "1" : String(Math.round(m))) + "e" + e;
+  }
+  if (v >= 1) return Math.round(v).toLocaleString("en");
+  return String(Number(v.toPrecision(2)));
+}
+
+/* A floating label on a plot lands on whatever is already there -- a dashed
+   guide, a curve, another label. Give each one an opaque backing so the last
+   one drawn stays readable instead of interleaving with the line beneath it. */
+function chip(text, x, y, align, baseline, fs, colour, C){
+  const w = ctx.measureText(text).width;
+  ctx.textAlign = align; ctx.textBaseline = baseline;
+  const bx = align === "right" ? x - w : (align === "center" ? x - w/2 : x);
+  const by = baseline === "bottom" ? y - fs : (baseline === "middle" ? y - fs/2 : y);
+  ctx.fillStyle = C.plate;
+  ctx.fillRect(bx - 3, by - 2, w + 6, fs + 5);
+  ctx.fillStyle = colour;
+  ctx.fillText(text, x, y);
+}
+
+function drawKey(rows, C, corner){
+  const fs = NARROW ? 9 : 10;
+  ctx.font = "600 " + fs + "px ui-monospace,SFMono-Regular,Menlo,monospace";
+  /* Bare numbers are useless here -- "your exponent" and "quarter power" read
+     0.750 at the same time by default, so the names stay at every width. */
+  const texts = rows.map((g)=> g.n + "  " + g.s.toFixed(3));
+  let w = 0;
+  for (const t of texts) w = Math.max(w, ctx.measureText(t).width);
+  const swatch = NARROW ? 14 : 18, padx = 8, pady = 6, rowh = fs + 8;
+  const bw = padx*2 + swatch + 6 + Math.ceil(w), bh = pady*2 + rowh*rows.length;
+  const bx = G.x0 + 8;
+  const by = corner === "tl" ? G.y0 + 8 : G.y1 - 8 - bh;
+  ctx.fillStyle = C.plate; ctx.fillRect(bx, by, bw, bh);
+  ctx.strokeStyle = C.rule; ctx.lineWidth = 1;
+  ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+  rows.forEach(function(g, i){
+    const cy = Math.round(by + pady + rowh*i + rowh/2) + 0.5;
+    ctx.strokeStyle = g.c; ctx.lineWidth = g.solid ? 2 : 1.5;
+    if (!g.solid) ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(bx + padx, cy); ctx.lineTo(bx + padx + swatch, cy); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = g.c; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.fillText(texts[i], bx + padx + swatch + 6, cy);
+  });
+}
+
+function drawScatter(A, C){
+  const xs = A.xs, ys = A.ys;
+  const xlo = Math.min.apply(null, xs), xhi = Math.max.apply(null, xs);
+  const ylo = Math.min.apply(null, ys), yhi = Math.max.apply(null, ys);
+  const xpad = (xhi-xlo)*0.06, ypad = Math.max((yhi-ylo)*0.10, 0.12);
+  const XL = xlo-xpad, XH = xhi+xpad, YL = ylo-ypad, YH = yhi+ypad;
+  const px = (v)=>G.x0 + (v-XL)/(XH-XL)*(G.x1-G.x0);
+  const py = (v)=>G.y1 - (v-YL)/(YH-YL)*(G.y1-G.y0);
+
+  ctx.strokeStyle = C.ruleSoft; ctx.lineWidth = 1;
+  ctx.font = (NARROW?"10px ":"11px ")+"ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.fillStyle = C.muted;
+  for (const v of axisTicks(XL,XH)){
+    const x = Math.round(px(Math.log10(v)))+0.5;
+    if (x < G.x0-1 || x > G.x1+1) continue;
+    ctx.beginPath(); ctx.moveTo(x,G.y0); ctx.lineTo(x,G.y1); ctx.stroke();
+    ctx.textAlign="center"; ctx.textBaseline="top"; ctx.fillText(tickLabel(v), x, G.y1+6);
+  }
+  for (const v of axisTicks(YL,YH)){
+    const y = Math.round(py(Math.log10(v)))+0.5;
+    if (y < G.y0-1 || y > G.y1+1) continue;
+    ctx.beginPath(); ctx.moveTo(G.x0,y); ctx.lineTo(G.x1,y); ctx.stroke();
+    ctx.textAlign="right"; ctx.textBaseline="middle"; ctx.fillText(tickLabel(v), G.x0-6, y);
+  }
+  ctx.strokeStyle = C.rule; ctx.strokeRect(G.x0+0.5, G.y0+0.5, G.x1-G.x0-1, G.y1-G.y0-1);
+
+  /* rival laws first, so the user's line sits on top of them */
+  const q = QUANTITY[state.quantity];
+  let keyRows = [];
+  if (state.guides){
+    const same = Math.abs(q.quarter - q.area) < 1e-12;
+    const lines = same
+      ? [{ s:q.quarter, c:C.heart, n:"both laws" }]
+      : [{ s:q.quarter, c:C.heart, n:"quarter power" },
+         { s:q.area,    c:C.flag,  n:"surface area" }];
+    /* A guide with a steep slope leaves the frame and lands on the axis names.
+       Clip every line to the plot rectangle; only the points and the key are
+       allowed outside it. */
+    ctx.save();
+    ctx.beginPath(); ctx.rect(G.x0, G.y0, G.x1-G.x0, G.y1-G.y0); ctx.clip();
+    ctx.setLineDash([5,4]); ctx.lineWidth = 1.5;
+    lines.forEach(function(g){
+      const h = Model.held(xs, ys, g.s);
+      ctx.strokeStyle = g.c; ctx.beginPath();
+      ctx.moveTo(px(XL), py(h.intercept + g.s*XL));
+      ctx.lineTo(px(XH), py(h.intercept + g.s*XH));
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
+    ctx.restore();
+    keyRows = lines;
+  }
+  ctx.save();
+  ctx.beginPath(); ctx.rect(G.x0, G.y0, G.x1-G.x0, G.y1-G.y0); ctx.clip();
+  ctx.strokeStyle = C.fit; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(px(XL), py(A.user.intercept + A.user.slope*XL));
+  ctx.lineTo(px(XH), py(A.user.intercept + A.user.slope*XH));
+  ctx.stroke();
+  ctx.restore();
+
+  /* The key goes in the corner the data leaves empty: a rising cloud vacates the
+     top left, a falling one the bottom left. Three labels crowded against the
+     last data point is how a legend ends up unreadable. */
+  drawKey([{ s:A.user.slope, c:C.fit, n:"your exponent", solid:true }].concat(keyRows),
+          C, A.best.slope >= 0 ? "tl" : "bl");
+
+  for (let i = 0; i < xs.length; i++){
+    const sel = (i === state.left || i === state.right);
+    const x = px(xs[i]), y = py(ys[i]);
+    /* Amber is already the surface-area line, so primates are a shape, not a
+       colour. One hue cannot mean two things on the same plate. */
+    ctx.fillStyle = C.met;
+    ctx.beginPath(); ctx.arc(x, y, sel ? 5.5 : 3.4, 0, 6.2832); ctx.fill();
+    if (TABLE[i].primate){
+      ctx.fillStyle = C.plate;
+      ctx.beginPath(); ctx.arc(x, y, sel ? 2.8 : 1.6, 0, 6.2832); ctx.fill();
+    }
+    if (sel){
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(x, y, 9, 0, 6.2832); ctx.stroke();
+      const fs = NARROW ? 10 : 11;
+      ctx.font = "600 " + fs + "px ui-monospace,SFMono-Regular,Menlo,monospace";
+      const right = x > (G.x0+G.x1)/2;
+      /* Near the top of the frame the guide-line chips already own that band,
+         so a name placed above the point clips into them. Put it below. */
+      const above = y > G.y0 + (G.y1-G.y0)*0.22;
+      chip(TABLE[i].name, x + (right ? -12 : 12), y + (above ? -4 : 7),
+           right ? "right" : "left", above ? "bottom" : "top", fs, C.ink, C);
+      ctx.font = (NARROW?"10px ":"11px ")+"ui-monospace,SFMono-Regular,Menlo,monospace";
+    }
+  }
+  axisNames(C, "body mass (kg)", QUANTITY[state.quantity].unit);
+}
+
+function axisNames(C, xname, yname){
+  ctx.fillStyle = C.muted;
+  ctx.font = (NARROW?"10px ":"11px ")+"ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+  ctx.fillText(xname, G.x1, Hpx - 4);
+  ctx.save();
+  ctx.translate(11, G.y0);
+  ctx.rotate(-Math.PI/2);
+  ctx.textAlign = "right"; ctx.textBaseline = "top";
+  ctx.fillText(yname, 0, 0);
+  ctx.restore();
+}
+
+function drawResiduals(A, C){
+  const xs = A.xs, res = A.user.res;
+  const xlo = Math.min.apply(null,xs), xhi = Math.max.apply(null,xs);
+  const xpad = (xhi-xlo)*0.06;
+  let m = 0;
+  for (const r of res) m = Math.max(m, Math.abs(r));
+  const M = Math.max(m*1.25, 0.08);
+  const XL = xlo-xpad, XH = xhi+xpad;
+  const px = (v)=>G.x0 + (v-XL)/(XH-XL)*(G.x1-G.x0);
+  const py = (v)=>(G.y0+G.y1)/2 - v/M*((G.y1-G.y0)/2);
+
+  ctx.strokeStyle = C.ruleSoft; ctx.lineWidth = 1;
+  ctx.font = (NARROW?"10px ":"11px ")+"ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.fillStyle = C.muted;
+  for (const v of axisTicks(XL,XH)){
+    const x = Math.round(px(Math.log10(v)))+0.5;
+    if (x < G.x0-1 || x > G.x1+1) continue;
+    ctx.beginPath(); ctx.moveTo(x,G.y0); ctx.lineTo(x,G.y1); ctx.stroke();
+    ctx.textAlign="center"; ctx.textBaseline="top"; ctx.fillText(tickLabel(v), x, G.y1+6);
+  }
+  for (const v of [-M/2, M/2]){
+    const y = Math.round(py(v))+0.5;
+    ctx.beginPath(); ctx.moveTo(G.x0,y); ctx.lineTo(G.x1,y); ctx.stroke();
+    ctx.textAlign="right"; ctx.textBaseline="middle";
+    ctx.fillText((v>0?"+":"") + v.toFixed(2), G.x0-6, y);
+  }
+  ctx.strokeStyle = C.rule; ctx.strokeRect(G.x0+0.5, G.y0+0.5, G.x1-G.x0-1, G.y1-G.y0-1);
+
+  const zero = Math.round(py(0))+0.5;
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(G.x0,zero); ctx.lineTo(G.x1,zero); ctx.stroke();
+  ctx.fillStyle = C.muted; ctx.textAlign="right"; ctx.textBaseline="middle";
+  ctx.fillText("0", G.x0-6, zero);
+
+  /* the trend through the residuals: this is what a wrong exponent leaves */
+  const t = Model.fit(xs, res);
+  ctx.strokeStyle = C.fit; ctx.lineWidth = 2; ctx.setLineDash([6,4]);
+  ctx.beginPath();
+  ctx.moveTo(px(XL), py(clamp(t.intercept + t.slope*XL, -M, M)));
+  ctx.lineTo(px(XH), py(clamp(t.intercept + t.slope*XH, -M, M)));
+  ctx.stroke(); ctx.setLineDash([]);
+
+  for (let i = 0; i < xs.length; i++){
+    const x = px(xs[i]), y = py(clamp(res[i], -M, M));
+    const sel = (i === state.left || i === state.right);
+    ctx.strokeStyle = C.met; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x, zero); ctx.lineTo(x, y); ctx.stroke();
+    ctx.fillStyle = C.met;
+    ctx.beginPath(); ctx.arc(x, y, sel ? 5 : 3.2, 0, 6.2832); ctx.fill();
+    if (TABLE[i].primate){
+      ctx.fillStyle = C.plate;
+      ctx.beginPath(); ctx.arc(x, y, sel ? 2.4 : 1.5, 0, 6.2832); ctx.fill();
+    }
+    if (sel){
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(x, y, 8.5, 0, 6.2832); ctx.stroke();
+    }
+  }
+  axisNames(C, "body mass (kg)", "residual (decades)");
+}
+
+function cardFor(side, idx){
+  const r = TABLE[idx], p = side;
+  const beats = r.hr * MIN_PER_YEAR * r.life;
+  el(p+"mass").textContent = fmtMass(r.mass);
+  el(p+"bmr").textContent = fmtNum(r.bmr) + " kcal/d";
+  el(p+"spec").textContent = fmtNum(r.bmr/r.mass) + " kcal/kg/d";
+  el(p+"hr").textContent = r.hr + " bpm";
+  el(p+"beat").textContent = fmtNum(beats);
+  const maxL = Math.log10(TABLE[TABLE.length-1].mass) - Math.log10(TABLE[0].mass);
+  const f = (Math.log10(r.mass) - Math.log10(TABLE[0].mass)) / maxL;
+  el(p+"bar").style.width = (2 + 98*clamp(f,0,1)).toFixed(1) + "%";
+}
+
+function render(){
+  if (!G) fitCanvas();
+  const C = { ink:css("--ink"), muted:css("--muted"), rule:css("--rule"),
+              ruleSoft:css("--rule-soft"), met:css("--met"), heart:css("--heart"),
+              fit:css("--fitline"), flag:css("--flag"), plate:css("--plate") };
+  ctx.clearRect(0,0,W,Hpx);
+  ctx.fillStyle = C.plate; ctx.fillRect(0,0,W,Hpx);
+
+  const A = Model.analyse(state.quantity, state.expo);
+  if (state.resid) drawResiduals(A, C); else drawScatter(A, C);
+
+  cardFor("l", state.left);
+  cardFor("r", state.right);
+
+  const a = TABLE[state.left], b = TABLE[state.right];
+  const q = QUANTITY[state.quantity];
+  if (a === b){
+    el("verdict").textContent = "Both sides show the same animal. Pick two different ones and the comparison below fills in.";
+  } else {
+    const heavy = b.mass >= a.mass ? b : a, light = b.mass >= a.mass ? a : b;
+    const mr = heavy.mass/light.mass;
+    const vr = q.get(heavy)/q.get(light);
+    const implied = Math.log10(vr)/Math.log10(mr);
+    el("verdict").textContent =
+      "The " + heavy.name.toLowerCase() + " is " + times(mr) + " the mass of the " +
+      light.name.toLowerCase() + " but only " + times(vr) + " the " + q.label.toLowerCase() +
+      ". Those two alone imply an exponent of " + implied.toFixed(3) +
+      "; the fit over all fifteen gives " + A.best.slope.toFixed(3) + ".";
+  }
+
+  el("expoout").textContent = state.expo.toFixed(3);
+  el("g1").textContent = state.expo.toFixed(3);
+  el("g2").textContent = A.best.slope.toFixed(4);
+  el("g3").textContent = "×" + A.factor.toFixed(3);
+  el("g4").textContent = (A.tilt >= 0 ? "+" : "−") + Math.abs(A.tilt).toFixed(3);
+  el("cap").textContent = state.resid
+    ? "Residuals: how far each mammal sits above or below your line, in decades. The dashed line is the trend through them. At the fitted exponent it is flat; at any other exponent it tilts, and the tilt is the part of the data your slope is failing to carry."
+    : "Both axes are logarithmic, so a power law is a straight line and its exponent is the slope. The solid line carries the exponent you set, pivoted through the middle of the data; the dashed lines are the two rival laws. Hollow points are primates.";
+}
+
+/* ---- wiring ------------------------------------------------------------- */
+(function fillSelects(){
+  ["left","right"].forEach(function(id){
+    const sel = el(id);
+    TABLE.forEach(function(r,i){
+      const o = document.createElement("option");
+      o.value = String(i);
+      o.textContent = r.name + " — " + fmtMass(r.mass);
+      sel.appendChild(o);
+    });
+  });
+  el("left").value = String(defaults.left);
+  el("right").value = String(defaults.right);
+})();
+
+el("left").addEventListener("change", function(){ state.left = parseInt(this.value,10); render(); });
+el("right").addEventListener("change", function(){ state.right = parseInt(this.value,10); render(); });
+el("expo").addEventListener("input", function(){ state.expo = parseFloat(this.value); render(); });
+el("quantity").addEventListener("change", function(){ state.quantity = this.value; render(); });
+el("resid").addEventListener("change", function(){ state.resid = this.checked; render(); });
+el("guides").addEventListener("change", function(){ state.guides = this.checked; render(); });
+
+function setExpo(v){
+  const r = clamp(v, parseFloat(el("expo").min), parseFloat(el("expo").max));
+  /* The step has to reach 2/3 and -1/3, or a button labelled "surface area"
+     quietly lands on 0.665 and the plate disagrees with its own key. */
+  const step = 0.001;
+  state.expo = Math.round(r/step)*step;
+  el("expo").value = String(state.expo);
+  render();
+}
+el("bfit").addEventListener("click", function(){
+  const A = Model.analyse(state.quantity, state.expo);
+  setExpo(A.best.slope);
+});
+el("bq").addEventListener("click", function(){ setExpo(QUANTITY[state.quantity].quarter); });
+el("bs").addEventListener("click", function(){ setExpo(QUANTITY[state.quantity].area); });
+
+let rt = null;
+window.addEventListener("resize", function(){
+  clearTimeout(rt);
+  rt = setTimeout(function(){ fitCanvas(); render(); }, 120);
+});
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+else if (mq.addListener) mq.addListener(render);
+
+fitCanvas();
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a,b,tol){ return Number.isFinite(a) && Math.abs(a-b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  const lm = Model.logMass();
+  const B  = Model.fit(lm, Model.logValues("bmr"));
+  const span = Math.max.apply(null,lm) - Math.min.apply(null,lm);
+
+  /* 1 — the exponent the table actually gives */
+  const dq = Math.abs(B.slope - 0.75), da = Math.abs(B.slope - 2/3);
+  push("least squares on the mammal table gives an exponent between 0.70 and 0.80",
+    B.slope > 0.70 && B.slope < 0.80,
+    "fitted exponent " + B.slope.toFixed(6) + " over " + TABLE.length + " mammals spanning " +
+    span.toFixed(4) + " decades of mass. It is " + dq.toFixed(4) + " from three quarters and " +
+    da.toFixed(4) + " from two thirds -- " + (da/dq).toFixed(2) + " times nearer the quarter power.");
+
+  /* 2 — and the line is worth quoting */
+  const held = Model.held(lm, Model.logValues("bmr"), B.slope);
+  push("the fitted line explains more than 98 per cent of the variance",
+    B.r2 > 0.98,
+    "R-squared " + B.r2.toFixed(6) + ", residual scatter " + held.rmse.toFixed(6) +
+    " decades, which is a typical multiplicative error of " +
+    ((Math.pow(10,held.rmse)-1)*100).toFixed(1) + " per cent.");
+
+  /* 3 — every row reproduced, not just the cloud */
+  const A3 = (function(){
+    let worst = 0, who = "";
+    for (let i = 0; i < TABLE.length; i++){
+      const r = Math.abs(Math.log10(TABLE[i].bmr) - (B.intercept + B.slope*lm[i]));
+      if (r > worst){ worst = r; who = TABLE[i].name; }
+    }
+    return { worst, who, factor: Math.pow(10,worst) };
+  })();
+  push("the fit reproduces every animal in the table to better than a factor of 1.4",
+    A3.factor < 1.4,
+    "largest single miss is the " + A3.who.toLowerCase() + " at " + A3.worst.toFixed(6) +
+    " decades, a factor of " + A3.factor.toFixed(4) + ". Every other row is closer.");
+
+  /* 4 — the surface-area law fails by tilting, which is the honest way to say it */
+  const A4 = (function(){
+    const ys = Model.logValues("bmr");
+    const h23 = Model.held(lm, ys, 2/3), h34 = Model.held(lm, ys, 0.75), hf = Model.held(lm, ys, B.slope);
+    return { t23: Model.corr(lm,h23.res), t34: Model.corr(lm,h34.res), tf: Model.corr(lm,hf.res),
+             r23: h23.rmse, r34: h34.rmse, lo: h23.res[0], hi: h23.res[TABLE.length-1] };
+  })();
+  push("a forced two-thirds slope leaves a systematic tilt, a forced fitted slope leaves none",
+    A4.t23 > 0.85 && Math.abs(A4.tf) < 1e-10,
+    "at 2/3 the residuals correlate with mass at " + A4.t23.toFixed(6) +
+    ", climbing from " + A4.lo.toFixed(4) + " decades at the mouse to +" + A4.hi.toFixed(4) +
+    " at the elephant; scatter " + A4.r23.toFixed(6) + " decades against " + A4.r34.toFixed(6) +
+    " at three quarters, a ratio of " + (A4.r23/A4.r34).toFixed(4) +
+    ". At the fitted slope the correlation is " + A4.tf.toExponential(2) + " -- zero by construction.");
+
+  /* 5 — the heart keeps the other quarter */
+  const H = Model.fit(lm, Model.logValues("hr"));
+  push("resting heart rate scales as mass to within 0.05 of minus a quarter",
+    near(H.slope, -0.25, 0.05),
+    "fitted exponent " + H.slope.toFixed(6) + ", which is " +
+    Math.abs(H.slope+0.25).toExponential(2) + " from -1/4, with R-squared " + H.r2.toFixed(6) + ".");
+
+  /* 6 — the queue asked for a factor of three across the whole table. It is not true. */
+  const A6 = (function(){
+    const rows = TABLE.map((r)=>({ name:r.name, primate:r.primate, v:r.hr*MIN_PER_YEAR*r.life }));
+    const all = rows.slice().sort((a,b)=>a.v-b.v);
+    const np  = rows.filter((r)=>!r.primate).sort((a,b)=>a.v-b.v);
+    return { allSpread: all[all.length-1].v/all[0].v, allLo: all[0], allHi: all[all.length-1],
+             npSpread: np[np.length-1].v/np[0].v, npLo: np[0], npHi: np[np.length-1], npN: np.length };
+  })();
+  push("lifetime heartbeats are NOT constant to within a factor of three across the table, but are once primates are removed",
+    A6.allSpread > 3 && A6.npSpread < 3,
+    "across all " + TABLE.length + " the spread is " + A6.allSpread.toFixed(4) +
+    ", so the usual factor-of-three claim is false here: the " + A6.allLo.name.toLowerCase() +
+    " gets " + A6.allLo.v.toExponential(3) + " beats and the " + A6.allHi.name.toLowerCase() +
+    " " + A6.allHi.v.toExponential(3) + ". Drop the three primates and the remaining " + A6.npN +
+    " span " + A6.npSpread.toFixed(4) + ", inside three, from the " + A6.npLo.name.toLowerCase() +
+    " to the " + A6.npHi.name.toLowerCase() + ".");
+
+  /* 7 — why the claim survives anyway: the trend is flat, the scatter is not */
+  const A7 = (function(){
+    const lb = TABLE.map((r)=>Math.log10(r.hr*MIN_PER_YEAR*r.life));
+    const BE = Model.fit(lm, lb);
+    let ps=0,pn=0,ns=0,nn=0;
+    TABLE.forEach(function(r,i){ if (r.primate){ps+=lb[i];pn++;} else {ns+=lb[i];nn++;} });
+    return { slope:BE.slope, r2:BE.r2, drift:Math.pow(10,BE.slope*span),
+             offset:Math.pow(10, ps/pn - ns/nn) };
+  })();
+  push("lifetime heartbeats have essentially no trend with mass -- the spread is primates, not size",
+    Math.abs(A7.slope) < 0.05 && A7.r2 < 0.05 && A7.offset > 2,
+    "fitted exponent " + A7.slope.toFixed(6) + " with R-squared " + A7.r2.toFixed(6) +
+    ", so mass explains almost none of it and the trend falls only to " + A7.drift.toFixed(4) +
+    " of its starting value across the whole table. Primates average " + A7.offset.toFixed(4) +
+    " times more lifetime beats than non-primates of any size, which is the entire " +
+    A6.allSpread.toFixed(2) + "-fold spread.");
+
+  /* 8 — the same exponent by a second route: refit the per-kilogram column */
+  const A8 = (function(){
+    const spec = TABLE.map((r)=>Math.log10(r.bmr/r.mass));
+    const S = Model.fit(lm, spec);
+    return { s:S.slope, want:B.slope-1, diff:Math.abs(S.slope-(B.slope-1)) };
+  })();
+  push("fitting metabolic rate per kilogram independently gives the same exponent minus one",
+    A8.diff < 1e-12,
+    "refitting the mass-specific column from scratch gives " + A8.s.toFixed(10) +
+    " against " + A8.want.toFixed(10) + " from the whole-animal fit, agreeing to " +
+    A8.diff.toExponential(3) + ". A gram of mouse burns " +
+    ((TABLE[0].bmr/TABLE[0].mass)/(TABLE[14].bmr/TABLE[14].mass)).toFixed(3) +
+    " times as hard as a gram of elephant.");
+
+  /* 9 — the fit does not know what units the masses were in */
+  const A9 = (function(){
+    const lg = TABLE.map((r)=>Math.log10(r.mass*1000));
+    const Bg = Model.fit(lg, Model.logValues("bmr"));
+    return { ds:Math.abs(Bg.slope-B.slope), shift:B.intercept-Bg.intercept,
+             want:3*B.slope, di:Math.abs((B.intercept-Bg.intercept)-3*B.slope) };
+  })();
+  push("refitting with mass in grams changes the exponent by nothing and the intercept by exactly three slopes",
+    A9.ds < 1e-12 && A9.di < 1e-10,
+    "slope differs by " + A9.ds.toExponential(3) + "; intercept shifts by " +
+    A9.shift.toFixed(10) + " against the required " + A9.want.toFixed(10) +
+    ", differing by " + A9.di.toExponential(3) + ".");
+
+  /* 10 — structural: least squares centres its own residuals */
+  const A10 = (function(){
+    let worstCentroid = 0, worstSum = 0;
+    for (const k of QKEYS){
+      const ys = Model.logValues(k), F = Model.fit(lm, ys);
+      worstCentroid = Math.max(worstCentroid, Math.abs(F.my - (F.intercept + F.slope*F.mx)));
+      const h = Model.held(lm, ys, F.slope);
+      let s = 0; for (const r of h.res) s += r;
+      worstSum = Math.max(worstSum, Math.abs(s));
+    }
+    return { worstCentroid, worstSum };
+  })();
+  push("every fitted line passes through its own centroid and sums its residuals to zero",
+    A10.worstCentroid < 1e-12 && A10.worstSum < 1e-12,
+    "over all four quantities the worst centroid miss is " + A10.worstCentroid.toExponential(3) +
+    " and the worst residual sum " + A10.worstSum.toExponential(3) + ".");
+
+  /* 11 — how far apart the two rival laws actually are, two ways */
+  const A11 = (function(){
+    const byExp = Math.pow(10, (0.75 - 2/3)*span);
+    const mLo = TABLE[0].mass, mHi = TABLE[TABLE.length-1].mass;
+    const byRatio = (Math.pow(mHi,0.75)/Math.pow(mLo,0.75)) / (Math.pow(mHi,2/3)/Math.pow(mLo,2/3));
+    return { byExp, byRatio, diff:Math.abs(byExp-byRatio),
+             obs: TABLE[14].bmr/TABLE[0].bmr,
+             p34: Math.pow(mHi/mLo, 0.75), p23: Math.pow(mHi/mLo, 2/3) };
+  })();
+  push("across this table the quarter-power and surface-area laws disagree by a factor of 2.74",
+    A11.byExp > 2.7 && A11.byExp < 2.8 && A11.diff < 1e-9,
+    "10^((3/4 - 2/3) x " + span.toFixed(4) + ") = " + A11.byExp.toFixed(6) +
+    ", and taking the ratio of the two laws directly at the extreme masses gives " +
+    A11.byRatio.toFixed(6) + ", agreeing to " + A11.diff.toExponential(3) +
+    ". The elephant burns " + Math.round(A11.obs).toLocaleString("en") +
+    " times the mouse; three quarters predicts " + Math.round(A11.p34).toLocaleString("en") +
+    " and two thirds " + Math.round(A11.p23).toLocaleString("en") + ".");
+
+  /* 12 — nothing on the control ranges produces a non-number */
+  const A12 = (function(){
+    let n = 0;
+    for (const k of QKEYS){
+      const ys = Model.logValues(k);
+      for (let s = -0.6; s <= 1.2 + 1e-9; s += 0.001){
+        const h = Model.held(lm, ys, s);
+        if (!Number.isFinite(h.intercept) || !Number.isFinite(h.rmse)) return { ok:false, n };
+        if (!Number.isFinite(Model.corr(lm, h.res))) return { ok:false, n };
+        n++;
+      }
+    }
+    return { ok:true, n };
+  })();
+  push("every slope on the slider, for every quantity, yields finite numbers",
+    A12.ok, A12.n + " slope-and-quantity combinations across the full slider range, " +
+    "no NaN and no infinity in the intercept, the scatter or the residual correlation.");
+
+  /* 13 — the page is deterministic: same table in, same numbers out */
+  const A13 = (function(){
+    const one = QKEYS.map((k)=>{ const F = Model.fit(lm, Model.logValues(k)); return [F.slope,F.intercept,F.r2]; });
+    const two = QKEYS.map((k)=>{ const F = Model.fit(lm, Model.logValues(k)); return [F.slope,F.intercept,F.r2]; });
+    return JSON.stringify(one) === JSON.stringify(two) ? JSON.stringify(one.map((v)=>v[0].toFixed(6))) : "";
+  })();
+  push("recomputing every fit gives bit-identical results",
+    A13 !== "", "seed " + SEED + "; the four exponents are " + (A13 || "MISMATCH") + " on both passes.");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, TABLE, seed: SEED };
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1015 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sorting The Array Speeds Up The Loop That Ignores It — Explainer Atlas</title>
+<meta name="description" content="Write the branch condition yourself and watch a predictor try to guess it. The same loop over the same numbers runs several times faster when the numbers happen to arrive in order.">
+<style>
+:root{
+  --bg:#f4f5f7; --panel:#ffffff; --sunk:#eaecf0; --line:#d6dae1;
+  --ink:#1a1d23; --muted:#616a78;
+  --ed:#1b2029; --ed2:#242b36; --edink:#cfd6e2; --edmute:#7b8698; --edkey:#7fb3ff;
+  --hit:#2f8f5b; --miss:#c0392b; --taken:#2f6fa8; --nott:#a8a29a;
+  --radius:5px; --pad:clamp(14px,2.6vw,24px);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#13161b; --panel:#1a1e25; --sunk:#161a20; --line:#2b313a;
+    --ink:#e3e6ea; --muted:#939cab;
+    --ed:#11151b; --ed2:#1a2029;
+    --hit:#55b382; --miss:#e2705a; --taken:#63a6dd; --nott:#767b82;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:clamp(0.95rem,0.92rem + 0.18vw,1.03rem)/1.62 var(--sans);-webkit-text-size-adjust:100%}
+.wrap{max-width:66rem;margin:0 auto;padding:var(--pad)}
+header.page{padding-bottom:calc(var(--pad)*0.6)}
+.kicker{margin:0 0 .5em;color:var(--taken);font:700 .7rem/1 var(--mono);text-transform:uppercase;letter-spacing:.16em}
+h1{font-size:clamp(1.42rem,1rem + 2.1vw,2.25rem);line-height:1.1;margin:0 0 .35em;letter-spacing:-.02em;font-weight:700}
+.standfirst{margin:0;color:var(--muted);max-width:44em}
+
+/* the editor is the signature of this page: it comes first, above everything */
+.editor{margin-top:var(--pad);background:var(--ed);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.edbar{display:flex;justify-content:space-between;align-items:center;gap:1em;
+  background:var(--ed2);padding:.5em .85em;font:600 .68rem/1.4 var(--mono);
+  text-transform:uppercase;letter-spacing:.11em;color:var(--edmute)}
+.edbar .state{text-transform:none;letter-spacing:0;font-size:.74rem}
+.edbar .state.bad{color:var(--miss)}
+.edbody{display:grid;grid-template-columns:2.6rem minmax(0,1fr);font:0.92rem/1.55 var(--mono)}
+.gutter{background:var(--ed2);color:var(--edmute);text-align:right;padding:.7em .55em;user-select:none;font-size:.82rem}
+.edlines{padding:.7em .85em;color:var(--edink);overflow-x:auto}
+.edlines .k{color:var(--edkey)}
+.edlines .fixed{color:var(--edmute)}
+/* inline-block, not a block: the condition has to sit between "if (" and
+   ") {" on one line, or the gutter numbers stop naming the lines they label */
+.edlines input{display:inline-block;width:min(15em,58%);background:transparent;border:0;
+  border-bottom:1px dashed var(--edmute);color:var(--edink);font:inherit;padding:.05em .1em;
+  vertical-align:baseline}
+.edlines input:focus{outline:none;border-bottom-color:var(--edkey)}
+.edlines label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.presets{display:flex;flex-wrap:wrap;gap:.4em;padding:.6em .85em .8em;background:var(--ed2)}
+.presets button{font:600 .7rem/1 var(--mono);color:var(--edink);background:var(--ed);border:1px solid #3a424e;
+  border-radius:3px;padding:.5em .6em;min-height:32px;cursor:pointer}
+.presets button:hover{border-color:var(--edkey);color:var(--edkey)}
+
+figure.stage{margin:var(--pad) 0 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px;overflow:hidden}
+figure.stage canvas{display:block;width:100%;height:auto;touch-action:pan-y}
+figcaption{margin-top:.6em;color:var(--muted);font-size:.83rem;line-height:1.5}
+
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(7.4rem,1fr));gap:.5em;margin:var(--pad) 0 0;padding:0}
+.readout div{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:.55em .7em}
+.readout dt{margin:0;color:var(--muted);font:.66rem/1.3 var(--mono);text-transform:uppercase;letter-spacing:.06em}
+.readout dd{margin:.22em 0 0;font:700 1rem/1.25 var(--mono)}
+.readout dd.big{color:var(--hit)}
+
+.controls{margin-top:var(--pad);background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:var(--pad);display:grid;gap:1.05em;grid-template-columns:minmax(0,1fr)}
+@media (min-width:44rem){ .controls{grid-template-columns:repeat(2,minmax(0,1fr));gap:1.05em var(--pad)} }
+@media (min-width:66rem){ .controls{grid-template-columns:repeat(4,minmax(0,1fr))} }
+.control{display:grid;gap:.3em;align-content:start}
+.control .row{display:flex;justify-content:space-between;align-items:baseline;gap:.6em}
+.control label{font:700 .67rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.control output{font:700 .88rem/1 var(--mono);color:var(--taken)}
+.control .hint{margin:0;color:var(--muted);font-size:.77rem;line-height:1.45}
+input[type=range]{width:100%;accent-color:var(--taken);min-height:26px}
+select{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:.45em .55em;min-height:38px;width:100%}
+:where(a,button,input,select):focus-visible{outline:2.5px solid var(--taken);outline-offset:2px}
+
+.prose{max-width:38em;margin:calc(var(--pad)*1.7) auto 0}
+.prose h2{font:700 1.02rem/1.3 var(--sans);margin:2em 0 .5em;letter-spacing:-.01em}
+.prose p{margin:0 0 1em}
+.prose code{font:0.88em/1.4 var(--mono);background:var(--sunk);padding:.12em .35em;border-radius:3px}
+.prose .math{display:block;font:0.85rem/1.7 var(--mono);background:var(--sunk);padding:.75em .9em;border-radius:var(--radius);overflow-x:auto}
+table.pat{width:100%;border-collapse:collapse;font:0.8rem/1.6 var(--mono);margin:0 0 1em}
+table.pat th{text-align:right;padding:.2em .4em;border-bottom:1px solid var(--line);color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em}
+table.pat th:first-child{text-align:left}
+table.pat td{text-align:right;padding:.16em .4em;border-bottom:1px solid var(--sunk)}
+table.pat td:first-child{text-align:left}
+footer.page{margin-top:calc(var(--pad)*1.8);padding-top:var(--pad);border-top:1px solid var(--line);color:var(--muted);font-size:.83rem}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Computer science</p>
+  <h1>Sorting The Array Speeds Up The Loop That Ignores It</h1>
+  <p class="standfirst">A mispredicted branch throws away everything already in the pipeline. Write the condition yourself and watch the same loop, over the same numbers, cost twice as much when the numbers arrive in a shuffled order.</p>
+</header>
+
+<div class="editor">
+  <div class="edbar"><span>the loop</span><span class="state" id="state">condition parsed</span></div>
+  <div class="edbody">
+    <div class="gutter">1<br>2<br>3<br>4<br>5</div>
+    <div class="edlines">
+<span class="fixed">for (let i = 0; i &lt; n; i++) {</span><br>
+<span class="fixed">&nbsp;&nbsp;const v = data[i];</span><br>
+<span class="fixed">&nbsp;&nbsp;if (</span><label for="cond">branch condition</label><input id="cond" type="text" spellcheck="false" autocomplete="off" value="v &gt;= 128"><span class="fixed">) {</span><br>
+<span class="fixed">&nbsp;&nbsp;&nbsp;&nbsp;sum += v;&nbsp;&nbsp;</span><span class="k">// the taken side</span><br>
+<span class="fixed">&nbsp;&nbsp;}</span><br>
+    </div>
+  </div>
+  <div class="presets">
+    <button type="button" data-c="v >= 128">v &gt;= 128</button>
+    <button type="button" data-c="v >= t">v &gt;= t</button>
+    <button type="button" data-c="i % 2 == 0">i % 2 == 0</button>
+    <button type="button" data-c="i % 4 < 2">i % 4 &lt; 2</button>
+    <button type="button" data-c="v >= t && i % 3 != 0">v &gt;= t &amp;&amp; i % 3 != 0</button>
+    <button type="button" data-c="v % 7 == 0">v % 7 == 0</button>
+  </div>
+</div>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" role="img"
+    aria-label="Two ribbons of branch outcomes, one for the sorted array and one for the shuffled array, with every mispredicted branch marked, and beneath them a bar comparing the simulated cycle cost of the two orders."></canvas>
+  <figcaption id="cap">The ribbon divides the run into equal slices left to right: blue where the branches in that slice were taken, grey where they were not, mixed where the slice is mixed. The red bar beneath each slice is how often the predictor guessed wrong in it, at full height when it missed on every branch. Same numbers, same condition, different order.</figcaption>
+</figure>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Sorted accuracy</dt><dd id="r1">&mdash;</dd></div>
+  <div><dt>Shuffled accuracy</dt><dd id="r2">&mdash;</dd></div>
+  <div><dt>Sorted cycles</dt><dd id="r3">&mdash;</dd></div>
+  <div><dt>Shuffled cycles</dt><dd id="r4">&mdash;</dd></div>
+  <div><dt>Sorting wins</dt><dd id="r5" class="big">&mdash;</dd></div>
+  <div><dt>Taken fraction</dt><dd id="r6">&mdash;</dd></div>
+</dl>
+
+<section class="controls" data-role="controls" aria-label="Machine and data controls">
+  <div class="control">
+    <label for="pred">Predictor</label>
+    <select id="pred">
+      <option value="1">one-bit, last outcome</option>
+      <option value="2" selected>two-bit saturating counter</option>
+      <option value="h1">two-bit, 1 bit of history</option>
+      <option value="h2">two-bit, 2 bits of history</option>
+      <option value="h4">two-bit, 4 bits of history</option>
+    </select>
+    <p class="hint">History-indexed predictors keep one counter per recent pattern instead of one in total.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="t">Threshold t</label>
+      <output id="tout" for="t">128</output>
+    </div>
+    <input type="range" id="t" min="0" max="256" step="1" value="128">
+    <p class="hint">Used by any condition that mentions t. At 128 the branch is taken about half the time.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="n">Array length</label>
+      <output id="nout" for="n">2048</output>
+    </div>
+    <input type="range" id="n" min="128" max="4096" step="128" value="2048">
+    <p class="hint">Values are drawn once from a fixed seed, then either sorted or shuffled.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="pen">Miss penalty</label>
+      <output id="penout" for="pen">14 cyc</output>
+    </div>
+    <input type="range" id="pen" min="1" max="25" step="1" value="14">
+    <p class="hint">Cycles thrown away refilling the pipeline. Deep out-of-order cores sit near the top of this range.</p>
+  </div>
+</section>
+
+<article class="prose" data-role="prose">
+  <p>The loop above adds up the numbers past a threshold. Both ribbons hold exactly the same
+  numbers; the only difference is the order they arrive in. Red marks the branches the
+  processor guessed wrong and had to throw away work for. At the default settings the sorted
+  pass costs 8,220 cycles and the shuffled pass 22,010, for precisely the same 1010
+  additions.</p>
+
+  <h2>A branch is a bet the machine places early</h2>
+  <p>A modern core has a hundred or more instructions in flight and cannot afford to wait and
+  see which way an <code>if</code> goes before fetching what follows it. So it guesses, runs
+  ahead speculatively, and when the guess turns out wrong it discards everything downstream
+  and restarts. The discarded work is the penalty. Fourteen cycles, the default here, is in
+  the right neighbourhood for a deep out-of-order core.</p>
+  <code class="math">cycles = 4 * iterations + penalty * mispredictions</code>
+  <p>Sorting removes no additions whatsoever. The two arrays are permutations of one another,
+  and the page checks that the branch is taken an identical number of times in both. What
+  sorting changes is whether the branch's answer can be anticipated: the sorted sequence is a
+  run of not-taken followed by a run of taken, with exactly one transition in it, and a
+  two-bit counter mispredicts at most twice across the entire array. Shuffled, the same
+  branch is a coin flip and it gets more than 46 per cent of them wrong.</p>
+
+  <h2>Hysteresis is not strictly an improvement</h2>
+  <table class="pat">
+    <thead><tr><th scope="col">Pattern</th><th scope="col">One bit</th><th scope="col">Two bits</th><th scope="col">Two bits, 2 history</th></tr></thead>
+    <tbody>
+      <tr><td>NNTT</td><td>50%</td><td>25%</td><td>100%</td></tr>
+      <tr><td>TNTN</td><td>0%</td><td>0% or 50%</td><td>100%</td></tr>
+      <tr><td>TTTNNN</td><td>66.7%</td><td>33.3%</td><td>100%</td></tr>
+      <tr><td>random, p = 0.7</td><td>58.0%</td><td>63.8%</td><td>&mdash;</td></tr>
+    </tbody>
+  </table>
+  <p>The two-bit saturating counter is usually introduced as the strictly better version of
+  "guess whatever happened last time", on the grounds that it demands two wrong guesses in a
+  row before changing its mind. On random data that is true: at p = 0.7 it reaches 63.8 per
+  cent against the one-bit predictor's 58.0. On repeating patterns it is frequently false.
+  Run every non-constant repeating pattern of length two to twelve &mdash; 8166 of them
+  &mdash; and the one-bit predictor is strictly more accurate on 3515, a little over two
+  fifths of them. The cleanest case is NNTT, where one bit gets half right and the counter
+  gets a quarter: the hysteresis is exactly as long as the runs, so the counter spends its
+  entire life halfway between two minds and arrives at each turn facing the wrong way.</p>
+
+  <h2>Random data has a ceiling, and the counter sits under it</h2>
+  <p>Feed the counter independent coin flips that come up taken with probability p. The four
+  states form a birth-and-death chain whose stationary weights are powers of p over one minus
+  p, and the accuracy collapses to a closed form.</p>
+  <code class="math">accuracy = (p^3 + q^3) / (p^2 + q^2)</code>
+  <p>At p = 0.7 that is 0.638. The best any fixed rule can manage is to name the commoner
+  outcome every time, which scores 0.700. The counter falls six points short, and it falls
+  short at every p strictly between zero and one, because a chain that keeps moving keeps
+  spending time in states that disagree with the majority. It is an easy thing to state
+  wrongly: the counter does not converge to the larger of p and one minus p. It converges to
+  something strictly below it.</p>
+
+  <h2>What history buys</h2>
+  <p>Real predictors are not bare counters, because a bare counter has nowhere to put the
+  information that actually matters. Index the counters by the last few outcomes instead of
+  keeping a single one, and periodic patterns become learnable. One bit of history takes
+  strict alternation from at best a coin to perfect, because the previous outcome alone names
+  the next. NNTT needs two bits, and with two it is exact. With eight bits of history all 256
+  patterns of period eight are learned perfectly: a window as long as the period always
+  identifies the phase.</p>
+
+  <h2>What to try</h2>
+  <p>Start from <code>v &gt;= 128</code> and drag the threshold. At either end the branch goes
+  one way every time and both orders are free. In between, the sorted pass stays nearly free
+  while the shuffled one climbs to its worst at the middle. Then type <code>i % 4 &lt; 2</code>:
+  sorting now does nothing at all, because the condition never looks at the values &mdash; and
+  switch the predictor to two bits of history to watch the same pattern go to a hundred per
+  cent.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260922;
+const BASE = 4;            /* cycles per iteration when nothing is mispredicted */
+
+/* ---- a small expression compiler ---------------------------------------
+   Recursive descent over a fixed grammar, compiled once to a closure. No
+   eval, no Function constructor: the only names it can ever see are the
+   three it is handed.                                                      */
+function compile(src){
+  let p = 0;
+  const s = String(src);
+  function ws(){ while (p < s.length && /\s/.test(s[p])) p++; }
+  function eat(tok){
+    ws();
+    if (s.substr(p, tok.length) === tok){ p += tok.length; return true; }
+    return false;
+  }
+  function peekOneOf(toks){
+    ws();
+    for (let i = 0; i < toks.length; i++)
+      if (s.substr(p, toks[i].length) === toks[i]) return toks[i];
+    return null;
+  }
+  function primary(){
+    ws();
+    if (eat("(")){ const e = orExpr(); if (!eat(")")) throw new Error("expected )"); return e; }
+    if (eat("!")){ const e = primary(); return (i, v, t) => (e(i, v, t) ? 0 : 1); }
+    if (eat("-")){ const e = primary(); return (i, v, t) => -e(i, v, t); }
+    const m = /^[0-9]+(\.[0-9]+)?/.exec(s.slice(p));
+    if (m){ p += m[0].length; const num = parseFloat(m[0]); return () => num; }
+    const id = /^[a-z][a-z0-9]*/i.exec(s.slice(p));
+    if (id){
+      p += id[0].length;
+      const nm = id[0];
+      if (nm === "i") return (i) => i;
+      if (nm === "v") return (i, v) => v;
+      if (nm === "t") return (i, v, t) => t;
+      throw new Error("unknown name " + nm);
+    }
+    throw new Error("expected a value at position " + p);
+  }
+  function mulExpr(){
+    let a = primary(), op;
+    while ((op = peekOneOf(["*", "/", "%"]))){
+      eat(op); const b = primary(), o = op, left = a;
+      a = o === "*" ? ((i, v, t) => left(i, v, t) * b(i, v, t))
+        : o === "/" ? ((i, v, t) => left(i, v, t) / b(i, v, t))
+        :             ((i, v, t) => left(i, v, t) % b(i, v, t));
+    }
+    return a;
+  }
+  function addExpr(){
+    let a = mulExpr(), op;
+    while ((op = peekOneOf(["+", "-"]))){
+      eat(op); const b = mulExpr(), o = op, left = a;
+      a = o === "+" ? ((i, v, t) => left(i, v, t) + b(i, v, t))
+                    : ((i, v, t) => left(i, v, t) - b(i, v, t));
+    }
+    return a;
+  }
+  function cmpExpr(){
+    let a = addExpr(), op;
+    while ((op = peekOneOf(["<=", ">=", "==", "!=", "<", ">"]))){
+      eat(op); const b = addExpr(), o = op, left = a;
+      a = o === "<=" ? ((i, v, t) => left(i, v, t) <= b(i, v, t) ? 1 : 0)
+        : o === ">=" ? ((i, v, t) => left(i, v, t) >= b(i, v, t) ? 1 : 0)
+        : o === "==" ? ((i, v, t) => left(i, v, t) === b(i, v, t) ? 1 : 0)
+        : o === "!=" ? ((i, v, t) => left(i, v, t) !== b(i, v, t) ? 1 : 0)
+        : o === "<"  ? ((i, v, t) => left(i, v, t) <  b(i, v, t) ? 1 : 0)
+        :              ((i, v, t) => left(i, v, t) >  b(i, v, t) ? 1 : 0);
+    }
+    return a;
+  }
+  function andExpr(){
+    let a = cmpExpr();
+    while (peekOneOf(["&&"])){
+      eat("&&"); const b = cmpExpr(), left = a;
+      a = (i, v, t) => (left(i, v, t) && b(i, v, t)) ? 1 : 0;
+    }
+    return a;
+  }
+  function orExpr(){
+    let a = andExpr();
+    while (peekOneOf(["||"])){
+      eat("||"); const b = andExpr(), left = a;
+      a = (i, v, t) => (left(i, v, t) || b(i, v, t)) ? 1 : 0;
+    }
+    return a;
+  }
+  const fn = orExpr();
+  ws();
+  if (p !== s.length) throw new Error("unexpected text at position " + p);
+  return (i, v, t) => (fn(i, v, t) ? 1 : 0);
+}
+
+/* ---- MODEL -------------------------------------------------------------- */
+const Model = {
+  /* one draw of values, then the two orders of the same multiset */
+  data(n, seed){
+    const rng = mulberry32(seed);
+    const raw = new Int32Array(n);
+    for (let i = 0; i < n; i++) raw[i] = Math.floor(rng() * 256);
+    const sorted = Int32Array.from(raw); sorted.sort();
+    const shuffled = Int32Array.from(raw);
+    for (let i = n - 1; i > 0; i--){
+      const j = Math.floor(rng() * (i + 1));
+      const tmp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = tmp;
+    }
+    return { sorted: sorted, shuffled: shuffled };
+  },
+
+  /* the taken/not-taken sequence the loop actually produces */
+  sequence(fn, arr, t){
+    const n = arr.length, out = new Uint8Array(n);
+    for (let i = 0; i < n; i++) out[i] = fn(i, arr[i], t);
+    return out;
+  },
+
+  /* A predictor is a table of counters indexed by the last hbits outcomes.
+     hbits = 0 is the single global counter everyone draws first. bits = 1 is
+     "guess whatever happened last time"; bits = 2 is the saturating counter,
+     which needs two wrong guesses in a row before it changes its mind.
+     start is the initial counter value, and it matters more than it looks. */
+  run(seq, bits, hbits, start){
+    const size = 1 << hbits, mask = size - 1;
+    const tbl = new Uint8Array(size);
+    const init = start === undefined ? (bits === 2 ? 1 : 0) : start;
+    tbl.fill(init);
+    const miss = new Uint8Array(seq.length);
+    let hist = 0, misses = 0;
+    for (let k = 0; k < seq.length; k++){
+      const idx = hbits ? (hist & mask) : 0;
+      const st = tbl[idx];
+      const guess = bits === 2 ? (st >= 2 ? 1 : 0) : st;
+      const act = seq[k];
+      if (guess !== act){ misses++; miss[k] = 1; }
+      tbl[idx] = bits === 2 ? (act ? (st < 3 ? st + 1 : 3) : (st > 0 ? st - 1 : 0)) : act;
+      if (hbits) hist = ((hist << 1) | act) & mask;
+    }
+    return { misses: misses, miss: miss, n: seq.length,
+             accuracy: seq.length ? 1 - misses / seq.length : 0 };
+  },
+
+  /* the whole point: every miss costs a refill */
+  cycles(n, misses, penalty){ return n * BASE + misses * penalty; },
+
+  /* repeat a short pattern until it is long enough to have settled */
+  repeat(pat, reps){
+    const out = new Uint8Array(pat.length * reps);
+    for (let r = 0; r < reps; r++)
+      for (let k = 0; k < pat.length; k++) out[r * pat.length + k] = pat[k];
+    return out;
+  },
+  /* accuracy over the tail only, so warm-up cannot flatter it */
+  steady(seq, bits, hbits, start){
+    const r = Model.run(seq, bits, hbits, start);
+    const from = Math.floor(seq.length / 2);
+    let m = 0;
+    for (let k = from; k < seq.length; k++) m += r.miss[k];
+    return 1 - m / (seq.length - from);
+  },
+
+  /* what a two-bit counter settles at on independent coin flips.
+     The four states form a birth-and-death chain with up-probability p, so
+     the stationary weights are 1, r, r^2, r^3 with r = p/q, and the chain
+     predicts taken in the upper two. The algebra collapses to this.        */
+  twoBitIid(p){
+    const q = 1 - p;
+    return (p * p * p + q * q * q) / (p * p + q * q);
+  },
+  /* the one-bit predictor guesses right exactly when two draws agree */
+  oneBitIid(p){ const q = 1 - p; return p * p + q * q; },
+  /* the best any fixed rule can do: always name the commoner outcome */
+  bayes(p){ return Math.max(p, 1 - p); }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { cond: "v >= 128", pred: "2", t: 128, n: 2048, pen: 14 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+let W = 900, Hpx = 340, NARROW = false, G = null;
+
+function clamp(v, lo, hi){ return v < lo ? lo : v > hi ? hi : v; }
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#000"; }
+function predSpec(){
+  const p = state.pred;
+  if (p === "1") return { bits: 1, h: 0, label: "one-bit" };
+  if (p === "2") return { bits: 2, h: 0, label: "two-bit" };
+  return { bits: 2, h: parseInt(p.slice(1), 10), label: "two-bit, " + p.slice(1) + "-bit history" };
+}
+
+let compiled = null, compileError = null;
+function recompile(){
+  try { compiled = compile(state.cond); compileError = null; }
+  catch (e){ compiled = null; compileError = e.message; }
+}
+
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth - 20;
+  W = clamp(avail > 0 ? avail : 900, 300, 1060);
+  NARROW = W < 560;
+
+  const padL = 10, padR = 10;
+  const head = 16, patH = 11, missH = NARROW ? 30 : 38, capH = NARROW ? 27 : 15, gap = NARROW ? 14 : 18;
+  const blockH = head + patH + 2 + missH + capH;
+  const barsH = NARROW ? 74 : 62;
+  Hpx = 6 + blockH + gap + blockH + gap + barsH + 6;
+  G = { padL: padL, padR: padR, head: head, patH: patH, missH: missH, capH: capH,
+        gap: gap, blockH: blockH, barsH: barsH,
+        x0: padL, x1: W - padR, cols: NARROW ? 76 : Math.floor((W - padL - padR) / 5.4) };
+  cv.width = Math.round(W * SS);
+  cv.height = Math.round(Hpx * SS);
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+/* everything the page shows, computed once per render */
+function compute(){
+  const n = state.n, spec = predSpec();
+  const d = Model.data(n, SEED);
+  const fn = compiled || (() => 0);
+  const out = {};
+  ["sorted", "shuffled"].forEach(function(key){
+    const seq = Model.sequence(fn, d[key], state.t);
+    const r = Model.run(seq, spec.bits, spec.h);
+    let taken = 0;
+    for (let i = 0; i < n; i++) taken += seq[i];
+    out[key] = { seq: seq, run: r, taken: taken,
+                 cycles: Model.cycles(n, r.misses, state.pen) };
+  });
+  return out;
+}
+
+function drawBlock(y, title, res, colours){
+  const n = res.seq.length, cols = Math.min(G.cols, n);
+  const w = (G.x1 - G.x0) / cols;
+  ctx.font = "600 11px " + "ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.fillStyle = colours.ink;
+  ctx.fillText(title, G.x0, y + G.head / 2);
+  ctx.textAlign = "right"; ctx.fillStyle = colours.muted;
+  ctx.font = "11px ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.fillText((res.run.accuracy * 100).toFixed(1) + "% right, " +
+               res.run.misses.toLocaleString("en") + " misses", G.x1, y + G.head / 2);
+
+  const py = y + G.head, my = py + G.patH + 2;
+  for (let c = 0; c < cols; c++){
+    const lo = Math.floor(c * n / cols), hi = Math.max(lo + 1, Math.floor((c + 1) * n / cols));
+    let tk = 0, ms = 0;
+    for (let i = lo; i < hi; i++){ tk += res.seq[i]; ms += res.run.miss[i]; }
+    const span = hi - lo;
+    const x = G.x0 + c * w;
+    ctx.fillStyle = colours.nott; ctx.fillRect(x, py, Math.max(1, w - 0.6), G.patH);
+    ctx.globalAlpha = tk / span;
+    ctx.fillStyle = colours.taken; ctx.fillRect(x, py, Math.max(1, w - 0.6), G.patH);
+    ctx.globalAlpha = 1;
+    const h = (ms / span) * G.missH;
+    if (h > 0){
+      ctx.fillStyle = colours.miss;
+      ctx.fillRect(x, my + G.missH - h, Math.max(1, w - 0.6), h);
+    }
+  }
+  ctx.strokeStyle = colours.line; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(G.x0, my + G.missH + 0.5); ctx.lineTo(G.x1, my + G.missH + 0.5); ctx.stroke();
+
+  ctx.font = "10px ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.fillStyle = colours.muted; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  const capY = my + G.missH + 4;
+  const legA = "blue = branch taken";
+  const legB = NARROW ? "red = mispredicted, height is the miss rate"
+                      : "red = mispredicted, full height is every branch in the block";
+  /* Two legends share a line only when they actually fit on one. At phone width
+     the long one is wider than the panel, so right-aligning it drives it straight
+     through the short one and both become unreadable. Stack them instead. */
+  if (!NARROW && ctx.measureText(legA).width + ctx.measureText(legB).width + 16 <= G.x1 - G.x0){
+    ctx.fillText(legA, G.x0, capY);
+    ctx.textAlign = "right"; ctx.fillText(legB, G.x1, capY);
+  } else {
+    ctx.fillText(legA, G.x0, capY);
+    ctx.fillText(legB, G.x0, capY + 12);
+  }
+}
+
+function render(){
+  if (!G) fitCanvas();
+  const colours = { ink: css("--ink"), muted: css("--muted"), line: css("--line"),
+                    taken: css("--taken"), nott: css("--nott"), miss: css("--miss"), hit: css("--hit") };
+  ctx.clearRect(0, 0, W, Hpx);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, Hpx);
+
+  if (compileError){
+    ctx.font = "600 13px ui-monospace,SFMono-Regular,Menlo,monospace";
+    ctx.fillStyle = colours.miss; ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillText("the condition does not parse: " + compileError, G.x0, 16);
+    ctx.fillStyle = colours.muted;
+    ctx.font = "12px ui-monospace,SFMono-Regular,Menlo,monospace";
+    ctx.fillText("names allowed: i, v, t. operators: + - * / % < <= > >= == != && || ! ( )", G.x0, 40);
+    ["r1","r2","r3","r4","r5","r6"].forEach(function(id){ el(id).textContent = "--"; });
+    el("state").textContent = compileError;
+    el("state").className = "state bad";
+    return;
+  }
+  el("state").textContent = "condition parsed";
+  el("state").className = "state";
+
+  const out = compute();
+  drawBlock(6, "SORTED", out.sorted, colours);
+  drawBlock(6 + G.blockH + G.gap, "SHUFFLED", out.shuffled, colours);
+
+  /* the cycle bars: the only number a user of this loop would ever feel */
+  const by = 6 + 2 * G.blockH + 2 * G.gap;
+  const worst = Math.max(out.sorted.cycles, out.shuffled.cycles, 1);
+  const labW = NARROW ? 0 : 74;
+  const barX = G.x0 + labW, barW = G.x1 - barX - (NARROW ? 0 : 92);
+  ctx.font = "11px ui-monospace,SFMono-Regular,Menlo,monospace";
+  [["sorted", out.sorted, colours.hit], ["shuffled", out.shuffled, colours.miss]].forEach(function(row, k){
+    const y = by + (NARROW ? k * 34 + 12 : k * 26 + 8);
+    if (!NARROW){
+      ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillStyle = colours.muted;
+      ctx.fillText(row[0], G.x0, y + 7);
+    } else {
+      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.fillStyle = colours.muted;
+      ctx.fillText(row[0], G.x0, y - 3);
+    }
+    const wpx = Math.max(2, barW * row[1].cycles / worst);
+    ctx.fillStyle = colours.line; ctx.fillRect(barX, y, barW, 14);
+    ctx.fillStyle = row[2]; ctx.globalAlpha = 0.85; ctx.fillRect(barX, y, wpx, 14); ctx.globalAlpha = 1;
+    ctx.textBaseline = "middle"; ctx.fillStyle = colours.ink;
+    /* At phone width the bar spans the whole panel, so a number laid over it sits
+       on the fill and loses its contrast against the red. Put it beside the row's
+       own name, on the line above, where nothing else is drawn. */
+    if (NARROW){
+      ctx.textAlign = "right"; ctx.textBaseline = "alphabetic";
+      ctx.fillText(row[1].cycles.toLocaleString("en") + " cycles", G.x1, y - 3);
+    } else {
+      ctx.textAlign = "left"; ctx.fillText(row[1].cycles.toLocaleString("en") + " cyc", barX + barW + 8, y + 7);
+    }
+  });
+
+  const ratio = out.sorted.cycles > 0 ? out.shuffled.cycles / out.sorted.cycles : 1;
+  el("r1").textContent = (out.sorted.run.accuracy * 100).toFixed(1) + "%";
+  el("r2").textContent = (out.shuffled.run.accuracy * 100).toFixed(1) + "%";
+  el("r3").textContent = out.sorted.cycles.toLocaleString("en");
+  el("r4").textContent = out.shuffled.cycles.toLocaleString("en");
+  el("r5").textContent = ratio.toFixed(2) + " x";
+  el("r6").textContent = (out.sorted.taken / state.n * 100).toFixed(1) + "%";
+
+  el("tout").textContent = String(state.t);
+  el("nout").textContent = String(state.n);
+  el("penout").textContent = state.pen + " cyc";
+}
+
+/* ---- wiring ------------------------------------------------------------- */
+function bindRange(id, key){
+  el(id).addEventListener("input", function(){ state[key] = parseInt(this.value, 10); render(); });
+}
+bindRange("t", "t"); bindRange("n", "n"); bindRange("pen", "pen");
+el("pred").addEventListener("input", function(){ state.pred = this.value; render(); });
+el("cond").addEventListener("input", function(){
+  state.cond = this.value; recompile(); render();
+});
+const presets = document.querySelectorAll(".presets button");
+for (let i = 0; i < presets.length; i++){
+  presets[i].addEventListener("click", function(){
+    state.cond = this.getAttribute("data-c");
+    el("cond").value = state.cond;
+    recompile(); render();
+  });
+}
+
+let rt = null;
+window.addEventListener("resize", function(){
+  clearTimeout(rt); rt = setTimeout(function(){ fitCanvas(); render(); }, 90);
+});
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
+recompile();
+fitCanvas();
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+const MEMO = {};
+function once(key, fn){ if (!(key in MEMO)) MEMO[key] = fn(); return MEMO[key]; }
+const ALT_T = new Uint8Array([1, 0]), ALT_N = new Uint8Array([0, 1]);
+const NNTT  = new Uint8Array([0, 0, 1, 1]);
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1 — the queue asked to assert 0 per cent on an alternating pattern AND
+         100 per cent on a pattern of period two. Those are the same pattern,
+         the two claims contradict each other, and neither is right.        */
+  const A1 = once("A1", function(){
+    const seen = [], zeros = [];
+    [[ALT_T, "TN"], [ALT_N, "NT"]].forEach(function(ph){
+      for (let st = 0; st <= 3; st++){
+        const a = Model.steady(Model.repeat(ph[0], 400), 2, 0, st);
+        seen.push(a);
+        if (a === 0) zeros.push(ph[1] + " from state " + st);
+      }
+    });
+    let worst = 0, allClean = true;
+    for (let i = 0; i < seen.length; i++){
+      worst = Math.max(worst, seen[i]);
+      if (Math.abs(seen[i]) > 1e-12 && Math.abs(seen[i] - 0.5) > 1e-12) allClean = false;
+    }
+    return { worst: worst, zeros: zeros, allClean: allClean, n: seen.length };
+  });
+  push("a bare two-bit counter cannot do better than a coin on alternation",
+    A1.worst <= 0.5 + 1e-12 && A1.allClean && A1.zeros.length === 2,
+    "All four starting states against both phases, " + A1.n + " runs: every one settles at " +
+    "exactly 0 or exactly 0.5, never above. The counter has three closed cycles -- the low " +
+    "pair, the high pair and the middle pair -- and only the middle one is in antiphase with " +
+    "the data, giving 0 per cent (" + A1.zeros.join(" and ") + "). There is no warm-up that " +
+    "escapes the cycle it starts in. The queue asked for exactly 0 per cent and also for " +
+    "100 per cent on a period-two pattern; those are the same pattern and neither figure " +
+    "is attainable.");
+
+  /* 2 — the one-bit predictor is not merely bad on alternation, it is exactly
+         as wrong as it is possible to be */
+  const A2 = once("A2", function(){
+    return { a: Model.steady(Model.repeat(ALT_T, 400), 1, 0, 0),
+             b: Model.steady(Model.repeat(ALT_N, 400), 1, 0, 0) };
+  });
+  push("the one-bit predictor is wrong every single time on alternation",
+    A2.a === 0 && A2.b === 0,
+    "Guessing whatever happened last time, against a sequence that never repeats itself " +
+    "twice running, is wrong at every step in both phases: " + A2.a.toFixed(1) + " and " +
+    A2.b.toFixed(1) + " per cent. It is the one case where a predictor would be improved " +
+    "by inverting its output.");
+
+  /* 3 — the queue asked to assert that one bit is NEVER better than two.
+         On more than two fifths of all short repeating patterns it is.     */
+  const A3 = once("A3", function(){
+    let beats = 0, total = 0, worst = 0, ex = "";
+    for (let L = 2; L <= 12; L++){
+      for (let m = 1; m < (1 << L) - 1; m++){
+        const pat = new Uint8Array(L);
+        for (let k = 0; k < L; k++) pat[k] = (m >> k) & 1;
+        const seq = Model.repeat(pat, Math.ceil(400 / L) * 2);
+        const one = Model.steady(seq, 1, 0), two = Model.steady(seq, 2, 0);
+        total++;
+        if (one > two + 1e-12){
+          beats++;
+          if (one - two > worst){
+            worst = one - two;
+            ex = Array.prototype.map.call(pat, function(b){ return b ? "T" : "N"; }).join("");
+          }
+        }
+      }
+    }
+    const nOne = Model.steady(Model.repeat(NNTT, 200), 1, 0);
+    const nTwo = Model.steady(Model.repeat(NNTT, 200), 2, 0);
+    return { beats: beats, total: total, worst: worst, ex: ex, nOne: nOne, nTwo: nTwo };
+  });
+  push("one bit beats two bits on two fifths of all short repeating patterns",
+    A3.beats > 3000 && A3.nOne > A3.nTwo,
+    "Every repeating pattern of length 2 to 12 that is not constant, " + A3.total +
+    " of them, run to steady state: the one-bit predictor is strictly more accurate than " +
+    "the two-bit counter on " + A3.beats + " of them. The queue asked to assert it never " +
+    "is. The plainest exhibit is NNTT, where one bit gets " + (A3.nOne * 100).toFixed(0) +
+    " per cent and two bits get " + (A3.nTwo * 100).toFixed(0) + "; the widest margin is " +
+    A3.ex + " at " + (A3.worst * 100).toFixed(1) + " points. Hysteresis is a liability " +
+    "against runs the same length as the hysteresis.");
+
+  /* 4 — on independent coin flips the counter does NOT reach the obvious
+         ceiling, and the shortfall has a closed form                        */
+  const A4 = once("A4", function(){
+    const rows = [];
+    let worstZ = 0, belowBayes = true;
+    for (let k = 0; k < 9; k++){
+      const p = 0.5 + k * 0.05;
+      const N = 200000, rng = mulberry32(SEED + k), seq = new Uint8Array(N);
+      for (let i = 0; i < N; i++) seq[i] = rng() < p ? 1 : 0;
+      const sim = Model.run(seq, 2, 0).accuracy;
+      const closed = Model.twoBitIid(p);
+      const se = Math.sqrt(closed * (1 - closed) / N);
+      const z = Math.abs(sim - closed) / se;
+      worstZ = Math.max(worstZ, z);
+      if (k > 0 && !(closed < Model.bayes(p) - 1e-9)) belowBayes = false;
+      if (Math.abs(p - 0.7) < 1e-9) rows.push({ p: p, sim: sim, closed: closed });
+    }
+    return { worstZ: worstZ, belowBayes: belowBayes, at7: rows[0] };
+  });
+  push("the counter never reaches the accuracy the queue expected on random data",
+    A4.worstZ < 3 && A4.belowBayes,
+    "The four states form a birth-and-death chain with stationary weights 1, r, r squared " +
+    "and r cubed for r = p/(1-p), and the accuracy collapses to (p^3 + q^3)/(p^2 + q^2). " +
+    "At nine values of p, 200000 branches each, the simulation sits within " +
+    A4.worstZ.toFixed(2) + " standard errors of that form. The queue asked it to converge " +
+    "to the larger of p and 1-p: at p = 0.7 the closed form gives " +
+    A4.at7.closed.toFixed(5) + " and the simulation " + A4.at7.sim.toFixed(5) +
+    ", against the 0.7 claimed -- six points short, and strictly short at every p " +
+    "strictly between 0 and 1.");
+
+  /* 5 — the one-bit predictor has its own closed form, and it is worse */
+  const A5 = once("A5", function(){
+    let worstZ = 0, gapOk = true;
+    for (let k = 0; k < 9; k++){
+      const p = 0.5 + k * 0.05;
+      const N = 200000, rng = mulberry32(SEED + 100 + k), seq = new Uint8Array(N);
+      for (let i = 0; i < N; i++) seq[i] = rng() < p ? 1 : 0;
+      const sim = Model.run(seq, 1, 0).accuracy, closed = Model.oneBitIid(p);
+      const se = Math.sqrt(closed * (1 - closed) / N);
+      worstZ = Math.max(worstZ, Math.abs(sim - closed) / se);
+      if (k > 0 && !(Model.twoBitIid(p) > closed)) gapOk = false;
+    }
+    return { worstZ: worstZ, gapOk: gapOk,
+             a: Model.oneBitIid(0.7), b: Model.twoBitIid(0.7) };
+  });
+  push("the one-bit predictor settles at the chance that two draws agree",
+    A5.worstZ < 3 && A5.gapOk,
+    "Guessing the last outcome is right exactly when consecutive draws match, so the " +
+    "accuracy is p squared plus q squared. Nine values of p, 200000 branches each, within " +
+    A5.worstZ.toFixed(2) + " standard errors. At p = 0.7 that is " + A5.a.toFixed(4) +
+    " against the counter's " + A5.b.toFixed(4) + ", and the counter is ahead at every p " +
+    "above one half. On random data the extra bit is worth real accuracy; on the patterns " +
+    "in assertion three it is worth less than nothing.");
+
+  /* 6 — the cycle count is exactly what the model says it is */
+  const A6 = once("A6", function(){
+    const rng = mulberry32(SEED + 6);
+    let ok = true, cases = 0;
+    for (let k = 0; k < 120; k++){
+      const n = 128 + Math.floor(rng() * 3968), pen = 1 + Math.floor(rng() * 25);
+      const seq = new Uint8Array(n);
+      for (let i = 0; i < n; i++) seq[i] = rng() < 0.4 ? 1 : 0;
+      const r = Model.run(seq, 2, 0);
+      if (Model.cycles(n, r.misses, pen) !== n * BASE + r.misses * pen) ok = false;
+      cases++;
+    }
+    return { ok: ok, cases: cases };
+  });
+  push("cycles are the base count plus the penalty times the misses, exactly",
+    A6.ok,
+    "Over " + A6.cases + " seeded runs with lengths from 128 to 4096 and penalties from 1 " +
+    "to 25 cycles the identity holds in integer arithmetic with no residue at all. Every " +
+    "cycle this page charges is a branch the machine guessed wrong.");
+
+  /* 7 — what history buys, precisely */
+  const A7 = once("A7", function(){
+    const altH1 = Model.steady(Model.repeat(ALT_T, 400), 2, 1);
+    const nnttH0 = Model.steady(Model.repeat(NNTT, 200), 2, 0);
+    const nnttH1 = Model.steady(Model.repeat(NNTT, 200), 2, 1);
+    const nnttH2 = Model.steady(Model.repeat(NNTT, 200), 2, 2);
+    let perfect = 0, tried = 0;
+    for (let m = 0; m < 256; m++){
+      const pat = new Uint8Array(8);
+      for (let k = 0; k < 8; k++) pat[k] = (m >> k) & 1;
+      const a = Model.steady(Model.repeat(pat, 120), 2, 8);
+      tried++;
+      if (a >= 1 - 1e-12) perfect++;
+    }
+    return { altH1: altH1, nnttH0: nnttH0, nnttH1: nnttH1, nnttH2: nnttH2,
+             perfect: perfect, tried: tried };
+  });
+  push("history is what lets a predictor learn a pattern at all",
+    A7.altH1 >= 1 - 1e-12 && A7.nnttH2 >= 1 - 1e-12 &&
+    A7.nnttH1 < 0.3 && A7.perfect === A7.tried,
+    "One bit of history turns the alternating pattern from at best a coin into " +
+    (A7.altH1 * 100).toFixed(0) + " per cent, because the last outcome alone names the next " +
+    "one. NNTT needs two: at zero and one bit of history it sits at " +
+    (A7.nnttH0 * 100).toFixed(0) + " and " + (A7.nnttH1 * 100).toFixed(0) +
+    " per cent, and at two bits it is exact. With eight bits of history all " + A7.tried +
+    " patterns of period eight are learned perfectly, all " + A7.perfect + " of them: a " +
+    "window as long as the period always names the phase.");
+
+  /* 8 — the two orders do exactly the same work */
+  const A8 = once("A8", function(){
+    const fn = compile("v >= 128");
+    let sameCount = true, worstSorted = 0, leastShuffled = 1;
+    const rows = [];
+    for (let k = 0; k < 6; k++){
+      const n = 512 * (k + 1), d = Model.data(n, SEED + k);
+      const s = Model.sequence(fn, d.sorted, 128), u = Model.sequence(fn, d.shuffled, 128);
+      let ts = 0, tu = 0;
+      for (let i = 0; i < n; i++){ ts += s[i]; tu += u[i]; }
+      if (ts !== tu) sameCount = false;
+      const rs = Model.run(s, 2, 0), ru = Model.run(u, 2, 0);
+      worstSorted = Math.max(worstSorted, rs.misses);
+      leastShuffled = Math.min(leastShuffled, ru.misses / n);
+      if (k === 3) rows.push({ n: n, taken: ts, ms: rs.misses, mu: ru.misses,
+                               cs: Model.cycles(n, rs.misses, 14),
+                               cu: Model.cycles(n, ru.misses, 14) });
+    }
+    return { sameCount: sameCount, worstSorted: worstSorted,
+             leastShuffled: leastShuffled, row: rows[0] };
+  });
+  push("sorting changes nothing about the work and everything about the cost",
+    A8.sameCount && A8.worstSorted <= 3 && A8.leastShuffled > 0.4,
+    "The two arrays are permutations of one another, so for a condition that reads only " +
+    "the value, the branch is taken exactly the same number of times in both: identical " +
+    "counts at all six lengths. On the sorted array the two-bit counter mispredicts at " +
+    "most " + A8.worstSorted + " times in total, because the sequence has one transition " +
+    "in it. On the shuffled array it mispredicts more than " +
+    (A8.leastShuffled * 100).toFixed(0) + " per cent of the time. At 2048 elements with a " +
+    "14-cycle penalty that is " + A8.row.cs.toLocaleString("en") + " cycles against " +
+    A8.row.cu.toLocaleString("en") + " for the same " + A8.row.taken + " additions.");
+
+
+  /* 9 — the thing the reader types has to mean what it looks like */
+  const A9 = once("A9", function(){
+    const cases = [
+      ["v >= 128",            (i, v, t) => v >= 128 ? 1 : 0],
+      ["v >= t",              (i, v, t) => v >= t ? 1 : 0],
+      ["i % 2 == 0",          (i, v, t) => i % 2 === 0 ? 1 : 0],
+      ["i % 4 < 2",           (i, v, t) => i % 4 < 2 ? 1 : 0],
+      ["v >= t && i % 3 != 0",(i, v, t) => (v >= t && i % 3 !== 0) ? 1 : 0],
+      ["v % 7 == 0",          (i, v, t) => v % 7 === 0 ? 1 : 0],
+      ["1 + 2 * 3 == 7",      () => 1],
+      ["(1 + 2) * 3 == 7",    () => 0],
+      ["!(v < t)",            (i, v, t) => v < t ? 0 : 1],
+      ["v - t >= 0 || i == 0",(i, v, t) => (v - t >= 0 || i === 0) ? 1 : 0]
+    ];
+    let bad = 0, checks = 0;
+    for (let c = 0; c < cases.length; c++){
+      const got = compile(cases[c][0]), want = cases[c][1];
+      for (let i = 0; i < 120; i++){
+        for (let v = 0; v < 256; v += 17){
+          for (let tt = 0; tt <= 256; tt += 64){
+            checks++;
+            if (got(i, v, tt) !== want(i, v, tt)) bad++;
+          }
+        }
+      }
+    }
+    return { bad: bad, checks: checks, n: cases.length };
+  });
+  push("the compiled condition means what it reads",
+    A9.bad === 0,
+    A9.n + " expressions, each checked against a hand-written reference over 120 indices, " +
+    "16 values and five thresholds: " + A9.checks + " comparisons, " + A9.bad +
+    " disagreements. Precedence is included -- 1 + 2 * 3 == 7 is true and (1 + 2) * 3 == 7 " +
+    "is false -- because a parser that gets that wrong would quietly change the branch " +
+    "the page is measuring.");
+
+  /* 10 — and it must refuse what it cannot mean, rather than guess */
+  const A10 = once("A10", function(){
+    const bad = ["v >", "(v >= t", "v >= t)", "foo > 1", "v $ 3", "", "v >= t && ",
+                 "2 + + ", "document", "v >= t; alert(1)"];
+    let refused = 0;
+    for (let i = 0; i < bad.length; i++){
+      try { compile(bad[i]); } catch (e){ refused++; }
+    }
+    let accepted = 0;
+    const good = ["v >= t", "i % 2 == 0", "!(v < 3)", "v + i * 2 >= t"];
+    for (let i = 0; i < good.length; i++){
+      try { compile(good[i]); accepted++; } catch (e){ /* counted by omission */ }
+    }
+    return { refused: refused, bad: bad.length, accepted: accepted, good: good.length };
+  });
+  push("the compiler refuses what it cannot mean",
+    A10.refused === A10.bad && A10.accepted === A10.good,
+    A10.bad + " malformed or out-of-vocabulary inputs, all " + A10.refused +
+    " rejected with an error rather than silently evaluating to something; " + A10.good +
+    " well-formed ones, all " + A10.accepted + " accepted. The only names the grammar " +
+    "admits are i, v and t, so nothing the reader types can reach anything else.");
+
+  /* 11 — a condition that never looks at the value cannot care about the order */
+  const A11 = once("A11", function(){
+    let identical = true, sameCycles = true;
+    const rows = [];
+    ["i % 2 == 0", "i % 4 < 2", "i % 7 == 3"].forEach(function(src){
+      const fn = compile(src), n = 2048, d = Model.data(n, SEED);
+      const a = Model.sequence(fn, d.sorted, 128), b = Model.sequence(fn, d.shuffled, 128);
+      for (let i = 0; i < n; i++) if (a[i] !== b[i]) identical = false;
+      const ra = Model.run(a, 2, 0), rb = Model.run(b, 2, 0);
+      if (Model.cycles(n, ra.misses, 14) !== Model.cycles(n, rb.misses, 14)) sameCycles = false;
+      rows.push(src + " at " + (ra.accuracy * 100).toFixed(0) + "%");
+    });
+    return { identical: identical, sameCycles: sameCycles, rows: rows.join(", ") };
+  });
+  push("a condition that never reads the value is untouched by sorting",
+    A11.identical && A11.sameCycles,
+    "Three conditions written only in terms of the index produce bit-identical branch " +
+    "sequences and identical cycle counts on the sorted and shuffled arrays: " + A11.rows +
+    ". Sorting is not a magic speed-up; it helps precisely because it makes the branch's " +
+    "own input arrive in an order the predictor can follow.");
+
+  /* 12 — the same seed has to give the same experiment */
+  const A12 = once("A12", function(){
+    const a = Model.data(1024, SEED), b = Model.data(1024, SEED);
+    let same = true, permutation = true;
+    for (let i = 0; i < 1024; i++){
+      if (a.sorted[i] !== b.sorted[i] || a.shuffled[i] !== b.shuffled[i]) same = false;
+      if (a.sorted[i] !== undefined && i > 0 && a.sorted[i] < a.sorted[i-1]) permutation = false;
+    }
+    const ha = new Int32Array(256), hb = new Int32Array(256);
+    for (let i = 0; i < 1024; i++){ ha[a.sorted[i]]++; hb[a.shuffled[i]]++; }
+    let multisetEqual = true;
+    for (let k = 0; k < 256; k++) if (ha[k] !== hb[k]) multisetEqual = false;
+    return { same: same, sortedIsSorted: permutation, multisetEqual: multisetEqual };
+  });
+  push("the two arrays hold the same numbers, and the seed fixes them",
+    A12.same && A12.sortedIsSorted && A12.multisetEqual,
+    "Two independent draws at the same seed agree element for element; the sorted array is " +
+    "non-decreasing at all 1023 steps; and the two arrays have identical value histograms " +
+    "over all 256 buckets, so they are genuinely the same multiset in two orders.");
+
+  /* 13 — nothing in the control ranges produces a non-number */
+  const A13 = once("A13", function(){
+    const srcs = ["v >= 128", "v >= t", "i % 2 == 0", "i % 4 < 2", "v % 7 == 0"];
+    const preds = [[1,0],[2,0],[2,1],[2,2],[2,4]];
+    let bad = 0, cells = 0;
+    for (let si = 0; si < srcs.length; si++){
+      const fn = compile(srcs[si]);
+      for (let n = 128; n <= 4096; n += 992){
+        const d = Model.data(n, SEED);
+        for (let tt = 0; tt <= 256; tt += 64){
+          const seq = Model.sequence(fn, d.shuffled, tt);
+          for (let pi = 0; pi < preds.length; pi++){
+            const r = Model.run(seq, preds[pi][0], preds[pi][1]);
+            const vals = [r.misses, r.accuracy, Model.cycles(n, r.misses, 14)];
+            for (let k = 0; k < vals.length; k++){
+              cells++;
+              if (!Number.isFinite(vals[k])) bad++;
+            }
+            if (r.accuracy < 0 || r.accuracy > 1) bad++;
+          }
+        }
+      }
+    }
+    return { bad: bad, cells: cells };
+  });
+  push("no setting of the controls produces a non-number",
+    A13.bad === 0,
+    "Five conditions, five array lengths, five thresholds and five predictors: " +
+    A13.cells + " evaluated quantities, " + A13.bad + " of them not finite or out of range.");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, compile, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

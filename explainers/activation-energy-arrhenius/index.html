@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ten Degrees Doubles It, But Only Near Room Temperature — Explainer Atlas</title>
+<meta name="description" content="Nudge the temperature and watch the rate leap. The Arrhenius law is exponential in one over temperature, which is why the ten-degree rule of thumb quietly stops working as things get hot.">
+<style>
+:root{
+  --bg:#eef1f5; --panel:#ffffff; --sunk:#f6f8fa; --ink:#10161d; --muted:#5d6b7a;
+  --line:#d4dbe3; --line-soft:#e6ebf0;
+  --cold:#2b6cb0; --hot:#c2410c; --fit:#6d28d9; --cat:#0f766e;
+  --pad:clamp(14px,3vw,24px);
+  --font-body:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0d1218; --panel:#151c24; --sunk:#111821; --ink:#e6edf4; --muted:#93a3b4;
+    --line:#26313d; --line-soft:#1c242e;
+    --cold:#63a4e8; --hot:#f0834f; --fit:#a98bf0; --cat:#4ec4b4;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:clamp(.98rem,.95rem + .16vw,1.04rem)/1.6 var(--font-body);-webkit-text-size-adjust:100%}
+.wrap{max-width:66rem;margin:0 auto;padding:var(--pad)}
+header.page{padding-bottom:1em}
+.kicker{margin:0 0 .5em;color:var(--hot);font:700 .7rem/1.3 var(--font-mono);
+  text-transform:uppercase;letter-spacing:.14em}
+h1{margin:0 0 .35em;font-size:clamp(1.5rem,1.05rem + 2.1vw,2.2rem);line-height:1.14;
+  font-weight:700;letter-spacing:-.022em}
+.standfirst{margin:0;color:var(--muted);max-width:46em}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* ---- split: plot on the left, running numbers on the right ------------- */
+.split{display:grid;gap:12px;grid-template-columns:1fr;margin-top:var(--pad)}
+@media (min-width:58rem){ .split{grid-template-columns:minmax(0,1fr) 15.5rem;align-items:start} }
+figure.stage{margin:0;padding:10px 10px 0;background:var(--panel);
+  border:1px solid var(--line);border-radius:6px}
+figure.stage canvas{display:block;width:100%;height:auto;touch-action:pan-y}
+figcaption{margin:.55em 2px .85em;color:var(--muted);font-size:.85em;line-height:1.5}
+
+.meters{margin:0;padding:0;display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr))}
+@media (min-width:58rem){ .meters{grid-template-columns:1fr} }
+.meters div{background:var(--panel);border:1px solid var(--line);border-radius:6px;
+  padding:.6em .75em}
+.meters div.lead{background:var(--sunk);border-color:var(--hot)}
+.meters dt{margin:0;font:600 .68rem/1.3 var(--font-mono);text-transform:uppercase;
+  letter-spacing:.09em;color:var(--muted)}
+.meters dd{margin:.2em 0 0;font:600 1.16rem/1.15 var(--font-mono);letter-spacing:-.02em}
+.meters dd small{display:block;font:400 .72rem/1.35 var(--font-body);color:var(--muted);
+  letter-spacing:0;margin-top:.25em}
+
+/* ---- control bench ------------------------------------------------------ */
+.controls{margin:12px 0 0;padding:var(--pad);background:var(--panel);
+  border:1px solid var(--line);border-radius:6px;display:grid;gap:1.15em 1.5em;
+  grid-template-columns:1fr}
+@media (min-width:46rem){ .controls{grid-template-columns:1fr 1fr} }
+@media (min-width:70rem){ .controls{grid-template-columns:1fr 1fr 1fr} }
+.control{display:grid;gap:.3em;align-content:start}
+.control .row{display:flex;justify-content:space-between;align-items:baseline;gap:.7em}
+.control .row label,.control > .grouplab{font:600 .72rem/1.3 var(--font-mono);
+  text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+.control output{font:700 .95rem/1 var(--font-mono);color:var(--hot);letter-spacing:-.02em}
+.control .hint{margin:.1em 0 0;color:var(--muted);font-size:.8em;line-height:1.45}
+input[type=range]{width:100%;accent-color:var(--hot);min-height:26px}
+button{font:700 .74rem/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;
+  color:inherit;background:var(--sunk);border:1px solid var(--line);border-radius:5px;
+  padding:.62em .8em;min-height:38px;cursor:pointer}
+button:hover{border-color:var(--hot);color:var(--hot)}
+.btnrow{display:flex;flex-wrap:wrap;gap:.45em;margin-top:.2em}
+.chk{display:flex;align-items:center;gap:.55em;margin:.35em 0 0;font-size:.92em}
+.chk input{width:18px;height:18px;accent-color:var(--hot);flex:none}
+.chk label{font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink)}
+
+/* ---- prose -------------------------------------------------------------- */
+.prose{max-width:38em;margin:calc(var(--pad)*1.6) auto 0}
+.prose h2{margin:1.9em 0 .45em;font-size:1.08rem;font-weight:700;letter-spacing:-.008em}
+.prose p{margin:0 0 1em}
+.prose .math{font:.9rem/1.7 var(--font-mono);background:var(--sunk);padding:.75em .9em;
+  border-radius:6px;border-left:3px solid var(--hot);overflow-x:auto}
+footer.page{max-width:38em;margin:calc(var(--pad)*1.7) auto 0;padding-top:1em;
+  border-top:1px solid var(--line);color:var(--muted);font-size:.85em}
+footer.page a{color:var(--hot)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--hot);
+  outline-offset:2px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Chemistry · kinetics</p>
+  <h1>Ten Degrees Doubles It, But Only Near Room Temperature</h1>
+  <p class="standfirst">Warming a reaction by ten degrees is supposed to roughly double its rate. Push the temperature rail and watch what the rule is actually made of &mdash; an exponential not in temperature but in one over temperature, which is why the rule works at 300 kelvin and quietly fails at 500.</p>
+</header>
+
+<div class="split">
+  <figure class="stage" data-role="stage">
+    <canvas id="bench" width="900" height="560" role="img"
+      aria-label="A temperature rail across the top marking the current temperature and the point ten kelvin warmer, and beneath it either the reaction rate against temperature on a logarithmic rate axis, or the Arrhenius plot of the logarithm of rate against one over temperature with six synthetic measurements and the line fitted through them."></canvas>
+    <figcaption id="cap">The rail is the temperature you set; the dashed marker ten kelvin to its right is where the plus ten button would take you. Beneath, the rate against temperature. The rate axis is logarithmic, because on a linear one everything below the hottest tenth of the range is flat against zero.</figcaption>
+  </figure>
+
+  <dl class="meters" aria-live="polite">
+    <div class="lead"><dt>Rate at T</dt><dd id="m1">&mdash;<small id="m1s">&nbsp;</small></dd></div>
+    <div class="lead"><dt>Ten degrees warmer</dt><dd id="m2">&mdash;<small id="m2s">&nbsp;</small></dd></div>
+    <div><dt>Fitted activation energy</dt><dd id="m3">&mdash;<small id="m3s">&nbsp;</small></dd></div>
+    <div><dt>Fitted pre-exponential</dt><dd id="m4">&mdash;<small id="m4s">&nbsp;</small></dd></div>
+    <div><dt>With the catalyst</dt><dd id="m5">&mdash;<small id="m5s">&nbsp;</small></dd></div>
+  </dl>
+</div>
+
+<section class="controls" data-role="controls" aria-label="Reaction and plot controls">
+  <div class="control">
+    <div class="row">
+      <label for="temp">Temperature</label>
+      <output id="tempout" for="temp">300 K</output>
+    </div>
+    <input type="range" id="temp" min="250" max="500" step="1" value="300">
+    <div class="btnrow">
+      <button type="button" id="up10">+10 K</button>
+      <button type="button" id="dn10">&minus;10 K</button>
+      <button type="button" id="reset">Reset</button>
+    </div>
+    <p class="hint">Nudge it ten at a time and watch the rate meter. The jump is not the same size everywhere on the rail.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="ea">Activation energy</label>
+      <output id="eaout" for="ea">62.4 kJ/mol</output>
+    </div>
+    <input type="range" id="ea" min="20" max="120" step="0.1" value="62.35">
+    <div class="row">
+      <label for="cat">Catalyst lowers it by</label>
+      <output id="catout" for="cat">0 kJ/mol</output>
+    </div>
+    <input type="range" id="cat" min="0" max="40" step="0.5" value="0">
+    <p class="hint">The barrier the molecules have to clear, and how much of it a catalyst takes away.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="loga">Pre-exponential factor</label>
+      <output id="logaout" for="loga">10^11.57</output>
+    </div>
+    <input type="range" id="loga" min="8" max="16" step="0.01" value="11.568">
+    <div class="row">
+      <label for="noise">Measurement noise</label>
+      <output id="noiseout" for="noise">0.0%</output>
+    </div>
+    <input type="range" id="noise" min="0" max="8" step="0.1" value="0">
+    <p class="chk"><input type="checkbox" id="arr"><label for="arr">Arrhenius plot: ln&nbsp;k against 1/T</label></p>
+  </div>
+</section>
+
+<article class="prose" data-role="prose">
+  <p>Set the rail to 300 kelvin and press plus ten. At the default barrier the rate meter goes up by a factor of 2.24. Press it again from 490 and the same ten degrees buys 1.36. Nothing about the reaction changed. The rule of thumb is not a property of chemistry, it is a property of where on the rail you happen to be standing.</p>
+
+  <h2>What the law actually says</h2>
+  <p class="math">k = A exp(&minus;E<sub>a</sub> / RT)</p>
+  <p>The exponent is not proportional to temperature. It is proportional to <em>one over</em> temperature, and that single reciprocal is the whole story. A fixed step of ten kelvin changes 1/T by 10/(T(T+10)), which shrinks as the square of the temperature. At 300 kelvin that step is 1.08 × 10<sup>&minus;4</sup> per kelvin; at 500 it is 3.92 × 10<sup>&minus;5</sup>, under four tenths as much. The exponential is being fed a smaller and smaller morsel.</p>
+
+  <p class="math">k(T+10) / k(T) = exp( (E<sub>a</sub>/R) × 10 / (T(T+10)) )</p>
+
+  <p>Two things set the size of the jump, and the folk rule silently fixes both. Across activation energies from 40 to 80 kilojoules per mole, the ten-degree ratio at 300 kelvin runs from 1.68 to 2.81 &mdash; a genuine doubling needs 53.60 kilojoules per mole exactly, which happens to be an ordinary value for an ordinary reaction, which is why the rule survives. Hold that barrier fixed and move along the rail instead and the ratio runs from 2.70 at 250 kelvin down to 1.29 at 500, a spread of 2.09 in itself.</p>
+
+  <h2>Reading the barrier out of the data</h2>
+  <p>Take logarithms and the reciprocal becomes an axis. Plotting ln&nbsp;k against 1/T turns the curve into a straight line of slope &minus;E<sub>a</sub>/R and intercept ln&nbsp;A, which is the only reason anyone ever measures a rate at six temperatures. Switch the plate over with the Arrhenius checkbox: with the noise at zero the six points recover the barrier to the last digit and the pre-exponential to fourteen significant figures, and the correlation is &minus;1 rather than +1 because the slope runs downhill.</p>
+
+  <p>The same six points plotted against plain temperature are not straight at all: the best line through them misses by up to 0.30 in ln&nbsp;k, a factor of 1.35 in rate, while against 1/T the residuals are at the floor of double precision. That gap is the experimental evidence for the reciprocal, and it is why a chemist reaches for 1/T without thinking.</p>
+
+  <p>Now raise the noise. At one per cent on each rate the fitted barrier still lands within a fraction of a per cent, because six points across a hundred kelvin give a long lever arm on the slope. The pre-exponential is the fragile one &mdash; it is an extrapolation to infinite temperature, out past the end of the data, and a small error in the slope swings it by orders of magnitude.</p>
+
+  <h2>What a catalyst does, and does not do</h2>
+  <p>Drag the catalyst slider. The rate rises by exactly exp(&Delta;E<sub>a</sub>/RT), with no fitting and no approximation, because the pre-exponential is untouched. But watch the ten-degree meter while you drag: a 40 kilojoule catalyst at 300 kelvin pulls the jump from 2.24 down to 1.34. A catalysed reaction is not merely faster, it is markedly less fussy about temperature, which is exactly why living things run their chemistry on enzymes instead of on heat.</p>
+
+  <h2>What to try</h2>
+  <p>Put the barrier at 53.6 kilojoules per mole, stand at 300 kelvin, and confirm the meter reads 2.00. Then walk the rail up in ten-kelvin steps and watch a rule everybody learns as a constant slide steadily down. Switch to the Arrhenius plot, push the noise to 5 per cent, and see which of the two fitted numbers survives it.</p>
+</article>
+
+<footer class="page">
+  <p>Gas constant R = 8.314462618 J mol<sup>&minus;1</sup> K<sup>&minus;1</sup>, exact under the 2019 SI. Rates are arbitrary units; only their ratios mean anything here. The synthetic measurements sit at six temperatures from 280 to 380 kelvin with seeded multiplicative noise, so the plate is reproducible.</p>
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260127;
+
+/* Molar gas constant, exact under the 2019 SI redefinition (R = N_A k_B). */
+const R = 8.314462618;
+/* The six temperatures a kineticist would actually run, fixed so the plate is
+   about the fit and not about where the points happen to sit. */
+const TS = [280, 300, 320, 340, 360, 380];
+
+const Model = {
+  rate(A, EaJ, T){ return A * Math.exp(-EaJ/(R*T)); },
+
+  /* the ten-degree ratio, in closed form -- no subtraction of two rates */
+  q10(EaJ, T){ return Math.exp(EaJ/R * (1/T - 1/(T+10))); },
+
+  /* the barrier for which a ten-degree rise doubles the rate at T */
+  eaForDoubling(T){ return R * Math.LN2 * T * (T+10) / 10; },
+
+  /* seeded multiplicative noise, so the same settings always give the same plate */
+  samples(A, EaJ, pct){
+    const rng = mulberry32(SEED);
+    return TS.map(function(T){
+      const clean = Model.rate(A, EaJ, T);
+      if (pct <= 0) return { T, k: clean, clean };
+      /* two uniforms -> one normal, kept well inside +/-1 so k stays positive */
+      const u = rng(), v = rng();
+      const z = Math.sqrt(-2*Math.log(u > 1e-12 ? u : 1e-12)) * Math.cos(2*Math.PI*v);
+      const f = 1 + Math.max(-0.9, Math.min(0.9, z * pct/100));
+      return { T, k: clean * f, clean };
+    });
+  },
+
+  /* ordinary least squares of ln k on 1/T, then read the physics off it */
+  fit(rows){
+    const n = rows.length;
+    let sx = 0, sy = 0;
+    const xs = rows.map((r)=>1/r.T), ys = rows.map((r)=>Math.log(r.k));
+    for (let i = 0; i < n; i++){ sx += xs[i]; sy += ys[i]; }
+    const mx = sx/n, my = sy/n;
+    let sxy = 0, sxx = 0, syy = 0;
+    for (let i = 0; i < n; i++){
+      sxy += (xs[i]-mx)*(ys[i]-my); sxx += (xs[i]-mx)*(xs[i]-mx); syy += (ys[i]-my)*(ys[i]-my);
+    }
+    const slope = sxy/sxx, intercept = my - slope*mx;
+    return { slope, intercept, Ea: -slope*R, A: Math.exp(intercept),
+             r: sxx > 0 && syy > 0 ? sxy/Math.sqrt(sxx*syy) : 0, xs, ys };
+  },
+
+  /* the same barrier from any two rates alone -- an independent route */
+  eaFromPair(k1, T1, k2, T2){ return R * Math.log(k2/k1) / (1/T1 - 1/T2); }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { temp:300, ea:62.35, cat:0, loga:11.568, noise:0, arr:false };
+const state = Object.assign({}, defaults);
+
+const el = (id)=>document.getElementById(id);
+const cv = el("bench"), ctx = cv.getContext("2d");
+const SS = 2;
+let W = 900, Hpx = 560, NARROW = false, G = null;
+
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function A_of(){ return Math.pow(10, state.loga); }
+function Ea_of(){ return state.ea * 1000; }
+function EaCat(){ return Math.max(1000, (state.ea - state.cat) * 1000); }
+
+function sci(v){
+  if (!Number.isFinite(v)) return "--";
+  if (v === 0) return "0";
+  const e = Math.floor(Math.log10(Math.abs(v)));
+  const m = v/Math.pow(10,e);
+  return m.toFixed(3) + "e" + e;
+}
+
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth - 20;
+  W = clamp(avail > 0 ? avail : 880, 300, 1040);
+  NARROW = W < 540;
+  const railH = NARROW ? 62 : 74;
+  Hpx = Math.round(clamp(W * (NARROW ? 1.02 : 0.60), 300, 600));
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.font = (NARROW ? "10px " : "11px ") + "ui-monospace,SFMono-Regular,Menlo,monospace";
+  /* measure the labels this plate will really draw, both plot modes, so the
+     frame never eats a minus sign or slides when the mode changes */
+  let widest = 0;
+  for (const s of ["-30.0","1e-12","1e+12","-12.5"]) widest = Math.max(widest, ctx.measureText(s).width);
+  const NAMEBAND = 15;
+  const x0 = clamp(NAMEBAND + Math.ceil(widest) + 10, 44, Math.round(W*0.32));
+  G = { railH, x0, x1: W - (NARROW ? 12 : 20),
+        y0: railH + (NARROW ? 14 : 18), y1: Hpx - (NARROW ? 42 : 46) };
+  cv.width = Math.round(W*SS); cv.height = Math.round(Hpx*SS);
+  ctx.setTransform(SS,0,0,SS,0,0);
+}
+
+/* a two-stop cold-to-hot ramp, mixed in sRGB -- good enough for a rail */
+function mix(c1, c2, t){
+  const p = (h)=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+  const a = p(c1), b = p(c2);
+  return "rgb(" + a.map((v,i)=>Math.round(v + (b[i]-v)*clamp(t,0,1))).join(",") + ")";
+}
+
+function drawRail(C){
+  const TMIN = 250, TMAX = 500;
+  const x0 = G.x0, x1 = G.x1, y = NARROW ? 20 : 24, h = NARROW ? 16 : 20;
+  const at = (T)=> x0 + (T-TMIN)/(TMAX-TMIN)*(x1-x0);
+  const g = ctx.createLinearGradient(x0, 0, x1, 0);
+  g.addColorStop(0, C.cold); g.addColorStop(1, C.hot);
+  ctx.fillStyle = g; ctx.fillRect(x0, y, x1-x0, h);
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  ctx.strokeRect(x0+0.5, y+0.5, x1-x0-1, h-1);
+
+  ctx.font = (NARROW?"9px ":"10px ")+"ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.fillStyle = C.muted; ctx.textBaseline = "top";
+  for (let T = TMIN; T <= TMAX; T += 50){
+    const x = Math.round(at(T))+0.5;
+    ctx.strokeStyle = C.line; ctx.beginPath();
+    ctx.moveTo(x, y+h); ctx.lineTo(x, y+h+4); ctx.stroke();
+    ctx.textAlign = T === TMIN ? "left" : (T === TMAX ? "right" : "center");
+    ctx.fillText(String(T), x, y+h+6);
+  }
+
+  /* Where +10 K would land. A translucent block over the rail destroys the very
+     gradient the rail exists to show, so this is a dashed marker and a tag. */
+  const nxt = Math.min(500, state.temp + 10);
+  const x = Math.round(at(state.temp))+0.5;
+  let tagAt = -1;
+  if (nxt > state.temp){
+    const xn = Math.round(at(nxt))+0.5;
+    ctx.strokeStyle = C.ink; ctx.globalAlpha = 0.5;
+    ctx.setLineDash([3,3]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(xn, y-6); ctx.lineTo(xn, y+h+6); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+    tagAt = xn;
+  }
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(x, y-7); ctx.lineTo(x, y+h+7); ctx.stroke();
+  ctx.font = "700 " + (NARROW?"11px ":"12px ") + "ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.fillStyle = C.ink; ctx.textBaseline = "bottom";
+  /* flip on the room actually left, not on which half of the rail we are in */
+  const lab = state.temp + " K";
+  const labW = ctx.measureText(lab).width;
+  const toLeft = x - 7 - labW >= x0;
+  ctx.textAlign = toLeft ? "right" : "left";
+  ctx.fillText(lab, x + (toLeft ? -7 : 7), y-8);
+  /* The tag belongs above the rail, not in the tick-label row where it lands on
+     whichever scale number happens to be nearby. Drop it when the live reading
+     is already in that space rather than stacking two labels on one baseline. */
+  if (tagAt > 0){
+    ctx.font = (NARROW?"9px ":"10px ")+"ui-monospace,SFMono-Regular,Menlo,monospace";
+    const tag = "+10", tw = ctx.measureText(tag).width;
+    const lab0 = toLeft ? x-7-labW : x+7, lab1 = toLeft ? x-7 : x+7+labW;
+    const t0 = tagAt + 5, t1 = t0 + tw;
+    if (t1 <= x1 && (t1 < lab0 - 4 || t0 > lab1 + 4)){
+      ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+      ctx.fillText(tag, t0, y-9);
+    }
+  }
+}
+
+/* One key drawer for both plots: a panel-coloured box in a named corner, with
+   an optional line swatch per row. A key over the data is not a key. */
+function keyBox(rows, C, corner, swatch){
+  const fs = NARROW ? 9 : 10;
+  ctx.font = "600 " + fs + "px ui-monospace,SFMono-Regular,Menlo,monospace";
+  let w = 0;
+  for (const r of rows) w = Math.max(w, ctx.measureText(r.t).width);
+  const sw = swatch ? (NARROW ? 14 : 18) : 0, gap = swatch ? 6 : 0;
+  const bw = 16 + sw + gap + Math.ceil(w), bh = 12 + (fs+7)*rows.length;
+  const bx = corner === "tr" || corner === "br" ? G.x1 - 8 - bw : G.x0 + 8;
+  const by = corner === "bl" || corner === "br" ? G.y1 - 8 - bh : G.y0 + 8;
+  ctx.fillStyle = C.panel; ctx.fillRect(bx, by, bw, bh);
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.strokeRect(bx+0.5, by+0.5, bw-1, bh-1);
+  rows.forEach(function(r, i){
+    const cy = Math.round(by + 6 + (fs+7)*i + (fs+7)/2) + 0.5;
+    if (swatch){
+      ctx.strokeStyle = r.c; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.moveTo(bx+8, cy); ctx.lineTo(bx+8+sw, cy); ctx.stroke();
+    }
+    ctx.fillStyle = r.c; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.fillText(r.t, bx + 8 + sw + gap, cy);
+  });
+}
+
+function frame(C, xlabel, ylabel){
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  ctx.strokeRect(G.x0+0.5, G.y0+0.5, G.x1-G.x0-1, G.y1-G.y0-1);
+  ctx.fillStyle = C.muted;
+  ctx.font = (NARROW?"10px ":"11px ")+"ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+  ctx.fillText(xlabel, G.x1, Hpx-4);
+  ctx.save(); ctx.translate(11, G.y0); ctx.rotate(-Math.PI/2);
+  ctx.textAlign = "right"; ctx.textBaseline = "top";
+  ctx.fillText(ylabel, 0, 0);
+  ctx.restore();
+}
+
+/* rate against temperature, rate axis logarithmic */
+function drawRateCurve(C){
+  const TMIN = 250, TMAX = 500, A = A_of();
+  const Ea = Ea_of(), Ec = EaCat();
+  const lo = Math.log10(Model.rate(A, Ea, TMIN));
+  const hi = Math.log10(Model.rate(A, Ec, TMAX));
+  const pad = Math.max((hi-lo)*0.06, 0.2);
+  const YL = lo-pad, YH = hi+pad;
+  const px = (T)=>G.x0 + (T-TMIN)/(TMAX-TMIN)*(G.x1-G.x0);
+  const py = (l)=>G.y1 - (l-YL)/(YH-YL)*(G.y1-G.y0);
+
+  ctx.strokeStyle = C.lineSoft; ctx.lineWidth = 1;
+  ctx.font = (NARROW?"10px ":"11px ")+"ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.fillStyle = C.muted;
+  for (let T = TMIN; T <= TMAX; T += 50){
+    const x = Math.round(px(T))+0.5;
+    ctx.beginPath(); ctx.moveTo(x,G.y0); ctx.lineTo(x,G.y1); ctx.stroke();
+    ctx.textAlign="center"; ctx.textBaseline="top"; ctx.fillText(String(T), x, G.y1+6);
+  }
+  const dspan = YH-YL;
+  const estep = dspan > 12 ? 3 : (dspan > 8 ? 2 : 1);
+  for (let e = Math.ceil(YL); e <= YH; e += estep){
+    const y = Math.round(py(e))+0.5;
+    ctx.beginPath(); ctx.moveTo(G.x0,y); ctx.lineTo(G.x1,y); ctx.stroke();
+    ctx.textAlign="right"; ctx.textBaseline="middle";
+    ctx.fillText("1e" + e, G.x0-6, y);
+  }
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(G.x0, G.y0, G.x1-G.x0, G.y1-G.y0); ctx.clip();
+  const curves = state.cat > 0
+    ? [{ E:Ea, c:C.hot, w:2.2 }, { E:Ec, c:C.cat, w:2.2 }]
+    : [{ E:Ea, c:C.hot, w:2.4 }];
+  for (const cu of curves){
+    ctx.strokeStyle = cu.c; ctx.lineWidth = cu.w; ctx.beginPath();
+    for (let i = 0; i <= 250; i++){
+      const T = TMIN + (TMAX-TMIN)*i/250;
+      const y = py(Math.log10(Model.rate(A, cu.E, T)));
+      if (i === 0) ctx.moveTo(px(T), y); else ctx.lineTo(px(T), y);
+    }
+    ctx.stroke();
+  }
+
+  /* the ten-degree step, drawn as the bracket the meter is reporting */
+  const T0 = state.temp, T1 = Math.min(TMAX, T0+10);
+  if (T1 > T0){
+    const y0 = py(Math.log10(Model.rate(A, Ec, T0)));
+    const y1 = py(Math.log10(Model.rate(A, Ec, T1)));
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]);
+    ctx.beginPath();
+    ctx.moveTo(px(T0), y0); ctx.lineTo(px(T0), y1); ctx.lineTo(px(T1), y1);
+    ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = C.ink;
+    ctx.beginPath(); ctx.arc(px(T0), y0, 4, 0, 6.2832); ctx.fill();
+    ctx.beginPath(); ctx.arc(px(T1), y1, 4, 0, 6.2832); ctx.fill();
+    /* A factor of two is a small step on a six-decade axis. Say what it is, or
+       the only visible interaction on the plate reads as two stray dots. */
+    const fs = NARROW ? 10 : 11;
+    ctx.font = "700 " + fs + "px ui-monospace,SFMono-Regular,Menlo,monospace";
+    const lab = "\u00d7" + Model.q10(Ec, T0).toFixed(3);
+    const lw = ctx.measureText(lab).width;
+    const right = px(T1) + 8 + lw <= G.x1;
+    ctx.textAlign = right ? "left" : "right";
+    ctx.textBaseline = "middle";
+    const lx = px(T1) + (right ? 8 : -(px(T1)-px(T0)) - 8);
+    ctx.fillStyle = C.panel;
+    ctx.fillRect(right ? lx-3 : lx-lw-3, y1-fs/2-3, lw+6, fs+6);
+    ctx.fillStyle = C.ink;
+    ctx.fillText(lab, lx, y1);
+  }
+  ctx.restore();
+  if (state.cat > 0){
+    keyBox([{ t:"no catalyst   " + (Ea/1000).toFixed(2) + " kJ", c:C.hot },
+            { t:"catalysed     " + (Ec/1000).toFixed(2) + " kJ", c:C.cat }],
+           C, "tl", true);
+  }
+  frame(C, "temperature (K)", "rate (arbitrary units)");
+}
+
+/* ln k against 1/T: the plot that turns the law into a ruler */
+function drawArrhenius(C, rows, F){
+  const xs = rows.map((r)=>1000/r.T), ys = rows.map((r)=>Math.log(r.k));
+  const xlo = Math.min.apply(null,xs), xhi = Math.max.apply(null,xs);
+  const ylo = Math.min.apply(null,ys), yhi = Math.max.apply(null,ys);
+  const xp = (xhi-xlo)*0.10, yp = Math.max((yhi-ylo)*0.10, 0.4);
+  const XL = xlo-xp, XH = xhi+xp, YL = ylo-yp, YH = yhi+yp;
+  const px = (v)=>G.x0 + (v-XL)/(XH-XL)*(G.x1-G.x0);
+  const py = (v)=>G.y1 - (v-YL)/(YH-YL)*(G.y1-G.y0);
+
+  ctx.strokeStyle = C.lineSoft; ctx.lineWidth = 1;
+  ctx.font = (NARROW?"10px ":"11px ")+"ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.fillStyle = C.muted;
+  const xstep = (XH-XL) > 1.2 ? 0.5 : 0.25;
+  for (let v = Math.ceil(XL/xstep)*xstep; v <= XH; v += xstep){
+    const x = Math.round(px(v))+0.5;
+    ctx.beginPath(); ctx.moveTo(x,G.y0); ctx.lineTo(x,G.y1); ctx.stroke();
+    ctx.textAlign="center"; ctx.textBaseline="top"; ctx.fillText(v.toFixed(2), x, G.y1+6);
+  }
+  const yspan = YH-YL, ystep = yspan > 12 ? 4 : (yspan > 6 ? 2 : 1);
+  for (let v = Math.ceil(YL/ystep)*ystep; v <= YH; v += ystep){
+    const y = Math.round(py(v))+0.5;
+    ctx.beginPath(); ctx.moveTo(G.x0,y); ctx.lineTo(G.x1,y); ctx.stroke();
+    ctx.textAlign="right"; ctx.textBaseline="middle"; ctx.fillText(v.toFixed(1), G.x0-6, y);
+  }
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(G.x0, G.y0, G.x1-G.x0, G.y1-G.y0); ctx.clip();
+  ctx.strokeStyle = C.fit; ctx.lineWidth = 2;
+  ctx.beginPath();
+  /* the fit lives in 1/T, the axis is in 1000/T, so the slope divides by 1000 */
+  ctx.moveTo(px(XL), py(F.intercept + F.slope*XL/1000));
+  ctx.lineTo(px(XH), py(F.intercept + F.slope*XH/1000));
+  ctx.stroke();
+
+  if (state.noise > 0){
+    ctx.strokeStyle = C.muted; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+    for (let i = 0; i < rows.length; i++){
+      ctx.beginPath();
+      ctx.moveTo(px(xs[i]), py(ys[i]));
+      ctx.lineTo(px(xs[i]), py(Math.log(rows[i].clean)));
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+  ctx.fillStyle = C.hot;
+  for (let i = 0; i < rows.length; i++){
+    ctx.beginPath(); ctx.arc(px(xs[i]), py(ys[i]), 4.5, 0, 6.2832); ctx.fill();
+  }
+  /* where the rail currently stands, if it is on this plot at all */
+  const cx = 1000/state.temp;
+  if (cx >= XL && cx <= XH){
+    const x = Math.round(px(cx))+0.5;
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(x, G.y0); ctx.lineTo(x, G.y1); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
+
+  /* An Arrhenius line falls from left to right, so the top left is exactly where
+     the fastest measurements sit. Put the key in the corner the data vacates. */
+  keyBox([{ t:"slope  " + F.slope.toFixed(1) + " = -Ea/R", c:C.fit },
+          { t:"Ea     " + (F.Ea/1000).toFixed(3) + " kJ/mol", c:C.fit },
+          { t:"r      " + F.r.toFixed(6), c:C.fit }],
+         C, F.slope < 0 ? "bl" : "tl", false);
+
+  frame(C, "1000 / T  (per kelvin)", "ln k");
+}
+
+function render(){
+  if (!G) fitCanvas();
+  const C = { ink:css("--ink"), muted:css("--muted"), line:css("--line"),
+              lineSoft:css("--line-soft"), cold:css("--cold"), hot:css("--hot"),
+              fit:css("--fit"), cat:css("--cat"), panel:css("--panel") };
+  ctx.clearRect(0,0,W,Hpx);
+  ctx.fillStyle = C.panel; ctx.fillRect(0,0,W,Hpx);
+
+  const A = A_of(), Ea = Ea_of(), Ec = EaCat(), T = state.temp;
+  const rows = Model.samples(A, Ea, state.noise);
+  const F = Model.fit(rows);
+
+  drawRail(C);
+  if (state.arr) drawArrhenius(C, rows, F); else drawRateCurve(C);
+
+  const kNow = Model.rate(A, Ec, T);
+  const kUp  = Model.rate(A, Ec, Math.min(500, T+10));
+  const ratio = Model.q10(Ec, T);
+  const eaDouble = Model.eaForDoubling(T) / 1000;
+
+  el("m1").firstChild.nodeValue = sci(kNow);
+  el("m1s").textContent = "at " + T + " K, barrier " + (Ec/1000).toFixed(2) + " kJ/mol";
+  el("m2").firstChild.nodeValue = "×" + ratio.toFixed(3);
+  el("m2s").textContent = T + " K → " + Math.min(500,T+10) + " K gives " + sci(kUp) +
+    ". A doubling here would need " + eaDouble.toFixed(2) + " kJ/mol.";
+  el("m3").firstChild.nodeValue = (F.Ea/1000).toFixed(3) + " kJ";
+  el("m3s").textContent = "generated from " + state.ea.toFixed(2) + " kJ/mol; off by " +
+    (Math.abs(F.Ea - Ea)/Ea*100).toFixed(4) + "%";
+  el("m4").firstChild.nodeValue = sci(F.A);
+  el("m4s").textContent = "generated " + sci(A) + "; off by " +
+    (Math.abs(F.A - A)/A*100).toFixed(3) + "%";
+  el("m5").firstChild.nodeValue = state.cat > 0 ? "×" + sci(Math.exp(state.cat*1000/(R*T))) : "no catalyst";
+  el("m5s").textContent = state.cat > 0
+    ? "exp(" + state.cat.toFixed(1) + " kJ / RT) exactly; the ten-degree jump falls to ×" + ratio.toFixed(3)
+    : "drag the catalyst slider to lower the barrier";
+
+  el("tempout").textContent = T + " K";
+  el("eaout").textContent = state.ea.toFixed(2) + " kJ/mol";
+  el("catout").textContent = state.cat.toFixed(1) + " kJ/mol";
+  el("logaout").textContent = "10^" + state.loga.toFixed(2);
+  el("noiseout").textContent = state.noise.toFixed(1) + "%";
+  el("cap").textContent = state.arr
+    ? "The Arrhenius plot. Each dot is one of the six synthetic measurements; the line is least squares through them, and its slope is minus the activation energy over R. The dashed vertical marks where the rail stands. With noise on, each dot carries a hairline back to the noiseless rate it was drawn from; at a few per cent that hairline is shorter than the dot itself, which is why the slope survives noise so much better than the intercept does."
+    : ("The rail is the temperature you set; the dashed marker ten kelvin to its right is where the plus ten button would take you. Beneath, the rate against temperature, with the dashed step showing the jump the meter reports. The rate axis is logarithmic, because on a linear one everything below the hottest tenth of the range is flat against zero."
+       + (state.cat > 0 ? " The upper curve is the catalysed reaction; the step is measured on it." : ""));
+}
+
+/* ---- wiring ------------------------------------------------------------- */
+function bindRange(id, key, parse){
+  el(id).addEventListener("input", function(){ state[key] = parse(this.value); render(); });
+}
+bindRange("temp","temp",(v)=>parseInt(v,10));
+bindRange("ea","ea",parseFloat);
+bindRange("cat","cat",parseFloat);
+bindRange("loga","loga",parseFloat);
+bindRange("noise","noise",parseFloat);
+el("arr").addEventListener("change", function(){ state.arr = this.checked; render(); });
+
+function nudge(d){
+  state.temp = clamp(state.temp + d, 250, 500);
+  el("temp").value = String(state.temp);
+  render();
+}
+el("up10").addEventListener("click", function(){ nudge(10); });
+el("dn10").addEventListener("click", function(){ nudge(-10); });
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults);
+  el("temp").value = String(defaults.temp); el("ea").value = String(defaults.ea);
+  el("cat").value = String(defaults.cat);   el("loga").value = String(defaults.loga);
+  el("noise").value = String(defaults.noise); el("arr").checked = defaults.arr;
+  render();
+});
+
+let rt = null;
+window.addEventListener("resize", function(){
+  clearTimeout(rt); rt = setTimeout(function(){ fitCanvas(); render(); }, 120);
+});
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+else if (mq.addListener) mq.addListener(render);
+
+fitCanvas();
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1 — the ten-degree ratio at 300 K over the ordinary range of barriers */
+  const A1 = (function(){
+    let lo = Infinity, hi = -Infinity, n = 0;
+    for (let e = 40000; e <= 80000; e += 500){
+      const q = Model.q10(e, 300);
+      lo = Math.min(lo,q); hi = Math.max(hi,q); n++;
+    }
+    return { lo, hi, n };
+  })();
+  push("a ten-degree rise near 300 K multiplies the rate by between 1.5 and 4 for ordinary barriers",
+    A1.lo > 1.5 && A1.hi < 4,
+    "over " + A1.n + " activation energies from 40 to 80 kJ/mol the ratio runs from " +
+    A1.lo.toFixed(5) + " at 40 to " + A1.hi.toFixed(5) + " at 80. The folk rule is the middle of that, not the whole of it.");
+
+  /* 2 — the barrier that makes the rule exactly true, round-tripped */
+  const A2 = (function(){
+    const e = Model.eaForDoubling(300);
+    const back = Model.q10(e, 300);
+    const A = 1e12;
+    const direct = Model.rate(A, e, 310) / Model.rate(A, e, 300);
+    return { e, back, direct, err: Math.max(Math.abs(back-2), Math.abs(direct-2)) };
+  })();
+  push("exactly 53.597 kJ/mol makes ten degrees double the rate at 300 K, by two independent routes",
+    A2.err < 1e-12 && A2.e > 53596 && A2.e < 53598,
+    "R ln2 T(T+10)/10 gives " + A2.e.toFixed(3) + " J/mol. The closed-form ratio returns " +
+    A2.back.toFixed(14) + " and dividing two separately evaluated rates returns " +
+    A2.direct.toFixed(14) + ", both within " + A2.err.toExponential(2) + " of 2.");
+
+  /* 3 — and the rule is not a constant, which is the point of the page */
+  const A3 = (function(){
+    const e = Model.eaForDoubling(300);
+    const at = (T)=>Model.q10(e, T);
+    let mono = true, prev = Infinity;
+    for (let T = 250; T <= 490; T += 10){ const q = at(T); if (q >= prev) mono = false; prev = q; }
+    return { lo:at(500), hi:at(250), at300:at(300), at490:at(490), spread:at(250)/at(500), mono };
+  })();
+  push("the same barrier gives a different ten-degree ratio at every temperature, falling monotonically",
+    A3.mono && A3.spread > 2,
+    "holding the barrier at the value that doubles the rate at 300 K, the ratio is " +
+    A3.hi.toFixed(5) + " at 250 K, exactly " + A3.at300.toFixed(5) + " at 300 K and " +
+    A3.lo.toFixed(5) + " at 500 K -- a spread of " + A3.spread.toFixed(5) +
+    ", falling at every one of the 25 steps between. The rule of thumb is a statement about room temperature.");
+
+  /* 4 — noiseless data returns the barrier and the prefactor it was made from */
+  const A4 = (function(){
+    let wE = 0, wA = 0;
+    for (const loga of [9, 11.568, 14]) for (const ea of [30000, 62350, 95000]){
+      const A = Math.pow(10, loga);
+      const F = Model.fit(Model.samples(A, ea, 0));
+      wE = Math.max(wE, Math.abs(F.Ea-ea)/ea);
+      wA = Math.max(wA, Math.abs(F.A-A)/A);
+    }
+    return { wE, wA };
+  })();
+  push("with no noise the six-point fit recovers both generating constants",
+    A4.wE < 1e-8 && A4.wA < 1e-10,
+    "over 9 combinations of pre-exponential and barrier the worst relative error is " +
+    A4.wE.toExponential(3) + " on the activation energy and " + A4.wA.toExponential(3) +
+    " on the pre-exponential -- the second is an extrapolation to 1/T = 0, so it is the looser of the two.");
+
+  /* 5 — the queue asked for a correlation of +1. The slope runs downhill. */
+  const A5 = (function(){
+    const F = Model.fit(Model.samples(1e12, 62350, 0));
+    let ssr = 0;
+    for (let i = 0; i < F.xs.length; i++) ssr += Math.pow(F.ys[i]-(F.intercept+F.slope*F.xs[i]), 2);
+    return { r:F.r, slope:F.slope, ssr };
+  })();
+  push("the Arrhenius plot is perfectly straight with correlation MINUS one, not plus one",
+    Math.abs(A5.r + 1) < 1e-12 && A5.ssr < 1e-24,
+    "the correlation is " + A5.r.toFixed(15) + ", which is " + Math.abs(A5.r+1).toExponential(2) +
+    " from -1 and 2 from +1: ln k falls as 1/T rises because the slope is -Ea/R = " +
+    A5.slope.toFixed(3) + ". A page asserting +1 here would be asserting the wrong sign. " +
+    "Residual sum of squares " + A5.ssr.toExponential(3) + ".");
+
+  /* 6 — against plain T it is not straight, which is the evidence for 1/T */
+  const A6 = (function(){
+    const rows = Model.samples(1e12, 62350, 0);
+    const xs = rows.map((r)=>r.T), ys = rows.map((r)=>Math.log(r.k));
+    const n = xs.length;
+    let sx=0, sy=0; for (let i=0;i<n;i++){ sx+=xs[i]; sy+=ys[i]; }
+    const mx=sx/n, my=sy/n;
+    let sxy=0, sxx=0, sst=0;
+    for (let i=0;i<n;i++){ sxy+=(xs[i]-mx)*(ys[i]-my); sxx+=(xs[i]-mx)*(xs[i]-mx); sst+=(ys[i]-my)*(ys[i]-my); }
+    const b=sxy/sxx, a=my-b*mx;
+    let ssr=0, worst=0;
+    for (let i=0;i<n;i++){ const d=ys[i]-(a+b*xs[i]); ssr+=d*d; worst=Math.max(worst,Math.abs(d)); }
+    const F = Model.fit(rows);
+    let ssrInv=0;
+    for (let i=0;i<n;i++) ssrInv += Math.pow(F.ys[i]-(F.intercept+F.slope*F.xs[i]),2);
+    return { lack: ssr/sst, worst, factor:Math.exp(worst), ssr, ssrInv };
+  })();
+  push("plotted against plain temperature the same points are measurably curved",
+    A6.lack > 1e-3 && A6.worst > 0.1 && A6.ssrInv < 1e-24,
+    "the best straight line in T leaves " + (A6.lack*100).toFixed(4) +
+    " per cent of the variance unexplained and misses by up to " + A6.worst.toFixed(6) +
+    " in ln k, a factor of " + A6.factor.toFixed(4) + " in rate. Against 1/T the same six points " +
+    "leave a residual sum of squares of " + A6.ssrInv.toExponential(3) + ", which is the arithmetic floor.");
+
+  /* 7 — catalysis is a clean exponential, at every setting on the sliders */
+  const A7 = (function(){
+    let worst = 0, n = 0;
+    for (let dE = 1000; dE <= 40000; dE += 3000)
+      for (let T = 250; T <= 500; T += 25){
+        const A = 1e12, Ea = 62350;
+        const got = Model.rate(A, Ea-dE, T) / Model.rate(A, Ea, T);
+        const want = Math.exp(dE/(R*T));
+        worst = Math.max(worst, Math.abs(got-want)/want); n++;
+        }
+    return { worst, n };
+  })();
+  push("lowering the barrier multiplies the rate by exactly exp(dEa/RT)",
+    A7.worst < 1e-12,
+    "checked at " + A7.n + " combinations of catalyst strength and temperature; the worst " +
+    "relative disagreement with the closed form is " + A7.worst.toExponential(3) +
+    ". The pre-exponential never enters, which is why the ratio has no units and no fitting.");
+
+  /* 8 — the real chemistry: a catalysed reaction cares less about temperature */
+  const A8 = (function(){
+    const Ea = 62350;
+    const at = (dE)=>Model.q10(Ea-dE, 300);
+    let mono = true, prev = Infinity;
+    for (let dE = 0; dE <= 40000; dE += 1000){ const q = at(dE); if (q >= prev) mono = false; prev = q; }
+    return { none:at(0), half:at(20000), full:at(40000), mono };
+  })();
+  push("a catalyst flattens the temperature dependence as well as raising the rate",
+    A8.mono && A8.full < A8.none,
+    "at 300 K the ten-degree ratio falls from " + A8.none.toFixed(5) + " with no catalyst to " +
+    A8.half.toFixed(5) + " at 20 kJ/mol and " + A8.full.toFixed(5) + " at 40, decreasing at " +
+    "every one of the 41 steps. Enzymes buy speed and temperature-insensitivity from the same barrier.");
+
+  /* 9 — the barrier a second way: two rates alone, no regression */
+  const A9 = (function(){
+    let worst = 0, n = 0;
+    for (const ea of [25000, 62350, 110000]){
+      const A = 1e12, F = Model.fit(Model.samples(A, ea, 0));
+      for (let i = 0; i < TS.length; i++) for (let j = i+1; j < TS.length; j++){
+        const pair = Model.eaFromPair(Model.rate(A,ea,TS[i]), TS[i], Model.rate(A,ea,TS[j]), TS[j]);
+        worst = Math.max(worst, Math.abs(pair-F.Ea)/F.Ea); n++;
+      }
+    }
+    return { worst, n };
+  })();
+  push("any two rates give the same activation energy as the six-point regression",
+    A9.worst < 1e-9,
+    "all " + A9.n + " pairs of the six temperatures, at three barriers, solved directly from " +
+    "R ln(k2/k1) / (1/T1 - 1/T2) with no least squares anywhere; worst relative difference " +
+    "from the fitted value " + A9.worst.toExponential(3) + ".");
+
+  /* 10 — with noise on, the slope survives and the intercept does not */
+  const A10 = (function(){
+    const A = 1e12, ea = 62350;
+    const out = [];
+    for (const pct of [1, 3, 5]){
+      const F = Model.fit(Model.samples(A, ea, pct));
+      out.push({ pct, e:Math.abs(F.Ea-ea)/ea*100, a:Math.abs(F.A-A)/A*100 });
+    }
+    return out;
+  })();
+  push("noise on the rates costs the pre-exponential far more than the activation energy",
+    A10.every((o)=>o.a > o.e),
+    A10.map((o)=>o.pct + "% noise -> barrier off by " + o.e.toFixed(3) +
+      "%, pre-exponential off by " + o.a.toFixed(3) + "%").join("; ") +
+    ". The intercept is an extrapolation to infinite temperature, so a small tilt in the line moves it a long way.");
+
+  /* 11 — nothing on any slider produces a non-number */
+  const A11 = (function(){
+    let n = 0;
+    for (let T = 250; T <= 500; T += 5)
+      for (let ea = 20; ea <= 120; ea += 5)
+        for (const cat of [0, 20, 40])
+          for (const loga of [8, 12, 16]){
+            const Ec = Math.max(1000, (ea-cat)*1000);
+            const k = Model.rate(Math.pow(10,loga), Ec, T), q = Model.q10(Ec, T);
+            if (!Number.isFinite(k) || !Number.isFinite(q) || k < 0 || q < 1) return { ok:false, n };
+            n++;
+          }
+    for (const pct of [0, 2, 4, 6, 8]){
+      const F = Model.fit(Model.samples(1e12, 62350, pct));
+      if (!Number.isFinite(F.Ea) || !Number.isFinite(F.A) || !Number.isFinite(F.r)) return { ok:false, n };
+    }
+    return { ok:true, n };
+  })();
+  push("every setting the sliders allow yields a finite, positive rate and a ratio at least 1",
+    A11.ok, A11.n + " combinations of temperature, barrier, catalyst and pre-exponential, plus " +
+    "five noise levels through the fit: no NaN, no infinity, no negative rate.");
+
+  /* 12 — the seeded noise makes the plate reproducible */
+  const A12 = (function(){
+    const a = Model.samples(1e12, 62350, 5).map((r)=>r.k);
+    const b = Model.samples(1e12, 62350, 5).map((r)=>r.k);
+    const same = JSON.stringify(a) === JSON.stringify(b);
+    const F = Model.fit(Model.samples(1e12, 62350, 5));
+    return { same, ea:(F.Ea/1000).toFixed(6) };
+  })();
+  push("the noisy measurements are reproducible from the seed",
+    A12.same, "seed " + SEED + "; drawing the six noisy rates twice gives byte-identical values, " +
+    "and the fit at 5 per cent noise returns " + A12.ea + " kJ/mol on every run.");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, R: R, TS: TS };
+
+})();
+</script>
+</body>
+</html>

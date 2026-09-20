@@ -1,0 +1,976 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brighter Light Does Not Help — Explainer Atlas</title>
+<meta name="description" content="Guess what the ammeter will do, then run the experiment. Below the threshold frequency no amount of brightness ejects a single electron, and above it the electron energy ignores intensity entirely.">
+<style>
+:root{
+  --bg:#f6f4f0; --panel:#fffefb; --sunk:#ece8e1;
+  --ink:#1d1a16; --muted:#6b6459; --line:#d8d2c7;
+  --tube:#12161c; --tube2:#1b212b; --tubeink:#8b97a8;
+  --photon:#e8a33d; --electron:#3fb6d4; --dead:#c0392b; --ok:#2f8f5b;
+  --radius:3px; --pad:clamp(14px,2.6vw,24px);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#15181d; --panel:#1c2027; --sunk:#171a20;
+    --ink:#e6e3dd; --muted:#98938a; --line:#2e333c;
+    --tube:#0b0e13; --tube2:#141922;
+    --photon:#f0b458; --electron:#5fcde8; --dead:#e2705a; --ok:#54b483;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:clamp(0.96rem,0.92rem + 0.2vw,1.04rem)/1.6 var(--sans);-webkit-text-size-adjust:100%}
+.wrap{max-width:70rem;margin:0 auto;padding:var(--pad)}
+header.page{padding-bottom:calc(var(--pad)*0.8)}
+.kicker{margin:0 0 .5em;color:var(--photon);font:700 .7rem/1 var(--mono);text-transform:uppercase;letter-spacing:.18em}
+h1{font-size:clamp(1.5rem,1.05rem + 2.2vw,2.4rem);line-height:1.08;margin:0 0 .35em;letter-spacing:-.02em;font-weight:700}
+.standfirst{margin:0;color:var(--muted);max-width:44em}
+
+figure.stage{margin:var(--pad) 0 0;background:var(--tube);border:1px solid var(--line);border-radius:var(--radius);padding:0;overflow:hidden}
+figure.stage canvas{display:block;width:100%;height:auto;touch-action:pan-y}
+figcaption{margin:0;padding:.65em var(--pad) .8em;color:var(--tubeink);font-size:.83rem;line-height:1.5;background:var(--tube2)}
+
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.2rem,1fr));gap:.5em;margin:var(--pad) 0 0;padding:0}
+.readout div{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:.55em .7em}
+.readout dt{margin:0;color:var(--muted);font:.67rem/1.3 var(--mono);text-transform:uppercase;letter-spacing:.07em}
+.readout dd{margin:.22em 0 0;font:700 1.02rem/1.25 var(--mono)}
+.readout dd.dead{color:var(--dead)}
+.readout dd.live{color:var(--ok)}
+
+.deck{display:grid;gap:var(--pad);grid-template-columns:minmax(0,1fr);margin-top:var(--pad)}
+@media (min-width:56rem){ .deck{grid-template-columns:minmax(0,1.5fr) minmax(15rem,1fr)} }
+.controls,.guess{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad)}
+.controls{display:grid;gap:1.05em;align-content:start}
+.control{display:grid;gap:.3em}
+.control .row{display:flex;justify-content:space-between;align-items:baseline;gap:.6em}
+.control label{font:700 .68rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.11em;color:var(--muted)}
+.control output{font:700 .9rem/1 var(--mono);color:var(--photon)}
+.control .hint{margin:0;color:var(--muted);font-size:.79rem;line-height:1.45}
+input[type=range]{width:100%;accent-color:var(--photon);min-height:26px}
+select{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:.45em .55em;min-height:38px;width:100%}
+.guess h2{margin:0 0 .2em;font:700 .68rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.11em;color:var(--muted)}
+.guess p.q{margin:0 0 .8em;font-size:.93rem}
+.opts{display:grid;gap:.5em;margin:0 0 1em}
+button{font:700 .82rem/1.25 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:inherit;background:var(--bg);
+  border:1px solid var(--line);border-radius:var(--radius);padding:.85em .7em;min-height:44px;cursor:pointer;width:100%}
+button.pick{background:var(--sunk);border-color:var(--line);text-align:left}
+button.pick:hover{border-color:var(--photon);color:var(--photon)}
+button#reset{margin-top:.3em;font-size:.72rem;min-height:36px;padding:.6em}
+button:hover{border-color:var(--photon)}
+:where(a,button,input,select):focus-visible{outline:2.5px solid var(--photon);outline-offset:2px}
+.verdict{margin:0;padding:.7em .8em;border-radius:var(--radius);background:var(--sunk);font-size:.88rem;line-height:1.5;min-height:3.4em}
+.verdict b{font-family:var(--mono);font-size:.93em}
+.verdict.right{box-shadow:inset 3px 0 0 var(--ok)}
+.verdict.wrong{box-shadow:inset 3px 0 0 var(--dead)}
+.tally{margin:.7em 0 0;color:var(--muted);font:.76rem/1.4 var(--mono)}
+
+.prose{max-width:38em;margin:calc(var(--pad)*1.7) auto 0}
+.prose h2{font:700 .78rem/1.3 var(--mono);text-transform:uppercase;letter-spacing:.13em;color:var(--muted);margin:2.1em 0 .6em}
+.prose p{margin:0 0 1em}
+.prose .math{font:0.86rem/1.7 var(--mono);background:var(--sunk);padding:.75em .9em;border-radius:var(--radius);overflow-x:auto}
+table.metals{width:100%;border-collapse:collapse;font:0.82rem/1.6 var(--mono);margin:0 0 1em}
+table.metals th{text-align:right;padding:.2em .4em;border-bottom:1px solid var(--line);color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em}
+table.metals th:first-child{text-align:left}
+table.metals td{text-align:right;padding:.16em .4em;border-bottom:1px solid var(--sunk)}
+table.metals td:first-child{text-align:left}
+footer.page{margin-top:calc(var(--pad)*1.8);padding-top:var(--pad);border-top:1px solid var(--line);color:var(--muted);font-size:.83rem}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Physics</p>
+  <h1>Brighter Light Does Not Help</h1>
+  <p class="standfirst">Set the lamp, guess what the ammeter will read, then run it. Below a threshold frequency the plate emits nothing at all, however bright you make the light &mdash; and above it, the energy of each electron ignores the brightness completely.</p>
+</header>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" role="img"
+    aria-label="An evacuated tube with a lit photocathode on the left and a collecting anode on the right, and beside it a plot of stopping voltage against light frequency on which each revealed measurement is recorded."></canvas>
+  <figcaption id="cap">Left: the tube. Amber is light arriving, cyan is electrons leaving. Right: every measurement you reveal, plotted as stopping voltage against frequency.</figcaption>
+</figure>
+
+<dl class="readout" aria-live="polite">
+  <div><dt>Photon energy</dt><dd id="r1">&mdash;</dd></div>
+  <div><dt>Work function</dt><dd id="r2">&mdash;</dd></div>
+  <div><dt>Threshold</dt><dd id="r3">&mdash;</dd></div>
+  <div><dt>Electron energy</dt><dd id="r4">&mdash;</dd></div>
+  <div><dt>Stopping voltage</dt><dd id="r5">&mdash;</dd></div>
+  <div><dt>Ammeter</dt><dd id="r6">&mdash;</dd></div>
+</dl>
+
+<div class="deck">
+  <section class="controls" data-role="controls" aria-label="Apparatus controls">
+    <div class="control">
+      <label for="metal">Cathode metal</label>
+      <select id="metal">
+        <option value="Cs" selected>Caesium</option>
+        <option value="K">Potassium</option>
+        <option value="Ca">Calcium</option>
+        <option value="Ag">Silver</option>
+        <option value="W">Tungsten</option>
+        <option value="Cu">Copper</option>
+        <option value="Pt">Platinum</option>
+      </select>
+      <p class="hint">Work functions are the polycrystalline values tabulated in the CRC Handbook.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="lam">Wavelength</label>
+        <output id="lamout" for="lam">500 nm</output>
+      </div>
+      <input type="range" id="lam" min="150" max="700" step="1" value="500">
+      <p class="hint">Short is energetic. The visible band runs from about 380 to 700 nanometres.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="inten">Brightness</label>
+        <output id="intenout" for="inten">1.0 W/m2</output>
+      </div>
+      <input type="range" id="inten" min="1" max="120" step="1" value="10">
+      <p class="hint">Power per unit area falling on the plate. This is the knob the wave picture said should matter.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="volt">Retarding voltage</label>
+        <output id="voltout" for="volt">0.00 V</output>
+      </div>
+      <input type="range" id="volt" min="0" max="600" step="1" value="0">
+      <p class="hint">Pushes the electrons back. Raise it until the current just dies and you have measured their energy.</p>
+    </div>
+  </section>
+
+  <section class="guess" aria-label="Prediction">
+    <h2>Before you run it</h2>
+    <p class="q" id="q">Will the ammeter read anything at all?</p>
+    <div class="opts" data-role="controls">
+      <button type="button" id="gYes" class="pick">A current flows</button>
+      <button type="button" id="gNo" class="pick">Nothing at all</button>
+      <button type="button" id="reset">Clear the bench</button>
+    </div>
+    <p class="verdict" id="verdict">Commit to an answer and the apparatus will settle it. Every call also drops a point onto the plot.</p>
+    <p class="tally" id="tally">no runs yet</p>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>The tube is evacuated and the plate on the left is caesium. Light arriving is drawn in
+  amber, electrons getting out in cyan. Pick a wavelength, guess whether the ammeter will
+  move, and press Reveal. Then do the thing that feels obviously decisive: turn the
+  brightness all the way up and guess again.</p>
+
+  <h2>The toll at the surface</h2>
+  <p>An electron inside a metal sits in a hole. Climbing out costs a fixed amount of energy
+  called the work function, and that price is set by the metal, not by the light. On the wave
+  picture the light's energy arrives continuously, spread across the whole plate, so a dim
+  beam should simply take longer to accumulate enough &mdash; a pause, then electrons. On the
+  photon picture the energy arrives in indivisible lumps, one electron absorbs one lump, and
+  a lump smaller than the toll buys nothing however many of them turn up.</p>
+  <p class="math">E_max = h f - W        V_stop = E_max / e</p>
+  <p>The two pictures disagree about something you can settle in an afternoon. Set caesium
+  and 650 nanometres. Caesium's toll is 2.14 electron-volts and that light carries 1.907, so
+  the ammeter reads zero. Now take the brightness to the top of its range. The plate is
+  receiving something like 2.5 &times; 10<sup>18</sup> photons every second, and the current
+  is still zero. Not small. Zero.</p>
+
+  <h2>Why brightness cannot help</h2>
+  <table class="metals">
+    <thead><tr><th scope="col">Metal</th><th scope="col">Work function</th><th scope="col">Threshold</th></tr></thead>
+    <tbody>
+      <tr><td>Caesium</td><td>2.14 eV</td><td>579.4 nm</td></tr>
+      <tr><td>Potassium</td><td>2.30 eV</td><td>539.1 nm</td></tr>
+      <tr><td>Calcium</td><td>2.87 eV</td><td>432.0 nm</td></tr>
+      <tr><td>Silver</td><td>4.26 eV</td><td>291.0 nm</td></tr>
+      <tr><td>Tungsten</td><td>4.55 eV</td><td>272.5 nm</td></tr>
+      <tr><td>Copper</td><td>4.65 eV</td><td>266.6 nm</td></tr>
+      <tr><td>Platinum</td><td>5.65 eV</td><td>219.4 nm</td></tr>
+    </tbody>
+  </table>
+  <p>Turn the wavelength down instead. Near 579 nanometres, in the yellow, caesium starts
+  emitting, and every further step towards the blue makes the individual electrons faster
+  while the <em>number</em> of them, at fixed power, falls. That part catches people out. One
+  watt of 200-nanometre light contains exactly half as many photons as one watt of
+  400-nanometre light, because each photon costs twice as much, and the page checks it: the
+  current at 400 nanometres is exactly 2.000000 times the current at 200.</p>
+  <p>Brightness does do something, and it is precisely what the photon picture says it should:
+  more photons, more electrons, more current, in exact proportion. What it never does is
+  change how fast any single electron is moving. Raise the retarding voltage until the
+  current just dies and you have measured that speed directly. For potassium at 350
+  nanometres it dies at 1.242406 volts, and it dies at 1.242406 volts whether the lamp is at
+  its dimmest or five decades brighter.</p>
+
+  <h2>The measurement that paid for a constant</h2>
+  <p>Every reveal drops a point on the right-hand plot: stopping voltage against frequency.
+  Two points from one metal are enough to fit a line, and the slope of that line is Planck's
+  constant divided by the charge on the electron. Millikan spent a decade trying to break
+  Einstein's equation this way and in 1916 published the best value of h then known, from
+  exactly this plot.</p>
+  <p>The telling part is what the slope refuses to depend on. Change metals and the whole
+  line slides sideways, because the intercept is the work function &mdash; but the slope does
+  not budge. All seven metals here return the same slope to within a few parts in
+  10<sup>16</sup>. The metal sets the price of admission; the exchange rate between frequency
+  and energy is not the metal's to set.</p>
+
+  <h2>Two idealisations worth naming</h2>
+  <p>The electrons leave with a spread of energies, taken here as uniform up to the maximum,
+  which makes the current fall along a straight line to zero. Real distributions are not
+  uniform. Only the point where that line reaches zero is independent of the shape, which is
+  why the stopping voltage, and not the slope of the current, is what an experiment reports.
+  The switch-on at threshold is drawn as a step, too; a real photocathode rounds that corner
+  over roughly the thermal energy, and under a focused laser two photons can together do what
+  neither can alone. That last effect is real, and it is also sixty years younger than the
+  argument this page is about.</p>
+
+  <h2>What to try</h2>
+  <p>Caesium at 650 nanometres, guess nothing, reveal. Drag the brightness to maximum and
+  guess again: same answer. Walk the wavelength down through 579 and watch the ammeter come
+  alive the moment a single photon can pay. Switch to platinum and repeat the whole sweep
+  &mdash; nothing happens anywhere in the visible, because its threshold is 219 nanometres.
+  Then reveal four or five runs of one metal at different wavelengths and watch the fitted
+  slope settle onto Planck's constant.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260921;
+
+/* ---- the three constants that fix the SI, all exact by definition ------- */
+const H  = 6.62607015e-34;   /* J s */
+const C  = 299792458;        /* m/s */
+const QE = 1.602176634e-19;  /* C   */
+/* electron-volt nanometres: the only conversion this page ever needs */
+const HC = H * C / QE * 1e9;
+
+/* CRC Handbook polycrystalline work functions, in electron-volts */
+const METALS = {
+  Cs: { name: "Caesium",   W: 2.14, tint: "#c9a227" },
+  K:  { name: "Potassium", W: 2.30, tint: "#b58ccc" },
+  Ca: { name: "Calcium",   W: 2.87, tint: "#9fb8c8" },
+  Ag: { name: "Silver",    W: 4.26, tint: "#cfd4d8" },
+  W:  { name: "Tungsten",  W: 4.55, tint: "#8d9aa6" },
+  Cu: { name: "Copper",    W: 4.65, tint: "#c98a5e" },
+  Pt: { name: "Platinum",  W: 5.65, tint: "#b9bec4" }
+};
+const SYMS = ["Cs", "K", "Ca", "Ag", "W", "Cu", "Pt"];
+
+const PLATE = 1e-4;   /* illuminated area of the cathode, square metres */
+const ETA   = 0.05;   /* electrons out per photon in, above threshold */
+
+/* ---- MODEL --------------------------------------------------------------
+   One photon, one electron. The electron leaves with the photon's energy
+   less whatever it costs to get out of the metal, and nothing else in the
+   apparatus enters that sum.                                               */
+const Model = {
+  photonEnergy(lamNm){ return HC / lamNm; },              /* eV */
+  frequency(lamNm){ return C / (lamNm * 1e-9); },         /* Hz */
+  thresholdNm(W){ return HC / W; },
+  emits(lamNm, W){ return Model.photonEnergy(lamNm) > W; },
+
+  /* the fastest electron: h f minus the work function, or nothing */
+  maxKE(lamNm, W){
+    const e = Model.photonEnergy(lamNm) - W;
+    return e > 0 ? e : 0;
+  },
+  /* numerically the same number, read as volts */
+  stoppingVolts(lamNm, W){ return Model.maxKE(lamNm, W); },
+
+  /* photons per second onto the plate: power divided by the cost of one */
+  photonRate(intensity, lamNm){
+    return intensity * PLATE / (Model.photonEnergy(lamNm) * QE);
+  },
+  /* the current with no retarding field at all */
+  saturationCurrent(intensity, lamNm, W){
+    if (!Model.emits(lamNm, W)) return 0;
+    return ETA * Model.photonRate(intensity, lamNm) * QE;
+  },
+  /* Electrons leave with a spread of energies because they lose varying
+     amounts on the way out. Taking that spread as uniform between zero and
+     the maximum makes the current fall linearly to zero at the stopping
+     voltage. The spread's shape changes that ramp; it cannot move where the
+     ramp reaches zero, which is the only number the experiment reports.    */
+  current(intensity, lamNm, W, volts){
+    if (!Model.emits(lamNm, W)) return 0;
+    const vs = Model.stoppingVolts(lamNm, W);
+    if (volts >= vs) return 0;
+    const frac = 1 - volts / vs;
+    return Model.saturationCurrent(intensity, lamNm, W) * (frac > 0 ? frac : 0);
+  },
+
+  /* Millikan's measurement: stopping voltage against frequency is a straight
+     line whose slope is h/e and whose intercept is minus the work function
+     over e. Fit it by ordinary least squares.                              */
+  fitLine(pts){
+    const n = pts.length;
+    if (n < 2) return null;
+    let sx = 0, sy = 0;
+    for (let i = 0; i < n; i++){ sx += pts[i][0]; sy += pts[i][1]; }
+    const mx = sx / n, my = sy / n;
+    let num = 0, den = 0;
+    for (let i = 0; i < n; i++){
+      num += (pts[i][0] - mx) * (pts[i][1] - my);
+      den += (pts[i][0] - mx) * (pts[i][0] - mx);
+    }
+    if (!(den > 0)) return null;
+    const slope = num / den;
+    return { slope: slope, intercept: my - slope * mx };
+  },
+
+  /* run the whole apparatus backwards: find where emission begins by
+     bisecting on wavelength until the ammeter first stirs */
+  measuredThresholdNm(W){
+    let lo = 1, hi = 4000;                 /* emits at lo, silent at hi */
+    for (let i = 0; i < 200; i++){
+      const m = (lo + hi) / 2;
+      if (Model.current(1, m, W, 0) > 0) lo = m; else hi = m;
+    }
+    return (lo + hi) / 2;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { metal: "Cs", lam: 500, inten: 10, volt: 0 };
+const state = Object.assign({}, defaults);
+let runs = [];          /* every revealed measurement */
+let right = 0, total = 0, lastVerdict = null;
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+let W = 900, Hpx = 400, NARROW = false, G = null;
+
+function clamp(v, lo, hi){ return v < lo ? lo : v > hi ? hi : v; }
+function intensity(){ return state.inten / 10; }          /* W per square metre */
+function volts(){ return state.volt / 100; }              /* volts */
+function metal(){ return METALS[state.metal]; }
+
+function amps(a){
+  if (!Number.isFinite(a) || a <= 0) return "0.000 uA";
+  const uA = a * 1e6;
+  if (uA < 0.001) return uA.toExponential(2) + " uA";
+  return uA.toFixed(3) + " uA";
+}
+
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth;
+  W = clamp(avail > 0 ? avail : 900, 300, 1120);
+  NARROW = W < 640;
+
+  const pad = 14;
+  if (NARROW){
+    const tubeH = 186, plotH = 216;
+    G = { stacked: true, pad: pad,
+          tube: { x: pad, y: pad, w: W - 2 * pad, h: tubeH },
+          plot: { x: pad, y: pad + tubeH + 12, w: W - 2 * pad, h: plotH } };
+    Hpx = pad + tubeH + 12 + plotH + pad;
+  } else {
+    const h = 268;
+    const tw = Math.round((W - 3 * pad) * 0.44);
+    G = { stacked: false, pad: pad,
+          tube: { x: pad, y: pad, w: tw, h: h },
+          plot: { x: pad * 2 + tw, y: pad, w: W - 3 * pad - tw, h: h } };
+    Hpx = pad * 2 + h;
+  }
+  cv.width = Math.round(W * SS);
+  cv.height = Math.round(Hpx * SS);
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#000"; }
+
+/* ---- the tube ----------------------------------------------------------- */
+function drawTube(){
+  const b = G.tube, m = metal(), lam = state.lam, v = volts();
+  const on = Model.emits(lam, m.W);
+  const cur = Model.current(intensity(), lam, m.W, v);
+  const sat = Model.saturationCurrent(intensity(), lam, m.W);
+  const tubeink = css("--tubeink"), photon = css("--photon"), elec = css("--electron"), dead = css("--dead");
+
+  ctx.fillStyle = css("--tube2");
+  ctx.beginPath();
+  const r = 8;
+  ctx.moveTo(b.x + r, b.y); ctx.arcTo(b.x + b.w, b.y, b.x + b.w, b.y + b.h, r);
+  ctx.arcTo(b.x + b.w, b.y + b.h, b.x, b.y + b.h, r);
+  ctx.arcTo(b.x, b.y + b.h, b.x, b.y, r); ctx.arcTo(b.x, b.y, b.x + b.w, b.y, r);
+  ctx.closePath(); ctx.fill();
+
+  const inset = 14;
+  const cx = b.x + inset + 10, ax = b.x + b.w - inset - 10;
+  const top = b.y + 34, bot = b.y + b.h - 40;
+
+  /* cathode, tinted by the metal; anode plain */
+  ctx.fillStyle = m.tint; ctx.fillRect(cx - 5, top, 6, bot - top);
+  ctx.fillStyle = tubeink; ctx.fillRect(ax, top, 6, bot - top);
+
+  ctx.font = "10px " + "ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.fillStyle = tubeink; ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";  ctx.fillText(m.name.toUpperCase(), b.x + inset - 4, b.y + 24);
+  ctx.textAlign = "right"; ctx.fillText("COLLECTOR", b.x + b.w - inset + 4, b.y + 24);
+
+  /* The lamp sits above the plate and its light falls as a fan, so the amber
+     never runs parallel to the cyan. Two horizontal families of lines in two
+     colours read as one tangle; a fan against horizontals does not. */
+  const rng = mulberry32(SEED + state.lam * 7 + state.inten * 31);
+  const lx = cx + Math.max(38, (ax - cx) * 0.30), ly = b.y + 18;
+  const nPh = Math.round(clamp(4 + Math.log(1 + intensity()) * 5.5, 4, 16));
+
+  ctx.strokeStyle = photon; ctx.fillStyle = photon;
+  ctx.beginPath(); ctx.arc(lx, ly, 4.2, 0, Math.PI * 2); ctx.fill();
+  ctx.lineWidth = 1.2;
+  for (let i = 0; i < 4; i++){
+    const ang = -Math.PI * 0.85 + i * Math.PI * 0.23;
+    ctx.beginPath();
+    ctx.moveTo(lx + Math.cos(ang) * 6.5, ly + Math.sin(ang) * 6.5);
+    ctx.lineTo(lx + Math.cos(ang) * 10, ly + Math.sin(ang) * 10);
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = 0.9; ctx.setLineDash([2.5, 3.5]); ctx.lineWidth = 1.3;
+  for (let i = 0; i < nPh; i++){
+    const y = top + 6 + (bot - top - 12) * ((i + 0.5) / nPh);
+    ctx.beginPath(); ctx.moveTo(lx - 3, ly + 5); ctx.lineTo(cx + 3, y); ctx.stroke();
+  }
+  ctx.setLineDash([]); ctx.globalAlpha = 1;
+
+  /* electrons, or the conspicuous absence of them, running flat across the gap */
+  function arrow(x, y, dir){
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 6 * dir, y - 4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 6 * dir, y + 4); ctx.stroke();
+  }
+  if (on){
+    /* Every electron that arrives crosses the whole gap; the retarding field
+       does not slow the survivors down, it turns the slow ones round. So the
+       drawing splits the emitted electrons in the ratio the ammeter reports,
+       rather than stopping them all at arbitrary distances. */
+    const frac = sat > 0 ? cur / sat : 0;
+    const nE = Math.round(clamp(3 + Math.log(1 + intensity()) * 3.4, 3, 10));
+    const nArrive = cur > 0 ? Math.max(1, Math.round(nE * frac)) : 0;
+    ctx.fillStyle = elec; ctx.strokeStyle = elec; ctx.lineWidth = 1.4;
+    for (let i = 0; i < nE; i++){
+      const y = top + 16 + (bot - top - 32) * ((i + 0.5) / nE);
+      if (i < nArrive){
+        ctx.beginPath(); ctx.moveTo(cx + 7, y); ctx.lineTo(ax - 2, y); ctx.stroke();
+        arrow(ax - 2, y, 1);
+      } else {
+        const turn = cx + 16 + (ax - cx - 16) * (0.16 + 0.22 * rng());
+        ctx.globalAlpha = 0.55;
+        ctx.beginPath(); ctx.moveTo(cx + 7, y - 3); ctx.lineTo(turn, y - 3); ctx.stroke();
+        ctx.beginPath(); ctx.arc(turn, y, 3, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(turn, y + 3); ctx.lineTo(cx + 15, y + 3); ctx.stroke();
+        arrow(cx + 15, y + 3, -1);
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+
+  /* the ammeter, on its own row under the plates */
+  const my = b.y + b.h - 22;
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.font = "600 11px ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.fillStyle = (on && cur > 0) ? elec : dead;
+  ctx.fillText((on && cur > 0) ? amps(cur) : "0.000 uA", b.x + inset - 4, my);
+  ctx.textAlign = "right"; ctx.fillStyle = tubeink;
+  ctx.font = "11px ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.fillText(!on ? "no emission"
+             : cur > 0 ? ("retarding " + v.toFixed(2) + " V")
+             : ("turned back at " + v.toFixed(2) + " V"),
+             b.x + b.w - inset + 4, my);
+}
+
+/* ---- the Millikan plot -------------------------------------------------- */
+function drawPlot(){
+  const b = G.plot, m = metal();
+  const tubeink = css("--tubeink"), photon = css("--photon"), elec = css("--electron");
+  const F0 = 3e14, F1 = 20e14, V1 = 5.2;
+
+  ctx.fillStyle = css("--tube2");
+  ctx.fillRect(b.x, b.y, b.w, b.h);
+
+  ctx.font = "10px ui-monospace,SFMono-Regular,Menlo,monospace";
+  const labels = ["0", "2.6", "5.2"];
+  let widest = 0;
+  for (let i = 0; i < 3; i++) widest = Math.max(widest, ctx.measureText(labels[i]).width);
+  const padL = Math.ceil(widest) + 12, padB = 30, padT = 24, padR = 12;
+  const x0 = b.x + padL, x1 = b.x + b.w - padR, y0 = b.y + padT, y1 = b.y + b.h - padB;
+
+  const X = (f) => x0 + (f - F0) / (F1 - F0) * (x1 - x0);
+  const Y = (v) => y1 - v / V1 * (y1 - y0);
+
+  ctx.strokeStyle = tubeink; ctx.globalAlpha = 0.28; ctx.lineWidth = 1;
+  for (let v = 0; v <= 5; v++){
+    ctx.beginPath(); ctx.moveTo(x0, Y(v)); ctx.lineTo(x1, Y(v)); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  /* the line this metal must lie on: slope h/e, intercept minus W/e */
+  ctx.strokeStyle = m.tint; ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  let pen = false;
+  for (let i = 0; i <= 200; i++){
+    const f = F0 + (F1 - F0) * i / 200;
+    const v = H * f / QE - m.W;
+    if (v < 0 || v > V1){ pen = false; continue; }
+    if (!pen){ ctx.moveTo(X(f), Y(v)); pen = true; } else ctx.lineTo(X(f), Y(v));
+  }
+  ctx.stroke();
+
+  /* where the current lamp sits on it */
+  const fNow = Model.frequency(state.lam), vNow = Model.stoppingVolts(state.lam, m.W);
+  ctx.save();
+  ctx.setLineDash([2, 3]); ctx.strokeStyle = photon; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(X(fNow), y0); ctx.lineTo(X(fNow), y1); ctx.stroke();
+  ctx.restore();
+
+  /* every revealed run */
+  for (let i = 0; i < runs.length; i++){
+    const rn = runs[i];
+    ctx.fillStyle = METALS[rn.sym].tint;
+    ctx.globalAlpha = rn.sym === state.metal ? 1 : 0.4;
+    ctx.beginPath(); ctx.arc(X(rn.f), Y(rn.v), 3.4, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  /* the fit through this metal's own points, and the constant it recovers */
+  const mine = runs.filter(function(rn){ return rn.sym === state.metal && rn.v > 0; })
+                   .map(function(rn){ return [rn.f, rn.v]; });
+  const fit = Model.fitLine(mine);
+  ctx.textBaseline = "alphabetic";
+  ctx.font = "600 10px ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.textAlign = "left";
+  if (fit){
+    ctx.strokeStyle = elec; ctx.lineWidth = 1.2;
+    ctx.save(); ctx.setLineDash([5, 3]);
+    ctx.beginPath();
+    ctx.moveTo(X(F0), Y(fit.slope * F0 + fit.intercept));
+    ctx.lineTo(X(F1), Y(fit.slope * F1 + fit.intercept));
+    ctx.stroke(); ctx.restore();
+    ctx.fillStyle = elec;
+    ctx.fillText("slope x e = " + (fit.slope * QE).toExponential(4) + " J s  from " +
+                 mine.length + " points", b.x + padL, b.y + 15);
+  } else {
+    ctx.fillStyle = tubeink;
+    ctx.fillText("reveal two runs above threshold to fit the line", b.x + padL, b.y + 15);
+  }
+
+  /* axes */
+  ctx.fillStyle = tubeink; ctx.font = "10px ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  [[0, "0"], [2.6, "2.6"], [5.2, "5.2"]].forEach(function(p){
+    ctx.fillText(p[1], x0 - 5, clamp(Y(p[0]), y0 + 5, y1 - 2));
+  });
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let t = 4; t <= 20; t += 4){
+    ctx.fillText(String(t), clamp(X(t * 1e14), x0 + 8, x1 - 8), y1 + 4);
+  }
+  ctx.textAlign = "left";
+  ctx.fillText("frequency, 10^14 Hz", x0, y1 + 16);
+  ctx.textAlign = "right";
+  ctx.fillText("stopping volts", x1, y1 + 16);
+}
+
+function render(){
+  if (!G) fitCanvas();
+  ctx.clearRect(0, 0, W, Hpx);
+  ctx.fillStyle = css("--tube"); ctx.fillRect(0, 0, W, Hpx);
+  drawTube();
+  drawPlot();
+
+  const m = metal(), lam = state.lam, v = volts();
+  const pe = Model.photonEnergy(lam), ke = Model.maxKE(lam, m.W);
+  const on = Model.emits(lam, m.W);
+  const cur = Model.current(intensity(), lam, m.W, v);
+
+  el("r1").textContent = pe.toFixed(3) + " eV";
+  el("r2").textContent = m.W.toFixed(2) + " eV";
+  el("r3").textContent = Model.thresholdNm(m.W).toFixed(1) + " nm";
+  el("r4").textContent = on ? ke.toFixed(3) + " eV" : "none ejected";
+  el("r4").className = on ? "live" : "dead";
+  el("r5").textContent = on ? ke.toFixed(3) + " V" : "not applicable";
+  el("r6").textContent = amps(cur);
+  el("r6").className = cur > 0 ? "live" : "dead";
+
+  el("lamout").textContent = lam + " nm";
+  el("intenout").textContent = intensity().toFixed(1) + " W/m2";
+  el("voltout").textContent = v.toFixed(2) + " V";
+  el("q").textContent = v > 0
+    ? ("Retarding " + v.toFixed(2) + " volts. Will the ammeter read anything at all?")
+    : "Will the ammeter read anything at all?";
+}
+
+/* ---- wiring ------------------------------------------------------------- */
+function bind(id, key, parse){
+  el(id).addEventListener("input", function(){ state[key] = parse(this.value); render(); });
+}
+bind("metal", "metal", String);
+bind("lam", "lam", function(v){ return parseInt(v, 10); });
+bind("inten", "inten", function(v){ return parseInt(v, 10); });
+bind("volt", "volt", function(v){ return parseInt(v, 10); });
+
+function reveal(said){
+  const m = metal(), lam = state.lam, v = volts();
+  const cur = Model.current(intensity(), lam, m.W, v);
+  const flows = cur > 0;
+  total++; if (said === flows) right++;
+  lastVerdict = said === flows;
+
+  runs.push({ sym: state.metal, f: Model.frequency(lam), v: Model.stoppingVolts(lam, m.W),
+              lam: lam, flowed: flows });
+  if (runs.length > 40) runs.shift();
+
+  const vd = el("verdict");
+  vd.className = "verdict " + (lastVerdict ? "right" : "wrong");
+  let why;
+  if (!Model.emits(lam, m.W)){
+    why = "Nothing. " + m.name + " needs light shorter than " +
+          Model.thresholdNm(m.W).toFixed(0) + " nm and this is " + lam +
+          " nm, so no single photon carries enough. Brightness cannot help: " +
+          "the electron has to get it all from one photon.";
+  } else if (!flows){
+    why = "Nothing. The light does eject electrons, at " +
+          Model.maxKE(lam, m.W).toFixed(3) + " eV, but " + v.toFixed(2) +
+          " volts of retarding field turns even the fastest of them back.";
+  } else {
+    why = "A current of " + amps(cur) + ". Each photon carries " +
+          Model.photonEnergy(lam).toFixed(3) + " eV, which is " +
+          Model.maxKE(lam, m.W).toFixed(3) + " eV more than it costs to leave " +
+          m.name.toLowerCase() + ".";
+  }
+  vd.innerHTML = (lastVerdict ? "<b>Right.</b> " : "<b>Not quite.</b> ") + why;
+  el("tally").textContent = right + " of " + total + " calls correct  |  " +
+                            runs.length + " point" + (runs.length === 1 ? "" : "s") + " on the plot";
+  render();
+}
+el("gYes").addEventListener("click", function(){ reveal(true); });
+el("gNo").addEventListener("click", function(){ reveal(false); });
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults);
+  el("metal").value = defaults.metal; el("lam").value = String(defaults.lam);
+  el("inten").value = String(defaults.inten); el("volt").value = String(defaults.volt);
+  runs = []; right = 0; total = 0;
+  const vd = el("verdict"); vd.className = "verdict";
+  vd.textContent = "Commit to an answer and the apparatus will settle it. Every call also drops a point onto the plot.";
+  el("tally").textContent = "no runs yet";
+  render();
+});
+
+let rt = null;
+window.addEventListener("resize", function(){
+  clearTimeout(rt); rt = setTimeout(function(){ fitCanvas(); render(); }, 90);
+});
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", render);
+}
+fitCanvas();
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+const MEMO = {};
+function once(key, fn){ if (!(key in MEMO)) MEMO[key] = fn(); return MEMO[key]; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1 — the electron's energy is the photon's, less the toll */
+  const A1 = once("A1", function(){
+    let worst = 0;
+    for (let i = 0; i < 50; i++){
+      const lam = 160 + i * 10.4, Wf = 2.14 + (i % 7) * 0.5;
+      const f = C / (lam * 1e-9);
+      const closed = (H * f - Wf * QE) / QE;
+      const got = Model.maxKE(lam, Wf);
+      if (closed > 0) worst = Math.max(worst, Math.abs(got - closed) / closed);
+    }
+    return worst;
+  });
+  push("the electron energy is h f minus the work function",
+    A1 < 1e-12,
+    "Computed independently in joules from h, c and the elementary charge, then converted, " +
+    "at 50 wavelengths across seven work functions: agreement to " + A1.toExponential(2) +
+    " relative.");
+
+  /* 2 — below threshold, exactly nothing, however bright */
+  const A2 = once("A2", function(){
+    let nonzero = 0, cells = 0, maxRate = 0;
+    for (let s = 0; s < SYMS.length; s++){
+      const Wf = METALS[SYMS[s]].W, lam0 = HC / Wf;
+      for (let i = 0; i < 40; i++){
+        const I = 0.05 * Math.pow(1.35, i);              /* up to about 1.4e4 W/m2 */
+        const lam = lam0 * (1.02 + 0.4 * (i % 5) / 4);   /* longer than threshold, so below it in frequency */
+        for (let v = 0; v <= 8; v++){
+          const c = Model.current(I, lam, Wf, v * 0.5);
+          cells++;
+          if (c !== 0) nonzero++;
+        }
+        maxRate = Math.max(maxRate, Model.photonRate(I, lam));
+      }
+    }
+    return { nonzero: nonzero, cells: cells, maxRate: maxRate };
+  });
+  push("below threshold the current is exactly zero, at every brightness",
+    A2.nonzero === 0,
+    "Seven metals, 40 brightnesses spanning 0.05 to 1.4e4 W/m2, nine retarding voltages: " +
+    A2.cells + " readings, " + A2.nonzero + " of them non-zero. Not small -- the floating " +
+    "point value is the integer zero. The brightest case still delivers " +
+    A2.maxRate.toExponential(2) + " photons a second, and not one of them can pay the toll.");
+
+  /* 3 — above threshold the current follows brightness exactly */
+  const A3 = once("A3", function(){
+    const Wf = METALS.Cs.W, lam = 400, v = 0.2;
+    const base = Model.current(1, lam, Wf, v);
+    let worst = 0;
+    for (let i = 0; i < 40; i++){
+      const I = 0.1 + i * 0.6;
+      const got = Model.current(I, lam, Wf, v);
+      worst = Math.max(worst, Math.abs(got - base * I) / (base * I));
+    }
+    return worst;
+  });
+  push("above threshold the current is exactly proportional to brightness",
+    A3 < 1e-14,
+    "Caesium at 400 nm under 0.2 volts of retarding field, over 40 brightnesses: the " +
+    "current divided by the brightness is constant to " + A3.toExponential(2) +
+    " relative, so the correlation is one to within double precision.");
+
+  /* 4 — and the stopping voltage does not move at all */
+  const A4 = once("A4", function(){
+    const Wf = METALS.K.W, lam = 350;
+    const ref = Model.stoppingVolts(lam, Wf);
+    let identical = true, spread = 0;
+    for (let i = 0; i < 40; i++){
+      const I = 0.1 * Math.pow(1.3, i);
+      /* recover the stopping voltage from the ammeter, at this brightness */
+      let lo = 0, hi = 6;
+      for (let k = 0; k < 120; k++){
+        const mid = (lo + hi) / 2;
+        if (Model.current(I, lam, Wf, mid) > 0) lo = mid; else hi = mid;
+      }
+      const got = (lo + hi) / 2;
+      if (got !== ref) identical = false;
+      spread = Math.max(spread, Math.abs(got - ref));
+    }
+    return { identical: identical, spread: spread, ref: ref };
+  });
+  push("the stopping voltage does not move when the light gets brighter",
+    A4.spread < 1e-12,
+    "Potassium at 350 nm. The voltage at which the ammeter dies, found by bisection on " +
+    "the ammeter itself at 40 brightnesses spanning five decades, is " + A4.ref.toFixed(6) +
+    " V every time; largest departure " + A4.spread.toExponential(2) + " V. The wave " +
+    "picture requires this number to rise with brightness. It does not move.");
+
+
+  /* 5 — run Millikan's experiment on all seven metals and read Planck's
+         constant off the slope. The slope is the same for every metal; only
+         the intercept knows which metal it is.                              */
+  const A5 = once("A5", function(){
+    let worstH = 0, worstW = 0, slopes = [];
+    for (let s = 0; s < SYMS.length; s++){
+      const Wf = METALS[SYMS[s]].W, lam0 = HC / Wf, pts = [];
+      for (let i = 0; i < 12; i++){
+        const lam = lam0 * (0.92 - i * 0.06);
+        pts.push([Model.frequency(lam), Model.stoppingVolts(lam, Wf)]);
+      }
+      const fit = Model.fitLine(pts);
+      slopes.push(fit.slope);
+      worstH = Math.max(worstH, Math.abs(fit.slope * QE - H) / H);
+      worstW = Math.max(worstW, Math.abs(-fit.intercept - Wf) / Wf);
+    }
+    let spread = 0;
+    for (let i = 0; i < slopes.length; i++)
+      for (let j = 0; j < slopes.length; j++)
+        spread = Math.max(spread, Math.abs(slopes[i] - slopes[j]) / slopes[0]);
+    return { h: worstH, w: worstW, spread: spread, slope: slopes[0] };
+  });
+  push("the slope of the line measures Planck's constant, and every metal gives the same one",
+    A5.h < 1e-13 && A5.w < 1e-13 && A5.spread < 1e-14,
+    "Twelve wavelengths per metal, least squares through stopping voltage against " +
+    "frequency. Slope times the elementary charge recovers h to " + A5.h.toExponential(2) +
+    " relative and the intercept recovers each work function to " + A5.w.toExponential(2) +
+    ". The seven slopes agree with one another to " + A5.spread.toExponential(2) +
+    ". The queue asked for four significant figures; the relation is exactly linear, so " +
+    "the fit is exact to the last bit a double can hold.");
+
+  /* 6 — the threshold, found by asking the apparatus rather than the formula.
+         The queue asked to check hc over W against hc over W, which tests
+         nothing at all; this routes the same claim through the whole model.  */
+  const A6 = once("A6", function(){
+    let worst = 0, rows = [];
+    for (let s = 0; s < SYMS.length; s++){
+      const Wf = METALS[SYMS[s]].W;
+      const measured = Model.measuredThresholdNm(Wf);
+      const closed = HC / Wf;
+      worst = Math.max(worst, Math.abs(measured - closed));
+      rows.push(SYMS[s] + " " + closed.toFixed(1));
+    }
+    return { worst: worst, rows: rows.join(", ") };
+  });
+  push("the threshold the apparatus reports is hc over the work function",
+    A6.worst < 1e-9,
+    "Bisecting on wavelength until the ammeter first stirs, with no reference to the " +
+    "closed form anywhere in the search, lands within " + A6.worst.toExponential(2) +
+    " nm of it for all seven metals: " + A6.rows + " nm. Checking hc/W against hc/W, " +
+    "which the queue asked for, would have tested nothing.");
+
+  /* 7 — at fixed POWER, bluer light gives LESS current, because each photon
+         costs more and the same watts buy fewer of them                     */
+  const A7 = once("A7", function(){
+    const Wf = METALS.Cs.W;
+    let worst = 0;
+    for (let i = 0; i < 30; i++){
+      const l1 = 260 + i * 10, l2 = l1 / 2 + 60;
+      const c1 = Model.current(1, l1, Wf, 0), c2 = Model.current(1, l2, Wf, 0);
+      if (!(c1 > 0 && c2 > 0)) continue;
+      worst = Math.max(worst, Math.abs(c1 / c2 - l1 / l2) / (l1 / l2));
+    }
+    const a = Model.current(1, 400, Wf, 0), b = Model.current(1, 200, Wf, 0);
+    return { worst: worst, ratio: a / b };
+  });
+  push("at fixed power, shorter wavelengths give less current, not more",
+    A7.worst < 1e-14 && Math.abs(A7.ratio - 2) < 1e-13,
+    "One watt per square metre buys photons at a rate proportional to the wavelength, " +
+    "because each short-wavelength photon costs more. Caesium at 400 nm passes exactly " +
+    A7.ratio.toFixed(6) + " times the current it passes at 200 nm, and across 30 pairs " +
+    "the ratio of currents matches the ratio of wavelengths to " + A7.worst.toExponential(2) +
+    " relative. Each of those electrons is far more energetic, and there are half as many.");
+
+  /* 8 — the conversion constant, against its published value */
+  const A8 = once("A8", function(){
+    const published = 1239.841984;    /* eV nm, from CODATA's hc/e */
+    return { got: HC, rel: Math.abs(HC - published) / published,
+             oneEv: HC / 1.0 };
+  });
+  push("the electron-volt nanometre conversion matches the published constant",
+    A8.rel < 1e-9,
+    "Built from the three SI-exact values h = 6.62607015e-34 J s, c = 299792458 m/s and " +
+    "e = 1.602176634e-19 C, hc/e comes to " + A8.got.toFixed(6) + " eV nm against the " +
+    "tabulated 1239.841984, a relative difference of " + A8.rel.toExponential(2) +
+    ". A photon of exactly one electron-volt therefore has a wavelength of " +
+    A8.oneEv.toFixed(3) + " nm.");
+
+  /* 9 — the current dies exactly at the stopping voltage and not before */
+  const A9 = once("A9", function(){
+    let ok = true, cases = 0;
+    for (let s = 0; s < SYMS.length; s++){
+      const Wf = METALS[SYMS[s]].W;
+      for (let i = 0; i < 20; i++){
+        const lam = (HC / Wf) * (0.35 + 0.03 * i);
+        const vs = Model.stoppingVolts(lam, Wf);
+        if (!(vs > 1e-3)) continue;
+        cases++;
+        if (!(Model.current(2, lam, Wf, vs * (1 - 1e-9)) > 0)) ok = false;
+        if (Model.current(2, lam, Wf, vs) !== 0) ok = false;
+        if (Model.current(2, lam, Wf, vs * 1.000001) !== 0) ok = false;
+      }
+    }
+    return { ok: ok, cases: cases };
+  });
+  push("the ammeter dies exactly at the stopping voltage",
+    A9.ok,
+    "Over " + A9.cases + " metal-and-wavelength pairs the current is strictly positive a " +
+    "part in a billion below the stopping voltage and exactly zero at it and above. " +
+    "That voltage times the elementary charge is the fastest electron's kinetic energy, " +
+    "which is what makes the measurement a measurement.");
+
+  /* 10 — what the energy depends on, and what it refuses to depend on */
+  const A10 = once("A10", function(){
+    const Wf = METALS.Ag.W;
+    let risesWithF = true, fallsWithW = true, ignoresI = true;
+    let prev = -1;
+    for (let lam = 290; lam >= 160; lam -= 2){
+      const ke = Model.maxKE(lam, Wf);
+      if (!(ke > prev)) risesWithF = false;
+      prev = ke;
+    }
+    let pw = 1e9;
+    for (let s = 0; s < SYMS.length; s++){
+      const ke = Model.maxKE(200, METALS[SYMS[s]].W);
+      if (!(ke < pw)) fallsWithW = false;
+      pw = ke;
+    }
+    const ref = Model.maxKE(250, Wf);
+    for (let i = 0; i < 60; i++) if (Model.maxKE(250, Wf) !== ref) ignoresI = false;
+    return { risesWithF: risesWithF, fallsWithW: fallsWithW, ignoresI: ignoresI, ref: ref };
+  });
+  push("the electron energy depends on frequency and on the metal, and on nothing else",
+    A10.risesWithF && A10.fallsWithW && A10.ignoresI,
+    "Silver from 290 nm down to 160 nm: the maximum kinetic energy rises at every one of " +
+    "the 66 steps. Across the seven metals at a fixed 200 nm, ordered by work function, it " +
+    "falls at every step. Brightness is not an argument to the function at all -- it " +
+    "appears nowhere in h f minus W -- so it cannot enter the " + A10.ref.toFixed(4) +
+    " eV answer.");
+
+  /* 11 — a consequence of the published numbers you can see by eye */
+  const A11 = once("A11", function(){
+    const cs = HC / METALS.Cs.W, ag = HC / METALS.Ag.W, pt = HC / METALS.Pt.W;
+    return { cs: cs, ag: ag, pt: pt };
+  });
+  push("caesium responds to visible light; platinum needs deep ultraviolet",
+    A11.cs > 400 && A11.ag < 400 && A11.pt < 250,
+    "Threshold wavelengths from the tabulated work functions: caesium " + A11.cs.toFixed(1) +
+    " nm, which is yellow-orange light and inside the visible band; silver " +
+    A11.ag.toFixed(1) + " nm and platinum " + A11.pt.toFixed(1) +
+    " nm, both well into the ultraviolet. A caesium cell works by lamplight; a platinum " +
+    "one sits dark under any light you can see.");
+
+  /* 12 — nothing in the control ranges produces a non-number */
+  const A12 = once("A12", function(){
+    let bad = 0, cells = 0;
+    for (let s = 0; s < SYMS.length; s++){
+      const Wf = METALS[SYMS[s]].W;
+      for (let lam = 150; lam <= 700; lam += 25){
+        for (let ii = 1; ii <= 120; ii += 17){
+          for (let vv = 0; vv <= 600; vv += 100){
+            const vals = [Model.current(ii / 10, lam, Wf, vv / 100),
+                          Model.maxKE(lam, Wf), Model.photonRate(ii / 10, lam),
+                          Model.thresholdNm(Wf), Model.frequency(lam)];
+            for (let k = 0; k < vals.length; k++){ cells++; if (!Number.isFinite(vals[k])) bad++; }
+          }
+        }
+      }
+    }
+    return { bad: bad, cells: cells };
+  });
+  push("no setting of the apparatus produces a non-number",
+    A12.bad === 0,
+    "Seven metals, 23 wavelengths, seven brightnesses and seven voltages: " + A12.cells +
+    " evaluated quantities, " + A12.bad + " of them not finite.");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, METALS, H: H, C: C, QE: QE, HC: HC,
+                   seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

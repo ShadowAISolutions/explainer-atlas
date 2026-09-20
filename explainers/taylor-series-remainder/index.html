@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Every Extra Term Buys A Little More Distance — Explainer Atlas</title>
+<meta name="description" content="Add Taylor terms one at a time and watch the interval you are allowed to trust widen, slowly, and stop widening altogether at the radius of convergence.">
+<style>
+:root{
+  --bg:#eef1f6; --panel:#fbfcfe; --sunk:#e3e8f0;
+  --ink:#16233a; --muted:#5d6b84; --line:#cdd5e2;
+  --true:#16233a; --approx:#c0392b; --band:#b07d12; --trust:#1f7a5c;
+  --radius:4px; --pad:clamp(14px,2.6vw,24px);
+  --serif:Georgia,"Iowan Old Style","Times New Roman",serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#111721; --panel:#182030; --sunk:#131a26;
+    --ink:#dde5f2; --muted:#94a2ba; --line:#2a3548;
+    --true:#dde5f2; --approx:#f0785c; --band:#e0b455; --trust:#57c79c;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:clamp(0.97rem,0.93rem + 0.2vw,1.05rem)/1.65 var(--serif);-webkit-text-size-adjust:100%}
+.wrap{max-width:82rem;margin:0 auto;padding:var(--pad)}
+header.page{border-bottom:2px solid var(--ink);padding-bottom:calc(var(--pad)*0.7)}
+.kicker{margin:0 0 .5em;color:var(--muted);font:600 .72rem/1 var(--mono);text-transform:uppercase;letter-spacing:.14em}
+h1{font-size:clamp(1.5rem,1.05rem + 2.1vw,2.35rem);line-height:1.12;margin:0 0 .35em;letter-spacing:-.015em;font-weight:600}
+.standfirst{margin:0;color:var(--muted);max-width:44em;font-size:1.02em}
+
+.layout{display:grid;gap:var(--pad);grid-template-columns:minmax(0,1fr);margin-top:var(--pad)}
+@media (min-width:47rem){
+  .layout{grid-template-columns:minmax(0,1fr) 17rem}
+  .stage{grid-column:1 / -1}
+}
+@media (min-width:72rem){
+  .layout{grid-template-columns:15.5rem minmax(0,1fr) 17rem}
+  .stage{grid-column:2 / 3;grid-row:1 / 3}
+  .controls{grid-column:1 / 2;grid-row:1 / 3}
+  .side{grid-column:3 / 4}
+}
+/* the picture comes before its controls at every width; only the widest
+   layout places all three explicitly and ignores the order */
+figure.stage{order:-1;margin:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px;overflow:hidden}
+figure.stage canvas{display:block;width:100%;height:auto;touch-action:pan-y}
+figcaption{margin-top:.7em;color:var(--muted);font-size:.85rem;line-height:1.5}
+
+.controls{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad);display:grid;gap:1em;align-content:start}
+.control{display:grid;gap:.3em}
+.control .row{display:flex;justify-content:space-between;align-items:baseline;gap:.6em}
+.control label{font:600 .74rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.control label.plain{text-transform:none;letter-spacing:0;font-size:.9rem;font-family:var(--serif);color:var(--ink)}
+.control output{font:600 .9rem/1 var(--mono);color:var(--approx)}
+.control .hint{margin:0;color:var(--muted);font-size:.79rem;line-height:1.45}
+input[type=range]{width:100%;accent-color:var(--approx);min-height:26px}
+select{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:.45em .55em;min-height:38px;width:100%}
+.chk{display:flex;align-items:center;gap:.5em}
+.chk input{accent-color:var(--trust);width:17px;height:17px}
+.btnrow{display:flex;gap:.5em}
+button{font:600 .85rem/1 var(--mono);color:inherit;background:var(--bg);border:1px solid var(--line);
+  border-radius:var(--radius);padding:.6em .5em;min-height:38px;cursor:pointer;flex:1}
+button:hover{border-color:var(--approx);color:var(--approx)}
+:where(a,button,input,select):focus-visible{outline:2.5px solid var(--approx);outline-offset:2px}
+
+.side{display:grid;gap:var(--pad);align-content:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:calc(var(--pad)*0.8)}
+.card h2{margin:0 0 .6em;font:600 .72rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.11em;color:var(--muted)}
+table.ledger{width:100%;border-collapse:collapse;font:0.78rem/1.5 var(--mono)}
+table.ledger th{text-align:right;font-weight:600;color:var(--muted);padding:0 0 .35em;border-bottom:1px solid var(--line);font-size:.71rem;text-transform:uppercase;letter-spacing:.05em}
+table.ledger th:first-child{text-align:left}
+table.ledger td{padding:.16em 0;border-bottom:1px solid var(--sunk);text-align:right;white-space:nowrap}
+table.ledger td:first-child{text-align:left;color:var(--muted)}
+table.ledger tr.off td{opacity:.32}
+table.ledger tr.last td{color:var(--approx);font-weight:600}
+.ladder{display:grid;gap:2px;font:0.74rem/1.35 var(--mono)}
+.ladder .lrow{display:grid;grid-template-columns:2.1rem minmax(0,1fr) 3.1rem;align-items:center;gap:.4em}
+.ladder .lab{color:var(--muted);text-align:right}
+.ladder .barwrap{background:var(--sunk);height:9px;border-radius:2px;overflow:hidden}
+.ladder .bar{height:100%;background:var(--trust)}
+.ladder .lrow.here .lab{color:var(--approx);font-weight:600}
+.ladder .lrow.here .bar{background:var(--approx)}
+.ladder .val{text-align:right;color:var(--muted)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(6.6rem,1fr));gap:.5em;margin:0;padding:0}
+.readout div{background:var(--sunk);border-radius:var(--radius);padding:.5em .6em}
+.readout dt{margin:0;color:var(--muted);font:.68rem/1.3 var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.readout dd{margin:.2em 0 0;font:600 .95rem/1.25 var(--mono)}
+
+.prose{max-width:38em;margin:calc(var(--pad)*1.5) auto 0}
+.prose h2{font:600 1.04rem/1.3 var(--serif);margin:2em 0 .5em;padding-top:.6em;border-top:1px solid var(--line);letter-spacing:-.005em}
+.prose h2::before{content:counter(sec) " · ";counter-increment:sec;color:var(--muted);font-family:var(--mono);font-size:.82em}
+.prose{counter-reset:sec}
+.prose p{margin:0 0 1em}
+.prose .math{font:0.88rem/1.7 var(--mono);background:var(--sunk);padding:.75em .9em;border-radius:var(--radius);overflow-x:auto;white-space:pre}
+footer.page{margin-top:calc(var(--pad)*1.8);padding-top:var(--pad);border-top:1px solid var(--line);color:var(--muted);font-size:.84rem}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Mathematics</p>
+  <h1>Every Extra Term Buys A Little More Distance</h1>
+  <p class="standfirst">A truncated Taylor series is the exact function minus a remainder, and the remainder can be bounded before you compute anything. Add terms one at a time and watch the interval you are allowed to trust widen — until the function has a singularity, and it stops widening for good.</p>
+</header>
+
+<div class="layout">
+  <section class="controls" data-role="controls" aria-label="Series controls">
+    <div class="control">
+      <label class="plain" for="fn">Function</label>
+      <select id="fn">
+        <option value="exp" selected>e raised to x</option>
+        <option value="sin">sine of x</option>
+        <option value="log">natural log of 1 plus x</option>
+        <option value="geo">one over one minus x</option>
+      </select>
+      <p class="hint" id="fnhint">The last two have a singularity nearby. Watch what that does to the trusted band.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="deg">Terms kept</label>
+        <output id="degout" for="deg">4</output>
+      </div>
+      <input type="range" id="deg" min="0" max="20" step="1" value="4">
+      <p class="hint">The highest power in the polynomial. Degree zero is the flat line through the centre.</p>
+    </div>
+
+    <div class="btnrow">
+      <button type="button" id="minus">Drop a term</button>
+      <button type="button" id="plus">Add a term</button>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="ctr">Centre</label>
+        <output id="ctrout" for="ctr">0.00</output>
+      </div>
+      <input type="range" id="ctr" min="-0.8" max="0.8" step="0.05" value="0">
+      <p class="hint">Where the polynomial is glued to the function. Everything it knows, it knows here.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="tol">Accuracy wanted</label>
+        <output id="tolout" for="tol">1e-6</output>
+      </div>
+      <input type="range" id="tol" min="-12" max="-1" step="1" value="-6">
+      <p class="hint">How wrong you are willing to be. The green shading is where the bound promises less error than this.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="probe">Probe</label>
+        <output id="probeout" for="probe">+1.50</output>
+      </div>
+      <input type="range" id="probe" min="-1" max="1" step="0.005" value="0.5">
+      <p class="hint">Slides along the curve. The ledger on the right is the arithmetic at exactly this point.</p>
+    </div>
+
+    <div class="control chk">
+      <input type="checkbox" id="env" checked>
+      <label class="plain" for="env">Draw the error envelope</label>
+    </div>
+
+    <div class="btnrow"><button type="button" id="reset">Reset</button></div>
+  </section>
+
+  <figure class="stage" data-role="stage">
+    <canvas id="view" role="img"
+      aria-label="The true function drawn against its truncated Taylor polynomial about a movable centre, with the Lagrange error envelope shaded around the true curve and the interval meeting the requested accuracy marked along the axis."></canvas>
+    <figcaption id="cap">The function in ink, the polynomial in red, and around the true curve a band as thick as the Lagrange bound allows the polynomial to stray. Green along the axis is where the bound alone promises the accuracy you asked for.</figcaption>
+  </figure>
+
+  <div class="side">
+    <div class="card">
+      <h2>The terms, at the probe</h2>
+      <table class="ledger">
+        <thead><tr><th scope="col">Term</th><th scope="col">Adds</th><th scope="col">Running</th></tr></thead>
+        <tbody id="ledger"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>How far you may trust it</h2>
+      <div class="ladder" id="ladder"></div>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Error at probe</dt><dd id="r1">&mdash;</dd></div>
+      <div><dt>Bound there</dt><dd id="r2">&mdash;</dd></div>
+      <div><dt>Trusted width</dt><dd id="r3">&mdash;</dd></div>
+      <div><dt>Terms for that</dt><dd id="r4">&mdash;</dd></div>
+    </dl>
+  </div>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>The red curve is a polynomial. It is glued to the black curve at the centre, marked
+  by the open circle, and there it agrees in value, in slope, in curvature, and in as many
+  further derivatives as you have kept terms. Away from the centre it drifts. The gold band
+  is how far it is <em>allowed</em> to drift: the Lagrange bound, computed from the function
+  alone, before the polynomial has been evaluated anywhere at all. The red curve never
+  leaves the band. Along the axis, the green segment marks where the band is thinner than
+  the accuracy you asked for.</p>
+
+  <h2>The bound you can compute first</h2>
+  <p>Truncating after degree n leaves a remainder, and Lagrange's theorem says that
+  remainder is not a vague error term but the same shape as one more term of the series,
+  with the derivative evaluated at some unknown point between the centre and where you
+  stand. You never learn that point, and you do not need it: replace the derivative there
+  by the largest it gets anywhere on the interval and the equality becomes an inequality
+  you can actually evaluate.</p>
+  <p class="math">|R(x)|  <=  max |f super (n+1)|  *  |x - a| super (n+1)  /  (n+1)!</p>
+  <p>Two things do the work and they pull opposite ways. The power punishes distance from
+  the centre. The factorial rewards terms, and it outruns anything the numerator can manage
+  &mdash; provided the derivatives stay bounded. For sine they never exceed one, so the
+  bound is the bare power over the factorial. For e<sup>x</sup> they grow, but only as fast
+  as e<sup>x</sup> itself, and the factorial still wins.</p>
+  <p>This is not a loose safety margin. Bring the probe in towards the centre and the ratio
+  of the real error to the bound climbs towards one: at 0.05 away it already sits between
+  0.958 and 0.967, and it cannot fall below 0.951, because the only slack in the whole
+  argument is the gap between the derivative at the unknown point and the derivative at the
+  far end.</p>
+
+  <h2>Doubling the degree does not square the error</h2>
+  <p>The factorial makes it tempting to think twice the terms squares your accuracy. For
+  e<sup>x</sup> about zero at x = 1 it does, comfortably. At x = 0.01 it does not: the
+  degree-2 error is 1.7e-7, its square is 2.8e-14, and the degree-4 error is 8.3e-13,
+  thirty times larger. The crossing sits where the distance equals ((n+1)!)<sup>2</sup> over
+  (2n+1)!, which for two terms is 0.300, and the measured ratio is 1.10 at x = 0.25 and
+  0.65 at x = 0.40.</p>
+  <p>The reason is a mismatch of currencies. Doubling the degree buys one further power of
+  the distance and a far larger factorial. Squaring the error demands n+1 further powers of
+  the distance. Where the distance is small, powers of it are worth more than factorials,
+  and squaring is the more expensive request.</p>
+
+  <h2>The wall that more terms cannot cross</h2>
+  <p>Switch to 1/(1-x) or to ln(1+x) and the ladder on the right stops climbing. These
+  functions have a singularity a fixed distance from the centre, and their derivatives grow
+  just fast enough to cancel the factorial exactly at that distance. Inside it the
+  polynomial converges: at x = 0.8 the error falls from 1.3 to 5.0e-3 between degree 5 and
+  degree 30. Outside it the polynomial diverges. At x = 1.2 the error <em>rises</em> at
+  every single step of that same sweep, from 15 to 1400. Adding terms there is not merely
+  wasted, it is actively making the answer worse. Move the centre and the wall moves with
+  it, which is what the centre slider is for.</p>
+
+  <h2>What to try</h2>
+  <p>Leave the function at e<sup>x</sup>, set the accuracy to 1e-6, and walk the degree up
+  with Add a term. The half-width the bound guarantees goes from 0.0014 at one term to
+  0.159 at four, 1.72 at twelve and 3.76 at twenty: sixteen extra terms buy twenty-four
+  times the reach, not sixteen times. Then switch to 1/(1-x), drag the probe out past the
+  green, and press Add a term repeatedly. Watch the red curve pull away from the black one
+  rather than towards it, and watch the ledger's running total march off in the wrong
+  direction while every individual term still looks perfectly reasonable.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG ------------------------------------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+const PI = Math.PI;
+
+const FACT = (function(){ const f = [1]; for (let k = 1; k <= 44; k++) f[k] = f[k-1] * k; return f; })();
+
+/* ---- MODEL -------------------------------------------------------------
+   Four functions. Each supplies its k-th derivative in closed form, the
+   Taylor coefficient about a centre, and the supremum of the (m)-th
+   derivative between the centre and the point, which is the only thing the
+   Lagrange remainder needs.                                                */
+const F = {
+  exp: {
+    name: "e^x", poly: "e^a",
+    f: (x) => Math.exp(x),
+    dAt: (t, k) => Math.exp(t),
+    coef: (a, k) => Math.exp(a) / FACT[k],
+    sup: (a, x, m) => Math.exp(Math.max(a, x)),
+    radius: (a) => Infinity,
+    view: (a) => [a - 3, a + 3]
+  },
+  sin: {
+    name: "sin x", poly: "sin",
+    f: (x) => Math.sin(x),
+    dAt: (t, k) => Math.sin(t + k * PI / 2),
+    coef: (a, k) => Math.sin(a + k * PI / 2) / FACT[k],
+    sup: (a, x, m) => 1,
+    radius: (a) => Infinity,
+    view: (a) => [a - 6.5, a + 6.5]
+  },
+  log: {
+    name: "ln(1+x)", poly: "log",
+    f: (x) => Math.log(1 + x),
+    dAt: (t, k) => k === 0 ? Math.log(1 + t)
+                           : (k % 2 === 1 ? 1 : -1) * FACT[k-1] / Math.pow(1 + t, k),
+    coef: (a, k) => k === 0 ? Math.log(1 + a)
+                            : (k % 2 === 1 ? 1 : -1) / (k * Math.pow(1 + a, k)),
+    sup: (a, x, m) => FACT[m-1] / Math.pow(1 + Math.min(a, x), m),
+    radius: (a) => 1 + a,
+    view: (a) => [a - Math.min(3, 0.95 * (1 + a)), a + 3]
+  },
+  geo: {
+    name: "1/(1-x)", poly: "geo",
+    f: (x) => 1 / (1 - x),
+    dAt: (t, k) => FACT[k] / Math.pow(1 - t, k + 1),
+    coef: (a, k) => 1 / Math.pow(1 - a, k + 1),
+    sup: (a, x, m) => FACT[m] / Math.pow(1 - Math.max(a, x), m + 1),
+    radius: (a) => 1 - a,
+    view: (a) => [a - 3, a + Math.min(3, 0.95 * (1 - a))]
+  }
+};
+const KEYS = ["exp", "sin", "log", "geo"];
+
+const Model = {
+  /* the k-th term of the series about a, evaluated at x */
+  term(fn, a, x, k){ return F[fn].coef(a, k) * Math.pow(x - a, k); },
+
+  /* degree-n partial sum, by Horner on the coefficient list */
+  partial(fn, a, x, n){
+    const f = F[fn], d = x - a;
+    let s = 0;
+    for (let k = n; k >= 0; k--) s = s * d + f.coef(a, k);
+    return s;
+  },
+
+  /* what the polynomial actually gets wrong */
+  error(fn, a, x, n){ return F[fn].f(x) - Model.partial(fn, a, x, n); },
+
+  /* Lagrange bound: sup|f^(n+1)| between a and x, times |x-a|^(n+1)/(n+1)!
+     It is computable before the polynomial is ever evaluated.              */
+  bound(fn, a, x, n){
+    const f = F[fn], m = n + 1;
+    return f.sup(a, x, m) * Math.pow(Math.abs(x - a), m) / FACT[m];
+  },
+
+  /* the widest symmetric interval about a on which the BOUND alone
+     promises an error no larger than tol. The bound rises strictly with
+     the half-width on both sides, so a bisection is exact.                 */
+  trustWidth(fn, a, n, tol){
+    const R = F[fn].radius(a);
+    let hi = Number.isFinite(R) ? Math.min(6.5, 0.999 * R) : 6.5;
+    const g = (w) => Math.max(Model.bound(fn, a, a + w, n), Model.bound(fn, a, a - w, n));
+    if (g(hi) <= tol) return hi;
+    let lo = 0;
+    for (let i = 0; i < 90; i++){ const m = (lo + hi) / 2; if (g(m) <= tol) lo = m; else hi = m; }
+    return lo;
+  },
+
+  /* fewest terms whose BOUND clears tol at x, and fewest whose ACTUAL
+     error does. The first can never be smaller than the second.            */
+  termsFor(fn, a, x, tol, which){
+    for (let n = 0; n <= 60; n++){
+      const v = which === "actual" ? Math.abs(Model.error(fn, a, x, n)) : Model.bound(fn, a, x, n);
+      if (v <= tol) return n;
+    }
+    return null;
+  }
+};
+
+/* ---- the integral form of the remainder, by Gauss-Legendre --------------
+   R_n(x) = integral from a to x of f^(n+1)(t) (x-t)^n / n! dt.
+   This shares no algebra with the Lagrange form above, so it is an
+   independent route to the same number.                                    */
+const GLX = [-0.9602898564975363, -0.7966664774136267, -0.5255324099163290, -0.1834346424956498,
+              0.1834346424956498,  0.5255324099163290,  0.7966664774136267,  0.9602898564975363];
+const GLW = [ 0.1012285362903763,  0.2223810344533745,  0.3137066458778873,  0.3626837833783620,
+              0.3626837833783620,  0.3137066458778873,  0.2223810344533745,  0.1012285362903763];
+function quadRemainder(fn, a, x, n, panels){
+  const f = F[fn], h = (x - a) / panels, half = h / 2;
+  let acc = 0;
+  for (let p = 0; p < panels; p++){
+    const mid = a + (p + 0.5) * h;
+    for (let g = 0; g < 8; g++){
+      const t = mid + half * GLX[g];
+      acc += GLW[g] * f.dAt(t, n + 1) * Math.pow(x - t, n) / FACT[n];
+    }
+  }
+  return acc * half;
+}
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { fn: "exp", deg: 4, ctr: 0, tol: -6, probe: 0.5, env: true };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+let W = 900, H = 520, NARROW = false, G = null;
+
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#000"; }
+function clamp(v, lo, hi){ return v < lo ? lo : v > hi ? hi : v; }
+
+function fmt(v){
+  if (!Number.isFinite(v)) return "over 1e300";
+  const A = Math.abs(v);
+  if (A === 0) return "0";
+  if (A < 1e-3 || A >= 1e5) return v.toExponential(2).replace("e+", "e");
+  let s = v.toPrecision(4);
+  if (s.indexOf(".") >= 0) s = s.replace(/0+$/, "").replace(/\.$/, "");
+  return s;
+}
+function fmtTol(e){ return "1e" + e; }
+
+/* the probe slider is a fraction of the view half-width on whichever side
+   it points, so it can never leave the function's domain */
+function probeX(fn, a, t){
+  const v = F[fn].view(a);
+  return t < 0 ? a + t * (a - v[0]) : a + t * (v[1] - a);
+}
+
+function fitCanvas(){
+  const avail = cv.parentElement.clientWidth - 20;
+  W = clamp(avail > 0 ? avail : 900, 300, 980);
+  NARROW = W < 520;
+
+  const padL = NARROW ? 36 : 50, padR = 12;
+  const legendH = NARROW ? 34 : 20;
+  const plotH = NARROW ? 236 : 316;
+  const tickH = 17;
+  const stripH = 26;
+  const footH = NARROW ? 32 : 18;
+  const top = 6;
+  H = top + legendH + plotH + tickH + stripH + footH + 6;
+
+  G = { padL, padR, top, legendH, plotH, tickH, stripH, footH,
+        x0: padL, x1: W - padR, y0: top + legendH, y1: top + legendH + plotH };
+
+  cv.width = Math.round(W * SS);
+  cv.height = Math.round(H * SS);
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+/* robust y-window: clip the wild tails so a pole does not flatten the rest */
+function yWindow(fn, a, n, xs){
+  const f = F[fn], vals = [];
+  for (let i = 0; i < xs.length; i++){
+    const v = f.f(xs[i]);
+    if (Number.isFinite(v)) vals.push(v);
+  }
+  if (!vals.length) return [-1, 1];
+  vals.sort((p, q) => p - q);
+  const q = (r) => vals[clamp(Math.round(r * (vals.length - 1)), 0, vals.length - 1)];
+  /* Clip the tails only when there is actually a pole in view. Otherwise a
+     perfectly well behaved function -- e^x is the obvious one -- would have
+     its own top and bottom cropped off the frame for no reason. */
+  const full = [vals[0], vals[vals.length - 1]];
+  const trimmed = [q(0.02), q(0.98)];
+  const fullSpan = full[1] - full[0], trimSpan = trimmed[1] - trimmed[0];
+  const poled = trimSpan > 0 && fullSpan > 6 * trimSpan;
+  let lo = poled ? trimmed[0] : full[0], hi = poled ? trimmed[1] : full[1];
+  const fa = f.f(a);
+  if (Number.isFinite(fa)){ lo = Math.min(lo, fa); hi = Math.max(hi, fa); }
+  if (!(hi > lo)){ hi = lo + 1; lo -= 1; }
+  const pad = (hi - lo) * 0.16;
+  return [lo - pad, hi + pad];
+}
+
+function render(){
+  if (!G) fitCanvas();
+  const fn = state.fn, a = state.ctr, n = state.deg, tol = Math.pow(10, state.tol);
+  const f = F[fn];
+  const view = f.view(a);
+  const px = probeX(fn, a, state.probe);
+
+  const N = 460, xs = new Array(N);
+  for (let i = 0; i < N; i++) xs[i] = view[0] + (view[1] - view[0]) * i / (N - 1);
+  const yw = yWindow(fn, a, n, xs);
+
+  /* The left margin is whatever the y labels actually need. A constant one
+     silently amputates a minus sign at phone width, which is how "-3.156"
+     turns into "3.156" and the frame starts lying about its own scale. */
+  const yLabels = [yw[1], (yw[0] + yw[1]) / 2, yw[0]].map(fmt);
+  ctx.font = "11px ui-monospace,SFMono-Regular,Menlo,monospace";
+  let widest = 0;
+  for (let i = 0; i < yLabels.length; i++) widest = Math.max(widest, ctx.measureText(yLabels[i]).width);
+  G.x0 = clamp(Math.ceil(widest) + 10, 28, Math.round(W * 0.28));
+
+  const X = (x) => G.x0 + (x - view[0]) / (view[1] - view[0]) * (G.x1 - G.x0);
+  const Y = (y) => G.y1 - (y - yw[0]) / (yw[1] - yw[0]) * (G.y1 - G.y0);
+  const inY = (y) => Number.isFinite(y) && y >= yw[0] - (yw[1]-yw[0]) && y <= yw[1] + (yw[1]-yw[0]);
+
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line");
+  const panel = css("--panel"), sunk = css("--sunk");
+  const cTrue = css("--true"), cApprox = css("--approx"), cBand = css("--band"), cTrust = css("--trust");
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = panel; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = sunk;  ctx.fillRect(G.x0, G.y0, G.x1 - G.x0, G.y1 - G.y0);
+
+  /* --- the error envelope: f plus or minus the Lagrange bound --- */
+  if (state.env){
+    ctx.fillStyle = cBand; ctx.globalAlpha = 0.24;
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i < N; i++){
+      const b = Model.bound(fn, a, xs[i], n), v = f.f(xs[i]);
+      const yv = Number.isFinite(v + b) ? clamp(Y(v + b), G.y0, G.y1) : G.y0;
+      if (!started){ ctx.moveTo(X(xs[i]), yv); started = true; } else ctx.lineTo(X(xs[i]), yv);
+    }
+    for (let i = N - 1; i >= 0; i--){
+      const b = Model.bound(fn, a, xs[i], n), v = f.f(xs[i]);
+      const yv = Number.isFinite(v - b) ? clamp(Y(v - b), G.y0, G.y1) : G.y1;
+      ctx.lineTo(X(xs[i]), yv);
+    }
+    ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+  }
+
+  /* --- zero line and the centre --- */
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  if (yw[0] < 0 && yw[1] > 0){
+    ctx.beginPath(); ctx.moveTo(G.x0, Y(0)); ctx.lineTo(G.x1, Y(0)); ctx.stroke();
+  }
+  ctx.save();
+  ctx.setLineDash([3, 3]); ctx.strokeStyle = muted;
+  ctx.beginPath(); ctx.moveTo(X(a), G.y0); ctx.lineTo(X(a), G.y1); ctx.stroke();
+  ctx.restore();
+
+  /* --- the true function --- */
+  ctx.strokeStyle = cTrue; ctx.lineWidth = 2; ctx.beginPath();
+  let pen = false;
+  for (let i = 0; i < N; i++){
+    const v = f.f(xs[i]);
+    if (!inY(v)){ pen = false; continue; }
+    const sx = X(xs[i]), sy = Y(v);
+    if (!pen){ ctx.moveTo(sx, sy); pen = true; } else ctx.lineTo(sx, sy);
+  }
+  ctx.stroke();
+
+  /* --- the polynomial --- */
+  ctx.strokeStyle = cApprox; ctx.lineWidth = 2; ctx.beginPath();
+  pen = false;
+  for (let i = 0; i < N; i++){
+    const v = Model.partial(fn, a, xs[i], n);
+    if (!inY(v)){ pen = false; continue; }
+    const sx = X(xs[i]), sy = Y(v);
+    if (!pen){ ctx.moveTo(sx, sy); pen = true; } else ctx.lineTo(sx, sy);
+  }
+  ctx.stroke();
+
+  /* --- the probe: the gap between the two curves, drawn --- */
+  const fv = f.f(px), pv = Model.partial(fn, a, px, n);
+  ctx.save();
+  ctx.setLineDash([2, 2]); ctx.strokeStyle = cApprox; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(X(px), G.y0); ctx.lineTo(X(px), G.y1); ctx.stroke();
+  ctx.restore();
+  if (inY(fv) && inY(pv)){
+    ctx.strokeStyle = cApprox; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(X(px), Y(fv)); ctx.lineTo(X(px), Y(pv)); ctx.stroke();
+  }
+  [[fv, cTrue], [pv, cApprox]].forEach(function(pair){
+    if (!inY(pair[0])) return;
+    ctx.fillStyle = pair[1];
+    ctx.beginPath(); ctx.arc(X(px), Y(pair[0]), 3.6, 0, 2 * PI); ctx.fill();
+  });
+  ctx.fillStyle = css("--panel");
+  ctx.beginPath(); ctx.arc(X(a), Y(f.f(a)), 4.4, 0, 2 * PI); ctx.fill();
+  ctx.strokeStyle = cTrue; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(X(a), Y(f.f(a)), 4.4, 0, 2 * PI); ctx.stroke();
+
+  /* --- the trusted interval, along its own strip below the plot --- */
+  const tw = Model.trustWidth(fn, a, n, tol);
+  const sy = G.y1 + G.tickH + 7;
+  ctx.fillStyle = sunk; ctx.fillRect(G.x0, sy, G.x1 - G.x0, 9);
+  const tl = clamp(X(a - tw), G.x0, G.x1), tr = clamp(X(a + tw), G.x0, G.x1);
+  ctx.fillStyle = cTrust; ctx.fillRect(tl, sy, Math.max(1.5, tr - tl), 9);
+
+  /* --- axis ticks --- */
+  ctx.font = "11px " + "ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.fillStyle = muted; ctx.textBaseline = "top";
+  const nt = NARROW ? 4 : 7;
+  for (let i = 0; i <= nt; i++){
+    const xv = view[0] + (view[1] - view[0]) * i / nt;
+    ctx.textAlign = i === 0 ? "left" : i === nt ? "right" : "center";
+    ctx.fillText(xv.toFixed(1), clamp(X(xv), G.x0, G.x1), G.y1 + 4);
+  }
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  [yw[1], (yw[0] + yw[1]) / 2, yw[0]].forEach(function(yv, i){
+    ctx.fillText(yLabels[i], G.x0 - 5, clamp(Y(yv), G.y0 + 6, G.y1 - 6));
+  });
+
+  /* --- legend, on its own rows so nothing sits on a curve --- */
+  ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  ctx.font = "600 11px ui-monospace,SFMono-Regular,Menlo,monospace";
+  const lrow = G.top + (NARROW ? 8 : 10);
+  let lx = G.x0;
+  function tag(colour, text, y){
+    ctx.fillStyle = colour; ctx.fillRect(lx, y - 1.5, 14, 3);
+    ctx.fillStyle = muted; ctx.fillText(text, lx + 19, y);
+    lx += 19 + ctx.measureText(text).width + 16;
+  }
+  tag(cTrue, f.name, lrow);
+  tag(cApprox, "degree " + n, lrow);
+  if (NARROW){ lx = G.x0; }
+  if (state.env) tag(cBand, "Lagrange bound", NARROW ? lrow + 15 : lrow);
+
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.font = "11px ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.fillStyle = cTrust;
+  const ftext = tw >= 6.4 ? "bound under " + fmtTol(state.tol) + " across the whole view"
+              : "bound under " + fmtTol(state.tol) + " within " + tw.toFixed(3) + " of the centre";
+  ctx.fillText(ftext, G.x0, sy + 13);
+  if (NARROW){
+    ctx.fillStyle = muted;
+    ctx.fillText("probe at x = " + px.toFixed(3), G.x0, sy + 28);
+  } else {
+    ctx.textAlign = "right"; ctx.fillStyle = muted;
+    ctx.fillText("probe at x = " + px.toFixed(3), G.x1, sy + 13);
+  }
+
+  paintPanels(fn, a, n, px, tol, f);
+}
+
+/* ---- the ledger and the ladder, as real markup rather than painted text - */
+function paintPanels(fn, a, n, px, tol, f){
+  const rows = [];
+  let run = 0;
+  const show = Math.min(20, n + 3);
+  for (let k = 0; k <= show; k++){
+    const t = Model.term(fn, a, px, k);
+    if (k <= n) run += t;
+    rows.push('<tr class="' + (k > n ? "off" : k === n ? "last" : "") + '">' +
+      "<td>k = " + k + "</td><td>" + fmt(t) + "</td><td>" +
+      (k <= n ? fmt(run) : "&middot;") + "</td></tr>");
+  }
+  rows.push('<tr><td>true</td><td>&middot;</td><td>' + fmt(f.f(px)) + "</td></tr>");
+  el("ledger").innerHTML = rows.join("");
+
+  const degs = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
+  const widths = degs.map(function(d){ return Model.trustWidth(fn, a, d, tol); });
+  const wmax = Math.max.apply(null, widths.concat([1e-9]));
+  el("ladder").innerHTML = degs.map(function(d, i){
+    const frac = wmax > 0 ? Math.max(0.006, widths[i] / wmax) : 0;
+    /* the ladder steps in twos, so an odd degree highlights the rung below it */
+    const here = (d === n) || (d === n - 1 && n % 2 === 1);
+    return '<div class="lrow' + (here ? " here" : "") + '">' +
+      '<span class="lab">n=' + d + "</span>" +
+      '<span class="barwrap"><span class="bar" style="width:' + (frac * 100).toFixed(1) + '%"></span></span>' +
+      '<span class="val">' + (widths[i] >= 6.4 ? "all" : widths[i].toFixed(2)) + "</span></div>";
+  }).join("");
+
+  const err = Math.abs(Model.error(fn, a, px, n));
+  const bnd = Model.bound(fn, a, px, n);
+  const tw = Model.trustWidth(fn, a, n, tol);
+  const need = Model.termsFor(fn, a, px, tol, "bound");
+  el("r1").textContent = fmt(err);
+  el("r2").textContent = fmt(bnd);
+  el("r3").textContent = tw >= 6.4 ? "all of it" : tw.toFixed(3);
+  el("r4").textContent = need === null ? "no number does" : String(need);
+}
+
+/* ---- wiring ------------------------------------------------------------- */
+function sync(){
+  el("degout").textContent = String(state.deg);
+  el("ctrout").textContent = state.ctr.toFixed(2);
+  el("tolout").textContent = fmtTol(state.tol);
+  el("probeout").textContent = (state.probe >= 0 ? "+" : "") + state.probe.toFixed(2);
+}
+function redraw(){ sync(); render(); }
+
+function bind(id, key, parse){
+  el(id).addEventListener("input", function(){
+    state[key] = parse(this.type === "checkbox" ? this.checked : this.value);
+    redraw();
+  });
+}
+bind("fn", "fn", String);
+bind("deg", "deg", function(v){ return parseInt(v, 10); });
+bind("ctr", "ctr", parseFloat);
+bind("tol", "tol", function(v){ return parseInt(v, 10); });
+bind("probe", "probe", parseFloat);
+bind("env", "env", Boolean);
+
+function stepDeg(by){
+  state.deg = clamp(state.deg + by, 0, 20);
+  el("deg").value = String(state.deg);
+  redraw();
+}
+el("plus").addEventListener("click", function(){ stepDeg(1); });
+el("minus").addEventListener("click", function(){ stepDeg(-1); });
+el("reset").addEventListener("click", function(){
+  Object.assign(state, defaults);
+  el("fn").value = defaults.fn; el("deg").value = String(defaults.deg);
+  el("ctr").value = String(defaults.ctr); el("tol").value = String(defaults.tol);
+  el("probe").value = String(defaults.probe); el("env").checked = defaults.env;
+  redraw();
+});
+
+let rt = null;
+function onResize(){ clearTimeout(rt); rt = setTimeout(function(){ fitCanvas(); redraw(); }, 90); }
+window.addEventListener("resize", onResize);
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", redraw);
+}
+fitCanvas();
+redraw();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+const MEMO = {};
+function once(key, fn){ if (!(key in MEMO)) MEMO[key] = fn(); return MEMO[key]; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+
+  /* 1 — the Lagrange bound is never beaten, on 200 seeded cases */
+  const A1 = once("A1", function(){
+    const rng = mulberry32(SEED + 1);
+    let worst = 0, ok = true, meaningful = 0;
+    for (let i = 0; i < 200; i++){
+      const a = (rng() - 0.5) * 1.6;
+      const x = a + (rng() - 0.5) * 6;
+      const n = Math.floor(rng() * 14);
+      const e = Math.abs(Model.error("exp", a, x, n)), b = Model.bound("exp", a, x, n);
+      const floor = 1e-13 * Math.abs(F.exp.f(x));
+      if (e > b + floor) ok = false;
+      /* the ratio only means anything where the bound is above the floor of
+         the subtraction that produced e; below it, e is mostly round-off */
+      if (b > floor){ worst = Math.max(worst, e / b); meaningful++; }
+    }
+    return { ok: ok, worst: worst, meaningful: meaningful };
+  });
+  push("exp: the Lagrange bound is never beaten",
+    A1.ok && A1.worst <= 1,
+    "200 seeded (centre, point, degree). On the " + A1.meaningful + " of them whose bound " +
+    "sits above the cancellation floor of f(x) minus the partial sum, the largest ratio of " +
+    "true error to bound is " + A1.worst.toFixed(4) + ", never above 1. On the rest the error " +
+    "is round-off, clearing the bound by no more than 1e-13 times the value of f there."
+  );
+
+  /* 2 — and it is not loose: the ratio goes to 1 as the point approaches
+         the centre, exactly as far as e^(-d) permits */
+  const A2 = once("A2", function(){
+    let lo = 2, hi = 0;
+    for (let n = 1; n <= 5; n++){
+      for (let j = 0; j < 9; j++){
+        const a = -0.8 + j * 0.2, d = 0.05;
+        const r = Math.abs(Model.error("exp", a, a + d, n)) / Model.bound("exp", a, a + d, n);
+        lo = Math.min(lo, r); hi = Math.max(hi, r);
+      }
+    }
+    return { lo: lo, hi: hi };
+  });
+  push("exp: the bound is tight, not merely safe",
+    A2.lo > Math.exp(-0.05) && A2.hi <= 1,
+    "At a point 0.05 from the centre the ratio of true error to bound lies in [" +
+    A2.lo.toFixed(6) + ", " + A2.hi.toFixed(6) + "]. The remainder is e^xi and the bound is " +
+    "e^x with xi between, so the ratio is bounded below by e^-0.05 = " +
+    Math.exp(-0.05).toFixed(6) + " and above by 1. Both ends hold.");
+
+  /* 3 — for sine the bound is the bare power over the factorial */
+  const A3 = once("A3", function(){
+    const rng = mulberry32(SEED + 3);
+    let exact = true, ok = true, worst = 0;
+    for (let i = 0; i < 300; i++){
+      const a = (rng() - 0.5) * 1.6, x = a + (rng() - 0.5) * 12, n = Math.floor(rng() * 16);
+      const closed = Math.pow(Math.abs(x - a), n + 1) / FACT[n + 1];
+      const b = Model.bound("sin", a, x, n);
+      if (Math.abs(b - closed) > 1e-15 * Math.max(1, closed)) exact = false;
+      const e = Math.abs(Model.error("sin", a, x, n));
+      if (e > b + 1e-14) ok = false;
+      if (b > 0) worst = Math.max(worst, e / b);
+    }
+    return { exact: exact, ok: ok, worst: worst };
+  });
+  push("sin: every derivative is at most 1, so the bound is |x-a|^(n+1)/(n+1)!",
+    A3.exact && A3.ok,
+    "300 seeded cases, degree up to 15. The bound matches the bare closed form to 1e-15 " +
+    "relative, and the true error never exceeds it; largest ratio " + A3.worst.toFixed(4) +
+    ". A 1e-14 absolute slack covers the cancellation in f(x) minus the partial sum.");
+
+  /* 4 — the geometric series, summed in closed form about any centre */
+  const A4 = once("A4", function(){
+    const rng = mulberry32(SEED + 4);
+    let worst = 0;
+    for (let i = 0; i < 100; i++){
+      const a = (rng() - 0.5) * 1.6;
+      const r = (rng() * 1.8 - 0.9);
+      const x = a + r * (1 - a);
+      const n = Math.floor(rng() * 20);
+      const closed = (1 - Math.pow(r, n + 1)) / ((1 - a) * (1 - r));
+      const s = Model.partial("geo", a, x, n);
+      worst = Math.max(worst, Math.abs(s - closed) / Math.max(1e-12, Math.abs(closed)));
+    }
+    return worst;
+  });
+  push("1/(1-x): the partial sums have a closed form, about any centre",
+    A4 < 1e-13,
+    "Writing r = (x-a)/(1-a), the degree-n sum is (1 - r^(n+1)) / ((1-a)(1-r)). " +
+    "Over 100 seeded (centre, ratio, degree) the Horner sum agrees to " +
+    A4.toExponential(2) + " relative.");
+
+  /* 5 — an algebraic identity the coefficients must satisfy: shifting the
+         centre of e^x only multiplies the whole polynomial by e^a */
+  const A5 = once("A5", function(){
+    const rng = mulberry32(SEED + 5);
+    let worst = 0;
+    for (let i = 0; i < 200; i++){
+      const a = (rng() - 0.5) * 1.6, d = (rng() - 0.5) * 5, n = Math.floor(rng() * 16);
+      const here = Model.partial("exp", a, a + d, n);
+      const shifted = Math.exp(a) * Model.partial("exp", 0, d, n);
+      worst = Math.max(worst, Math.abs(here - shifted) / Math.max(1e-12, Math.abs(shifted)));
+    }
+    return worst;
+  });
+  push("exp: moving the centre only rescales the polynomial",
+    A5 < 1e-13,
+    "The degree-n sum about a, at a+d, must equal e^a times the degree-n sum about 0 at d. " +
+    "Over 200 seeded cases the two constructions agree to " + A5.toExponential(2) + " relative.");
+
+  /* 6 — and sine's coefficients must split by the angle-addition formula */
+  const A6 = once("A6", function(){
+    const rng = mulberry32(SEED + 6);
+    let worst = 0;
+    for (let i = 0; i < 200; i++){
+      const a = (rng() - 0.5) * 3, d = (rng() - 0.5) * 8, n = Math.floor(rng() * 16);
+      const here = Model.partial("sin", a, a + d, n);
+      let cs = 0, sn = 0;
+      for (let k = n; k >= 0; k--){
+        cs = cs * d + Math.cos(k * PI / 2) / FACT[k];
+        sn = sn * d + Math.sin(k * PI / 2) / FACT[k];
+      }
+      const split = Math.sin(a) * cs + Math.cos(a) * sn;
+      worst = Math.max(worst, Math.abs(here - split) / Math.max(1e-12, Math.abs(split)));
+    }
+    return worst;
+  });
+  push("sin: the polynomial splits by the angle-addition formula",
+    A6 < 1e-12,
+    "sin(a+d) = sin a cos d + cos a sin d, so the degree-n sum about a must equal " +
+    "sin(a) times the degree-n sum of cosine plus cos(a) times that of sine, both about 0. " +
+    "Over 200 seeded cases they agree to " + A6.toExponential(2) + " relative.");
+
+  /* 7 — the integral form of the remainder, by quadrature, is an entirely
+         separate route to the same number */
+  const A7 = once("A7", function(){
+    const rng = mulberry32(SEED + 7);
+    let worst = 0, n7 = 0;
+    for (let i = 0; i < 160; i++){
+      const key = KEYS[i % 4];
+      const a = (rng() - 0.5) * 1.2;
+      const lim = Number.isFinite(F[key].radius(a)) ? 0.72 * F[key].radius(a) : 1.6;
+      const d = (rng() - 0.5) * 2 * lim;
+      const n = 1 + Math.floor(rng() * 9);
+      if (Math.abs(d) < 0.15) continue;
+      const exact = Model.error(key, a, a + d, n);
+      const quad = quadRemainder(key, a, a + d, n, 40);
+      /* the target is a difference of two numbers of size |f| and |S_n|, so
+         its own floor is a few ulps of those, not of the difference */
+      const scale = Math.abs(F[key].f(a + d)) + Math.abs(Model.partial(key, a, a + d, n)) +
+                    Math.abs(exact);
+      worst = Math.max(worst, Math.abs(quad - exact) / scale);
+      n7++;
+    }
+    return { worst: worst, n: n7 };
+  });
+  push("the integral form of the remainder reproduces it, on all four functions",
+    A7.worst < 1e-12,
+    "R_n(x) is also the integral from a to x of f^(n+1)(t)(x-t)^n/n! dt. Eight-point " +
+    "Gauss-Legendre over 40 panels, on " + A7.n + " seeded cases across all four functions, " +
+    "degree 1 to 9, reproduces f(x) minus the partial sum to " + A7.worst.toExponential(2) +
+    " of the size of the numbers being subtracted. That subtraction, not the quadrature, " +
+    "is the floor: its own round-off is already a few parts in 1e16 of |f| plus |S_n|.");
+
+  /* 8 — the alternating-series bound: the error is smaller than the first
+         term you left out */
+  const A8 = once("A8", function(){
+    const rng = mulberry32(SEED + 8);
+    let ok = true, cases = 0, worst = 0, meaningful = 0;
+    for (let i = 0; i < 300; i++){
+      const useSin = i % 2 === 0;
+      const x = useSin ? rng() * 3 : rng() * 0.95;
+      const n = Math.floor(rng() * 13);
+      const key = useSin ? "sin" : "log";
+      /* sine's even-order terms vanish, so the first term actually left out is
+         the next ODD one; and the bound needs the tail already decreasing,
+         which for sine means the next order has passed x */
+      if (useSin && ((n + 1) % 2 === 0 || n + 1 <= x)) continue;
+      const e = Math.abs(Model.error(key, 0, x, n));
+      const nxt = Math.abs(Model.term(key, 0, x, n + 1));
+      if (nxt === 0) continue;
+      cases++;
+      if (e > nxt + 1e-15) ok = false;
+      /* as in the first assertion, the ratio is only informative where the
+         omitted term is above the floor of the subtraction behind e */
+      if (nxt > 1e-14){ worst = Math.max(worst, e / nxt); meaningful++; }
+    }
+    return { ok: ok, cases: cases, worst: worst, meaningful: meaningful };
+  });
+  push("the error is smaller than the first term left out",
+    A8.ok && A8.worst <= 1,
+    "Both series alternate on these intervals: sine on 0 to 3, ln(1+x) on 0 to 0.95. " +
+    "Sine's even-order terms are zero, so the first term actually left out is the next odd " +
+    "one, and the tail must already be shrinking, which needs the next order above x. " +
+    "Over " + A8.cases + " seeded cases meeting that, the true error never exceeds the first " +
+    "omitted term. On the " + A8.meaningful + " whose omitted term is above 1e-14 -- the rest " +
+    "are both at the floor of the subtraction, where the ratio means nothing -- the largest " +
+    "ratio is " + A8.worst.toFixed(4) + ".");
+
+
+  /* 9 — the queue asked to assert that doubling the degree at least squares
+         the error for |x| < 1. It does not: the claim is a statement about
+         where you are, not about the degree.                              */
+  const A9 = once("A9", function(){
+    const E = (x, n) => Math.abs(Model.error("exp", 0, x, n));
+    const ratio = (x, n) => E(x, 2 * n) / (E(x, n) * E(x, n));
+    let holds = true;
+    for (let n = 2; n <= 6; n++) if (!(ratio(1, n) < 1)) holds = false;
+    const cx = 0.01, cn = 2;
+    return { small: ratio(cx, cn), e2: E(cx, cn), e4: E(cx, 2 * cn),
+             big: ratio(1, 2), holds: holds,
+             cross25: ratio(0.25, 2), cross40: ratio(0.40, 2),
+             thresh: (FACT[3] * FACT[3]) / FACT[5] };
+  });
+  push("doubling the degree does not square the error, and the queue said it did",
+    A9.small > 25 && A9.holds && A9.cross25 > 1 && A9.cross40 < 1,
+    "For e^x about 0 the claim holds at x = 1 for every degree from 2 to 6 " +
+    "(ratio at n=2: " + A9.big.toFixed(4) + "), and fails badly close in. At x = 0.01 " +
+    "the degree-2 error is " + A9.e2.toExponential(3) + ", its square is " +
+    (A9.e2 * A9.e2).toExponential(3) + ", and the degree-4 error is " +
+    A9.e4.toExponential(3) + " -- larger by a factor of " + A9.small.toFixed(1) + ". " +
+    "The leading terms give the crossing at |x| = ((n+1)!)^2/(2n+1)! = " +
+    A9.thresh.toFixed(3) + " for n = 2, and the measured ratio is " +
+    A9.cross25.toFixed(3) + " at x = 0.25 and " + A9.cross40.toFixed(3) + " at x = 0.40, " +
+    "straddling one exactly there.");
+
+  /* 10 — past the radius of convergence no number of terms helps */
+  const A10 = once("A10", function(){
+    const errs = [];
+    for (let n = 5; n <= 30; n++) errs.push(Math.abs(Model.error("geo", 0, 1.2, n)));
+    let rising = true;
+    for (let i = 1; i < errs.length; i++) if (!(errs[i] > errs[i-1])) rising = false;
+    const inside = [];
+    for (let n = 5; n <= 30; n += 5) inside.push(Math.abs(Model.error("geo", 0, 0.8, n)));
+    let falling = true;
+    for (let i = 1; i < inside.length; i++) if (!(inside[i] < inside[i-1])) falling = false;
+    return { rising: rising, falling: falling, first: errs[0], last: errs[errs.length-1],
+             inFirst: inside[0], inLast: inside[inside.length-1] };
+  });
+  push("outside the radius of convergence, more terms make it worse",
+    A10.rising && A10.falling && A10.last > 1e3,
+    "1/(1-x) about 0 has radius 1. At x = 1.2 the error rises at every single step " +
+    "from degree 5 to 30, from " + A10.first.toExponential(2) + " to " +
+    A10.last.toExponential(2) + ". At x = 0.8, inside the radius, the same sweep falls " +
+    "from " + A10.inFirst.toExponential(2) + " to " + A10.inLast.toExponential(2) + ".");
+
+  /* 11 — the trusted half-width, and how slowly it grows */
+  const A11 = once("A11", function(){
+    const w = [];
+    for (let n = 0; n <= 20; n++) w.push(Model.trustWidth("exp", 0, n, 1e-6));
+    let mono = true;
+    for (let i = 1; i < w.length; i++) if (!(w[i] >= w[i-1] - 1e-12)) mono = false;
+    return { mono: mono, w: w };
+  });
+  push("each extra term widens the trusted interval, and never narrows it",
+    A11.mono && A11.w[20] > A11.w[4],
+    "e^x about 0, asking for an error below 1e-6. The half-width the bound alone " +
+    "guarantees is " + A11.w[1].toFixed(4) + " at one term, " + A11.w[4].toFixed(4) +
+    " at four, " + A11.w[12].toFixed(4) + " at twelve and " + A11.w[20].toFixed(4) +
+    " at twenty, and is non-decreasing at all twenty steps. Sixteen extra terms buy " +
+    (A11.w[20] / A11.w[4]).toFixed(2) + " times the reach.");
+
+  /* 12 — the bound is conservative: it never asks for fewer terms than the
+          true error needs */
+  const A12 = once("A12", function(){
+    const rng = mulberry32(SEED + 12);
+    let ok = true, cases = 0, slack = 0, equal = 0;
+    for (let i = 0; i < 200; i++){
+      const key = KEYS[i % 4];
+      const a = (rng() - 0.5) * 1.2;
+      const lim = Number.isFinite(F[key].radius(a)) ? 0.7 * F[key].radius(a) : 2;
+      const x = a + (rng() - 0.5) * 2 * lim;
+      const tol = Math.pow(10, -2 - Math.floor(rng() * 9));
+      const nb = Model.termsFor(key, a, x, tol, "bound");
+      const na = Model.termsFor(key, a, x, tol, "actual");
+      if (nb === null || na === null) continue;
+      cases++;
+      if (nb < na) ok = false;
+      if (nb === na) equal++;
+      slack = Math.max(slack, nb - na);
+    }
+    return { ok: ok, cases: cases, slack: slack, equal: equal };
+  });
+  push("the bound never promises fewer terms than the error actually needs",
+    A12.ok,
+    "Over " + A12.cases + " seeded (function, centre, point, accuracy) the smallest degree " +
+    "clearing the bound is never below the smallest degree clearing the true error. " +
+    "It was exactly right in " + A12.equal + " of them and never asked for more than " +
+    A12.slack + " extra terms.");
+
+  /* 13 — nothing in the control ranges produces a non-number */
+  const A13 = once("A13", function(){
+    let bad = 0, cells = 0;
+    for (let f = 0; f < 4; f++){
+      const key = KEYS[f];
+      for (let ci = -16; ci <= 16; ci += 4){
+        const a = ci * 0.05;
+        for (let n = 0; n <= 20; n += 4){
+          for (let ti = -12; ti <= -1; ti += 3){
+            const tw = Model.trustWidth(key, a, n, Math.pow(10, ti));
+            if (!Number.isFinite(tw) || tw < 0) bad++;
+            cells++;
+          }
+          for (let pi = -1; pi <= 1; pi += 0.25){
+            const x = probeX(key, a, pi);
+            const vals = [F[key].f(x), Model.partial(key, a, x, n),
+                          Model.bound(key, a, x, n), Model.error(key, a, x, n)];
+            for (let v = 0; v < vals.length; v++){ cells++; if (!Number.isFinite(vals[v])) bad++; }
+          }
+        }
+      }
+    }
+    return { bad: bad, cells: cells };
+  });
+  push("no setting of the controls produces a non-number",
+    A13.bad === 0,
+    "All four functions, nine centres, six degrees, four accuracies and nine probe " +
+    "positions: " + A13.cells + " evaluated quantities, " + A13.bad + " of them not finite.");
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, quadRemainder, F, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
