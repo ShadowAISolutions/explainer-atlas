@@ -1,0 +1,17 @@
+{
+  "slug": "branch-prediction-cost",
+  "title": "Sorting The Array Speeds Up The Loop That Ignores It",
+  "domain": "computer-science",
+  "difficulty": 3,
+  "summary": "Write the branch condition yourself and watch a predictor try to guess it. The same loop over the same numbers costs far more when they arrive shuffled, because every wrong guess throws the pipeline away.",
+  "prerequisites": [],
+  "tags": ["branch-prediction", "pipeline", "speculation", "saturating-counter", "cache-effects", "performance"],
+  "interaction_pattern": "live-code",
+  "sources": [
+    { "title": "Smith, A Study of Branch Prediction Strategies, ISCA 1981 (the two-bit saturating counter)", "url": "https://doi.org/10.1145/800052.801871" },
+    { "title": "Yeh and Patt, Two-Level Adaptive Training Branch Prediction, MICRO 1991", "url": "https://doi.org/10.1145/123465.123475" },
+    { "title": "Hennessy and Patterson, Computer Architecture: A Quantitative Approach, chapter on control hazards and branch prediction", "url": "https://doi.org/10.1016/C2016-0-01933-8" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 13
+}
