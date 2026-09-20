@@ -1,8 +1,9 @@
 {
   "generated_at": "2026-09-20",
-  "count": 75,
+  "count": 80,
   "domains": {
     "biology": [
+      "allometric-scaling-metabolism",
       "enzyme-michaelis-menten",
       "epidemic-r0-herd-immunity",
       "hardy-weinberg",
@@ -11,6 +12,7 @@
       "predator-prey-cycles"
     ],
     "chemistry": [
+      "activation-energy-arrhenius",
       "electrochemical-cell-potential",
       "ideal-gas-law",
       "le-chatelier-equilibrium-shift",
@@ -20,6 +22,7 @@
     "computer-science": [
       "big-o-crossover",
       "bloom-filter-false-positives",
+      "branch-prediction-cost",
       "cache-line-stride",
       "dijkstra-vs-astar",
       "floating-point-precision",
@@ -78,7 +81,8 @@
       "map-projection-distortion",
       "matrix-determinant-area",
       "newton-raphson-basins",
-      "numerical-integration-error"
+      "numerical-integration-error",
+      "taylor-series-remainder"
     ],
     "music-theory": [
       "beat-frequency-tuning",
@@ -91,6 +95,7 @@
       "damped-harmonic-oscillator",
       "double-slit-interference",
       "orbital-transfer-hohmann",
+      "photoelectric-threshold",
       "projectile-drag",
       "special-relativity-time-dilation"
     ],
@@ -105,13 +110,13 @@
     ]
   },
   "interaction_patterns": {
-    "build-from-parts": 7,
-    "compare-side-by-side": 6,
+    "build-from-parts": 8,
+    "compare-side-by-side": 7,
     "drag-parameter": 7,
     "draw-input": 6,
-    "guess-then-reveal": 6,
-    "live-code": 4,
-    "perturb-and-observe": 7,
+    "guess-then-reveal": 7,
+    "live-code": 5,
+    "perturb-and-observe": 8,
     "race-two-methods": 6,
     "spatial-explore": 7,
     "step-through": 6,
@@ -119,6 +124,72 @@
     "tune-to-match": 6
   },
   "explainers": [
+    {
+      "slug": "activation-energy-arrhenius",
+      "title": "Ten Degrees Doubles It, But Only Near Room Temperature",
+      "domain": "chemistry",
+      "difficulty": 2,
+      "summary": "The Arrhenius law is exponential in one over temperature, not in temperature. Nudge the rail ten kelvin at a time and watch a rule of thumb everyone learns as a constant slide from 2.70 down to 1.29.",
+      "prerequisites": [],
+      "tags": [
+        "arrhenius",
+        "activation-energy",
+        "reaction-kinetics",
+        "q10",
+        "catalysis",
+        "linear-regression"
+      ],
+      "interaction_pattern": "perturb-and-observe",
+      "sources": [
+        {
+          "title": "Arrhenius, Uber die Reaktionsgeschwindigkeit bei der Inversion von Rohrzucker durch Sauren, Z. Phys. Chem. 4 (1889) 226-248",
+          "url": "https://www.degruyter.com/document/doi/10.1515/zpch-1889-0416/html"
+        },
+        {
+          "title": "Atkins and de Paula, Physical Chemistry, 11th ed., chapter 17 (reaction dynamics)",
+          "url": "https://global.oup.com/academic/product/atkins-physical-chemistry-9780198769866"
+        },
+        {
+          "title": "CODATA 2018 recommended value of the molar gas constant R",
+          "url": "https://physics.nist.gov/cgi-bin/cuu/Value?r"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 12
+    },
+    {
+      "slug": "allometric-scaling-metabolism",
+      "title": "A Mouse Is Not A Small Elephant",
+      "domain": "biology",
+      "difficulty": 2,
+      "summary": "Drag the exponent over fifteen published mammals. Metabolic rate goes as mass to 0.76, not the 2/3 a surface-area argument predicts, and a wrong exponent shows up as a tilt rather than as scatter.",
+      "prerequisites": [],
+      "tags": [
+        "allometry",
+        "kleiber-law",
+        "metabolic-scaling",
+        "power-law",
+        "log-log-regression",
+        "residual-analysis"
+      ],
+      "interaction_pattern": "compare-side-by-side",
+      "sources": [
+        {
+          "title": "Kleiber, Body size and metabolic rate, Physiological Reviews 27 (1947) 511-541",
+          "url": "https://journals.physiology.org/doi/10.1152/physrev.1947.27.4.511"
+        },
+        {
+          "title": "Schmidt-Nielsen, Scaling: Why is Animal Size So Important? (Cambridge, 1984)",
+          "url": "https://www.cambridge.org/core/books/scaling/6B2C1F7C0A1BE0E1CF1A78E0C3C0A2DB"
+        },
+        {
+          "title": "West, Brown and Enquist, A general model for the origin of allometric scaling laws in biology, Science 276 (1997) 122-126",
+          "url": "https://www.science.org/doi/10.1126/science.276.5309.122"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 13
+    },
     {
       "slug": "arithmetic-coding-interval",
       "title": "A Message Is One Number Between Zero and One",
@@ -373,6 +444,39 @@
       ],
       "created_at": "2026-09-20",
       "assertions_count": 14
+    },
+    {
+      "slug": "branch-prediction-cost",
+      "title": "Sorting The Array Speeds Up The Loop That Ignores It",
+      "domain": "computer-science",
+      "difficulty": 3,
+      "summary": "Write the branch condition yourself and watch a predictor try to guess it. The same loop over the same numbers costs far more when they arrive shuffled, because every wrong guess throws the pipeline away.",
+      "prerequisites": [],
+      "tags": [
+        "branch-prediction",
+        "pipeline",
+        "speculation",
+        "saturating-counter",
+        "cache-effects",
+        "performance"
+      ],
+      "interaction_pattern": "live-code",
+      "sources": [
+        {
+          "title": "Smith, A Study of Branch Prediction Strategies, ISCA 1981 (the two-bit saturating counter)",
+          "url": "https://doi.org/10.1145/800052.801871"
+        },
+        {
+          "title": "Yeh and Patt, Two-Level Adaptive Training Branch Prediction, MICRO 1991",
+          "url": "https://doi.org/10.1145/123465.123475"
+        },
+        {
+          "title": "Hennessy and Patterson, Computer Architecture: A Quantitative Approach, chapter on control hazards and branch prediction",
+          "url": "https://doi.org/10.1016/C2016-0-01933-8"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 13
     },
     {
       "slug": "cache-line-stride",
@@ -1698,6 +1802,43 @@
       "assertions_count": 13
     },
     {
+      "slug": "photoelectric-threshold",
+      "title": "Brighter Light Does Not Help",
+      "domain": "physics",
+      "difficulty": 2,
+      "summary": "Guess what the ammeter will do, then run it. Below a threshold frequency no brightness ejects a single electron, and above it the electron energy ignores brightness entirely.",
+      "prerequisites": [],
+      "tags": [
+        "photoelectric-effect",
+        "work-function",
+        "planck-constant",
+        "photons",
+        "stopping-voltage",
+        "quantum"
+      ],
+      "interaction_pattern": "guess-then-reveal",
+      "sources": [
+        {
+          "title": "Einstein, On a Heuristic Point of View Concerning the Production and Transformation of Light, Annalen der Physik 17 (1905)",
+          "url": "https://doi.org/10.1002/andp.19053220607"
+        },
+        {
+          "title": "Millikan, A Direct Photoelectric Determination of Planck's h, Physical Review 7, 355 (1916)",
+          "url": "https://doi.org/10.1103/PhysRev.7.355"
+        },
+        {
+          "title": "CRC Handbook of Chemistry and Physics, Electron Work Function of the Elements (after Michaelson, J. Appl. Phys. 48, 4729, 1977)",
+          "url": "https://doi.org/10.1063/1.323539"
+        },
+        {
+          "title": "CODATA recommended values of the fundamental physical constants (h, c and e are exact in the 2019 SI)",
+          "url": "https://physics.nist.gov/cuu/Constants/"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 12
+    },
+    {
       "slug": "pid-controller",
       "title": "Three Knobs, Three Different Ways to Be Wrong",
       "domain": "engineering",
@@ -2270,6 +2411,35 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 12
+    },
+    {
+      "slug": "taylor-series-remainder",
+      "title": "Every Extra Term Buys A Little More Distance",
+      "domain": "mathematics",
+      "difficulty": 2,
+      "summary": "A truncated Taylor series is the function minus a remainder you can bound before computing anything. Add terms and watch the trusted interval widen, until a singularity stops it widening for good.",
+      "prerequisites": [],
+      "tags": [
+        "taylor-series",
+        "lagrange-remainder",
+        "truncation-error",
+        "radius-of-convergence",
+        "approximation",
+        "numerical-analysis"
+      ],
+      "interaction_pattern": "build-from-parts",
+      "sources": [
+        {
+          "title": "Rudin, Principles of Mathematical Analysis, 3rd ed., Theorem 5.15 (Taylor's theorem)",
+          "url": "https://archive.org/details/rudin-principles-of-mathematical-analysis"
+        },
+        {
+          "title": "NIST Digital Library of Mathematical Functions, section 1.4(vi), Taylor's theorem with remainder",
+          "url": "https://dlmf.nist.gov/1.4"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 13
     },
     {
       "slug": "tragedy-of-the-commons",

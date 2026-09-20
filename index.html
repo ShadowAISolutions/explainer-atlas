@@ -36,12 +36,19 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
     <p class="lede">One concept per page. Each page teaches a single idea through a working
     simulation you can take apart — every model on this site is checked numerically against
     closed forms, conservation laws, or published reference values before it ships.</p>
-    <p class="count">75 explainers · 13 domains · 916 assertions</p>
+    <p class="count">80 explainers · 13 domains · 979 assertions</p>
   </header>
   <main>
       <section aria-labelledby="d-biology">
         <h2 id="d-biology">biology</h2>
         <ul class="grid">
+        <li class="card">
+          <a href="explainers/allometric-scaling-metabolism/index.html">
+            <h3>A Mouse Is Not A Small Elephant</h3>
+            <p>Drag the exponent over fifteen published mammals. Metabolic rate goes as mass to 0.76, not the 2/3 a surface-area argument predicts, and a wrong exponent shows up as a tilt rather than as scatter.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 2 of 5">●●○○○</span> <span>compare-side-by-side</span> <span>13 checks</span></p>
+        </li>
         <li class="card">
           <a href="explainers/hardy-weinberg/index.html">
             <h3>The Null Model Every Population Fails</h3>
@@ -89,6 +96,13 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
       <section aria-labelledby="d-chemistry">
         <h2 id="d-chemistry">chemistry</h2>
         <ul class="grid">
+        <li class="card">
+          <a href="explainers/activation-energy-arrhenius/index.html">
+            <h3>Ten Degrees Doubles It, But Only Near Room Temperature</h3>
+            <p>The Arrhenius law is exponential in one over temperature, not in temperature. Nudge the rail ten kelvin at a time and watch a rule of thumb everyone learns as a constant slide from 2.70 down to 1.29.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 2 of 5">●●○○○</span> <span>perturb-and-observe</span> <span>12 checks</span></p>
+        </li>
         <li class="card">
           <a href="explainers/electrochemical-cell-potential/index.html">
             <h3>A Flat Battery Is Not Empty</h3>
@@ -156,6 +170,13 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
             <p>Race a last-element, random and median-of-three pivot on the same list and watch the textbook version go quadratic on data that is merely already sorted.</p>
           </a>
           <p class="meta"><span class="diff" aria-label="difficulty 3 of 5">●●●○○</span> <span>race-two-methods</span> <span>12 checks</span></p>
+        </li>
+        <li class="card">
+          <a href="explainers/branch-prediction-cost/index.html">
+            <h3>Sorting The Array Speeds Up The Loop That Ignores It</h3>
+            <p>Write the branch condition yourself and watch a predictor try to guess it. The same loop over the same numbers costs far more when they arrive shuffled, because every wrong guess throws the pipeline away.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 3 of 5">●●●○○</span> <span>live-code</span> <span>13 checks</span></p>
         </li>
         <li class="card">
           <a href="explainers/floating-point-precision/index.html">
@@ -459,6 +480,13 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
           <p class="meta"><span class="diff" aria-label="difficulty 2 of 5">●●○○○</span> <span>draw-input</span> <span>12 checks</span></p>
         </li>
         <li class="card">
+          <a href="explainers/taylor-series-remainder/index.html">
+            <h3>Every Extra Term Buys A Little More Distance</h3>
+            <p>A truncated Taylor series is the function minus a remainder you can bound before computing anything. Add terms and watch the trusted interval widen, until a singularity stops it widening for good.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 2 of 5">●●○○○</span> <span>build-from-parts</span> <span>13 checks</span></p>
+        </li>
+        <li class="card">
           <a href="explainers/fourier-series-square-wave/index.html">
             <h3>Building a Corner Out of Curves</h3>
             <p>Stack sine waves one at a time into a square wave and watch the overshoot beside the jump narrow without ever getting shorter.</p>
@@ -538,6 +566,13 @@ footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:v
       <section aria-labelledby="d-physics">
         <h2 id="d-physics">physics</h2>
         <ul class="grid">
+        <li class="card">
+          <a href="explainers/photoelectric-threshold/index.html">
+            <h3>Brighter Light Does Not Help</h3>
+            <p>Guess what the ammeter will do, then run it. Below a threshold frequency no brightness ejects a single electron, and above it the electron energy ignores brightness entirely.</p>
+          </a>
+          <p class="meta"><span class="diff" aria-label="difficulty 2 of 5">●●○○○</span> <span>guess-then-reveal</span> <span>12 checks</span></p>
+        </li>
         <li class="card">
           <a href="explainers/damped-harmonic-oscillator/index.html">
             <h3>One Number Decides How a Thing Stops Shaking</h3>
