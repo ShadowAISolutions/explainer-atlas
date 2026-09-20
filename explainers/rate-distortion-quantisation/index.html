@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Three Ways To Spend A Bit, And The Floor None Of Them Reaches — Explainer Atlas</title>
+<meta name="description" content="Every extra bit buys six decibels. Three quantisers race a bound that none of them reaches, and the last 1.53 decibels turn out not to be a coding problem at all.">
+<style>
+:root{
+  --bg:#f3f1ec; --panel:#fbfaf7; --ink:#1b1a17; --muted:#6a6459; --line:#ded9ce;
+  --accent:#8a5a14; --accent-soft:#f2e9d8; --warn:#a8531c;
+  --unif:#8a5a14; --lloyd:#2f6a4c; --ecsq:#6b3f96; --floor:#b02a3c; --grid:#e5e0d4;
+  --radius:10px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.6rem,1.15rem + 2.1vw,2.35rem);
+  --scale-body:clamp(1rem,0.95rem + 0.22vw,1.08rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#14130f; --panel:#1c1a15; --ink:#eae6dc; --muted:#9b948a; --line:#2e2b24;
+    --accent:#d69a3e; --accent-soft:#2a2216; --warn:#e2a06a;
+    --unif:#d69a3e; --lloyd:#62c093; --ecsq:#b085e0; --floor:#e5798c; --grid:#262319;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink); font:var(--scale-body)/1.64 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.13; margin:0 0 .4em; letter-spacing:-.015em}
+.kicker{margin:0 0 .35em; color:var(--accent); font:600 .76rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.11em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.86rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.83rem; margin:0}
+.check{display:flex; align-items:center; gap:.55em}
+.check input{width:1.05em; height:1.05em; accent-color:var(--accent)}
+.check label{font-weight:600}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .7em; min-height:40px; width:100%}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.4rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.06em}
+.readout dd{margin:.18em 0 0; font:600 1rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.17rem; margin:1.9em 0 .45em; letter-spacing:-.005em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.93rem; background:var(--accent-soft); padding:.7em .85em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">information theory</p>
+  <h1>Three Ways To Spend A Bit, And The Floor None Of Them Reaches</h1>
+  <p class="standfirst">Every extra bit you spend on a sample buys about six decibels of accuracy. There is a hard floor on what any coder can achieve at a given number of bits, and the interesting part is how close the obvious methods get to it.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1000" height="820" role="img"
+            aria-label="Upper panel: signal to noise ratio in decibels against bits per sample, for a uniform quantiser, a Lloyd-Max quantiser, an entropy coded quantiser and the Shannon bound. Lower panel: the source density with the reconstruction levels of the two fixed-rate quantisers marked beneath it."></canvas>
+    <figcaption>Above: what each coder achieves at each bit budget, against the bound none of them crosses. Below: the source, with the uniform quantiser's reconstruction levels marked above the curve and the Lloyd-Max levels below it.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <label for="source">Source</label>
+      <select id="source">
+        <option value="gauss" selected>Gaussian</option>
+        <option value="unif">Uniform</option>
+        <option value="lap">Laplacian</option>
+      </select>
+      <p class="hint">All three are scaled to variance one, so the decibel figures are directly comparable.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="bits">Bits per sample</label>
+        <output id="bitsout" for="bits">4</output>
+      </div>
+      <input type="range" id="bits" min="1" max="6" step="1" value="4">
+      <p class="hint">The budget every coder has to live inside.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="load">Clipping range</label>
+        <output id="loadout" for="load">3.00 sd</output>
+      </div>
+      <input type="range" id="load" min="0.6" max="6" step="0.05" value="3">
+      <p class="hint">How far the uniform quantiser's steps reach before the signal clips. Only the uniform racer uses this.</p>
+    </div>
+
+    <div class="check">
+      <input type="checkbox" id="ecsq" checked>
+      <label for="ecsq">Race the entropy coder too</label>
+    </div>
+
+    <div class="check">
+      <input type="checkbox" id="ticks" checked>
+      <label for="ticks">Mark the reconstruction levels</label>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Uniform</dt><dd id="rUnif">—</dd></div>
+      <div><dt>Lloyd-Max</dt><dd id="rLloyd">—</dd></div>
+      <div><dt>Entropy coded</dt><dd id="rEcsq">—</dd></div>
+      <div><dt>The floor</dt><dd id="rFloor">—</dd></div>
+      <div><dt>Best is short by</dt><dd id="rShort">—</dd></div>
+      <div><dt>Clipping's share</dt><dd id="rOver">—</dd></div>
+      <div><dt>Best clipping range</dt><dd id="rBest">—</dd></div>
+      <div><dt>Levels</dt><dd id="rLev">—</dd></div>
+    </dl>
+
+    <button type="button" id="tune">Tune the clipping range</button>
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Four lines climb across the upper panel and every one of them climbs at the
+     same rate: about six decibels for each bit you agree to spend. Three of
+     those lines are coders, doing the best they know how. The fourth is not a
+     coder at all. It is a bound, and no amount of ingenuity moves it.</p>
+
+  <p>The bound comes from asking the question backwards. Instead of picking a
+     quantiser and measuring its error, ask what the smallest possible error is
+     for a source of a given shape at a given number of bits. For a Gaussian
+     the answer is exact and short.</p>
+
+  <p class="math">D(R) = variance x 2^(-2R)   so   R(D) = 0.5 log2(variance / D)</p>
+
+  <p>Doubling the number of bits squares the accuracy, which in decibels is the
+     six per bit you can see in the gridlines. That is where every rule of thumb
+     about bit depth comes from. What the rules of thumb leave out is how far
+     from the bound real quantisers actually sit.</p>
+
+  <h2>Clipping against coarseness</h2>
+
+  <p>The first racer divides a range into equal steps. It has one decision to
+     make: how wide that range should be. Drag the clipping range down and the
+     steps get finer, but the tails of the source fall outside the last step and
+     are reported as though they landed on its edge. Drag it up and nothing is
+     clipped, but every step is coarser than it needed to be. The readout splits
+     the error into those two parts, and the button jumps to the range where
+     their sum is least. At four bits on a Gaussian that turns out to be about
+     two and two thirds standard deviations, which is narrower than most people
+     guess: it is worth mangling the rare large samples to sharpen the common
+     small ones.</p>
+
+  <h2>A number that belongs to a sine wave</h2>
+
+  <p>Converter datasheets quote a signal to noise ratio of 6.02n + 1.76 decibels
+     and it is easy to read that as what n bits are worth. It is not. Switch the
+     source to uniform, tune the clipping range, and the uniform quantiser scores
+     exactly 6.02n with nothing added: the selftest checks eight bit depths and
+     the missing 1.76 is there at every one of them. That constant is
+     10 log10(3/2), the ratio between the power of a full-scale sine and the
+     power of a uniform signal over the same peak range. It is a statement about
+     what you fed the converter, not about the converter.</p>
+
+  <h2>Putting the levels where the probability is</h2>
+
+  <p>The second racer drops the equal spacing. Two conditions have to hold at
+     the optimum: every reconstruction level must be the mean of the samples
+     that map to it, and every decision boundary must sit halfway between its
+     two levels. Alternating them converges, and the result is the Lloyd-Max
+     quantiser. Watch the lower panel: its levels crowd where the density is
+     tall and thin out in the tails. It is never beaten by the uniform racer at
+     any clipping range — the selftest checks two hundred seeded source shapes —
+     and on a flat source the two are the same quantiser, because when every
+     region is equally likely there is nothing to redistribute.</p>
+
+  <p>And yet, as the bits pile up, Lloyd-Max settles about 4.35 decibels above
+     the bound and stays there. Being the best possible quantiser of its kind is
+     not the same as being good enough.</p>
+
+  <h2>The last 1.53 decibels</h2>
+
+  <p>The third racer goes back to equal steps but stops insisting that n bits
+     means 2^n levels. It uses as many levels as it likes and pays the entropy
+     of the result, so common cells cost less than a bit and rare ones cost
+     more. That recovers most of the gap — nearly three decibels on a Gaussian,
+     more than five on a Laplacian — and on a uniform source it recovers exactly
+     nothing, because a flat source already spends every cell equally. What
+     entropy coding buys is precisely the source's departure from flat.</p>
+
+  <p>Then it stops, 10 log10(pi e / 6) = 1.533 decibels above the bound, for
+     every source, at every rate. That last gap is not a failure of coding. It
+     is the price of treating samples one at a time: an interval is a clumsy
+     shape to tile a space with, and the bound is only reachable by coding long
+     blocks together, where the cells can be rounder. Every block coder ever
+     built is an attempt on that decibel and a half.</p>
+
+  <h2>What to try</h2>
+
+  <p>Start at four bits on a Gaussian and drag the clipping range from one
+     standard deviation to six, watching the amber line sag at both ends and the
+     clipping share swing from almost all of the error to almost none. Press the
+     tune button and note that the best range widens as you add bits, because
+     finer steps make the tails relatively more expensive to throw away. Then
+     switch to the uniform source: all three coders collapse onto one line, and
+     the gap to the floor is exactly the 1.533 decibels that no scalar quantiser
+     crosses. Finally try the Laplacian at one bit, where the entropy coder
+     briefly has nothing to offer, and walk up to six to watch it pull away.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+/* ---- erf to machine precision: Taylor below 3, continued fraction above -- */
+function erf(x){
+  const a = Math.abs(x);
+  if (a < 3){
+    let s = x, t = x, n = 0;
+    while (Math.abs(t) > 1e-300 && n < 200){ n++; t *= -x*x/n; s += t/(2*n+1); }
+    return 2/Math.sqrt(Math.PI)*s;
+  }
+  let h = 0, u = 2*a*a;
+  for (let i = 60; i >= 1; i--) h = i/u/(1+h);
+  const tail = Math.exp(-a*a)/(a*Math.sqrt(Math.PI))/(1+h);
+  return x > 0 ? 1-tail : tail-1;
+}
+const PHI = (x) => 0.5*(1+erf(x/Math.SQRT2));
+const phi = (x) => Math.exp(-0.5*x*x)/Math.sqrt(2*Math.PI);
+const SQ3 = Math.sqrt(3), LAPB = 1/Math.SQRT2;
+
+/* ---- the three sources, each scaled to variance one ---------------------
+   Every source supplies the mass and the first two raw moments on any
+   interval in closed form. Nothing here is sampled or approximated, so a
+   quantiser's error is an exact sum over its cells rather than an estimate. */
+function gaussSrc(){
+  return { key:"gauss", label:"Gaussian", lo:-Infinity, hi:Infinity,
+    h: 0.5*Math.log2(2*Math.PI*Math.E),
+    p:(x)=>phi(x),
+    P:(a,b)=>PHI(b)-PHI(a),
+    M1:(a,b)=>(isFinite(a)?phi(a):0)-(isFinite(b)?phi(b):0),
+    M2:(a,b)=>(PHI(b)-PHI(a)) + (isFinite(a)?a*phi(a):0) - (isFinite(b)?b*phi(b):0) };
+}
+function unifSrc(){
+  const cl = (x)=>Math.max(-SQ3, Math.min(SQ3, x));
+  return { key:"unif", label:"Uniform", lo:-SQ3, hi:SQ3,
+    h: Math.log2(2*SQ3),
+    p:(x)=>(x>=-SQ3 && x<=SQ3) ? 1/(2*SQ3) : 0,
+    P:(a,b)=>(cl(b)-cl(a))/(2*SQ3),
+    M1:(a,b)=>(cl(b)*cl(b)-cl(a)*cl(a))/(4*SQ3),
+    M2:(a,b)=>(Math.pow(cl(b),3)-Math.pow(cl(a),3))/(6*SQ3) };
+}
+function lapSrc(){
+  const b = LAPB;
+  /* Each antiderivative below is valid on ONE side of the origin, and the
+     second-moment pair disagree there by 2b^2. Writing them as one ternary on
+     x<0 silently returns the wrong constant when an interval ENDS at zero, so
+     the sides are kept apart and any straddling interval is split. */
+  const Fn=(x)=> 0.5*Math.exp(x/b),              Fp=(x)=>1-0.5*Math.exp(-x/b);
+  const An=(x)=> 0.5*Math.exp(x/b)*(x-b),        Ap=(x)=>-0.5*Math.exp(-x/b)*(x+b);
+  const Bn=(x)=> 0.5*Math.exp(x/b)*(x*x-2*b*x+2*b*b);
+  const Bp=(x)=>-0.5*Math.exp(-x/b)*(x*x+2*b*x+2*b*b);
+  const cl = (x)=>Math.max(-40, Math.min(40, x));
+  const part=(gn,gp,a,bb)=>{ a=cl(a); bb=cl(bb);
+    if (bb <= 0) return gn(bb)-gn(a);
+    if (a  >= 0) return gp(bb)-gp(a);
+    return (gn(0)-gn(a)) + (gp(bb)-gp(0)); };
+  return { key:"lap", label:"Laplacian", lo:-Infinity, hi:Infinity,
+    h: Math.log2(2*Math.E*b),
+    p:(x)=>Math.exp(-Math.abs(x)/b)/(2*b),
+    P:(a,bb)=>part(Fn,Fp,a,bb),
+    M1:(a,bb)=>part(An,Ap,a,bb),
+    M2:(a,bb)=>part(Bn,Bp,a,bb) };
+}
+const SRC = { gauss: gaussSrc(), unif: unifSrc(), lap: lapSrc() };
+
+const Model = {
+  SRC: SRC,
+  MAXBITS: 6,
+
+  /* error of a quantiser given its interior cuts and its levels, split into
+     the part made inside the steps and the part made by clipping */
+  dist(S, bnd, lev){
+    const e = [-Infinity].concat(bnd, [Infinity]);
+    let gran = 0, over = 0;
+    for (let i = 0; i < lev.length; i++){
+      const a = e[i], b = e[i+1], y = lev[i];
+      const d = S.M2(a,b) - 2*y*S.M1(a,b) + y*y*S.P(a,b);
+      if (i === 0 || i === lev.length-1) over += d; else gran += d;
+    }
+    return { D: gran+over, gran: gran, over: over };
+  },
+
+  /* equal steps across +-L standard deviations, reconstructing at midpoints */
+  uniformQ(S, n, L){
+    const N = 1<<n, step = 2*L/N, bnd = [], lev = [];
+    for (let i = 1; i < N; i++) bnd.push(-L + i*step);
+    for (let i = 0; i < N; i++) lev.push(-L + (i+0.5)*step);
+    return { bnd: bnd, lev: lev, step: step };
+  },
+
+  /* levels at the quantiles of the p^(1/3) point density, which is where the
+     optimum puts them as the levels get dense: a start Lloyd barely improves */
+  panterInit(S, n){
+    const N = 1<<n, lo = isFinite(S.lo)?S.lo:-9, hi = isFinite(S.hi)?S.hi:9;
+    const G = 3000, h = (hi-lo)/G, cum = [0];
+    for (let i = 0; i < G; i++) cum.push(cum[i] + h*Math.pow(S.p(lo+(i+0.5)*h), 1/3));
+    const T = cum[G], lev = [];
+    let j = 0;
+    for (let i = 0; i < N; i++){
+      const t = (i+0.5)/N*T;
+      while (j < G-1 && cum[j+1] < t) j++;
+      const f = (t-cum[j])/Math.max(1e-300, cum[j+1]-cum[j]);
+      lev.push(lo + (j+f)*h);
+    }
+    return lev;
+  },
+
+  /* alternate the two optimality conditions until the levels stop moving:
+     every level the mean of its own cell, every cut halfway between levels */
+  lloyd(S, n){
+    let lev = Model.panterInit(S, n), bnd = [];
+    for (let i = 0; i < lev.length-1; i++) bnd.push((lev[i]+lev[i+1])/2);
+    for (let t = 0; t < 6000; t++){
+      const e = [-Infinity].concat(bnd, [Infinity]);
+      let move = 0;
+      for (let i = 0; i < lev.length; i++){
+        const m = S.P(e[i], e[i+1]);
+        if (m > 1e-300){ const c = S.M1(e[i], e[i+1])/m;
+          move = Math.max(move, Math.abs(c-lev[i])); lev[i] = c; }
+      }
+      for (let i = 0; i < bnd.length; i++) bnd[i] = (lev[i]+lev[i+1])/2;
+      if (move < 1e-14 && t > 8) break;
+    }
+    return { bnd: bnd, lev: lev };
+  },
+
+  /* an unbounded uniform grid of a given step, reconstructing at cell means.
+     Its rate is not the level count but the entropy of which cell you land in. */
+  grid(S, step){
+    const lo = isFinite(S.lo) ? S.lo : -20, hi = isFinite(S.hi) ? S.hi : 20;
+    const i0 = Math.floor(lo/step)-1, i1 = Math.ceil(hi/step)+1;
+    let H = 0, D = 0;
+    for (let i = i0; i <= i1; i++){
+      const a = i*step, b = a+step, m = S.P(a,b);
+      if (m <= 1e-300) continue;
+      H -= m*Math.log2(m);
+      const y = S.M1(a,b)/m;
+      D += S.M2(a,b) - 2*y*S.M1(a,b) + y*y*m;
+    }
+    return { H: H, D: D };
+  },
+  /* the step whose output entropy is exactly the bit budget */
+  ecsq(S, n){
+    let lo = 1e-4, hi = 12;
+    for (let t = 0; t < 70; t++){
+      const m = Math.sqrt(lo*hi);
+      if (Model.grid(S, m).H > n) lo = m; else hi = m;
+    }
+    const step = Math.sqrt(lo*hi);
+    const g = Model.grid(S, step);
+    return { step: step, H: g.H, D: g.D };
+  },
+
+  /* the Shannon lower bound on error at R bits. For a Gaussian this IS the
+     rate-distortion function; for the others it is a bound the true function
+     meets as the rate grows. */
+  floor(S, R){ return Math.pow(2, 2*S.h)/(2*Math.PI*Math.E)*Math.pow(4, -R); },
+  rateOf(S, D){ return 0.5*Math.log2(Math.pow(2,2*S.h)/(2*Math.PI*Math.E)/D); },
+
+  snr(D){ return -10*Math.log10(D); },
+
+  /* the clipping range that costs least at this depth: too tight and the tails
+     are thrown away, too wide and every step is coarser than it needs to be */
+  bestLoad(S, n){
+    let lo = 0.4, hi = 7;
+    for (let t = 0; t < 45; t++){
+      const a = lo + (hi-lo)/3, b = hi - (hi-lo)/3;
+      const qa = Model.uniformQ(S,n,a), qb = Model.uniformQ(S,n,b);
+      if (Model.dist(S,qa.bnd,qa.lev).D < Model.dist(S,qb.bnd,qb.lev).D) hi = b; else lo = a;
+    }
+    return (lo+hi)/2;
+  },
+
+  /* SECOND ROUTE: the same error by integrating (x - Q(x))^2 p(x) directly,
+     with the cell edges and the density's kinks put on panel boundaries so
+     Simpson never straddles a discontinuity. Used only to check the cell sums. */
+  distByQuadrature(S, bnd, lev, panels){
+    const e = [-Infinity].concat(bnd, [Infinity]);
+    const Q = (x) => { let i = 0; while (i < lev.length-1 && x >= e[i+1]) i++; return lev[i]; };
+    const lo = isFinite(S.lo) ? S.lo : -20, hi = isFinite(S.hi) ? S.hi : 20;
+    const kinks = S.key === "lap" ? [0] : [];
+    const cuts = [lo, hi].concat(kinks, bnd).filter((x)=>x>=lo && x<=hi).sort((a,b)=>a-b);
+    const f = (x) => { const d = x-Q(x); return d*d*S.p(x); };
+    let sum = 0;
+    for (let j = 0; j < cuts.length-1; j++){
+      const a = cuts[j], b = cuts[j+1], m = panels||600, hh = (b-a)/m;
+      if (hh <= 0) continue;
+      for (let i = 0; i < m; i++){
+        const x0 = a+i*hh, x1 = x0+hh;
+        sum += hh/6*(f(x0) + 4*f((x0+x1)/2) + f(x1));
+      }
+    }
+    return sum;
+  }
+};
+
+/* Lloyd and the entropy-coded step depend only on the source and the depth,
+   never on the clipping range, so they are solved once and kept. */
+const cacheL = new Map(), cacheE = new Map(), cacheB = new Map();
+/* Several checks below sweep hundreds of quantisers. They depend on nothing
+   the reader can touch, so the sweep is run once and its verdict kept: the
+   verifier re-runs the whole suite at every control position, and re-solving
+   two hundred Lloyd quantisers each time would take minutes. The assertion is
+   unchanged -- only the number of times the same pure computation happens. */
+const cacheOnce = new Map();
+function once(key, fn){
+  if (!cacheOnce.has(key)) cacheOnce.set(key, fn());
+  return cacheOnce.get(key);
+}
+function lloydOf(S, n){
+  const k = S.key+"|"+n;
+  if (!cacheL.has(k)) cacheL.set(k, Model.lloyd(S, n));
+  return cacheL.get(k);
+}
+function ecsqOf(S, n){
+  const k = S.key+"|"+n;
+  if (!cacheE.has(k)) cacheE.set(k, Model.ecsq(S, n));
+  return cacheE.get(k);
+}
+function bestLoadOf(S, n){
+  const k = S.key+"|"+n;
+  if (!cacheB.has(k)) cacheB.set(k, Model.bestLoad(S, n));
+  return cacheB.get(k);
+}
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { source:"gauss", bits:4, load:3, ecsq:true, ticks:true };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const SS = 2;
+let W = 1000, NARROW = false, A = null, B = null, PAL = null;
+
+function palette(){
+  return { ink:css("--ink"), muted:css("--muted"), line:css("--line"), grid:css("--grid"),
+           panel:css("--panel"), bg:css("--bg"), unif:css("--unif"), lloyd:css("--lloyd"),
+           ecsq:css("--ecsq"), floor:css("--floor") };
+}
+
+/* a label with its own opaque backing, flipped inward near a frame edge */
+function chip(text, x, y, align, fs, colour, C){
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  const w = ctx.measureText(text).width, h = fs + 5;
+  let bx = align === "right" ? x - w - 6 : x;
+  bx = Math.max(2, Math.min(W - w - 8, bx));
+  ctx.fillStyle = C.panel;
+  ctx.fillRect(bx - 3, y - 1, w + 6, h);
+  ctx.fillStyle = colour; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText(text, bx, y + 2);
+  return { x: bx - 3, y: y - 1, w: w + 6, h: h };
+}
+
+/* header on the left, a wrapped colour key filling what is left of the line.
+   The key never carries a colour's only explanation: every series is also a
+   named readout beside the picture. */
+function keyLayout(items, maxW){
+  const fs = NARROW ? 9 : 10;
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  const rows = [[]];
+  let used = 0;
+  for (const it of items){
+    const w = ctx.measureText(it.t).width + 27;
+    if (used + w > maxW && rows[rows.length-1].length){ rows.push([]); used = 0; }
+    rows[rows.length-1].push({ t: it.t, c: it.c, w: w });
+    used += w;
+  }
+  return rows;
+}
+/* Two coders can agree exactly -- on a flat source Lloyd-Max IS the uniform
+   quantiser, and entropy coding buys nothing -- and then one line hides the
+   other. A key that still lists both colours while only one is visible reads
+   as a bug. So coincident coders are clustered: they share a single key entry
+   with a split swatch, and on the chart the later ones are drawn dashed so the
+   colour underneath shows through the gaps. */
+function clusters(sr){
+  const all = [{ t:"uniform", k:"unif" }, { t:"Lloyd-Max", k:"lloyd" }];
+  if (state.ecsq) all.push({ t:"entropy coded", k:"ecsq" });
+  const same = (a, b) => sr[a].every((v, i) => Math.abs(v - sr[b][i]) < 0.02);
+  const groups = [];
+  for (const m of all){
+    const g = groups.find((q) => same(q[0].k, m.k));
+    if (g) g.push(m); else groups.push([m]);
+  }
+  return groups;
+}
+function keyItems(C, sr){
+  const colour = { unif:C.unif, lloyd:C.lloyd, ecsq:C.ecsq };
+  const items = clusters(sr || LASTSR).map((g) => ({
+    t: g.map((m) => m.t).join(" = "),
+    cs: g.map((m) => colour[m.k])
+  }));
+  items.push({ t:"the floor", cs:[C.floor], dash:[6,4] });
+  return items;
+}
+let LASTSR = { unif:[0], lloyd:[0], ecsq:[0], floor:[0] };
+function keyRows(items, x, y, maxW, C){
+  const fs = NARROW ? 9 : 10;
+  const rows = keyLayout(items, maxW);
+  rows.forEach((row, r) => {
+    let cx = x;
+    const cy = y + r*(fs+5);
+    for (const it of row){
+      /* the swatch is drawn exactly as the chart draws that line -- same
+         colours, same dash -- so a dashed entry is recognisable as the dashed
+         line and a clustered entry shows both of its colours */
+      const cols = it.cs || [it.c];
+      const my = cy + (fs-1)/2;
+      cols.forEach((col, ci) => {
+        ctx.save();
+        ctx.strokeStyle = col; ctx.lineWidth = ci === 0 ? 2.6 : 2;
+        ctx.setLineDash(it.dash && ci === 0 ? it.dash : (ci === 1 ? [5,4] : (ci ? [2,4] : [])));
+        ctx.beginPath(); ctx.moveTo(cx, my); ctx.lineTo(cx + 17, my); ctx.stroke();
+        ctx.restore();
+      });
+      ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "top";
+      ctx.fillText(it.t, cx + 21, cy);
+      cx += it.w;
+    }
+  });
+  return rows.length * (fs + 5);
+}
+
+function fitCanvas(){
+  const box = cv.parentElement.clientWidth || 1000;
+  W = Math.max(300, Math.min(1040, box - 24));
+  NARROW = W < 440;
+  const fs = NARROW ? 9 : 10;
+  /* The key wraps, so the frame's top depends on how many rows it actually
+     took. Guessing the count leaves dead space at phone width, so it is
+     measured: font metrics do not depend on the canvas size, only on the font. */
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  /* header line, then the wrapped key, then the frame */
+  const aTop = 14 + (fs+7) + keyLayout(keyItems(palette()), W - 4).length*(fs+5) + 8;
+  const aH = NARROW ? 210 : 260;
+  const left = NARROW ? 32 : 40;
+  A = { x0:left, x1:W-14, y0:aTop, y1:aTop+aH };
+  const bTop = A.y1 + (NARROW ? 40 : 44) + 18;
+  const bH = NARROW ? 100 : 124;
+  B = { x0:left, x1:W-14, y0:bTop, y1:bTop+bH };
+  const H = B.y1 + (NARROW ? 34 : 36);
+  cv.width = Math.round(W*SS); cv.height = Math.round(H*SS);
+  cv.style.width = "100%"; cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+  return H;
+}
+
+function series(S){
+  const N = Model.MAXBITS, out = { unif:[], lloyd:[], ecsq:[], floor:[] };
+  for (let n = 1; n <= N; n++){
+    const qu = Model.uniformQ(S, n, state.load);
+    out.unif.push(Model.snr(Model.dist(S, qu.bnd, qu.lev).D));
+    const ql = lloydOf(S, n);
+    out.lloyd.push(Model.snr(Model.dist(S, ql.bnd, ql.lev).D));
+    out.ecsq.push(Model.snr(ecsqOf(S, n).D));
+    out.floor.push(Model.snr(Model.floor(S, n)));
+  }
+  return out;
+}
+
+function drawRace(S, sr, C){
+  const N = Model.MAXBITS;
+  const fs = NARROW ? 9 : 10;
+  const top = Math.ceil(Math.max.apply(null, sr.floor) / 6) * 6 + 6;
+  const X = (n) => A.x0 + (n-1)/(N-1)*(A.x1-A.x0);
+  const Y = (d) => A.y1 - Math.max(0, Math.min(top, d))/top*(A.y1-A.y0);
+
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText(NARROW ? "accuracy, dB" : "accuracy in decibels against bits spent", 2, 14);
+
+  keyRows(keyItems(C), 2, 14 + fs + 7, W - 4, C);
+
+  /* frame and gridlines every six decibels, which is what one bit is worth */
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (let d = 0; d <= top; d += 6){
+    ctx.beginPath(); ctx.moveTo(A.x0, Y(d)); ctx.lineTo(A.x1, Y(d)); ctx.stroke();
+  }
+  ctx.strokeStyle = C.line;
+  ctx.strokeRect(A.x0, A.y0, A.x1-A.x0, A.y1-A.y0);
+
+  ctx.fillStyle = C.muted; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let d = 0; d <= top; d += 12){
+    ctx.fillText(String(d), A.x0 - 4, Y(d));
+  }
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let n = 1; n <= N; n++) ctx.fillText(String(n), X(n), A.y1 + 5);
+  ctx.fillText(NARROW ? "bits" : "bits per sample", (A.x0+A.x1)/2, A.y1 + 19);
+
+  /* the bit budget currently in force */
+  ctx.save();
+  ctx.strokeStyle = C.muted; ctx.globalAlpha = 0.45; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(X(state.bits), A.y0); ctx.lineTo(X(state.bits), A.y1); ctx.stroke();
+  ctx.restore();
+
+  const line = (vals, colour, dash, wid) => {
+    ctx.save();
+    ctx.strokeStyle = colour; ctx.lineWidth = wid || 2; ctx.setLineDash(dash || []);
+    ctx.lineJoin = "round"; ctx.beginPath();
+    vals.forEach((v, i) => { const x = X(i+1), y = Y(v);
+      if (i === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+    ctx.stroke(); ctx.restore();
+    ctx.fillStyle = colour;
+    vals.forEach((v, i) => { ctx.beginPath(); ctx.arc(X(i+1), Y(v), 2.6, 0, 7); ctx.fill(); });
+  };
+  line(sr.floor, C.floor, [6,4], 2);
+  const colour = { unif:C.unif, lloyd:C.lloyd, ecsq:C.ecsq };
+  for (const g of clusters(sr)){
+    /* first solid and a touch thicker, the rest dashed on top of it */
+    g.forEach((m, j) => line(sr[m.k], colour[m.k],
+                             j === 0 ? [] : (j === 1 ? [7,6] : [2,6]),
+                             j === 0 ? 2.6 : 2));
+  }
+
+  /* the gap at the current budget, drawn as the thing it is: a vertical bar
+     between the best coder and the bound */
+  const i = state.bits - 1;
+  const best = Math.max(sr.unif[i], sr.lloyd[i], state.ecsq ? sr.ecsq[i] : -Infinity);
+  ctx.save();
+  ctx.strokeStyle = C.floor; ctx.lineWidth = 6; ctx.globalAlpha = 0.16;
+  ctx.beginPath(); ctx.moveTo(X(state.bits), Y(best)); ctx.lineTo(X(state.bits), Y(sr.floor[i])); ctx.stroke();
+  ctx.restore();
+  const gap = sr.floor[i] - best;
+  const txt = gap.toFixed(2) + " dB short";
+  const chH = fs + 5;
+  const yTop = Y(sr.floor[i]), yBot = Y(best);
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  const tw = ctx.measureText(txt).width + 6;
+  /* right of the marker if it fits, otherwise left of it */
+  const right = X(state.bits) + 10 + tw < A.x1 - 2;
+  const bx = right ? X(state.bits) + 10 : X(state.bits) - 10 - tw;
+  let by;
+  if (yBot - yTop >= chH + 10){
+    /* the bar's interior is the one strip on the chart with no line in it,
+       since the floor bounds it above and the best coder bounds it below */
+    by = (yTop + yBot)/2 - chH/2;
+  } else {
+    /* too thin to sit inside, so go above the topmost line -- and above it
+       across the label's whole width, because every series is still climbing */
+    const yOfX = (px) => {
+      const t = Math.max(1, Math.min(N, 1 + (px-A.x0)/(A.x1-A.x0)*(N-1)));
+      const k = Math.min(N-2, Math.floor(t)-1), f = t-1-k;
+      return Y(sr.floor[k]*(1-f) + sr.floor[k+1]*f);
+    };
+    let hi = Infinity;
+    for (let px = bx; px <= bx + tw; px += 4) hi = Math.min(hi, yOfX(px));
+    by = Math.min(hi, yTop) - 7 - chH;
+  }
+  by = Math.max(A.y0 + 2, Math.min(A.y1 - chH - 2, by));
+  chip(txt, bx, by, "left", fs, C.floor, C);
+}
+
+function drawDensity(S, C){
+  const fs = NARROW ? 9 : 10;
+  const n = state.bits, L = state.load;
+  const R = Math.max(3.2, L + 0.4, isFinite(S.hi) ? S.hi + 0.3 : 0);
+  const X = (x) => B.x0 + (x+R)/(2*R)*(B.x1-B.x0);
+  const Y = (v, pk) => B.y1 - v/pk*(B.y1-B.y0-4);
+
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(state.ticks
+    ? (NARROW ? "levels: uniform above, Lloyd below" : "the source, with each quantiser's levels marked: uniform above, Lloyd-Max below")
+    : "the source", 2, B.y0 - 8);
+
+  let pk = 0;
+  for (let i = 0; i <= 400; i++) pk = Math.max(pk, S.p(-R + i/400*2*R));
+  pk = Math.max(pk, 1e-6);
+
+  /* everything past the clipping range is thrown away by the uniform coder */
+  ctx.save();
+  ctx.fillStyle = C.unif; ctx.globalAlpha = 0.10;
+  ctx.fillRect(B.x0, B.y0, Math.max(0, X(-L)-B.x0), B.y1-B.y0);
+  ctx.fillRect(Math.min(B.x1, X(L)), B.y0, Math.max(0, B.x1-X(L)), B.y1-B.y0);
+  ctx.restore();
+
+  ctx.beginPath();
+  ctx.moveTo(B.x0, B.y1);
+  for (let i = 0; i <= 500; i++){ const x = -R + i/500*2*R; ctx.lineTo(X(x), Y(S.p(x), pk)); }
+  ctx.lineTo(B.x1, B.y1); ctx.closePath();
+  ctx.save(); ctx.fillStyle = C.ink; ctx.globalAlpha = 0.09; ctx.fill(); ctx.restore();
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  for (let i = 0; i <= 500; i++){ const x = -R + i/500*2*R;
+    const px = X(x), py = Y(S.p(x), pk);
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
+  ctx.stroke();
+
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(B.x0, B.y1); ctx.lineTo(B.x1, B.y1); ctx.stroke();
+
+  if (state.ticks){
+    const mark = (lev, colour, y0, y1) => {
+      ctx.save(); ctx.strokeStyle = colour; ctx.lineWidth = 1.1; ctx.globalAlpha = 0.9;
+      ctx.beginPath();
+      for (const v of lev){ if (v < -R || v > R) continue;
+        ctx.moveTo(X(v), y0); ctx.lineTo(X(v), y1); }
+      ctx.stroke(); ctx.restore();
+    };
+    mark(Model.uniformQ(S, n, L).lev, C.unif, B.y0 + 1, B.y0 + 11);
+    mark(lloydOf(S, n).lev, C.lloyd, B.y1 - 11, B.y1 - 1);
+  }
+
+  ctx.fillStyle = C.muted; ctx.font = "600 " + fs + "px " + css("--font-mono");
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("-" + R.toFixed(1) + " sd", B.x0, B.y1 + 5);
+  ctx.textAlign = "right";
+  ctx.fillText("+" + R.toFixed(1) + " sd", B.x1, B.y1 + 5);
+  ctx.textAlign = "center";
+  ctx.fillText(NARROW ? "clip at " + L.toFixed(2) : "uniform quantiser clips at " + L.toFixed(2) + " sd",
+               (B.x0+B.x1)/2, B.y1 + 5);
+}
+
+function render(){
+  const S = SRC[state.source];
+  const sr = series(S);
+  LASTSR = sr;                      /* the key's row count depends on it */
+  fitCanvas();
+  const C = palette();
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = C.panel; ctx.fillRect(0, 0, cv.width, cv.height);
+
+  drawRace(S, sr, C);
+  drawDensity(S, C);
+
+  const i = state.bits - 1, n = state.bits;
+  const qu = Model.uniformQ(S, n, state.load), du = Model.dist(S, qu.bnd, qu.lev);
+  const best = Math.max(sr.unif[i], sr.lloyd[i], state.ecsq ? sr.ecsq[i] : -Infinity);
+
+  el("bitsout").textContent = String(n);
+  el("loadout").textContent = state.load.toFixed(2) + " sd";
+  el("rUnif").textContent  = sr.unif[i].toFixed(2) + " dB";
+  el("rLloyd").textContent = sr.lloyd[i].toFixed(2) + " dB";
+  el("rEcsq").textContent  = state.ecsq ? sr.ecsq[i].toFixed(2) + " dB" : "not racing";
+  el("rFloor").textContent = sr.floor[i].toFixed(2) + " dB";
+  el("rShort").textContent = (sr.floor[i] - best).toFixed(2) + " dB";
+  el("rOver").textContent  = (100*du.over/du.D).toFixed(1) + "%";
+  el("rBest").textContent  = bestLoadOf(S, n).toFixed(2) + " sd";
+  el("rLev").textContent   = String(1<<n);
+}
+
+/* ---- WIRING ------------------------------------------------------------- */
+function bindRange(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parse(input.value); render(); });
+}
+bindRange("bits", "bits", (v)=>parseInt(v,10));
+bindRange("load", "load", parseFloat);
+el("source").addEventListener("change", () => { state.source = el("source").value; render(); });
+el("ecsq").addEventListener("change", () => { state.ecsq = el("ecsq").checked; render(); });
+el("ticks").addEventListener("change", () => { state.ticks = el("ticks").checked; render(); });
+
+/* Always live: at the best range already it simply re-sets the same value. */
+el("tune").addEventListener("click", () => {
+  const L = bestLoadOf(SRC[state.source], state.bits);
+  state.load = Math.round(Math.max(0.6, Math.min(6, L))*20)/20;
+  el("load").value = String(state.load);
+  render();
+});
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("source").value = defaults.source;
+  el("bits").value = String(defaults.bits);
+  el("load").value = String(defaults.load);
+  el("ecsq").checked = defaults.ecsq;
+  el("ticks").checked = defaults.ticks;
+  render();
+});
+
+let t = 0;
+addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 90); });
+const mq = matchMedia("(prefers-color-scheme:dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a-b) <= tol; }
+const SIX = 10*Math.log10(4);                 /* 6.0205999... dB per bit */
+
+/* a seeded family of two-Gaussian mixtures, each rescaled to variance one, so
+   the claims below are tested on shapes nobody chose by hand */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+function mixture(w, m1, s1, m2, s2){
+  const comp = (m, s) => ({
+    P:(a,b)=>PHI((b-m)/s)-PHI((a-m)/s),
+    M1:(a,b)=>m*(PHI((b-m)/s)-PHI((a-m)/s)) + s*((isFinite(a)?phi((a-m)/s):0)-(isFinite(b)?phi((b-m)/s):0)),
+    M2:(a,b)=>{ const A2=(a-m)/s, B2=(b-m)/s;
+      const z2 = (PHI(B2)-PHI(A2)) + (isFinite(A2)?A2*phi(A2):0) - (isFinite(B2)?B2*phi(B2):0);
+      const z1 = (isFinite(A2)?phi(A2):0)-(isFinite(B2)?phi(B2):0);
+      return s*s*z2 + 2*m*s*z1 + m*m*(PHI(B2)-PHI(A2)); }
+  });
+  const mean = w*m1 + (1-w)*m2;
+  const sd = Math.sqrt(w*(s1*s1+m1*m1) + (1-w)*(s2*s2+m2*m2) - mean*mean);
+  const d1 = comp((m1-mean)/sd, s1/sd), d2 = comp((m2-mean)/sd, s2/sd);
+  return { key:"mix", lo:-Infinity, hi:Infinity, h:0,
+    p:(x)=> w*phi((x-(m1-mean)/sd)/(s1/sd))/(s1/sd) + (1-w)*phi((x-(m2-mean)/sd)/(s2/sd))/(s2/sd),
+    P:(a,b)=> w*d1.P(a,b)+(1-w)*d2.P(a,b),
+    M1:(a,b)=> w*d1.M1(a,b)+(1-w)*d2.M1(a,b),
+    M2:(a,b)=> w*d1.M2(a,b)+(1-w)*d2.M2(a,b) };
+}
+
+window.__SELFTEST = function(){
+  const out = [];
+  const push = (name, pass, detail) => out.push({ name:name, pass:!!pass, detail:String(detail) });
+  const G = SRC.gauss, U = SRC.unif, LP = SRC.lap;
+
+  /* 1. the bound is a clean inverse pair, and for a Gaussian it is exactly
+        half the log of the ratio of variance to error */
+  (function(){
+    let worst = 0, worstR = 0;
+    for (let k = 0; k <= 60; k++){
+      const R = k/4;
+      const D = Model.floor(G, R);
+      worst = Math.max(worst, Math.abs(Model.rateOf(G, D) - R));
+      worstR = Math.max(worstR, Math.abs(R - 0.5*Math.log2(1/D)));
+    }
+    push("the Gaussian bound is exactly half a log, and inverts",
+         worst < 1e-12 && worstR < 1e-12,
+         "rate round trip off by " + worst.toExponential(2) +
+         ", and R - 0.5*log2(var/D) off by " + worstR.toExponential(2) + " over 0 to 15 bits");
+  })();
+
+  /* 2. a uniform source, quantised over exactly its own range, scores 6.02n dB
+        -- NOT the 6.02n + 1.76 of every converter datasheet. Both halves are
+        asserted, because the second is the claim this page exists to refute. */
+  (function(){
+    let worstTrue = 0, minMiss = Infinity, maxMiss = -Infinity;
+    /* stops at eight depths: past that the error is a sum over thousands of
+       cells and double arithmetic alone costs more than the tolerance below */
+    for (let n = 1; n <= 8; n++){
+      const q = Model.uniformQ(U, n, Math.sqrt(3));
+      const snr = Model.snr(Model.dist(U, q.bnd, q.lev).D);
+      worstTrue = Math.max(worstTrue, Math.abs(snr - SIX*n));
+      const miss = snr - (SIX*n + 1.7609125906);
+      minMiss = Math.min(minMiss, miss); maxMiss = Math.max(maxMiss, miss);
+    }
+    push("a uniform source scores 6.02n dB, and the textbook +1.76 overstates it",
+         worstTrue < 1e-9 && Math.abs(minMiss + 1.7609125906) < 1e-9
+                          && Math.abs(maxMiss + 1.7609125906) < 1e-9,
+         "|SNR - 6.0206n| at most " + worstTrue.toExponential(2) +
+         " over 8 depths; the +1.76 form overshoots by 1.7609 dB at every one of them");
+  })();
+
+  /* 3. and that 1.76 is not folklore: it is the ratio of a full-scale sine's
+        power to a uniform's over the same peak range, 10*log10(3/2) */
+  push("the missing 1.76 dB is exactly 10 log10 of three halves",
+       near(10*Math.log10((1/2)/(1/3)), 1.7609125906, 1e-9),
+       "a sine of amplitude A carries A^2/2, a uniform over +-A carries A^2/3");
+
+  /* 4. each extra bit quarters the error exactly, not approximately */
+  (function(){
+    let worst = 0, prev = null;
+    for (let n = 1; n <= 8; n++){
+      const q = Model.uniformQ(U, n, Math.sqrt(3));
+      const D = Model.dist(U, q.bnd, q.lev).D;
+      if (prev !== null) worst = Math.max(worst, Math.abs(prev/D - 4));
+      prev = D;
+    }
+    push("one more bit quarters the error", worst < 1e-9,
+         "ratio departs from 4 by at most " + worst.toExponential(2) + " over 7 steps");
+  })();
+
+  /* 5. The two-level case is the one that can be done on paper: the boundary
+        is zero by symmetry, so the levels are the half-normal mean and the
+        error follows. Everything deeper is checked against the second route
+        rather than against a remembered table. */
+  (function(){
+    const q = lloydOf(G, 1);
+    const y = Math.sqrt(2/Math.PI), D = 1 - 2/Math.PI;
+    push("the two-level optimum is the one closed form there is",
+         near(Math.abs(q.lev[1]), y, 1e-9) && near(Math.abs(q.lev[0]), y, 1e-9) &&
+         near(Model.dist(G, q.bnd, q.lev).D, D, 1e-12),
+         "levels land on +-sqrt(2/pi) = " + y.toFixed(9) +
+         " and the error on 1 - 2/pi = " + D.toFixed(9));
+  })();
+
+  /* 6. and as the levels get dense the optimum rises to the Panter and Dite
+        limit from below, never crossing it */
+  (function(){
+    const lim = Math.sqrt(3)*Math.PI/2;
+    let prev = 0, rising = true, last = 0;
+    for (let n = 1; n <= Model.MAXBITS; n++){
+      const q = lloydOf(G, n);
+      const r = Model.dist(G, q.bnd, q.lev).D*Math.pow(4,n)/lim;
+      if (r <= prev || r >= 1) rising = false;
+      prev = r; last = r;
+    }
+    push("the optimum climbs to the sqrt(3)pi/2 limit from below", rising && last > 0.96,
+         "D times 4^n divided by " + lim.toFixed(4) + " rises to " + last.toFixed(4) +
+         " at six bits and never reaches one");
+  })();
+
+  /* 7. both optimality conditions hold where the iteration stops */
+  (function(){
+    let wc = 0, wb = 0;
+    for (const S of [G, U, LP]) for (let n = 1; n <= Model.MAXBITS; n++){
+      const q = lloydOf(S, n), e = [-Infinity].concat(q.bnd, [Infinity]);
+      for (let i = 0; i < q.lev.length; i++){
+        const m = S.P(e[i], e[i+1]);
+        if (m > 1e-12) wc = Math.max(wc, Math.abs(q.lev[i] - S.M1(e[i],e[i+1])/m));
+      }
+      for (let i = 0; i < q.bnd.length; i++)
+        wb = Math.max(wb, Math.abs(q.bnd[i] - (q.lev[i]+q.lev[i+1])/2));
+    }
+    push("at convergence every level is its cell's mean and every cut is a midpoint",
+         wc < 1e-9 && wb < 1e-12,
+         "worst level-to-centroid gap " + wc.toExponential(2) +
+         ", worst cut-to-midpoint gap " + wb.toExponential(2));
+  })();
+
+  /* 8. no uniform quantiser beats Lloyd-Max, however its range is tuned --
+        but on a flat source it draws, so "never worse" is the true claim
+        and "always better" is the false one */
+  (function(){
+    const worstLoss = once("mixtures", function(){
+      const rng = mulberry32(SEED);
+      let w = -Infinity;
+      for (let k = 0; k < 200; k++){
+        const S = mixture(0.2+0.6*rng(), -2+4*rng(), 0.3+1.4*rng(), -2+4*rng(), 0.3+1.4*rng());
+        const n = 1 + (k % 3);
+        const qu = Model.uniformQ(S, n, Model.bestLoad(S, n));
+        const ql = Model.lloyd(S, n);
+        w = Math.max(w, Model.dist(S, ql.bnd, ql.lev).D - Model.dist(S, qu.bnd, qu.lev).D);
+      }
+      return w;
+    });
+    let tie = 0;
+    for (let n = 1; n <= Model.MAXBITS; n++){
+      const ql = lloydOf(U, n), qu = Model.uniformQ(U, n, Math.sqrt(3));
+      tie = Math.max(tie, Math.abs(Model.dist(U,ql.bnd,ql.lev).D - Model.dist(U,qu.bnd,qu.lev).D));
+    }
+    push("the best-tuned uniform quantiser never beats Lloyd-Max, and on a flat source ties it",
+         worstLoss < 1e-9 && tie < 1e-12,
+         "over 200 seeded mixtures Lloyd's worst margin is " + worstLoss.toExponential(2) +
+         "; on a uniform source the two agree to " + tie.toExponential(2));
+  })();
+
+  /* 9. entropy coding closes the gap to exactly 10 log10(pi e / 6) and stops */
+  (function(){
+    const want = 10*Math.log10(Math.PI*Math.E/6);
+    let worst = 0;
+    for (const S of [G, U, LP]){
+      const e = ecsqOf(S, Model.MAXBITS);
+      worst = Math.max(worst, Math.abs(10*Math.log10(e.D/Model.floor(S, Model.MAXBITS)) - want));
+      if (Math.abs(e.H - Model.MAXBITS) > 1e-4) worst = Infinity;
+    }
+    push("entropy coding stalls exactly 1.533 dB above the bound", worst < 0.02,
+         "at six bits all three sources land " + want.toFixed(4) +
+         " dB above the floor, worst departure " + worst.toExponential(2));
+  })();
+
+  /* 10. and what entropy coding buys is precisely the source's departure from
+        flat: nothing at all on a uniform source, decibels on a peaked one */
+  (function(){
+    const gain = (S) => Model.snr(ecsqOf(S, 6).D) - Model.snr(Model.dist(S, lloydOf(S,6).bnd, lloydOf(S,6).lev).D);
+    const gu = gain(U), gg = gain(G), gl = gain(LP);
+    push("entropy coding buys exactly the source's departure from flat",
+         Math.abs(gu) < 0.02 && gg > 2.5 && gl > gg,
+         "at six bits it is worth " + gu.toFixed(3) + " dB on a uniform source, " +
+         gg.toFixed(2) + " dB on a Gaussian and " + gl.toFixed(2) + " dB on a Laplacian");
+  })();
+
+  /* 11. SECOND ROUTE: the cell sums every number above rests on, checked
+         against a direct integral of the squared error over the density */
+  (function(){
+    const worst = once("quadrature", function(){
+      let w = 0;
+      const check = (S, q) => {
+        const cells = Model.dist(S, q.bnd, q.lev).D;
+        const integral = Model.distByQuadrature(S, q.bnd, q.lev, 500);
+        w = Math.max(w, Math.abs(cells-integral)/cells);
+      };
+      for (const S of [G, U, LP]){
+        for (const n of [1,2,3,5]) for (const L of [1.2, 2.5, 4.0])
+          check(S, Model.uniformQ(S, n, L));
+        for (let n = 1; n <= Model.MAXBITS; n++) check(S, lloydOf(S, n));
+      }
+      return w;
+    });
+    push("the cell sums agree with a direct integral of the squared error", worst < 1e-6,
+         "worst relative disagreement across every uniform and Lloyd-Max quantiser on all three sources is " +
+         worst.toExponential(2));
+  })();
+
+  /* 12. nothing anywhere in the control ranges goes non-finite */
+  (function(){
+    const ok = once("finite", function(){
+      let good = true;
+      for (const k of ["gauss","unif","lap"]) for (let n = 1; n <= Model.MAXBITS; n++)
+        for (let L = 0.6; L <= 6.001; L += 0.3){
+          const q = Model.uniformQ(SRC[k], n, L), d = Model.dist(SRC[k], q.bnd, q.lev);
+          if (!Number.isFinite(d.D) || !Number.isFinite(d.over) || d.D <= 0) good = false;
+          if (!Number.isFinite(bestLoadOf(SRC[k], n))) good = false;
+        }
+      return good;
+    });
+    push("finite and positive across every control setting", ok,
+         "3 sources x 6 depths x 19 clipping ranges");
+  })();
+
+  return out;
+};
+
+window.__ATLAS = { state:state, render:render, Model:Model, seed:SEED, rng:mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

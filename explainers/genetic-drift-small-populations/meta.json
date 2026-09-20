@@ -1,0 +1,17 @@
+{
+  "slug": "genetic-drift-small-populations",
+  "title": "Twenty Individuals Can Outvote Natural Selection",
+  "domain": "biology",
+  "difficulty": 3,
+  "summary": "Run a small population beside a large one under identical selection. Below a threshold set by 4Ns, sampling noise decides which allele survives, and the exact Markov chain says precisely where that threshold sits.",
+  "prerequisites": ["hardy-weinberg"],
+  "tags": ["genetic-drift", "wright-fisher", "fixation", "selection", "effective-population-size", "kimura"],
+  "interaction_pattern": "compare-side-by-side",
+  "sources": [
+    { "title": "Kimura, On the probability of fixation of mutant genes in a population, Genetics 47 (1962) 713-719", "url": "https://doi.org/10.1093/genetics/47.6.713" },
+    { "title": "Ewens, Mathematical Population Genetics I, 2nd edition, chapters 2 and 5", "url": "https://doi.org/10.1007/978-0-387-21822-9" },
+    { "title": "Gillespie, Population Genetics: A Concise Guide, 2nd edition, chapter 2", "url": "https://www.press.jhu.edu/books/title/1734/population-genetics" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 12
+}

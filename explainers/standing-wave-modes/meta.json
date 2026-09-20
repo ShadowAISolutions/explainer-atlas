@@ -1,0 +1,17 @@
+{
+  "slug": "standing-wave-modes",
+  "title": "Two Fixed Ends Are Enough To Quantise A String",
+  "domain": "physics",
+  "difficulty": 2,
+  "summary": "Drive a stretched wire at any frequency and it ignores you, until it does not. Nothing in the equation of motion picks out the frequencies it accepts: the clamps do, and stiffness then spreads them apart.",
+  "prerequisites": [],
+  "tags": ["standing-waves", "boundary-conditions", "resonance", "inharmonicity", "normal-modes", "strings"],
+  "interaction_pattern": "tune-to-match",
+  "sources": [
+    { "title": "Fletcher and Rossing, The Physics of Musical Instruments, 2nd edition, chapters 2 and 12", "url": "https://doi.org/10.1007/978-0-387-21603-4" },
+    { "title": "Morse and Ingard, Theoretical Acoustics, chapter 4", "url": "https://press.princeton.edu/books/paperback/9780691024011/theoretical-acoustics" },
+    { "title": "Young, Inharmonicity of plain wire piano strings, Journal of the Acoustical Society of America 24 (1952) 267-273", "url": "https://doi.org/10.1121/1.1906888" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 11
+}

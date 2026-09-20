@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two Fixed Ends Are Enough To Quantise A String — Explainer Atlas</title>
+<meta name="description" content="Drive a string at any frequency you like and it ignores you, until you hit one of the few it accepts. Nothing in the wave equation picks those out. The clamps do.">
+<style>
+:root{
+  --bg:#eceff1; --panel:#f8fafb; --ink:#14191d; --muted:#5b6871; --line:#d6dde1;
+  --accent:#0d6b78; --accent-soft:#dfeef0; --warn:#a8531c;
+  --string:#1d4e6b; --drive:#bb1655; --mode:#66741c; --env:#7fb3c4; --grid:#e1e7ea;
+  --radius:12px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.5rem,1.1rem + 2vw,2.2rem);
+  --scale-body:clamp(0.99rem,0.95rem + 0.2vw,1.07rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f1417; --panel:#161c20; --ink:#e4ebef; --muted:#93a1aa; --line:#252f35;
+    --accent:#4fbdcc; --accent-soft:#0f2a2e; --warn:#e2a06a;
+    --string:#7cb8d8; --drive:#f2789f; --mode:#b9c96a; --env:#2c5a6c; --grid:#1c2428;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink); font:var(--scale-body)/1.63 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.14; margin:0 0 .4em; letter-spacing:-.012em}
+.kicker{margin:0 0 .35em; color:var(--accent); font:600 .76rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.12em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.86rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .9rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.83rem; margin:0}
+.check{display:flex; align-items:center; gap:.55em}
+.check input{width:1.05em; height:1.05em; accent-color:var(--accent)}
+.check label{font-weight:600}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .7em; min-height:40px; width:100%}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.4rem,1fr)); gap:.55em; margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .65em}
+.readout dt{margin:0; color:var(--muted); font-size:.71rem; text-transform:uppercase; letter-spacing:.06em}
+.readout dd{margin:.16em 0 0; font:600 .98rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.16rem; margin:1.9em 0 .45em; letter-spacing:-.005em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.92rem; background:var(--accent-soft); padding:.7em .85em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">physics</p>
+  <h1>Two Fixed Ends Are Enough To Quantise A String</h1>
+  <p class="standfirst">Drive a stretched wire at whatever frequency you like and almost nothing happens. Nothing in the equation of motion singles out the frequencies it does accept. The clamps do.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1000" height="840" role="img"
+            aria-label="Upper panel: the steady amplitude of a driven string against drive frequency, showing a series of sharp resonance peaks. Lower panel: the shape the string settles into at the current drive frequency, with its nodes marked."></canvas>
+    <figcaption>Above: how hard the string answers, swept across the drive frequency. Below: the shape it settles into right now, with the still points marked. Drag the drive frequency across a peak and watch the string wake up.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <div class="row">
+        <label for="freq">Drive frequency</label>
+        <output id="freqout" for="freq">1.000</output>
+      </div>
+      <input type="range" id="freq" min="0.5" max="12.5" step="0.005" value="1">
+      <p class="hint">Measured in fundamentals, so the modes of an ideal string would sit on the whole numbers.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="tension">Tension</label>
+        <output id="tensionout" for="tension">70 N</output>
+      </div>
+      <input type="range" id="tension" min="20" max="200" step="1" value="70">
+      <p class="hint">Tighter wire, faster waves, higher pitch.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="length">Length</label>
+        <output id="lengthout" for="length">0.650 m</output>
+      </div>
+      <input type="range" id="length" min="0.3" max="1.2" step="0.005" value="0.65">
+      <p class="hint">Halve it and every mode doubles.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="stiff">Bending stiffness</label>
+        <output id="stiffout" for="stiff">0.00012</output>
+      </div>
+      <input type="range" id="stiff" min="0" max="0.001" step="0.00001" value="0.00012">
+      <p class="hint">Real wire resists being bent as well as being stretched. Set it to zero for the textbook string.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="damp">Damping</label>
+        <output id="dampout" for="damp">0.0040</output>
+      </div>
+      <input type="range" id="damp" min="0.002" max="0.02" step="0.0002" value="0.004">
+      <p class="hint">Wider peaks, and a string that answers to more of what you ask.</p>
+    </div>
+
+    <div class="control">
+      <label for="drive">Where you drive it</label>
+      <select id="drive">
+        <option value="0.5">Halfway along</option>
+        <option value="0.142857142857142857">A seventh from the end</option>
+        <option value="0.05" selected>Close to the end</option>
+      </select>
+      <p class="hint">A mode with a still point under your finger cannot be reached at all.</p>
+    </div>
+
+    <div class="check">
+      <input type="checkbox" id="marks" checked>
+      <label for="marks">Mark where the modes really are</label>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Fundamental</dt><dd id="rF0">—</dd></div>
+      <div><dt>Driving at</dt><dd id="rHz">—</dd></div>
+      <div><dt>Nearest mode</dt><dd id="rMode">—</dd></div>
+      <div><dt>It sits at</dt><dd id="rAt">—</dd></div>
+      <div><dt>You are off by</dt><dd id="rCents">—</dd></div>
+      <div><dt>Reach of that mode</dt><dd id="rReach">—</dd></div>
+      <div><dt>On its peak</dt><dd id="rPeak">—</dd></div>
+      <div><dt>Of the loudest</dt><dd id="rPct">—</dd></div>
+      <div><dt>Still points</dt><dd id="rNodes">—</dd></div>
+      <div><dt>12th partial</dt><dd id="rSharp">—</dd></div>
+    </dl>
+
+    <button type="button" id="tune">Tune to the nearest mode</button>
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Sweep the drive frequency slowly from left to right and most of the journey
+     is a flat refusal. The wire sits there. Then, over a span narrower than the
+     slider's own step, it wakes up, throws itself into a shape, and settles
+     back down again as you pass. Twelve times across the sweep, and nowhere
+     else.</p>
+
+  <p>Nothing in the physics of a wave on a wire picks out those frequencies. A
+     wave travels at whatever speed the tension and the mass give it, and a
+     travelling wave is happy at any frequency at all. What is not happy at any
+     frequency is the pair of clamps. Whatever the string does, the two ends
+     must stay still, and a sinusoid that is zero at both ends has to fit a
+     whole number of half wavelengths between them. That is the entire
+     argument, and it is enough.</p>
+
+  <p class="math">L = n x (wavelength / 2)   so   f_n = (n / 2L) x sqrt(tension / density)</p>
+
+  <p>A continuum with infinitely many ways to move has just been reduced to a
+     numbered list. No quantum mechanics, no discreteness anywhere in the
+     equation: a boundary condition did it. This is worth sitting with, because
+     the same move is the whole of why a bound electron has levels and a free
+     one does not.</p>
+
+  <h2>Where you push decides what you can wake</h2>
+
+  <p>Set the drive to the middle of the string and sweep again: half the peaks
+     have vanished. The second mode has a still point exactly at the midpoint,
+     so a force applied there does no work on it, at any amplitude, forever. The
+     same is true of every even mode. Move the drive to a seventh of the way
+     along and instead the seventh peak disappears, together with the
+     fourteenth. Piano hammers are placed at about a seventh of the speaking
+     length for this reason — the seventh partial is the sour one, and the
+     cheapest way to silence it is to hit the string where it cannot hear you.</p>
+
+  <h2>The rungs are not evenly spaced</h2>
+
+  <p>The olive marks show where the modes really are, and out past the sixth
+     they have drifted right of the whole numbers. Real wire does not only
+     resist being stretched, it resists being bent, and bending a short wave
+     costs far more than bending a long one. Add that to the equation and the
+     mode shapes survive untouched — a sine is still zero and straight at a
+     pinned end — while the frequencies stretch:</p>
+
+  <p class="math">f_n = n f_0 x sqrt(1 + B n^2)</p>
+
+  <p>At the default stiffness the twelfth partial is already a fifth of a
+     semitone sharp of twelve times the first; push the slider to 0.0004, about
+     a mid-range piano string, and it is nearly fifty cents, half a semitone.
+     This is why a piano is not tuned to arithmetic. Tune the octaves so the
+     beats vanish and you are matching the upper string's fundamental to the
+     lower one's sharp second partial, which lands the top of the instrument
+     more than a semitone above where the numbers say it should be. Every
+     concert grand on earth is out of tune with a calculator, on purpose.</p>
+
+  <h2>Taking a shape apart</h2>
+
+  <p>Because distinct modes are orthogonal, any starting shape can be written as
+     a weighted list of them, and the weights are unique. Sampled at a finite
+     number of points, that decomposition is exact to the last digit: the
+     selftest takes a plucked triangle at sixty-four points apart and puts it
+     back together to within ten to the minus fifteen. What is not exact is the
+     curve between the samples. A pluck has a corner in it, and a corner needs
+     every mode there is; twelve of them miss it by four per cent, and seven
+     hundred and sixty-eight still miss it by a part in ten thousand. The error
+     falls only like one over the number of modes, which is why a plucked note
+     sounds bright the instant it is struck and dull a moment later, as the
+     high modes that made the corner die away first.</p>
+
+  <h2>What to try</h2>
+
+  <p>Press the tune button, then drag the frequency by a single step and watch
+     the answering column collapse — the peak is a few cents wide at this
+     damping. Wind the damping up and the peaks broaden until they merge, which
+     is a string that will ring at almost anything and hold a pitch at nothing.
+     Set the stiffness to zero and watch every mode snap onto a whole number.
+     Then put the drive at the midpoint and sweep: the even peaks are simply
+     gone, and the string below shows you why, because every shape it will
+     agree to hold now has an antinode under your finger rather than a node.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+const PI = Math.PI;
+const NMODES = 16;          /* summed in the response; twelve are ever shown */
+
+/* ---- MODEL --------------------------------------------------------------
+   A wire under tension that also resists bending. With pinned ends the pure
+   sine sin(n pi x / L) is STILL an exact mode shape, because it satisfies both
+   conditions the pins impose -- no displacement and no curvature at each end.
+   So stiffness leaves every shape alone and only moves the frequencies:
+
+     mu w^2 y = T y'' - K y''''   with y = sin(n pi x/L)
+     mu w_n^2 = T (n pi/L)^2 + K (n pi/L)^4
+
+   which is f_n = n f0 sqrt(1 + B n^2) once K is written as B T L^2 / pi^2. */
+const Model = {
+  NMODES: NMODES,
+
+  shape(n, xOverL){ return Math.sin(n*PI*xOverL); },
+
+  f0(T, mu, L){ return Math.sqrt(T/mu)/(2*L); },
+  fn(n, T, mu, L, B){ return n*Model.f0(T,mu,L)*Math.sqrt(1 + B*n*n); },
+  bendK(T, L, B){ return B*T*L*L/(PI*PI); },
+
+  cents(a, b){ return 1200*Math.log2(a/b); },
+
+  /* how strongly a drive at xd can reach mode n: zero at that mode's own
+     still points, which is why the finger position decides what you can excite */
+  couple(n, xdOverL){ return Math.sin(n*PI*xdOverL); },
+
+  /* steady state of the driven damped wire, as a complex amplitude per mode */
+  modes(T, mu, L, B, zeta, xdOverL, f){
+    const w = 2*PI*f, re = [], im = [];
+    for (let n = 1; n <= NMODES; n++){
+      const wn = 2*PI*Model.fn(n, T, mu, L, B);
+      const d = wn*wn - w*w, q = 2*zeta*wn*w, den = d*d + q*q;
+      const g = Model.couple(n, xdOverL)*(2/(mu*L));
+      re.push(g*d/den); im.push(-g*q/den);
+    }
+    return { re: re, im: im };
+  },
+
+  /* The envelope the string traces out, and one snapshot inside it.
+     The snapshot is NOT taken at the drive's own phase: on resonance the
+     string lags the force by a quarter cycle, so at that instant it is passing
+     flat through the middle and the picture would show a straight line inside
+     a full bulge. The instant chosen is the one where the string is furthest
+     from straight, which is the shape anybody means by "the mode". */
+  envelope(m, samples){
+    const R = [], I = [], env = [];
+    let peak = 0, at = 0;
+    for (let i = 0; i <= samples; i++){
+      const u = i/samples;
+      let r = 0, q = 0;
+      for (let n = 1; n <= NMODES; n++){
+        const s = Math.sin(n*PI*u); r += m.re[n-1]*s; q += m.im[n-1]*s;
+      }
+      R.push(r); I.push(q);
+      const e = Math.hypot(r, q);
+      env.push(e);
+      if (e > peak){ peak = e; at = i; }
+    }
+    const th = -Math.atan2(I[at], R[at]), c = Math.cos(th), sn = Math.sin(th);
+    const inst = R.map((r, i) => r*c - I[i]*sn);
+    return { env: env, inst: inst };
+  },
+
+  /* the single number the response curve plots: the largest swing anywhere */
+  answer(T, mu, L, B, zeta, xdOverL, f, samples){
+    const m = Model.modes(T, mu, L, B, zeta, xdOverL, f);
+    const k = samples || 64;
+    let best = 0;
+    for (let i = 1; i < k; i++){
+      const u = i/k;
+      let R = 0, I = 0;
+      for (let n = 1; n <= NMODES; n++){
+        const s = Math.sin(n*PI*u); R += m.re[n-1]*s; I += m.im[n-1]*s;
+      }
+      best = Math.max(best, Math.hypot(R, I));
+    }
+    return best;
+  },
+
+  /* Still points of a DRIVEN string. A node is never perfectly still in
+     practice: the drive weakly stirs every other mode too, and their tails do
+     not vanish where the resonant one does, so at the eighth mode the pinches
+     sit between one and nine per cent of the peak. Judging them against a
+     single global threshold therefore drops the shallow ones. A pinch is
+     counted instead when it is far below the two humps that flank it, which is
+     a local test and needs no scale. */
+  pinches(env, frac){
+    const f = frac || 0.4, out = [];
+    for (let i = 1; i < env.length-1; i++){
+      if (!(env[i] < env[i-1] && env[i] <= env[i+1])) continue;
+      let l = env[i], r = env[i];
+      for (let j = i-1; j >= 0 && env[j] >= env[j+1]; j--) l = env[j];
+      for (let j = i+1; j < env.length && env[j] >= env[j-1]; j++) r = env[j];
+      if (env[i] < f*Math.min(l, r)) out.push(i);
+    }
+    return out;
+  },
+
+  /* interior still points of mode n, counted rather than assumed */
+  countNodes(n, grid){
+    const g = grid || 20000;
+    let z = 0, prev = Math.sin(n*PI/g);
+    for (let i = 2; i < g; i++){
+      const v = Math.sin(n*PI*i/g);
+      if ((prev < 0) !== (v < 0)) z++;
+      prev = v;
+    }
+    return z;
+  },
+
+  /* SECOND ROUTE to every frequency: the Rayleigh quotient, formed from
+     integrals taken numerically rather than from the algebra above. If the
+     substitution that produced f_n were wrong, these two would disagree. */
+  rayleigh(n, T, mu, L, B, panels){
+    const k = n*PI/L, K = Model.bendK(T, L, B), m = panels || 2000;
+    const simp = (f) => { let s = 0; const h = L/m;
+      for (let i = 0; i < m; i++){ const a = i*h, b = a+h;
+        s += h/6*(f(a) + 4*f((a+b)/2) + f(b)); }
+      return s; };
+    const I0 = simp((x)=>{ const v = Math.sin(k*x); return v*v; });
+    const I1 = simp((x)=>{ const v = k*Math.cos(k*x); return v*v; });
+    const I2 = simp((x)=>{ const v = k*k*Math.sin(k*x); return v*v; });
+    return Math.sqrt((T*I1 + K*I2)/(mu*I0))/(2*PI);
+  },
+
+  /* the exact inner product of two mode shapes over the string */
+  overlap(n, m, panels){
+    const p = panels || 4000, h = 1/p;
+    let s = 0;
+    for (let i = 0; i < p; i++){
+      const a = i*h, b = a+h;
+      const f = (x)=>Math.sin(n*PI*x)*Math.sin(m*PI*x);
+      s += h/6*(f(a) + 4*f((a+b)/2) + f(b));
+    }
+    return s;
+  },
+
+  /* a pluck: the triangle a finger leaves behind, released at rest */
+  pluck(xOverL, p){ return xOverL < p ? xOverL/p : (1-xOverL)/(1-p); },
+  pluckCoef(n, p){ return 2*Math.sin(n*PI*p)/(n*n*PI*PI*p*(1-p)); },
+
+  /* the discrete decomposition on N-1 interior samples, and its inverse */
+  dst(y){
+    const N = y.length + 1, a = [];
+    for (let n = 1; n < N; n++){
+      let s = 0;
+      for (let i = 1; i < N; i++) s += y[i-1]*Math.sin(n*PI*i/N);
+      a.push(2*s/N);
+    }
+    return a;
+  },
+  idst(a){
+    const N = a.length + 1, y = [];
+    for (let i = 1; i < N; i++){
+      let s = 0;
+      for (let n = 1; n < N; n++) s += a[n-1]*Math.sin(n*PI*i/N);
+      y.push(s);
+    }
+    return y;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const MU = 0.005;                       /* five grams a metre, a wound guitar string */
+const defaults = { freq:1, tension:70, length:0.65, stiff:0.00012, damp:0.004,
+                   drive:0.05, marks:true };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const SS = 2, FMIN = 0.5, FMAX = 12.5;
+let W = 1000, NARROW = false, A = null, B = null;
+
+function palette(){
+  return { ink:css("--ink"), muted:css("--muted"), line:css("--line"), grid:css("--grid"),
+           panel:css("--panel"), bg:css("--bg"), string:css("--string"), drive:css("--drive"),
+           mode:css("--mode"), env:css("--env"), accent:css("--accent") };
+}
+
+function chip(text, x, y, align, fs, colour, C){
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  const w = ctx.measureText(text).width, h = fs + 5;
+  let bx = align === "right" ? x - w - 6 : x;
+  bx = Math.max(2, Math.min(W - w - 8, bx));
+  ctx.fillStyle = C.panel; ctx.fillRect(bx - 3, y - 1, w + 6, h);
+  ctx.fillStyle = colour; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText(text, bx, y + 2);
+}
+
+function fitCanvas(){
+  const box = cv.parentElement.clientWidth || 1000;
+  W = Math.max(300, Math.min(1040, box - 24));
+  NARROW = W < 440;
+  const fs = NARROW ? 9 : 10;
+  const left = NARROW ? 14 : 16;
+  /* header row, then a row kept clear for the drive's own label, then the frame */
+  const aTop = 14 + (fs+6) + (fs+7) + 6;
+  const aH = NARROW ? 220 : 280;
+  A = { x0:left, x1:W-14, y0:aTop, y1:aTop+aH };
+  const bTop = A.y1 + (NARROW ? 38 : 40) + 20;
+  const bH = NARROW ? 120 : 150;
+  B = { x0:left, x1:W-14, y0:bTop, y1:bTop+bH };
+  const H = B.y1 + (NARROW ? 32 : 34);
+  cv.width = Math.round(W*SS); cv.height = Math.round(H*SS);
+  cv.style.width = "100%"; cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function modeRatios(){
+  const r = [];
+  for (let n = 1; n <= 14; n++)
+    r.push(Model.fn(n, state.tension, MU, state.length, state.stiff) /
+           Model.f0(state.tension, MU, state.length));
+  return r;
+}
+function answerAt(ratio, samples){
+  const f0 = Model.f0(state.tension, MU, state.length);
+  return Model.answer(state.tension, MU, state.length, state.stiff, state.damp,
+                      state.drive, ratio*f0, samples);
+}
+
+function drawResponse(C){
+  const fs = NARROW ? 9 : 10;
+  const NPTS = NARROW ? 240 : 340;
+  const ratios = modeRatios();
+
+  /* the curve spans several decades, so it is drawn on a log scale, pinned to
+     the strongest answer anywhere in the sweep */
+  const vals = [];
+  let top = 0;
+  for (let i = 0; i <= NPTS; i++){
+    const r = FMIN + i/NPTS*(FMAX-FMIN);
+    const v = answerAt(r, 56);
+    vals.push(v); top = Math.max(top, v);
+  }
+  state._top = top;
+  /* the peaks themselves are narrow, so sample each one exactly too */
+  for (const r of ratios) if (r >= FMIN && r <= FMAX) top = Math.max(top, answerAt(r, 56));
+  state._top = top;
+  const FLOOR = 1e-4;                         /* four decades is plenty to see */
+  const X = (r) => A.x0 + (r-FMIN)/(FMAX-FMIN)*(A.x1-A.x0);
+  const Y = (v) => {
+    const t = Math.log10(Math.max(v/top, FLOOR))/Math.log10(FLOOR);
+    return A.y0 + Math.max(0, Math.min(1, t))*(A.y1-A.y0);
+  };
+
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText(NARROW ? "how hard it answers" : "how hard the string answers, against what you drive it with",
+               2, 14);
+
+  /* whole-number gridlines: where an ideal string would put its modes */
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (let k = 1; k <= 12; k++){
+    ctx.beginPath(); ctx.moveTo(X(k), A.y0); ctx.lineTo(X(k), A.y1); ctx.stroke();
+  }
+  for (let d = 1; d <= 3; d++){
+    const y = A.y0 + d/4*(A.y1-A.y0);
+    ctx.beginPath(); ctx.moveTo(A.x0, y); ctx.lineTo(A.x1, y); ctx.stroke();
+  }
+
+  ctx.strokeStyle = C.line; ctx.strokeRect(A.x0, A.y0, A.x1-A.x0, A.y1-A.y0);
+
+  /* where the modes actually are, which is not on the gridlines once the
+     wire has any stiffness at all */
+  if (state.marks){
+    ctx.save();
+    ctx.strokeStyle = C.mode; ctx.lineWidth = 1.4; ctx.setLineDash([4,3]);
+    for (const r of ratios){
+      if (r < FMIN || r > FMAX) continue;
+      ctx.beginPath(); ctx.moveTo(X(r), A.y0); ctx.lineTo(X(r), A.y1); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  ctx.strokeStyle = C.string; ctx.lineWidth = 1.8; ctx.lineJoin = "round";
+  ctx.beginPath();
+  vals.forEach((v, i) => {
+    const x = X(FMIN + i/NPTS*(FMAX-FMIN)), y = Y(v);
+    if (i === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  /* the drive */
+  ctx.save();
+  ctx.strokeStyle = C.drive; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(X(state.freq), A.y0); ctx.lineTo(X(state.freq), A.y1); ctx.stroke();
+  ctx.restore();
+  const here = answerAt(state.freq, 56);
+  ctx.fillStyle = C.drive;
+  ctx.beginPath(); ctx.arc(X(state.freq), Y(here), 3.4, 0, 7); ctx.fill();
+
+  ctx.fillStyle = C.muted; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  for (let k = 1; k <= 12; k++){
+    if (NARROW && k % 2 === 0) continue;
+    ctx.fillText(String(k), X(k), A.y1 + 5);
+  }
+  ctx.fillText(NARROW ? "x the fundamental" : "drive frequency, in fundamentals",
+               (A.x0+A.x1)/2, A.y1 + 19);
+
+  /* label the drive above the frame, where no curve ever reaches */
+  /* four decades, so the quiet stretches between peaks stay visible. These go
+     on LAST: there is no left margin to put them in, so they sit inside the
+     frame on their own backing, and anything drawn after would cross them. */
+  ["1", "1/10", "1/100", "1/1000"].forEach((t, d) => {
+    if (NARROW && d === 2) return;
+    const y = A.y0 + d/4*(A.y1-A.y0);
+    chip(t, A.x0 + 3, d === 0 ? y + 3 : y - (fs+5)/2, "left", fs-1, C.muted, C);
+  });
+
+  const room = X(state.freq) + 7 + 92 < A.x1;
+  chip("you are here", room ? X(state.freq) + 7 : X(state.freq) - 7,
+       A.y0 - fs - 10, room ? "left" : "right", fs, C.drive, C);
+  if (state.marks)
+    chip(NARROW ? "modes" : "where the modes are", A.x1 - 4, A.y0 + 4, "right", fs, C.mode, C);
+}
+
+function drawString(C){
+  const fs = NARROW ? 9 : 10;
+  const f0 = Model.f0(state.tension, MU, state.length);
+  const m = Model.modes(state.tension, MU, state.length, state.stiff, state.damp,
+                        state.drive, state.freq*f0);
+  const S = Model.envelope(m, 320);
+  let big = 1e-30;
+  for (const v of S.env) big = Math.max(big, v);
+
+  /* the string is drawn against the biggest swing it reaches at ANY drive,
+     so winding off a peak visibly shrinks it instead of rescaling the view */
+  let ref = 1e-30;
+  for (let n = 1; n <= 12; n++){
+    const r = Model.fn(n, state.tension, MU, state.length, state.stiff)/f0;
+    if (r >= FMIN && r <= FMAX) ref = Math.max(ref, answerAt(r, 56));
+  }
+  /* The string is measured against the loudest it ever gets, so winding off a
+     peak visibly shrinks it instead of silently rescaling the view. Past a
+     point that becomes a flat line with node dots on it and tells the reader
+     nothing, so below a twelfth of full swing the view is magnified -- and
+     labelled, because a magnified picture that does not say so is a lie. */
+  const half = (B.y1-B.y0)/2;
+  let scale = half/Math.max(ref, big)*0.92, magnified = 1;
+  if (big*scale < half*0.12 && big > 0){
+    const want = half*0.3/big;
+    magnified = want/scale; scale = want;
+  }
+  const mid = (B.y0+B.y1)/2;
+  const X = (u) => B.x0 + u*(B.x1-B.x0);
+
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(NARROW ? "the string right now" : "the shape the string settles into, and the swing it covers",
+               2, B.y0 - 8);
+
+  ctx.save(); ctx.fillStyle = C.env; ctx.globalAlpha = 0.35;
+  ctx.beginPath();
+  S.env.forEach((v,i)=>{ const x = X(i/320), y = mid - v*scale;
+    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+  for (let i = 320; i >= 0; i--) ctx.lineTo(X(i/320), mid + S.env[i]*scale);
+  ctx.closePath(); ctx.fill(); ctx.restore();
+
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.setLineDash([2,3]);
+  ctx.beginPath(); ctx.moveTo(B.x0, mid); ctx.lineTo(B.x1, mid); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle = C.string; ctx.lineWidth = 2.2; ctx.lineJoin = "round";
+  ctx.beginPath();
+  S.inst.forEach((v,i)=>{ const x = X(i/320), y = mid - v*scale;
+    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+  ctx.stroke();
+
+  /* the still points: places the envelope pinches almost to nothing */
+  const pin = Model.pinches(S.env);
+  ctx.fillStyle = C.mode;
+  for (const i of pin){ ctx.beginPath(); ctx.arc(X(i/320), mid, 3, 0, 7); ctx.fill(); }
+  state._nodes = pin.length;
+
+  /* the clamps, and the hand */
+  ctx.fillStyle = C.ink;
+  ctx.fillRect(B.x0-2, B.y0-4, 4, (B.y1-B.y0)+8);
+  ctx.fillRect(B.x1-2, B.y0-4, 4, (B.y1-B.y0)+8);
+  ctx.strokeStyle = C.drive; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(X(state.drive), B.y1+2); ctx.lineTo(X(state.drive), B.y1-10); ctx.stroke();
+  ctx.fillStyle = C.muted; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  ctx.fillText("driven here", Math.max(B.x0+34, Math.min(B.x1-34, X(state.drive))), B.y1 + 5);
+  if (magnified > 1.5){
+    ctx.textAlign = "right";
+    ctx.fillStyle = C.muted;
+    ctx.fillText("swing magnified " + Math.round(magnified) + " times", B.x1, B.y1 + 5);
+  }
+}
+
+function render(){
+  fitCanvas();
+  const C = palette();
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = C.panel; ctx.fillRect(0, 0, cv.width, cv.height);
+  drawResponse(C);
+  drawString(C);
+
+  const f0 = Model.f0(state.tension, MU, state.length);
+  const ratios = modeRatios();
+  let best = 1, bd = Infinity;
+  ratios.forEach((r, i) => { const d = Math.abs(r - state.freq); if (d < bd){ bd = d; best = i+1; } });
+  const rBest = ratios[best-1];
+  const here = answerAt(state.freq, 96);
+  /* against the loudest this string gets anywhere in the sweep, NOT against
+     the nearest mode's own peak: a mode the drive point cannot reach has no
+     peak, and dividing by it would report a silent string as answering fully */
+  const loudest = Math.max(state._top || 0, here);
+  const reach = Math.abs(Model.couple(best, state.drive));
+  const atPeak = answerAt(rBest, 96);
+  const sharp = Model.cents(ratios[11], 12*ratios[0]);
+
+  el("freqout").textContent   = state.freq.toFixed(3);
+  el("tensionout").textContent= state.tension + " N";
+  el("lengthout").textContent = state.length.toFixed(3) + " m";
+  el("stiffout").textContent  = state.stiff.toFixed(5);
+  el("dampout").textContent   = state.damp.toFixed(4);
+  el("rF0").textContent   = f0.toFixed(1) + " Hz";
+  el("rHz").textContent   = (state.freq*f0).toFixed(1) + " Hz";
+  el("rMode").textContent = "no. " + best;
+  el("rAt").textContent   = rBest.toFixed(3) + " x";
+  el("rCents").textContent= (state.freq > rBest ? "+" : "") +
+                            Model.cents(state.freq, rBest).toFixed(1) + " cents";
+  /* two different questions, and they part company on an unreachable mode:
+     how well tuned you are, and how loud this mode is at all */
+  el("rPeak").textContent = reach < 1e-6 ? "unreachable"
+                          : (100*here/Math.max(atPeak,1e-30)).toFixed(1) + "%";
+  el("rPct").textContent  = (100*here/Math.max(loudest,1e-30)).toFixed(2) + "%";
+  el("rReach").textContent= (100*reach).toFixed(0) + "%";
+  el("rNodes").textContent= String(state._nodes);
+  el("rSharp").textContent= "+" + sharp.toFixed(1) + " cents";
+}
+
+/* ---- WIRING ------------------------------------------------------------- */
+function bindRange(id, key){
+  el(id).addEventListener("input", () => { state[key] = parseFloat(el(id).value); render(); });
+}
+["freq","tension","length","stiff","damp"].forEach((k)=>bindRange(k, k));
+el("drive").addEventListener("change", () => { state.drive = parseFloat(el("drive").value); render(); });
+el("marks").addEventListener("change", () => { state.marks = el("marks").checked; render(); });
+
+/* Always live: already on a mode, it simply lands on the same place again. */
+el("tune").addEventListener("click", () => {
+  const r = modeRatios();
+  let best = r[0], bd = Infinity;
+  for (const v of r){ const d = Math.abs(v - state.freq);
+    if (v >= FMIN && v <= FMAX && d < bd){ bd = d; best = v; } }
+  state.freq = Math.round(Math.max(FMIN, Math.min(FMAX, best))*200)/200;
+  el("freq").value = String(state.freq);
+  render();
+});
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  ["freq","tension","length","stiff","damp"].forEach((k)=>{ el(k).value = String(defaults[k]); });
+  el("drive").value = String(defaults.drive);
+  el("marks").checked = defaults.marks;
+  render();
+});
+
+let rt = 0;
+addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 90); });
+const mq = matchMedia("(prefers-color-scheme:dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a-b) <= tol; }
+const memo = new Map();
+function once(k, fn){ if (!memo.has(k)) memo.set(k, fn()); return memo.get(k); }
+/* twenty settings nobody picked by hand */
+function settings(){
+  const out = [];
+  for (let k = 0; k < 20; k++)
+    out.push({ T: 20 + k*9, mu: 0.0005 + k*0.0006, L: 0.3 + k*0.045 });
+  return out;
+}
+
+window.__SELFTEST = function(){
+  const out = [];
+  const push = (name, pass, detail) => out.push({ name:name, pass:!!pass, detail:String(detail) });
+  const M = Model;
+
+  /* 1. the fundamental is the textbook one */
+  (function(){
+    let w = 0;
+    for (const s of settings())
+      w = Math.max(w, Math.abs(M.fn(1, s.T, s.mu, s.L, 0) - Math.sqrt(s.T/s.mu)/(2*s.L)));
+    push("the fundamental is sqrt(tension over density) over twice the length", w < 1e-12,
+         "worst departure over 20 settings " + w.toExponential(2));
+  })();
+
+  /* 2. with no stiffness the ladder is exactly evenly spaced -- and with any
+        stiffness at all it is not, which is the claim this page turns on */
+  (function(){
+    let ideal = 0;
+    for (const s of settings()) for (let n = 1; n <= 12; n++)
+      ideal = Math.max(ideal, Math.abs(M.fn(n,s.T,s.mu,s.L,0) - n*M.fn(1,s.T,s.mu,s.L,0)));
+    const B = 4e-4, T = 70, mu = 0.005, L = 0.65;
+    const off = M.cents(M.fn(12,T,mu,L,B), 12*M.fn(1,T,mu,L,B));
+    push("only a stiffness-free wire has harmonic partials",
+         ideal < 1e-12 && off > 45 && off < 52,
+         "with no stiffness |f_n - n f_1| is at most " + ideal.toExponential(2) +
+         " over 20 settings and 12 modes; at a stiffness of 4e-4 the twelfth " +
+         "partial is " + off.toFixed(1) + " cents sharp, most of a quarter tone");
+  })();
+
+  /* 3. mode n really does have n-1 still points, counted rather than assumed */
+  (function(){
+    let bad = 0;
+    for (let n = 1; n <= 14; n++) if (M.countNodes(n) !== n-1) bad++;
+    /* and the string a reader actually sees -- driven, damped, with every
+       other mode faintly along for the ride -- pinches in the same places */
+    let badDriven = 0;
+    for (let n = 1; n <= 12; n++){
+      const f = M.fn(n, 70, 0.005, 0.65, 0.00012);
+      const e = M.envelope(M.modes(70,0.005,0.65,0.00012,0.004,0.05,f), 320).env;
+      if (M.pinches(e).length !== n-1) badDriven++;
+    }
+    push("mode n has exactly n-1 still points, on paper and on the driven string",
+         bad === 0 && badDriven === 0,
+         "sign changes over modes 1 to 14, and the driven envelope pinches " +
+         "n-1 times at each of the first twelve resonances");
+  })();
+
+  /* 4. the shapes are orthogonal, which is what lets a shape be taken apart */
+  (function(){
+    let w = 0;
+    for (let n = 1; n <= 12; n++) for (let m = 1; m <= 12; m++)
+      w = Math.max(w, Math.abs(M.overlap(n,m) - (n === m ? 0.5 : 0)));
+    push("distinct modes are orthogonal, and each has half the length as its own", w < 1e-12,
+         "worst departure over all 144 pairs " + w.toExponential(2));
+  })();
+
+  /* 5. SECOND ROUTE: every frequency re-derived from energy integrals taken
+        numerically, never from the algebra that produced the formula */
+  (function(){
+    const w = once("rayleigh", function(){
+      let worst = 0;
+      for (const B of [0, 2e-4, 1e-3]) for (const s of settings().slice(0,6))
+        for (let n = 1; n <= 12; n++){
+          const a = M.rayleigh(n, s.T, s.mu, s.L, B), b = M.fn(n, s.T, s.mu, s.L, B);
+          worst = Math.max(worst, Math.abs(a-b)/b);
+        }
+      return worst;
+    });
+    push("the Rayleigh quotient reproduces every frequency", w < 1e-9,
+         "worst relative disagreement over 3 stiffnesses, 6 strings and 12 modes " +
+         w.toExponential(2));
+  })();
+
+  /* 6. a drive sitting on a mode's still point cannot reach it at all */
+  (function(){
+    let evenDead = 0, oddAlive = Infinity;
+    for (let n = 1; n <= 14; n++){
+      const c = Math.abs(M.couple(n, 0.5));
+      if (n % 2 === 0) evenDead = Math.max(evenDead, c); else oddAlive = Math.min(oddAlive, c);
+    }
+    const f0 = M.f0(70, 0.005, 0.65), f2 = M.fn(2, 70, 0.005, 0.65, 0);
+    const mid = M.answer(70,0.005,0.65,0,0.004,0.5,f2,96);
+    const end = M.answer(70,0.005,0.65,0,0.004,0.05,f2,96);
+    push("driving the midpoint cannot excite a single even mode",
+         evenDead < 1e-12 && oddAlive > 0.999 && mid/end < 0.05,
+         "every even coupling is under " + evenDead.toExponential(2) +
+         " while every odd one is 1; at the second mode the midpoint answers " +
+         (100*mid/end).toFixed(1) + " per cent of what a drive near the end does");
+  })();
+
+  /* 7. and a seventh of the way along is dead for exactly the seventh and its
+        octave, which is where a piano hammer is put on purpose */
+  (function(){
+    const xd = 1/7;
+    let dead = [], weak = Infinity;
+    for (let n = 1; n <= 14; n++){
+      const c = Math.abs(M.couple(n, xd));
+      if (c < 1e-12) dead.push(n); else weak = Math.min(weak, c);
+    }
+    push("a seventh along is dead for the seventh partial and nothing else",
+         dead.length === 2 && dead[0] === 7 && dead[1] === 14 && weak > 0.4,
+         "modes [" + dead.join(", ") + "] are unreachable from there; every other " +
+         "coupling is at least " + weak.toFixed(2));
+  })();
+
+  /* 8. the response really peaks where the modes are, not on the whole numbers */
+  (function(){
+    const T = 70, mu = 0.005, L = 0.65, B = 4e-4, z = 0.002, xd = 0.05;
+    const f0 = M.f0(T,mu,L);
+    let worstRatio = Infinity;
+    for (const n of [6, 9, 11]){
+      const at = M.answer(T,mu,L,B,z,xd, M.fn(n,T,mu,L,B), 96);
+      const naive = M.answer(T,mu,L,B,z,xd, n*M.fn(1,T,mu,L,B), 96);
+      worstRatio = Math.min(worstRatio, at/naive);
+    }
+    push("on a stiff wire the whole numbers are the wrong place to drive", worstRatio > 3,
+         "driving at the true mode beats driving at n times the fundamental by at " +
+         "least " + worstRatio.toFixed(1) + " times, over modes 6, 9 and 11");
+  })();
+
+  /* 9. the sharpness of a peak is the damping, through Q = 1/(2 zeta) */
+  (function(){
+    const w = once("Q", function(){
+      const T = 70, mu = 0.005, L = 0.65, xd = 0.05, f3 = M.fn(3,T,mu,L,0);
+      let worst = 0;
+      for (const z of [0.02, 0.008, 0.003]){
+        const pk = M.answer(T,mu,L,0,z,xd,f3,64), half = pk/Math.SQRT2;
+        const edge = (lo, hi) => { for (let i = 0; i < 50; i++){ const m = (lo+hi)/2;
+          if (M.answer(T,mu,L,0,z,xd,m,64) > half) hi = m; else lo = m; } return (lo+hi)/2; };
+        const Q = f3/(edge(f3*1.4, f3*1.001) - edge(f3*0.6, f3*0.999));
+        worst = Math.max(worst, Math.abs(Q*2*z - 1));
+      }
+      return worst;
+    });
+    push("the width of a peak is one over twice the damping", w < 0.02,
+         "the half-power width gives a Q within " + (100*w).toFixed(1) +
+         " per cent of 1/(2 zeta) across the damping range");
+  })();
+
+  /* 10. taking a shape apart: the discrete decomposition is exact where it is
+         sampled, while a handful of modes does NOT reproduce a plucked corner */
+  (function(){
+    const p = 0.3, N = 64, y = [];
+    for (let i = 1; i < N; i++) y.push(M.pluck(i/N, p));
+    const back = M.idst(M.dst(y));
+    let round = 0;
+    for (let i = 0; i < y.length; i++) round = Math.max(round, Math.abs(back[i]-y[i]));
+    const contErr = (K) => {
+      let worst = 0;
+      for (let i = 1; i < 400; i++){
+        const x = i/400; let s = 0;
+        for (let n = 1; n <= K; n++) s += M.pluckCoef(n,p)*M.shape(n,x);
+        worst = Math.max(worst, Math.abs(s - M.pluck(x,p)));
+      }
+      return worst;
+    };
+    const e12 = contErr(12), e96 = contErr(96), e768 = contErr(768);
+    push("the decomposition is exact where it is sampled, and nowhere near it at the corner",
+         round < 1e-12 && e12 > 0.02 && e96 < e12 && e768 < e96 && e768 > 1e-4,
+         "a 64-point transform round trips to " + round.toExponential(2) +
+         ", but 12 modes miss the plucked corner by " + e12.toFixed(4) +
+         " and 768 still miss by " + e768.toFixed(5) + ", the error falling only " +
+         "like one over the mode count");
+  })();
+
+  /* 11. nothing goes non-finite anywhere a reader can reach */
+  (function(){
+    const ok = once("finite", function(){
+      for (const T of [20, 70, 200]) for (const L of [0.3, 0.65, 1.2])
+        for (const Bv of [0, 0.0004, 0.001]) for (const z of [0.002, 0.01, 0.02])
+          for (const xd of [0.5, 1/7, 0.05]) for (const r of [0.5, 1, 6.97, 12.5]){
+            const v = M.answer(T, 0.005, L, Bv, z, xd, r*M.f0(T,0.005,L), 32);
+            if (!Number.isFinite(v) || v < 0) return false;
+          }
+      return true;
+    });
+    push("finite and positive across every control setting", ok,
+         "3 tensions x 3 lengths x 3 stiffnesses x 3 dampings x 3 drive points x 4 frequencies");
+  })();
+
+  return out;
+};
+
+window.__ATLAS = { state:state, render:render, Model:Model, seed:20260920 };
+
+})();
+</script>
+</body>
+</html>

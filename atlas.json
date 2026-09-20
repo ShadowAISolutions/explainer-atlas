@@ -1,11 +1,12 @@
 {
   "generated_at": "2026-09-20",
-  "count": 85,
+  "count": 90,
   "domains": {
     "biology": [
       "allometric-scaling-metabolism",
       "enzyme-michaelis-menten",
       "epidemic-r0-herd-immunity",
+      "genetic-drift-small-populations",
       "hardy-weinberg",
       "neuron-integrate-and-fire",
       "population-logistic-chaos",
@@ -17,7 +18,8 @@
       "ideal-gas-law",
       "le-chatelier-equilibrium-shift",
       "ph-buffer-capacity",
-      "reaction-rate-order"
+      "reaction-rate-order",
+      "titration-curve-equivalence"
     ],
     "computer-science": [
       "big-o-crossover",
@@ -69,6 +71,7 @@
       "entropy-of-english-guessing",
       "hamming-code",
       "huffman-coding",
+      "rate-distortion-quantisation",
       "shannon-channel-capacity"
     ],
     "linguistics": [
@@ -80,6 +83,7 @@
       "zipf-law-word-frequency"
     ],
     "mathematics": [
+      "convolution-as-blurring",
       "eulers-identity-rotation",
       "fourier-series-square-wave",
       "map-projection-distortion",
@@ -102,7 +106,8 @@
       "orbital-transfer-hohmann",
       "photoelectric-threshold",
       "projectile-drag",
-      "special-relativity-time-dilation"
+      "special-relativity-time-dilation",
+      "standing-wave-modes"
     ],
     "statistics": [
       "bayes-base-rate",
@@ -116,17 +121,17 @@
   },
   "interaction_patterns": {
     "build-from-parts": 9,
-    "compare-side-by-side": 7,
-    "drag-parameter": 7,
-    "draw-input": 6,
+    "compare-side-by-side": 8,
+    "drag-parameter": 8,
+    "draw-input": 7,
     "guess-then-reveal": 7,
     "live-code": 5,
     "perturb-and-observe": 9,
-    "race-two-methods": 6,
+    "race-two-methods": 7,
     "spatial-explore": 8,
     "step-through": 7,
     "time-scrubber": 8,
-    "tune-to-match": 6
+    "tune-to-match": 7
   },
   "explainers": [
     {
@@ -799,6 +804,39 @@
       "assertions_count": 12
     },
     {
+      "slug": "convolution-as-blurring",
+      "title": "The Kernel Is The Whole Story",
+      "domain": "mathematics",
+      "difficulty": 2,
+      "summary": "A convolution is a sliding weighted average, so its weights are the whole behaviour. Draw a signal, switch kernels, and read blurring, ringing and overshoot straight off the kernel's own spectrum.",
+      "prerequisites": [],
+      "tags": [
+        "convolution",
+        "kernel",
+        "frequency-response",
+        "blur",
+        "ringing",
+        "central-limit-theorem"
+      ],
+      "interaction_pattern": "draw-input",
+      "sources": [
+        {
+          "title": "Oppenheim and Schafer, Discrete-Time Signal Processing, 3rd edition, chapters 2 and 5",
+          "url": "https://www.pearson.com/en-us/subject-catalog/p/discrete-time-signal-processing/P200000003226"
+        },
+        {
+          "title": "Smith, The Scientist and Engineer's Guide to Digital Signal Processing, chapters 6 to 15",
+          "url": "https://www.dspguide.com/"
+        },
+        {
+          "title": "Bracewell, The Fourier Transform and Its Applications, 3rd edition, chapter 3",
+          "url": "https://search.worldcat.org/title/41273959"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 13
+    },
+    {
       "slug": "coriolis-deflection",
       "title": "Nothing Pushed It Sideways",
       "domain": "earth-science",
@@ -1293,6 +1331,41 @@
         }
       ],
       "created_at": "2026-09-19",
+      "assertions_count": 12
+    },
+    {
+      "slug": "genetic-drift-small-populations",
+      "title": "Twenty Individuals Can Outvote Natural Selection",
+      "domain": "biology",
+      "difficulty": 3,
+      "summary": "Run a small population beside a large one under identical selection. Below a threshold set by 4Ns, sampling noise decides which allele survives, and the exact Markov chain says precisely where that threshold sits.",
+      "prerequisites": [
+        "hardy-weinberg"
+      ],
+      "tags": [
+        "genetic-drift",
+        "wright-fisher",
+        "fixation",
+        "selection",
+        "effective-population-size",
+        "kimura"
+      ],
+      "interaction_pattern": "compare-side-by-side",
+      "sources": [
+        {
+          "title": "Kimura, On the probability of fixation of mutant genes in a population, Genetics 47 (1962) 713-719",
+          "url": "https://doi.org/10.1093/genetics/47.6.713"
+        },
+        {
+          "title": "Ewens, Mathematical Population Genetics I, 2nd edition, chapters 2 and 5",
+          "url": "https://doi.org/10.1007/978-0-387-21822-9"
+        },
+        {
+          "title": "Gillespie, Population Genetics: A Concise Guide, 2nd edition, chapter 2",
+          "url": "https://www.press.jhu.edu/books/title/1734/population-genetics"
+        }
+      ],
+      "created_at": "2026-09-20",
       "assertions_count": 12
     },
     {
@@ -2230,6 +2303,43 @@
       "assertions_count": 12
     },
     {
+      "slug": "rate-distortion-quantisation",
+      "title": "Three Ways To Spend A Bit, And The Floor None Of Them Reaches",
+      "domain": "information-theory",
+      "difficulty": 3,
+      "summary": "Every extra bit buys six decibels. Three quantisers race a bound that none of them reaches, and the last 1.53 decibels turn out not to be a coding failure at all.",
+      "prerequisites": [],
+      "tags": [
+        "quantisation",
+        "rate-distortion",
+        "lloyd-max",
+        "entropy-coding",
+        "shannon-bound",
+        "signal-to-noise"
+      ],
+      "interaction_pattern": "race-two-methods",
+      "sources": [
+        {
+          "title": "Lloyd, Least squares quantization in PCM, IEEE Transactions on Information Theory 28 (1982) 129-137",
+          "url": "https://doi.org/10.1109/TIT.1982.1056489"
+        },
+        {
+          "title": "Max, Quantizing for minimum distortion, IRE Transactions on Information Theory 6 (1960) 7-12",
+          "url": "https://doi.org/10.1109/TIT.1960.1057548"
+        },
+        {
+          "title": "Gish and Pierce, Asymptotically efficient quantizing, IEEE Transactions on Information Theory 14 (1968) 676-683",
+          "url": "https://doi.org/10.1109/TIT.1968.1054193"
+        },
+        {
+          "title": "Cover and Thomas, Elements of Information Theory, 2nd edition, chapter 10",
+          "url": "https://doi.org/10.1002/047174882X"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 12
+    },
+    {
       "slug": "reaction-rate-order",
       "title": "The Balanced Equation Will Not Tell You This",
       "domain": "chemistry",
@@ -2517,6 +2627,39 @@
       "assertions_count": 12
     },
     {
+      "slug": "standing-wave-modes",
+      "title": "Two Fixed Ends Are Enough To Quantise A String",
+      "domain": "physics",
+      "difficulty": 2,
+      "summary": "Drive a stretched wire at any frequency and it ignores you, until it does not. Nothing in the equation of motion picks out the frequencies it accepts: the clamps do, and stiffness then spreads them apart.",
+      "prerequisites": [],
+      "tags": [
+        "standing-waves",
+        "boundary-conditions",
+        "resonance",
+        "inharmonicity",
+        "normal-modes",
+        "strings"
+      ],
+      "interaction_pattern": "tune-to-match",
+      "sources": [
+        {
+          "title": "Fletcher and Rossing, The Physics of Musical Instruments, 2nd edition, chapters 2 and 12",
+          "url": "https://doi.org/10.1007/978-0-387-21603-4"
+        },
+        {
+          "title": "Morse and Ingard, Theoretical Acoustics, chapter 4",
+          "url": "https://press.princeton.edu/books/paperback/9780691024011/theoretical-acoustics"
+        },
+        {
+          "title": "Young, Inharmonicity of plain wire piano strings, Journal of the Acoustical Society of America 24 (1952) 267-273",
+          "url": "https://doi.org/10.1121/1.1906888"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 11
+    },
+    {
       "slug": "supply-demand-tax-incidence",
       "title": "The Law Says Who Pays, the Market Decides Who Bears It",
       "domain": "economics",
@@ -2606,6 +2749,39 @@
         {
           "title": "NIST Digital Library of Mathematical Functions, section 1.4(vi), Taylor's theorem with remainder",
           "url": "https://dlmf.nist.gov/1.4"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 13
+    },
+    {
+      "slug": "titration-curve-equivalence",
+      "title": "Half Way Along, The Meter Almost Reads The pKa",
+      "domain": "chemistry",
+      "difficulty": 2,
+      "summary": "Add base to a weak acid and two landmarks appear for free: the pKa half way to equivalence, and an equivalence point that is never at pH 7. Both are shortcuts, and the page shows exactly where each one breaks.",
+      "prerequisites": [],
+      "tags": [
+        "titration",
+        "weak-acid",
+        "pka",
+        "equivalence-point",
+        "henderson-hasselbalch",
+        "buffer"
+      ],
+      "interaction_pattern": "drag-parameter",
+      "sources": [
+        {
+          "title": "Harris, Quantitative Chemical Analysis, 9th edition, chapters 9 to 11",
+          "url": "https://www.macmillanlearning.com/college/us/product/Quantitative-Chemical-Analysis/p/1319324509"
+        },
+        {
+          "title": "de Levie, The formalism of titration theory, Chemical Educator 6 (2001) 272-276",
+          "url": "https://doi.org/10.1007/s00897010509a"
+        },
+        {
+          "title": "NIST Critically Selected Stability Constants of Metal Complexes, standard reference database 46",
+          "url": "https://www.nist.gov/srd/nist46"
         }
       ],
       "created_at": "2026-09-20",

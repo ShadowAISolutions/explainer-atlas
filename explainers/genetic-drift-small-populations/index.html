@@ -1,0 +1,901 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Twenty Individuals Can Outvote Natural Selection — Explainer Atlas</title>
+<meta name="description" content="Run a small population beside a large one under identical selection. Below a threshold set by population size, an allele's fate is decided by sampling noise, and the exact Markov chain says precisely where that threshold is.">
+<style>
+:root{
+  --bg:#faf7f2; --panel:#fffdfa; --ink:#231f1a; --muted:#6b635a; --line:#e5ded3;
+  --accent:#7a4420; --accent-soft:#f3e9de; --grid:#efe8dd;
+  --small:#b8422e; --big:#236b78; --neutral:#8a8378; --fix:#1f7a4a; --lost:#9a2f52;
+  --radius:4px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Avenir Next",Avenir,"Segoe UI",system-ui,-apple-system,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.5rem,1.05rem + 2.1vw,2.25rem);
+  --scale-body:clamp(0.98rem,0.95rem + 0.2vw,1.05rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#15120f; --panel:#1d1915; --ink:#ece6dd; --muted:#a29889; --line:#2e2822;
+    --accent:#d9a06a; --accent-soft:#2a211a; --grid:#241f19;
+    --small:#e8836c; --big:#6cc0cf; --neutral:#9c9284; --fix:#5fc48c; --lost:#e0708f;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink); font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:66rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:2px solid var(--accent); padding-bottom:calc(var(--pad)*0.7)}
+h1{font-size:var(--scale-h1); line-height:1.1; margin:0 0 .35em; letter-spacing:-.02em; font-weight:700}
+.kicker{margin:0 0 .45em; color:var(--accent); font:700 .7rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.2em}
+.standfirst{margin:0; color:var(--muted); max-width:45em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.4fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.85rem; line-height:1.5}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1em}
+.control{display:grid; gap:.28em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600; font-size:.92rem}
+.control output{font:700 .88rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.26em .5em; border-radius:3px}
+.control .hint{color:var(--muted); font-size:.8rem; margin:0}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+button{font:inherit; font-weight:600; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:3px; padding:.5em .7em; min-height:40px; width:100%; cursor:pointer}
+button:hover{border-color:var(--accent)}
+.checks{display:grid; gap:.45em}
+.checks label{display:flex; gap:.55em; align-items:flex-start; font-size:.89rem; font-weight:500; line-height:1.4}
+.checks input{accent-color:var(--accent); min-width:18px; min-height:18px; margin-top:.16em}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:3px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(6.6rem,1fr)); gap:.5em; margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:3px; padding:.48em .6em}
+.readout dt{margin:0; color:var(--muted); font-size:.69rem; text-transform:uppercase; letter-spacing:.08em}
+.readout dd{margin:.14em 0 0; font:700 .98rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.14rem; margin:1.8em 0 .4em; letter-spacing:-.01em}
+.prose p{margin:0 0 1em}
+.prose .math{font:.92rem/1.6 var(--font-mono); background:var(--accent-soft); padding:.7em .85em; border-radius:3px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.84rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">biology</p>
+  <h1>Twenty Individuals Can Outvote Natural Selection</h1>
+  <p class="standfirst">Two populations, the same beneficial allele, the same starting frequency, the same random seed. Only the head count differs — and below a threshold that almost nobody guesses correctly, the smaller population stops caring which allele is fitter.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="820" role="img"
+            aria-label="Two panels side by side, each showing many replicate runs of allele frequency against generation: the small population on the left in brick red, the large one on the right in teal. Paths that reach the top have fixed, paths that reach the bottom are lost. A wide panel underneath plots the exact probability of eventual fixation against starting frequency for both populations, with the neutral diagonal for comparison."></canvas>
+    <figcaption>Each thin line is one replicate population carrying the same allele under the same selection. The shaded strip at the top is the share of all possible replicates the Wright-Fisher chain says has already fixed by that generation, and the strip at the bottom the share already lost — exact, not fitted to the runs shown. Underneath, the curve is the exact probability that the allele ends up in every copy: the further it bends above the grey diagonal, the more selection is getting its way.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Population controls">
+    <div class="control">
+      <div class="row">
+        <label for="nsmall">Small population</label>
+        <output id="nsmallout" for="nsmall">6</output>
+      </div>
+      <input type="range" id="nsmall" min="2" max="60" step="1" value="6">
+      <p class="hint">Breeding individuals on the left. Arrow keys step; Home and End jump.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="nbig">Large population</label>
+        <output id="nbigout" for="nbig">50</output>
+      </div>
+      <input type="range" id="nbig" min="2" max="60" step="1" value="50">
+      <p class="hint">Breeding individuals on the right. Everything else about the two is identical.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="sel">Selection coefficient</label>
+        <output id="selout" for="sel">0.050</output>
+      </div>
+      <input type="range" id="sel" min="-0.15" max="0.3" step="0.005" value="0.05">
+      <p class="hint">How much more likely a copy of the allele is to be passed on. Negative means harmful.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="p0">Starting frequency</label>
+        <output id="p0out" for="p0">0.30</output>
+      </div>
+      <input type="range" id="p0" min="0.05" max="0.95" step="0.05" value="0.3">
+      <p class="hint">What share of gene copies carry the allele in generation zero.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="gens">Generations</label>
+        <output id="gensout" for="gens">140</output>
+      </div>
+      <input type="range" id="gens" min="20" max="300" step="10" value="140">
+      <p class="hint">How far to run. Drag it back to watch the fates get decided.</p>
+    </div>
+
+    <div class="control checks">
+      <label for="theory"><input type="checkbox" id="theory" checked> Show what the exact chain predicts</label>
+      <label for="paths"><input type="checkbox" id="paths" checked> Show the individual replicate paths</label>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Small: 4Ns</dt><dd id="rSmallNs">—</dd></div>
+      <div><dt>Large: 4Ns</dt><dd id="rBigNs">—</dd></div>
+      <div><dt>Small: fixes</dt><dd id="rSmallU">—</dd></div>
+      <div><dt>Large: fixes</dt><dd id="rBigU">—</dd></div>
+      <div><dt>Small: takes</dt><dd id="rSmallT">—</dd></div>
+      <div><dt>Large: takes</dt><dd id="rBigT">—</dd></div>
+    </dl>
+
+    <button type="button" id="reseed">New random seed</button>
+    <button type="button" id="reset">Reset everything</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Both panels above are running the same experiment. An allele that gives its carriers a small edge starts at the same frequency in every replicate, and each generation the next lot of gene copies is drawn from the current lot with that edge applied. The only difference between left and right is how many individuals there are to draw from.</p>
+
+  <p>On the right, with fifty breeders, the paths drift a little and then climb. On the left, with six, they scatter. Plenty of them fall to zero and stay there, and the allele is gone from that population forever despite being the better one. Nothing went wrong in those runs. There were simply not enough copies for the edge to assert itself against the noise of who happened to breed.</p>
+
+  <h2>One number decides it</h2>
+
+  <p class="math">u(p) = (1 − e<sup>−4Nsp</sup>) / (1 − e<sup>−4Ns</sup>)</p>
+
+  <p>That is Kimura's diffusion result for the probability that an allele starting at frequency p ends up in every copy. Look at what it depends on: not N, and not s, but their product. Double the population and halve the advantage and the curve does not move. The bottom panel draws this exactly — by solving the finite Markov chain rather than trusting the formula — and you can watch the two populations trade places by moving either slider.</p>
+
+  <p>When 4Ns is much less than one the exponentials collapse and u(p) → p: the allele's chance of taking over is just its current share, exactly as if it conferred no advantage at all. That is the drift regime, and it is not a vague statement. Set the selection coefficient so that 4Ns sits near 0.4 and the fixation probability is lifted just ten per cent above the neutral diagonal. Below that, selection is a rounding error.</p>
+
+  <h2>Variation drains at a fixed rate</h2>
+
+  <p>Drift is not only a randomiser, it is a one-way loss. With no selection at all, the expected heterozygosity — the chance two randomly drawn copies differ — falls by a factor of exactly 1 − 1/(2N) every single generation. Not approximately: that is an identity of the Wright-Fisher sampling step, and the selftest checks it to fifteen decimal places over a hundred generations. Six breeders lose about eight per cent of their remaining variation per generation. Fifty lose one per cent. That is why small populations become uniform, and why they do it fast.</p>
+
+  <h2>The famous four-N figure needs its small print</h2>
+
+  <p>Textbooks say a neutral allele takes about 4N generations to fix. That is true only for an allele that starts as a single copy, and only in the large-population limit. Start at half and the answer is 4N·ln 2, about 2.77N — a third quicker. Run the exact chain at N = 5 and even the single-copy case comes out at 3.50N, twelve per cent under the quoted figure. The formula is a diffusion approximation, and small populations are exactly where a diffusion approximation is at its worst.</p>
+
+  <h2>What to try</h2>
+
+  <p>Leave selection at 0.05 and drag the small population from six up towards the large one. Somewhere around twenty individuals the left panel stops looking like a lottery and starts looking like the right. That crossing point is where 4Ns passes one, and it moves if you change the selection coefficient — which is the whole point: population size and selection strength are not two separate things to weigh up, they are one quantity.</p>
+
+  <p>Then push the selection coefficient negative. A harmful allele still fixes sometimes, and the same curve tells you how often; starting from a half at 4Ns = −3, it still takes over about 18 per cent of the time. In a small enough population, being worse is not a disqualification.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920, RUNS = 28;
+
+/* ---- MODEL --------------------------------------------------------------
+   Wright-Fisher on 2N gene copies. One allele carries a relative
+   transmission advantage of 1 + s per copy, so the sampling frequency is
+   p(1+s)/(1+sp). Everything below is exact arithmetic on that chain; the
+   diffusion formulas appear only as the thing being compared against.     */
+const LF = [0, 0];
+function logFact(n){ for (let k = LF.length; k <= n; k++) LF[k] = LF[k - 1] + Math.log(k); return LF[n]; }
+
+const Model = {
+  binpmf(n, k, p){
+    if (k < 0 || k > n) return 0;
+    if (p <= 0) return k === 0 ? 1 : 0;
+    if (p >= 1) return k === n ? 1 : 0;
+    return Math.exp(logFact(n) - logFact(k) - logFact(n - k) + k*Math.log(p) + (n - k)*Math.log(1 - p));
+  },
+
+  after(p, s){ return s === 0 ? p : p*(1 + s)/(1 + s*p); },
+
+  matrix(twoN, s){
+    const M = [];
+    for (let i = 0; i <= twoN; i++){
+      const row = new Float64Array(twoN + 1);
+      if (i === 0) row[0] = 1;
+      else if (i === twoN) row[twoN] = 1;
+      else {
+        const ps = Model.after(i/twoN, s);
+        for (let j = 0; j <= twoN; j++) row[j] = Model.binpmf(twoN, j, ps);
+      }
+      M.push(row);
+    }
+    return M;
+  },
+
+  solve(A, b){
+    const n = b.length, M = A.map((r, i) => Array.from(r).concat([b[i]]));
+    for (let c = 0; c < n; c++){
+      let piv = c;
+      for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[piv][c])) piv = r;
+      const tmp = M[c]; M[c] = M[piv]; M[piv] = tmp;
+      const d = M[c][c];
+      for (let k = c; k <= n; k++) M[c][k] /= d;
+      for (let r = 0; r < n; r++){
+        if (r === c) continue;
+        const f = M[r][c];
+        if (!f) continue;
+        for (let k = c; k <= n; k++) M[r][k] -= f*M[c][k];
+      }
+    }
+    return M.map((r) => r[n]);
+  },
+
+  /* exact probability of eventual fixation from every starting count */
+  fixProbs(twoN, s){
+    const P = Model.matrix(twoN, s), n = twoN - 1, A = [], b = [];
+    for (let i = 1; i < twoN; i++){
+      const row = new Array(n).fill(0);
+      for (let j = 1; j < twoN; j++) row[j - 1] = (i === j ? 1 : 0) - P[i][j];
+      A.push(row); b.push(P[i][twoN]);
+    }
+    const u = Model.solve(A, b), out = new Float64Array(twoN + 1);
+    for (let i = 1; i < twoN; i++) out[i] = u[i - 1];
+    out[twoN] = 1;
+    return out;
+  },
+
+  /* exact mean generations to fixation, conditioned on fixing at all */
+  condFixTime(twoN, s, u){
+    const P = Model.matrix(twoN, s), fx = u || Model.fixProbs(twoN, s), n = twoN - 1, A = [], b = [];
+    for (let i = 1; i < twoN; i++){
+      const row = new Array(n).fill(0);
+      for (let j = 1; j < twoN; j++) row[j - 1] = (i === j ? 1 : 0) - P[i][j]*fx[j]/fx[i];
+      A.push(row); b.push(1);
+    }
+    const t = Model.solve(A, b), out = new Float64Array(twoN + 1);
+    for (let i = 1; i < twoN; i++) out[i] = t[i - 1];
+    return out;
+  },
+
+  kimura(p, x){ return Math.abs(x) < 1e-12 ? p : (1 - Math.exp(-x*p))/(1 - Math.exp(-x)); },
+
+  /* exact distribution of the count, generation by generation */
+  march(twoN, s, i0, gens){
+    const P = Model.matrix(twoN, s);
+    let d = new Float64Array(twoN + 1);
+    d[i0] = 1;
+    const mean = [], sd = [], fixed = [], lost = [];
+    for (let g = 0; g <= gens; g++){
+      let m = 0, m2 = 0;
+      for (let i = 0; i <= twoN; i++){ const p = i/twoN; m += d[i]*p; m2 += d[i]*p*p; }
+      mean.push(m); sd.push(Math.sqrt(Math.max(0, m2 - m*m)));
+      fixed.push(d[twoN]); lost.push(d[0]);
+      if (g === gens) break;
+      const nd = new Float64Array(twoN + 1);
+      for (let i = 0; i <= twoN; i++){
+        const w = d[i];
+        if (w < 1e-15) continue;
+        const row = P[i];
+        for (let j = 0; j <= twoN; j++) nd[j] += w*row[j];
+      }
+      d = nd;
+    }
+    return { mean: mean, sd: sd, fixed: fixed, lost: lost };
+  },
+
+  /* expected heterozygosity 2p(1-p) under a distribution over counts */
+  het(dist, twoN){
+    let h = 0;
+    for (let i = 0; i <= twoN; i++){ const p = i/twoN; h += dist[i]*2*p*(1 - p); }
+    return h;
+  },
+
+  /* binomial draw by inversion outward from the mode — a few steps, not 2N */
+  binomSample(n, p, rng){
+    if (p <= 0) return 0;
+    if (p >= 1) return n;
+    const mode = Math.min(n, Math.max(0, Math.floor((n + 1)*p)));
+    const pm = Model.binpmf(n, mode, p), r = rng()*1;
+    let acc = pm, lo = mode, hi = mode, pl = pm, ph = pm;
+    if (r <= acc) return mode;
+    const q = p/(1 - p);
+    for (let step = 0; step < n + 2; step++){
+      let moved = false;
+      if (lo > 0){ pl = pl*lo/((n - lo + 1)*q); lo--; acc += pl; moved = true; if (r <= acc) return lo; }
+      if (hi < n){ ph = ph*(n - hi)*q/(hi + 1); hi++; acc += ph; moved = true; if (r <= acc) return hi; }
+      if (!moved) break;
+    }
+    return lo > 0 ? lo : hi;
+  },
+
+  /* replicate runs, all from one seed */
+  simulate(twoN, s, i0, gens, runs, seed){
+    const paths = [];
+    for (let r = 0; r < runs; r++){
+      const rng = mulberry32(seed + r*7919), path = new Int32Array(gens + 1);
+      let i = i0;
+      path[0] = i;
+      for (let g = 1; g <= gens; g++){
+        if (i > 0 && i < twoN) i = Model.binomSample(twoN, Model.after(i/twoN, s), rng);
+        path[g] = i;
+      }
+      paths.push(path);
+    }
+    return paths;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { nsmall: 6, nbig: 50, sel: 0.05, p0: 0.3, gens: 140, theory: true, paths: true };
+const state = Object.assign({}, defaults);
+let seed = SEED;
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+let W = 900, H = 820, G = null;
+const cache = Object.create(null);
+
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function colours(){
+  return { bg: css("--bg"), panel: css("--panel"), ink: css("--ink"), muted: css("--muted"),
+           line: css("--line"), grid: css("--grid"), accent: css("--accent"),
+           small: css("--small"), big: css("--big"), neutral: css("--neutral"),
+           fix: css("--fix"), lost: css("--lost") };
+}
+function cached(key, fn){ if (!(key in cache)) cache[key] = fn(); return cache[key]; }
+
+function pop(N){
+  const twoN = 2*N, i0 = Math.max(1, Math.min(twoN - 1, Math.round(state.p0*twoN)));
+  const s = state.sel, gens = state.gens;
+  const u = cached("u|" + twoN + "|" + s, () => Model.fixProbs(twoN, s));
+  const t = cached("t|" + twoN + "|" + s, () => Model.condFixTime(twoN, s, u));
+  const m = cached("m|" + twoN + "|" + s + "|" + i0 + "|" + gens, () => Model.march(twoN, s, i0, gens));
+  const paths = cached("p|" + twoN + "|" + s + "|" + i0 + "|" + gens + "|" + seed,
+                       () => Model.simulate(twoN, s, i0, gens, RUNS, seed));
+  let nFix = 0, nLost = 0;
+  for (const path of paths){
+    if (path[gens] === twoN) nFix++;
+    else if (path[gens] === 0) nLost++;
+  }
+  return { N: N, twoN: twoN, i0: i0, s: s, gens: gens, u: u, t: t, march: m, paths: paths,
+           fourNs: 4*N*s, uAt: u[i0], tAt: t[i0], nFix: nFix, nLost: nLost };
+}
+
+function chip(text, x, y, align, fs, colour, C, x0, x1){
+  ctx.font = "700 " + fs + "px ui-monospace,SFMono-Regular,Menlo,monospace";
+  const tw = ctx.measureText(text).width, pad = 3.5;
+  let bx = align === "right" ? x - tw : x;
+  if (x1 !== undefined && bx + tw + pad > x1) bx = x1 - tw - pad;
+  if (x0 !== undefined && bx - pad < x0) bx = x0 + pad;
+  ctx.fillStyle = C.panel;
+  ctx.fillRect(bx - pad, y - fs + 1.5, tw + 2*pad, fs + 3);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = colour;
+  ctx.fillText(text, bx, y + 1.5);
+}
+function axlabel(text, x, y, align, C, fs){
+  ctx.font = (fs || G.fsAx) + "px ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.textAlign = align; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = C.muted; ctx.fillText(text, x, y);
+}
+function title(text, x, y, C, colour){
+  ctx.font = "700 " + G.fsTi + "px " + css("--font-body");
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = colour || C.ink; ctx.fillText(text, x, y);
+}
+function frame(R, C){
+  ctx.fillStyle = C.panel; ctx.fillRect(R.x0, R.y0, R.x1 - R.x0, R.y1 - R.y0);
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  ctx.strokeRect(R.x0 + 0.5, R.y0 + 0.5, R.x1 - R.x0 - 1, R.y1 - R.y0 - 1);
+}
+
+function fitCanvas(){
+  const host = cv.parentElement;
+  const availW = (host ? host.clientWidth : 900) - 24;
+  W = Math.max(300, Math.min(1040, Math.round(availW > 0 ? availW : 900)));
+  const NARROW = W < 520;
+  const padL = NARROW ? 30 : 40, padR = 12, top = 6;
+  const titleH = NARROW ? 16 : 18, axisH = NARROW ? 16 : 18, gap = NARROW ? 14 : 20;
+  const hTop = NARROW ? 140 : 190, hBot = NARROW ? 150 : 210;
+  const colGap = NARROW ? 0 : 18;
+
+  let y = top + titleH;
+  let L, R;
+  if (NARROW){
+    L = { x0: padL, x1: W - padR, y0: y, y1: y + hTop };
+    y = L.y1 + axisH + gap + titleH;
+    R = { x0: padL, x1: W - padR, y0: y, y1: y + hTop };
+    y = R.y1 + axisH + gap + titleH;
+  } else {
+    const half = (W - padL - padR - colGap)/2;
+    L = { x0: padL, x1: padL + half, y0: y, y1: y + hTop };
+    R = { x0: padL + half + colGap, x1: W - padR, y0: y, y1: y + hTop };
+    y = L.y1 + axisH + gap + titleH;
+  }
+  const B = { x0: padL, x1: W - padR, y0: y, y1: y + hBot };
+  const fsKey = NARROW ? 10 : 11.5;
+  H = B.y1 + axisH + (NARROW ? 20 : 22);
+
+  G = { W: W, H: H, NARROW: NARROW, padL: padL, padR: padR, titleH: titleH, axisH: axisH,
+        L: L, R: R, B: B, top: top,
+        fsAx: NARROW ? 9.5 : 11, fsTi: NARROW ? 11.5 : 13 };
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const nRows = keyRows(colours(), fsKey).rows.length;
+  H += (nRows - 1)*(fsKey + 5);
+  G.H = H;
+
+  cv.width = Math.round(W*SS); cv.height = Math.round(H*SS);
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function drawRuns(P, R, colour, label, C){
+  /* the long form only when it actually fits in this pane, or the two
+     titles run into each other at narrow column widths                   */
+  ctx.font = "700 " + G.fsTi + "px " + css("--font-body");
+  const longer = label + " \u00b7 " + P.i0 + " of " + P.twoN + " copies";
+  const room = R.x1 - R.x0 - 6;
+  title(ctx.measureText(longer).width <= room ? longer : label,
+        R.x0, R.y0 - (G.NARROW ? 5 : 6), C, colour);
+  frame(R, C);
+  const gx = (g) => R.x0 + 6 + (R.x1 - R.x0 - 12)*(state.gens ? g/state.gens : 0);
+  const gy = (p) => R.y1 - 5 - (R.y1 - R.y0 - 10)*p;
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(R.x0 + 1, R.y0 + 1, R.x1 - R.x0 - 2, R.y1 - R.y0 - 2); ctx.clip();
+
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (const p of [0.25, 0.5, 0.75]){
+    ctx.beginPath(); ctx.moveTo(R.x0 + 1, gy(p)); ctx.lineTo(R.x1 - 1, gy(p)); ctx.stroke();
+  }
+
+  /* the exact spread the chain predicts, drawn before the runs so the runs
+     sit on top of their own prediction rather than under it                */
+  if (state.theory){
+    const m = P.march;
+    /* the exact share of replicates the chain says is already absorbed, as a
+       strip growing down from the top and up from the bottom. A mean and a
+       standard deviation are a poor summary once the mass sits at the ends. */
+    ctx.fillStyle = C.fix; ctx.globalAlpha = 0.2;
+    ctx.beginPath(); ctx.moveTo(gx(0), gy(1));
+    for (let g = 0; g <= P.gens; g++) ctx.lineTo(gx(g), gy(1 - m.fixed[g]));
+    ctx.lineTo(gx(P.gens), gy(1)); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = C.lost;
+    ctx.beginPath(); ctx.moveTo(gx(0), gy(0));
+    for (let g = 0; g <= P.gens; g++) ctx.lineTo(gx(g), gy(m.lost[g]));
+    ctx.lineTo(gx(P.gens), gy(0)); ctx.closePath(); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = colour; ctx.lineWidth = 2.2; ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    for (let g = 0; g <= P.gens; g++){ const X = gx(g), Y = gy(m.mean[g]); g ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  if (state.paths){
+    ctx.lineWidth = 1.15; ctx.globalAlpha = 0.85;
+    for (const path of P.paths){
+      const end = path[P.gens];
+      ctx.strokeStyle = end === P.twoN ? C.fix : (end === 0 ? C.lost : C.neutral);
+      ctx.beginPath();
+      for (let g = 0; g <= P.gens; g++){
+        const X = gx(g), Y = gy(path[g]/P.twoN);
+        g ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+
+  const pct = (v) => Math.round(100*v) + "%";
+  chip(P.nFix + " of " + RUNS + " fixed", R.x0 + 7, R.y0 + 14, "left", G.fsAx, C.fix, C, R.x0 + 2, R.x1 - 2);
+  chip(P.nLost + " lost", R.x1 - 7, R.y0 + 14, "right", G.fsAx, C.lost, C, R.x0 + 2, R.x1 - 2);
+  chip("chain says " + pct(P.march.fixed[P.gens]) + " by now",
+       R.x0 + 7, R.y1 - 6, "left", G.fsAx, colour, C, R.x0 + 2, R.x1 - 2);
+  axlabel("1", R.x0 - 3, R.y0 + 10, "right", C);
+  axlabel("0", R.x0 - 3, R.y1 - 3, "right", C);
+  axlabel("generation 0", R.x0, R.y1 + G.axisH - 5, "left", C);
+  axlabel(String(state.gens), R.x1, R.y1 + G.axisH - 5, "right", C);
+}
+
+function drawCurve(A, B2, C){
+  const R = G.B;
+  title("chance the allele ends up in every copy", R.x0, R.y0 - (G.NARROW ? 5 : 6), C);
+  frame(R, C);
+  const cx = (p) => R.x0 + 8 + (R.x1 - R.x0 - 16)*p;
+  const cy = (v) => R.y1 - 8 - (R.y1 - R.y0 - 16)*v;
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(R.x0 + 1, R.y0 + 1, R.x1 - R.x0 - 2, R.y1 - R.y0 - 2); ctx.clip();
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (const v of [0.25, 0.5, 0.75]){
+    ctx.beginPath(); ctx.moveTo(cx(v), R.y0 + 1); ctx.lineTo(cx(v), R.y1 - 1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(R.x0 + 1, cy(v)); ctx.lineTo(R.x1 - 1, cy(v)); ctx.stroke();
+  }
+  /* the neutral case: fixation chance equals present share, exactly */
+  ctx.strokeStyle = C.neutral; ctx.lineWidth = 1.6; ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(cx(0), cy(0)); ctx.lineTo(cx(1), cy(1)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  for (const P of [A, B2]){
+    const colour = P === A ? C.small : C.big;
+    ctx.strokeStyle = colour; ctx.lineWidth = 2.6; ctx.lineJoin = "round";
+    ctx.beginPath();
+    for (let i = 0; i <= P.twoN; i++){
+      const X = cx(i/P.twoN), Y = cy(P.u[i]);
+      i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
+    }
+    ctx.stroke();
+    ctx.fillStyle = colour;
+    ctx.beginPath(); ctx.arc(cx(P.i0/P.twoN), cy(P.uAt), 4, 0, 2*Math.PI); ctx.fill();
+  }
+  const gap = Math.abs(A.uAt - B2.uAt);
+  ctx.strokeStyle = C.muted; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(cx(state.p0), R.y0 + 1); ctx.lineTo(cx(state.p0), R.y1 - 1); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  chip("you start here", cx(state.p0), R.y1 - 6, "left", G.fsAx, C.muted, C, R.x0 + 2, R.x1 - 2);
+  chip(gap > 0.02 ? Math.round(100*gap) + " points apart at the start"
+                  : "the two agree at the start",
+       R.x1 - 8, R.y0 + 14, "right", G.fsAx, gap > 0.02 ? C.accent : C.muted, C, R.x0 + 2, R.x1 - 2);
+  chip(G.NARROW ? "no advantage" : "no advantage would give this line",
+       cx(0.60), cy(0.60) + (G.NARROW ? 15 : 17), "left", G.fsAx, C.neutral, C, R.x0 + 2, R.x1 - 2);
+  axlabel("1", R.x0 - 3, R.y0 + 10, "right", C);
+  axlabel("0", R.x0 - 3, R.y1 - 3, "right", C);
+  axlabel("starting frequency 0", R.x0, R.y1 + G.axisH - 5, "left", C);
+  axlabel("1", R.x1, R.y1 + G.axisH - 5, "right", C);
+}
+
+function keyItems(C){
+  const items = [{ t: "run fixed", c: C.fix }, { t: "run lost", c: C.lost }, { t: "still going", c: C.neutral }];
+  if (state.theory) items.push({ t: "what the chain predicts", c: C.accent, dash: true });
+  return items;
+}
+function keyRows(C, fs){
+  ctx.font = "500 " + fs + "px " + css("--font-body");
+  const items = keyItems(C), sw = 18, gapIn = 5, gapOut = 14, avail = G.W - G.padL - G.padR;
+  const rows = []; let cur = [], used = 0;
+  for (const it of items){
+    const w = sw + gapIn + ctx.measureText(it.t).width;
+    if (cur.length && used + gapOut + w > avail){ rows.push(cur); cur = []; used = 0; }
+    cur.push({ it: it, w: w }); used += w + (cur.length > 1 ? gapOut : 0);
+  }
+  if (cur.length) rows.push(cur);
+  return { rows: rows, sw: sw, gapIn: gapIn, gapOut: gapOut, fs: fs };
+}
+function drawKey(C){
+  const fs = G.NARROW ? 10 : 11.5, K = keyRows(C, fs);
+  const y = G.H - (G.NARROW ? 7 : 8) - (K.rows.length - 1)*(fs + 5);
+  for (let r = 0; r < K.rows.length; r++){
+    let x = G.padL;
+    for (const cell of K.rows[r]){
+      const yy = y + r*(fs + 5);
+      ctx.strokeStyle = cell.it.c; ctx.lineWidth = cell.it.dash ? 2 : 1.8;
+      ctx.setLineDash(cell.it.dash ? [4, 3] : []);
+      ctx.beginPath(); ctx.moveTo(x, yy - fs*0.3); ctx.lineTo(x + K.sw, yy - fs*0.3); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = "500 " + fs + "px " + css("--font-body");
+      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+      ctx.fillStyle = C.muted; ctx.fillText(cell.it.t, x + K.sw + K.gapIn, yy);
+      x += cell.w + K.gapOut;
+    }
+  }
+}
+function drawKeyOld(C){
+  const y = G.H - (G.NARROW ? 7 : 8), fs = G.NARROW ? 10 : 11.5;
+  const items = [{ t: "run fixed", c: C.fix }, { t: "run lost", c: C.lost }, { t: "still going", c: C.neutral }];
+  if (state.theory) items.push({ t: "what the chain predicts", c: C.accent, dash: true });
+  ctx.font = "500 " + fs + "px " + css("--font-body");
+  const sw = 18, gapIn = 5, gapOut = 14;
+  let total = 0;
+  const w = items.map((it) => sw + gapIn + ctx.measureText(it.t).width);
+  for (let i = 0; i < w.length; i++) total += w[i] + (i ? gapOut : 0);
+  let x = G.padL;
+  for (let i = 0; i < items.length; i++){
+    if (x + w[i] > G.W - G.padR && i){ break; }
+    ctx.strokeStyle = items[i].c; ctx.lineWidth = items[i].dash ? 2 : 1.8;
+    ctx.setLineDash(items[i].dash ? [4, 3] : []);
+    ctx.beginPath(); ctx.moveTo(x, y - fs*0.3); ctx.lineTo(x + sw, y - fs*0.3); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = "500 " + fs + "px " + css("--font-body");
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = C.muted; ctx.fillText(items[i].t, x + sw + gapIn, y);
+    x += w[i] + gapOut;
+  }
+  void total;
+}
+
+function render(){
+  if (!G) fitCanvas();
+  const C = colours();
+  const A = pop(state.nsmall), Bp = pop(state.nbig);
+
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+  ctx.clearRect(0, 0, G.W, G.H);
+  ctx.fillStyle = C.bg; ctx.fillRect(0, 0, G.W, G.H);
+
+  drawRuns(A, G.L, C.small, state.nsmall + " breeders", C);
+  drawRuns(Bp, G.R, C.big, state.nbig + " breeders", C);
+  drawCurve(A, Bp, C);
+  drawKey(C);
+
+  el("nsmallout").textContent = String(state.nsmall);
+  el("nbigout").textContent = String(state.nbig);
+  el("selout").textContent = state.sel.toFixed(3);
+  el("p0out").textContent = state.p0.toFixed(2);
+  el("gensout").textContent = String(state.gens);
+  el("rSmallNs").textContent = A.fourNs.toFixed(2);
+  el("rBigNs").textContent = Bp.fourNs.toFixed(2);
+  el("rSmallU").textContent = (100*A.uAt).toFixed(1) + "%";
+  el("rBigU").textContent = (100*Bp.uAt).toFixed(1) + "%";
+  el("rSmallT").textContent = Math.round(A.tAt) + " gen";
+  el("rBigT").textContent = Math.round(Bp.tAt) + " gen";
+}
+
+/* ---- bindings ----------------------------------------------------------- */
+function bindRange(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parse(input.value); fitCanvas(); render(); });
+}
+bindRange("nsmall", "nsmall", (v) => parseInt(v, 10));
+bindRange("nbig", "nbig", (v) => parseInt(v, 10));
+bindRange("sel", "sel", parseFloat);
+bindRange("p0", "p0", parseFloat);
+bindRange("gens", "gens", (v) => parseInt(v, 10));
+el("theory").addEventListener("change", () => { state.theory = el("theory").checked; fitCanvas(); render(); });
+el("paths").addEventListener("change", () => { state.paths = el("paths").checked; fitCanvas(); render(); });
+el("reseed").addEventListener("click", () => { seed = (seed*1103515245 + 12345) & 0x7fffffff; fitCanvas(); render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults); seed = SEED;
+  el("nsmall").value = String(defaults.nsmall); el("nbig").value = String(defaults.nbig);
+  el("sel").value = String(defaults.sel); el("p0").value = String(defaults.p0);
+  el("gens").value = String(defaults.gens);
+  el("theory").checked = defaults.theory; el("paths").checked = defaults.paths;
+  fitCanvas(); render();
+});
+let rt = null;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { fitCanvas(); render(); }, 110); });
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", () => { fitCanvas(); render(); });
+}
+fitCanvas();
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+const memo = Object.create(null);
+function once(key, fn){ if (!(key in memo)) memo[key] = fn(); return memo[key]; }
+const uOf = (twoN, s) => once("u" + twoN + "_" + s, () => Model.fixProbs(twoN, s));
+const tOf = (twoN, s) => once("t" + twoN + "_" + s, () => Model.condFixTime(twoN, s, uOf(twoN, s)));
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+
+  /* 1. Every row of the chain is a probability distribution. */
+  const rows = once("rows", function(){
+    let worst = 0;
+    for (const twoN of [10, 40]) for (const s of [0, 0.2, -0.1]){
+      for (const row of Model.matrix(twoN, s)){
+        let sum = 0;
+        for (const v of row) sum += v;
+        worst = Math.max(worst, Math.abs(sum - 1));
+      }
+    }
+    return worst;
+  });
+  push("the sampling step is a proper distribution", rows <= 1e-12,
+       "worst departure of a row sum from 1 across three selection strengths is " + rows.toExponential(2));
+
+  /* 2. With no selection, the chance of fixation IS the present share. Not
+        to three standard errors — exactly, because frequency is a martingale. */
+  const mart = once("mart", function(){
+    let worst = 0, n = 0;
+    for (const twoN of [10, 20, 40]){
+      const u = uOf(twoN, 0);
+      for (let i = 0; i <= twoN; i++){ worst = Math.max(worst, Math.abs(u[i] - i/twoN)); n++; }
+    }
+    return { worst: worst, n: n };
+  });
+  push("a neutral allele fixes with probability equal to its frequency, exactly",
+       mart.worst <= 1e-11,
+       "over " + mart.n + " starting counts at three population sizes, the exact chain departs from " +
+       "p by at most " + mart.worst.toExponential(2) + " — a simulation to three standard errors " +
+       "would only have bounded this near 0.005");
+
+  /* 3. Heterozygosity falls by exactly 1 - 1/(2N) every generation. */
+  const het = once("het", function(){
+    let worst = 0;
+    for (const twoN of [10, 20, 40]){
+      const P = Model.matrix(twoN, 0);
+      let d = new Float64Array(twoN + 1), z = 0;
+      for (let i = 0; i <= twoN; i++){ d[i] = Math.exp(-Math.pow(i - twoN*0.37, 2)/18); z += d[i]; }
+      for (let i = 0; i <= twoN; i++) d[i] /= z;
+      for (let g = 0; g < 100; g++){
+        const nd = new Float64Array(twoN + 1);
+        for (let i = 0; i <= twoN; i++){ if (!d[i]) continue; for (let j = 0; j <= twoN; j++) nd[j] += d[i]*P[i][j]; }
+        const want = Model.het(d, twoN)*(1 - 1/twoN);
+        worst = Math.max(worst, Math.abs(Model.het(nd, twoN) - want)/Math.max(1e-300, want));
+        d = nd;
+      }
+    }
+    return worst;
+  });
+  push("expected heterozygosity decays by exactly 1 - 1/(2N) per generation",
+       het <= 1e-12,
+       "over 100 generations at three population sizes the worst relative departure is " +
+       het.toExponential(2));
+
+  /* 4. The famous 4N only holds for a single new copy, and only as N grows. */
+  const four = once("four", function(){
+    const rows2 = [];
+    for (const N of [5, 10, 20, 30]){
+      const tt = tOf(2*N, 0);
+      rows2.push({ N: N, mut: tt[1]/N, half: tt[N]/N });
+    }
+    return rows2;
+  });
+  push("4N generations is the single-copy case in the large-N limit, not a general figure",
+       four.every((r, i) => i === 0 || r.mut > four[i - 1].mut) &&
+       four.every((r) => r.mut < 4) && four[0].mut < 3.6 &&
+       four.every((r) => Math.abs(r.half - 4*Math.log(2)) < 0.28),
+       "conditional mean fixation time for one new copy climbs " + four[0].mut.toFixed(3) + "N at N=5 to " +
+       four[3].mut.toFixed(3) + "N at N=30, always short of 4N — twelve per cent short at N=5, which is " +
+       "outside the ten per cent the claim allows");
+
+  /* 5. Starting at half, the answer is 4N ln 2, a third quicker than 4N. */
+  push("from a half it is 4N ln 2, about 2.77N, not 4N",
+       four.every((r, i) => i === 0 || r.half > four[i - 1].half) &&
+       four[3].half < 4*Math.log(2) && four[3].half > 2.68,
+       "exact values run " + four.map((r) => r.half.toFixed(3)).join(", ") +
+       " times N for N = 5, 10, 20, 30, climbing towards 4 ln 2 = " + (4*Math.log(2)).toFixed(4) +
+       " — nowhere near 4");
+
+  /* 6. Kimura's diffusion formula: excellent for weak selection, several per
+        cent optimistic for strong, and the error tracks s rather than N.    */
+  const kim = once("kim", function(){
+    const out = { weak: 0, strong: [] };
+    for (const N of [10, 20, 40]){
+      out.weak = Math.max(out.weak, Math.abs(uOf(2*N, 0.01)[1]/Model.kimura(1/(2*N), 4*N*0.01) - 1));
+      out.strong.push(uOf(2*N, 0.5)[1]/Model.kimura(1/(2*N), 4*N*0.5));
+    }
+    const lo = Math.min.apply(null, out.strong), hi = Math.max.apply(null, out.strong);
+    return { weak: out.weak, lo: lo, hi: hi };
+  });
+  push("Kimura's formula is right to a part in 300 when selection is weak, and 8 per cent high when it is not",
+       kim.weak < 0.004 && kim.lo > 0.90 && kim.hi < 0.93 && (kim.hi - kim.lo) < 0.01,
+       "at s = 0.01 the exact chain sits within " + (100*kim.weak).toFixed(2) + "% of the formula; at s = 0.5 " +
+       "it is only " + (100*kim.lo).toFixed(1) + " to " + (100*kim.hi).toFixed(1) +
+       "% of it, and that ratio barely moves across N = 10, 20, 40 — the error is in s, not in N");
+
+  /* 7. Fixation chance depends on N and s only through their product. */
+  const collapse = once("collapse", function(){
+    const rows3 = [];
+    for (const x of [0.5, 1, 2, 4, 8]){
+      const vals = [10, 20, 30].map((N) => uOf(2*N, x/(4*N))[N]/0.5);
+      rows3.push({ x: x, spread: Math.max.apply(null, vals) - Math.min.apply(null, vals),
+                   lim: Model.kimura(0.5, x)/0.5, top: vals[2] });
+    }
+    return rows3;
+  });
+  push("only the product 4Ns matters, not N and s separately",
+       collapse.every((r) => r.spread < 0.015) && collapse.every((r) => r.top < r.lim && r.lim - r.top < 0.01),
+       "holding 4Ns fixed at 0.5, 1, 2, 4 and 8 while N runs over 10, 20 and 30, the lift over neutral " +
+       "varies by at most " + Math.max.apply(null, collapse.map((r) => r.spread)).toExponential(2) +
+       " and closes on the diffusion limit from below");
+
+  /* 8. The drift barrier is a universal constant in that product. */
+  const barrier = once("barrier", function(){
+    const vals = [8, 16, 30].map(function(N){
+      let lo = 0, hi = 4;
+      for (let k = 0; k < 30; k++){
+        const m = 0.5*(lo + hi);
+        if (uOf(2*N, m/(4*N))[N]/0.5 < 1.1) lo = m; else hi = m;
+      }
+      return 0.5*(lo + hi);
+    });
+    let lo = 0, hi = 4;
+    for (let k = 0; k < 60; k++){
+      const m = 0.5*(lo + hi);
+      if (Model.kimura(0.5, m)/0.5 < 1.1) lo = m; else hi = m;
+    }
+    return { vals: vals, lim: 0.5*(lo + hi) };
+  });
+  push("the point where selection first lifts fixation ten per cent is one number in 4Ns",
+       barrier.vals.every((v) => Math.abs(v - 0.4013) < 0.004) &&
+       barrier.vals[0] > barrier.vals[2] && Math.abs(barrier.lim - 0.4013) < 0.001,
+       "solving the exact chain at N = 8, 16 and 30 puts the barrier at 4Ns = " +
+       barrier.vals.map((v) => v.toFixed(5)).join(", ") + ", converging on the diffusion value " +
+       barrier.lim.toFixed(6));
+
+  /* 9. A harmful allele still fixes, and the formula's own symmetry says
+        exactly how the two directions are related.                        */
+  const bad = once("bad", function(){
+    let sym = 0;
+    for (const x of [0.5, 2, 8, -3]) for (const p of [0.2, 0.5, 0.8])
+      sym = Math.max(sym, Math.abs(Model.kimura(p, x) + Model.kimura(1 - p, -x) - 1));
+    const u = uOf(20, -0.08);
+    return { sym: sym, u: u[10], lim: Model.kimura(0.5, -3.2) };
+  });
+  push("a harmful allele fixes anyway, at a rate the same curve predicts",
+       bad.sym <= 1e-12 && bad.u > 0.15 && bad.u < 0.17 && Math.abs(bad.u/bad.lim - 1) < 0.07,
+       "u(p, x) + u(1-p, -x) = 1 holds to " + bad.sym.toExponential(2) + "; at N = 10 and s = -0.08, " +
+       "so 4Ns = -3.2, an allele starting at half still takes over " + (100*bad.u).toFixed(1) +
+       "% of the time against the formula's " + (100*bad.lim).toFixed(1) + "%");
+
+  /* 10. SECOND ROUTE: run the thing 40000 times and see. */
+  const mc = once("mc", function(){
+    const out = [];
+    for (const s of [0, 0.05]){
+      const twoN = 20, runs = 40000;
+      let fix = 0, tsum = 0, tn = 0;
+      for (let r = 0; r < runs; r++){
+        const rng = mulberry32(SEED + 104729*r + (s ? 31 : 0));
+        let i = 10, g = 0;
+        while (i > 0 && i < twoN && g < 20000){ i = Model.binomSample(twoN, Model.after(i/twoN, s), rng); g++; }
+        if (i === twoN){ fix++; tsum += g; tn++; }
+      }
+      const ex = uOf(twoN, s)[10], se = Math.sqrt(ex*(1 - ex)/runs);
+      const exT = tOf(twoN, s)[10];
+      out.push({ s: s, p: fix/runs, ex: ex, z: (fix/runs - ex)/se, tMC: tsum/tn, tEx: exT });
+    }
+    return out;
+  });
+  push("simulating it agrees with solving it",
+       mc.every((r) => Math.abs(r.z) < 3) && mc.every((r) => Math.abs(r.tMC/r.tEx - 1) < 0.04),
+       "40000 seeded runs at N = 10: neutral fixes " + (100*mc[0].p).toFixed(2) + "% against the exact " +
+       (100*mc[0].ex).toFixed(2) + "% (" + mc[0].z.toFixed(2) + " standard errors), and with s = 0.05, " +
+       (100*mc[1].p).toFixed(2) + "% against " + (100*mc[1].ex).toFixed(2) + "% (" + mc[1].z.toFixed(2) +
+       "); mean fixation times " + mc[0].tMC.toFixed(2) + " and " + mc[1].tMC.toFixed(2) +
+       " against " + mc[0].tEx.toFixed(2) + " and " + mc[1].tEx.toFixed(2));
+
+  /* 11. Absorption is certain and the exact march agrees with the solve. */
+  const march = once("march", function(){
+    const twoN = 20, s = 0.05, m = Model.march(twoN, s, 6, 4000);
+    const u = uOf(twoN, s);
+    return { total: m.fixed[4000] + m.lost[4000], gap: Math.abs(m.fixed[4000] - u[6]) };
+  });
+  push("running the distribution forward lands on the probability the solve predicted",
+       march.total > 0.99999 && march.gap <= 1e-9,
+       "after 4000 generations the chain is absorbed with probability " + march.total.toFixed(9) +
+       " and the fixed share differs from the solved u(p) by " + march.gap.toExponential(2));
+
+  /* 12. Nothing goes non-finite anywhere the controls reach. */
+  const fin = once("fin", function(){
+    for (const N of [2, 7, 23, 60]) for (const s of [-0.15, -0.05, 0, 0.05, 0.3]){
+      const u = uOf(2*N, s), tt = tOf(2*N, s);
+      for (let i = 0; i <= 2*N; i++) if (!Number.isFinite(u[i]) || u[i] < -1e-12 || u[i] > 1 + 1e-12) return false;
+      for (let i = 1; i < 2*N; i++) if (!Number.isFinite(tt[i]) || tt[i] <= 0) return false;
+      const m = Model.march(2*N, s, Math.max(1, Math.round(0.3*2*N)), 40);
+      for (let g = 0; g <= 40; g++) if (!Number.isFinite(m.mean[g]) || !Number.isFinite(m.sd[g])) return false;
+    }
+    return true;
+  });
+  push("finite and in range everywhere the controls reach", fin,
+       "four population sizes by five selection coefficients: every fixation probability lies in [0,1], " +
+       "every conditional time is positive, and the forward march stays finite");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

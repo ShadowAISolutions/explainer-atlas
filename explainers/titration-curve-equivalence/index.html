@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Half Way Along, The Meter Almost Reads The pKa &#8212; Explainer Atlas</title>
+<meta name="description" content="Add base to a weak acid and two landmarks appear for free: the pKa half way to equivalence and the equivalence point itself. Neither shortcut is exact, and the page shows where each one breaks.">
+<style>
+:root{
+  --bg:#eef2f7; --panel:#fbfcfe; --ink:#131a23; --muted:#5a6675; --line:#d2dce6;
+  --accent:#1d5f8a; --accent-soft:#dbe8f2; --warn:#a8531c;
+  --curve:#1d5f8a; --pka:#b0326d; --eq:#8a6212; --ha:#8fb4cd; --a:#2f7d6a; --grid:#dfe7ef;
+  --radius:9px; --pad:clamp(14px,3vw,26px);
+  --font-body:"Helvetica Neue",Inter,system-ui,-apple-system,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.5rem,1.05rem + 2vw,2.2rem);
+  --scale-body:clamp(0.98rem,0.94rem + 0.2vw,1.05rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f151c; --panel:#151d26; --ink:#e4ebf2; --muted:#93a2b3; --line:#243141;
+    --accent:#6fb4e0; --accent-soft:#132433; --warn:#e2a06a;
+    --curve:#6fb4e0; --pka:#e87fb0; --eq:#d8ad55; --ha:#3f6a86; --a:#5fbda6; --grid:#1e2a37;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink); font:var(--scale-body)/1.6 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.13; margin:0 0 .4em; letter-spacing:-.015em}
+.kicker{margin:0 0 .35em; color:var(--accent); font:600 .74rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.14em}
+.standfirst{margin:0; color:var(--muted); max-width:46em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.6em; color:var(--muted); font-size:.85rem}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1.05em}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600}
+.control output{font:600 .92rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.82rem; margin:0}
+.checkrow{display:flex; align-items:center; gap:.55em}
+.checkrow label{font-weight:600}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+input[type=checkbox]{accent-color:var(--accent); width:18px; height:18px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .7em; min-height:40px}
+select{width:100%}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr)); gap:.6em; margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.55em .7em}
+.readout dt{margin:0; color:var(--muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.07em}
+.readout dd{margin:.18em 0 0; font:600 1rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.12rem; margin:1.75em 0 .45em; letter-spacing:-.008em}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.9rem; background:var(--accent-soft); padding:.7em .85em; border-radius:8px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.85rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Chemistry</p>
+  <h1>Half Way Along, The Meter Almost Reads The pKa</h1>
+  <p class="standfirst">Two landmarks fall out of a titration curve for nothing: the pKa at half way, and an equivalence point that is not at pH 7. Both are shortcuts, and both have a price.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="1040" height="620" role="img"
+            aria-label="A titration curve of pH against millilitres of base added, with the half-equivalence and equivalence points marked, above a band chart showing what fraction of the acid is still protonated."></canvas>
+    <figcaption>Above: pH against base added, solved from charge and mass balance with no approximations. Below: how much of the acid is still holding its proton. The two dashed marks are the landmarks; the numbers beside them are what the shortcuts claim and what is actually there.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Simulation controls">
+    <div class="control">
+      <label for="acid">Acid</label>
+      <select id="acid">
+        <option value="4.76" selected>Acetic acid &#8212; pKa 4.76</option>
+        <option value="3.75">Formic acid &#8212; pKa 3.75</option>
+        <option value="3.17">Hydrofluoric acid &#8212; pKa 3.17</option>
+        <option value="7.20">Dihydrogen phosphate &#8212; pKa 7.20</option>
+        <option value="9.21">Hydrocyanic acid &#8212; pKa 9.21</option>
+        <option value="strong">Hydrochloric acid &#8212; strong</option>
+        <option value="custom">Custom acid &#8212; set the pKa below</option>
+      </select>
+      <p class="hint" id="ahint">Moving the pKa slider switches to a custom acid.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="pka">pKa</label>
+        <output id="pkaout" for="pka">4.76</output>
+      </div>
+      <input type="range" id="pka" min="1" max="11" step="0.01" value="4.76">
+      <p class="hint">How reluctant the acid is to let go of its proton.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="ca">Acid concentration</label>
+        <output id="caout" for="ca">0.100 M</output>
+      </div>
+      <input type="range" id="ca" min="-3" max="-0.3" step="0.01" value="-1">
+      <p class="hint">From 1 millimolar to half molar, on a log scale.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="cb">Base concentration</label>
+        <output id="cbout" for="cb">0.100 M</output>
+      </div>
+      <input type="range" id="cb" min="-3" max="-0.3" step="0.01" value="-1">
+      <p class="hint">Sodium hydroxide in the burette.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="vb">Base added</label>
+        <output id="vbout" for="vb">0.0 mL</output>
+      </div>
+      <input type="range" id="vb" min="0" max="1" step="0.001" value="0">
+      <p class="hint">The whole run, from dry to twice the equivalence volume.</p>
+    </div>
+
+    <div class="control checkrow">
+      <input type="checkbox" id="marks" checked>
+      <label for="marks">Show the two shortcuts</label>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>pH now</dt><dd id="rph">2.87</dd></div>
+      <div><dt>Half way reads</dt><dd id="rhalf">4.76</dd></div>
+      <div><dt>pKa shortcut misses by</dt><dd id="rhoff">0.0005</dd></div>
+      <div><dt>Equivalence pH</dt><dd id="req">8.73</dd></div>
+      <div><dt>Hydrolysis formula misses by</dt><dd id="reoff">0.0000</dd></div>
+      <div><dt>Equivalence volume</dt><dd id="rveq">25.0 mL</dd></div>
+    </dl>
+
+    <button type="button" id="jhalf">Go to half equivalence</button>
+    <button type="button" id="jeq">Go to the equivalence point</button>
+    <button type="button" id="reset">Reset to defaults</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Nothing on this page is approximated. Every point on the curve is the
+     hydrogen ion concentration that satisfies charge balance, mass balance and
+     the water equilibrium at once, found by bisection to the last digit a
+     double can hold. That matters, because the whole subject is a stack of
+     shortcuts and the only way to see what each one costs is to have the exact
+     answer sitting next to it.</p>
+
+  <p>Add sodium hydroxide to a weak acid and the curve does three things: it
+     rises steeply from the start, flattens into a long shallow plateau, then
+     leaps. The plateau is the buffer region, and its midpoint is the first free
+     gift. Half the acid has been converted, so half is still protonated, and
+     the ratio of the two forms is one. Put that into the relation between pH
+     and that ratio and the logarithm vanishes.</p>
+
+  <p class="math">pH = pKa + log([A&#8315;] / [HA])&#8195;&#8594;&#8195;pH = pKa when the two are equal</p>
+
+  <p>That identity is exact. Given the true concentrations of the two forms it
+     holds to within four parts in a thousand trillion, which is the floor of
+     the arithmetic and not a property of chemistry. What is not exact is the step
+     everyone actually takes: assuming that adding half the equivalence volume
+     of base leaves exactly half the acid deprotonated. It does not, because
+     some of the acid dissociated on its own before any base arrived, and
+     because water is contributing ions of its own.</p>
+
+  <h2>What the shortcut costs</h2>
+
+  <p>For acetic acid at a tenth molar the gap is half a thousandth of a pH unit
+     and nobody will ever care. Wind the pKa down towards 2 and the
+     concentration down towards a millimolar and the same shortcut is out by
+     more than a whole pH unit: across three hundred seeded acids the worst case
+     misreads a pKa of 2.30 as 3.41. A stronger weak acid dissociates
+     substantially before the titration starts, so half the equivalence volume
+     is nowhere near half deprotonated.</p>
+
+  <p>What actually governs the miss, though, is not the pKa but the
+     concentration. Sweep the whole band from pKa 4 to 9 and the worst case is
+     0.176, and it sits at a millimolar; hold the acid at a twentieth molar or
+     stronger and the same sweep never exceeds 0.005. That is why the shortcut
+     survives in the textbooks. Dilution is what breaks it, because the more
+     dilute the acid the larger a share of it has already dissociated before
+     the burette is opened.</p>
+
+  <h2>The equivalence point is not at pH 7</h2>
+
+  <p>At equivalence every acid molecule has been converted to its conjugate
+     base, and that base pulls a proton off water. The solution ends up basic,
+     always: over three hundred acids the lowest equivalence pH found was 7.027,
+     and the weaker the acid the further above seven it sits. Only a strong acid
+     lands exactly on seven, and then it lands there exactly &#8212; at equivalence
+     nothing is left but water and a spectator salt, so the hydrogen ion
+     concentration is the square root of the water constant and the pH is
+     7.0000000000.</p>
+
+  <p>The usual estimate for the weak case treats the conjugate base as if it
+     were alone in solution and ignores the acid it came from. That is worth
+     four decimal places at ordinary concentrations and rather less elsewhere:
+     the worst of the same three hundred acids has the formula predicting 6.564
+     where the real answer is 7.027, an error of 0.463 &#8212; and on the wrong side
+     of neutral, which is the one thing the estimate was supposed to settle.</p>
+
+  <h2>What to try</h2>
+
+  <p>Press the button that jumps to half equivalence and watch the readout
+     beside the pKa: at the default acid they agree to two decimals. Now drag
+     the pKa down to 2 and the concentration down to a millimolar and watch the
+     same two numbers separate by a whole unit while the plateau itself
+     disappears &#8212; there is no flat region left to have a midpoint. Then switch
+     to hydrochloric acid and jump to equivalence: the leap becomes a cliff and
+     the pH lands on 7 exactly. Finally set the base concentration to ten times
+     the acid and notice that the equivalence volume moves but neither landmark
+     does, because both are properties of the acid rather than of the burette.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &#183; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+
+/* ---- MODEL -------------------------------------------------------------
+   Nothing here is approximated. At every point the hydrogen ion
+   concentration h solves charge balance with mass balance and the water
+   equilibrium substituted in:
+
+     [Na+] + h = [A-] + Kw/h,  [A-] = C_acid * Ka/(Ka + h)
+
+   A strong acid is the Ka -> infinity limit, where [A-] is the whole of the
+   acid. The left side rises with h and the right side falls, so the residual
+   is monotone and bisection on log h cannot miss the root.              */
+const Model = {
+  Kw: 1e-14,
+  STRONG: Infinity,
+
+  KaOf(pKa){ return Math.pow(10, -pKa); },
+
+  h(Ca, Va, Cb, Vb, Ka){
+    const V = Va + Vb, CA = Ca * Va / V, CB = Cb * Vb / V, Kw = Model.Kw;
+    const f = Number.isFinite(Ka)
+      ? x => CB + x - CA * Ka / (Ka + x) - Kw / x
+      : x => CB + x - CA - Kw / x;
+    let lo = -20, hi = 1;
+    /* 100 halvings of a 21-wide window is far past what a double can hold */
+    for (let i = 0; i < 100; i++){
+      const m = (lo + hi) / 2;
+      if (f(Math.pow(10, m)) > 0) hi = m; else lo = m;
+    }
+    return Math.pow(10, (lo + hi) / 2);
+  },
+
+  pH(Ca, Va, Cb, Vb, Ka){ return -Math.log10(Model.h(Ca, Va, Cb, Vb, Ka)); },
+
+  /* The same relation rearranged for the volume instead of the acidity. It is
+     derived on paper rather than solved, so running the curve through it and
+     back is a check on the solver by a different route. */
+  vbOf(hh, Ca, Va, Cb, Ka){
+    const Kw = Model.Kw;
+    const aFrac = Number.isFinite(Ka) ? Ka / (Ka + hh) : 1;
+    return Va * (Ca * aFrac + Kw / hh - hh) / (Cb + hh - Kw / hh);
+  },
+
+  veq(Ca, Va, Cb){ return Ca * Va / Cb; },
+
+  fracA(hh, Ka){ return Number.isFinite(Ka) ? Ka / (Ka + hh) : 1; },
+
+  halfEqPH(Ca, Va, Cb, Ka){ return Model.pH(Ca, Va, Cb, Model.veq(Ca, Va, Cb) / 2, Ka); },
+  eqPH(Ca, Va, Cb, Ka){ return Model.pH(Ca, Va, Cb, Model.veq(Ca, Va, Cb), Ka); },
+
+  /* the textbook estimate: treat the conjugate base as if it were alone */
+  eqClosed(Ca, Va, Cb, pKa){
+    const Veq = Model.veq(Ca, Va, Cb), CA = Ca * Va / (Va + Veq);
+    return 14 - 0.5 * ((14 - pKa) - Math.log10(CA));
+  },
+
+  /* the starting pH with the water term dropped, as a quadratic */
+  startQuadraticPH(Ca, Ka){
+    return -Math.log10((-Ka + Math.sqrt(Ka * Ka + 4 * Ka * Ca)) / 2);
+  }
+};
+
+/* ---- STATE -------------------------------------------------------------- */
+const VA = 25;                       /* millilitres of acid in the flask */
+const defaults = { pka: 4.76, strong: false, ca: -1, cb: -1, frac: 0, marks: true };
+const state = Object.assign({}, defaults);
+const conc = v => Math.pow(10, v);
+const KaNow = () => (state.strong ? Model.STRONG : Model.KaOf(state.pka));
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+let W = 1040, H = 620, NARROW = false;
+const G = { x0: 0, x1: 0, curve: {}, spec: {} };
+
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function palette(){
+  return { panel: css("--panel"), ink: css("--ink"), muted: css("--muted"), line: css("--line"),
+           grid: css("--grid"), curve: css("--curve"), pka: css("--pka"), eq: css("--eq"),
+           ha: css("--ha"), a: css("--a") };
+}
+
+function chip(text, x, y, align, fs, colour, C){
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  const w = ctx.measureText(text).width, h = fs + 5;
+  let bx = align === "right" ? x - w : (align === "center" ? x - w / 2 : x);
+  if (bx + w > W - 2) bx = Math.min(W - 2 - w, x - w - 6);
+  if (bx < 2) bx = 2;
+  ctx.fillStyle = C.panel; ctx.globalAlpha = 0.9;
+  ctx.fillRect(bx - 3, y - 1, w + 6, h + 2);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = colour; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText(text, bx, y + 2);
+  ctx.textBaseline = "alphabetic";
+}
+
+function headerKey(text, items, P, C){
+  const fs = NARROW ? 9 : 10;
+  ctx.font = fs + "px " + css("--font-mono");
+  ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(text, 2, P.y0 - 8);
+  if (!items || !items.length) return;
+  const hw = 2 + ctx.measureText(text).width;
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  let kw = 0;
+  for (const it of items) kw += 11 + 4 + ctx.measureText(it.t).width + 12;
+  kw -= 12;
+  let kx = G.x1 - kw;
+  if (kx < hw + 14) return;
+  const ky = P.y0 - 16;
+  for (const it of items){
+    ctx.fillStyle = it.c; ctx.fillRect(kx, ky, 11, 8);
+    ctx.fillStyle = C.muted; ctx.fillText(it.t, kx + 15, ky + 8);
+    kx += 11 + 4 + ctx.measureText(it.t).width + 12;
+  }
+}
+
+function fitCanvas(){
+  const host = cv.parentElement;
+  const avail = Math.floor(host.clientWidth - 24);
+  W = Math.max(300, Math.min(1040, avail > 0 ? avail : 1040));
+  NARROW = W < 440;
+  const fs = NARROW ? 9 : 10;
+  ctx.font = fs + "px " + css("--font-mono");
+  G.x0 = Math.ceil(Math.max(ctx.measureText("14").width, ctx.measureText("100%").width)) + 12;
+  G.x1 = W - (NARROW ? 8 : 14);
+
+  const curveH = NARROW ? 240 : 320;
+  const specH  = NARROW ? 96 : 118;
+  const head = NARROW ? 20 : 23, foot = NARROW ? 34 : 36;
+  let y = 6;
+  G.curve = { y0: y + head, y1: y + head + curveH }; y = G.curve.y1 + foot + 10;
+  G.spec  = { y0: y + head, y1: y + head + specH };  y = G.spec.y1 + foot;
+  H = y + 4;
+  cv.width = Math.round(W * SS); cv.height = Math.round(H * SS);
+  cv.style.width = "100%"; cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+/* ---- DRAWING ------------------------------------------------------------ */
+function drawCurve(C, S){
+  const P = G.curve, w = G.x1 - G.x0, h = P.y1 - P.y0;
+  headerKey("pH against base added", null, P, C);
+  const X = v => G.x0 + w * (v / S.vmax);
+  const Y = p => P.y1 - h * (p / 14);
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(G.x0, P.y0, w, h); ctx.clip();
+
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (let p = 2; p < 14; p += 2){
+    ctx.beginPath(); ctx.moveTo(G.x0, Y(p)); ctx.lineTo(G.x1, Y(p)); ctx.stroke();
+  }
+
+  if (state.marks){
+    /* the two landmarks, as verticals; they are named under the frame */
+    ctx.strokeStyle = C.eq; ctx.lineWidth = 1.3; ctx.setLineDash([4, 4]);
+    for (const v of [S.veq / 2, S.veq]){
+      ctx.beginPath(); ctx.moveTo(X(v), P.y0); ctx.lineTo(X(v), P.y1); ctx.stroke();
+    }
+    /* what the shortcuts claim */
+    if (!state.strong){
+      ctx.strokeStyle = C.pka;
+      ctx.beginPath(); ctx.moveTo(G.x0, Y(state.pka)); ctx.lineTo(G.x1, Y(state.pka)); ctx.stroke();
+    }
+    ctx.strokeStyle = C.muted;
+    ctx.beginPath(); ctx.moveTo(G.x0, Y(7)); ctx.lineTo(G.x1, Y(7)); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  ctx.strokeStyle = C.curve; ctx.lineWidth = 2.6;
+  ctx.beginPath();
+  for (let i = 0; i < S.pts.length; i++){
+    const px = X(S.pts[i].v), py = Y(S.pts[i].p);
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  ctx.fillStyle = C.curve;
+  ctx.beginPath(); ctx.arc(X(S.vb), Y(S.ph), 5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = C.panel; ctx.lineWidth = 1.7; ctx.stroke();
+  ctx.restore();
+
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  ctx.strokeRect(G.x0 + 0.5, P.y0 + 0.5, w - 1, h - 1);
+
+  /* Naming a horizontal mark by a fixed rule does not work here: the curve
+     may start above the pKa line and end below it, or the reverse, depending
+     on the acid and how dilute it is. So try all four corners of the mark,
+     measure how close the drawn curve comes to each, and take the roomiest.
+     Labels already placed count as obstacles too. */
+  const fs = NARROW ? 9 : 10, chH = fs + 5;
+  const placed = [];
+  function labelLine(text, pVal, colour){
+    ctx.font = "600 " + fs + "px " + css("--font-mono");
+    const tw = ctx.measureText(text).width + 6;
+    let best = null;
+    for (const side of [0, 1]){
+      const bx = side ? G.x1 - 6 - tw : G.x0 + 6;
+      for (const above of [0, 1]){
+        const top = above ? Y(pVal) - 9 - chH : Y(pVal) + 9;
+        if (top < P.y0 + 2 || top + chH > P.y1 - 2) continue;
+        let clear = Infinity;
+        for (const pt of S.pts){
+          const px = X(pt.v);
+          if (px < bx - 4 || px > bx + tw + 4) continue;
+          const cy = Y(pt.p);
+          clear = Math.min(clear, cy < top ? top - cy : (cy > top + chH ? cy - (top + chH) : -1));
+        }
+        for (const q of placed)
+          if (!(bx + tw < q.x || q.x + q.w < bx))
+            clear = Math.min(clear, top > q.y ? top - (q.y + chH) : q.y - (top + chH));
+        if (!best || clear > best.clear) best = { x: bx, y: top, clear: clear };
+      }
+    }
+    if (!best) return;
+    placed.push({ x: best.x, y: best.y, w: tw });
+    chip(text, best.x, best.y, "left", fs, colour, C);
+  }
+  if (state.marks){
+    if (!state.strong) labelLine("pKa " + state.pka.toFixed(2), state.pka, C.pka);
+    labelLine("pH 7", 7, C.muted);
+  }
+
+  ctx.font = fs + "px " + css("--font-mono");
+  ctx.fillStyle = C.muted; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (const p of [0, 7, 14]) ctx.fillText(String(p), G.x0 - 6, Y(p));
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("0", G.x0, P.y1 + 6);
+  ctx.textAlign = "right";
+  ctx.fillText(S.vmax.toFixed(1) + " mL", G.x1, P.y1 + 6);
+
+  if (state.marks){
+    ctx.fillStyle = C.eq;
+    ctx.textAlign = "center";
+    ctx.fillText(NARROW ? "half" : "half equivalence", X(S.veq / 2), P.y1 + 6);
+    ctx.fillText(NARROW ? "eq." : "equivalence", X(S.veq), P.y1 + 20);
+  }
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+}
+
+function drawSpecies(C, S){
+  const P = G.spec, w = G.x1 - G.x0, h = P.y1 - P.y0;
+  headerKey("what the acid is doing",
+            [{ c: C.ha, t: "still protonated" }, { c: C.a, t: "given it up" }], P, C);
+  const X = v => G.x0 + w * (v / S.vmax);
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(G.x0, P.y0, w, h); ctx.clip();
+  ctx.fillStyle = C.ha; ctx.fillRect(G.x0, P.y0, w, h);
+  ctx.fillStyle = C.a;
+  ctx.beginPath();
+  ctx.moveTo(G.x0, P.y1);
+  for (const pt of S.pts) ctx.lineTo(X(pt.v), P.y1 - h * pt.f);
+  ctx.lineTo(G.x1, P.y1);
+  ctx.closePath(); ctx.fill();
+
+  if (state.marks){
+    ctx.strokeStyle = C.eq; ctx.lineWidth = 1.3; ctx.setLineDash([4, 4]);
+    for (const v of [S.veq / 2, S.veq]){
+      ctx.beginPath(); ctx.moveTo(X(v), P.y0); ctx.lineTo(X(v), P.y1); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+  ctx.strokeStyle = C.panel; ctx.lineWidth = 1.8;
+  ctx.beginPath(); ctx.moveTo(X(S.vb), P.y0); ctx.lineTo(X(S.vb), P.y1); ctx.stroke();
+  ctx.restore();
+
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  ctx.strokeRect(G.x0 + 0.5, P.y0 + 0.5, w - 1, h - 1);
+
+  const fs = NARROW ? 9 : 10;
+  ctx.font = fs + "px " + css("--font-mono");
+  ctx.fillStyle = C.muted; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText("100%", G.x0 - 6, P.y0 + 7);
+  ctx.fillText("0%", G.x0 - 6, P.y1 - 7);
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText((S.fA * 100).toFixed(1) + " per cent has given up its proton", G.x0, P.y1 + 6);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+}
+
+/* ---- RENDER ------------------------------------------------------------- */
+function scene(){
+  const Ca = conc(state.ca), Cb = conc(state.cb), Ka = KaNow();
+  const veq = Model.veq(Ca, VA, Cb), vmax = veq * 2;
+  const vb = state.frac * vmax;
+  const N = 320, pts = [];
+  for (let i = 0; i <= N; i++){
+    const v = vmax * i / N;
+    const hh = Model.h(Ca, VA, Cb, v, Ka);
+    pts.push({ v: v, p: -Math.log10(hh), f: Model.fracA(hh, Ka) });
+  }
+  const hNow = Model.h(Ca, VA, Cb, vb, Ka);
+  return {
+    Ca: Ca, Cb: Cb, Ka: Ka, veq: veq, vmax: vmax, vb: vb, pts: pts,
+    ph: -Math.log10(hNow), fA: Model.fracA(hNow, Ka),
+    half: Model.halfEqPH(Ca, VA, Cb, Ka),
+    eq: Model.eqPH(Ca, VA, Cb, Ka),
+    eqApprox: state.strong ? 7 : Model.eqClosed(Ca, VA, Cb, state.pka)
+  };
+}
+
+function render(){
+  fitCanvas();
+  const C = palette(), S = scene();
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = C.panel; ctx.fillRect(0, 0, W, H);
+  drawCurve(C, S);
+  drawSpecies(C, S);
+
+  el("pkaout").textContent = state.strong ? "strong" : state.pka.toFixed(2);
+  el("caout").textContent = S.Ca.toFixed(S.Ca < 0.01 ? 4 : 3) + " M";
+  el("cbout").textContent = S.Cb.toFixed(S.Cb < 0.01 ? 4 : 3) + " M";
+  el("vbout").textContent = S.vb.toFixed(1) + " mL";
+  el("ahint").textContent = state.strong
+    ? "Fully dissociated, so it has no pKa and no buffer plateau."
+    : "Moving the pKa slider switches to a custom acid.";
+
+  el("rph").textContent = S.ph.toFixed(3);
+  el("rhalf").textContent = S.half.toFixed(3);
+  el("rhoff").textContent = state.strong ? "no pKa to read" : Math.abs(S.half - state.pka).toFixed(4);
+  el("req").textContent = S.eq.toFixed(3);
+  el("reoff").textContent = Math.abs(S.eq - S.eqApprox).toFixed(4);
+  el("rveq").textContent = S.veq.toFixed(1) + " mL";
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parse(input.value); render(); });
+}
+bind("ca", "ca", parseFloat);
+bind("cb", "cb", parseFloat);
+el("vb").addEventListener("input", () => { state.frac = parseFloat(el("vb").value); render(); });
+el("pka").addEventListener("input", () => {
+  state.pka = parseFloat(el("pka").value);
+  state.strong = false;                    /* a pKa means a weak acid by definition */
+  const named = Array.from(el("acid").options).some(o => o.value === String(state.pka));
+  el("acid").value = named ? String(state.pka) : "custom";
+  render();
+});
+el("acid").addEventListener("input", () => {
+  const v = el("acid").value;
+  if (v === "strong") state.strong = true;
+  else if (v === "custom") state.strong = false;
+  else { state.strong = false; state.pka = parseFloat(v); el("pka").value = v; }
+  render();
+});
+el("marks").addEventListener("input", () => { state.marks = el("marks").checked; render(); });
+
+el("jhalf").addEventListener("click", () => { state.frac = 0.25; el("vb").value = "0.25"; render(); });
+el("jeq").addEventListener("click", () => { state.frac = 0.5; el("vb").value = "0.5"; render(); });
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("acid").value = "4.76"; el("pka").value = String(defaults.pka);
+  el("ca").value = String(defaults.ca); el("cb").value = String(defaults.cb);
+  el("vb").value = "0"; el("marks").checked = defaults.marks;
+  render();
+});
+
+let tmr = 0;
+addEventListener("resize", () => { clearTimeout(tmr); tmr = setTimeout(render, 90); });
+if (matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+  const M = Model, Kw = M.Kw;
+
+  /* a seeded bench of weak acids, reused by several assertions */
+  const bench = (function(){
+    const r = mulberry32(SEED), out = [];
+    for (let k = 0; k < 300; k++){
+      const pKa = 2 + r() * 8, Ca = Math.pow(10, -3 + r() * 2.3);
+      out.push({ pKa: pKa, Ka: M.KaOf(pKa), Ca: Ca, Cb: Ca });
+    }
+    return out;
+  })();
+
+  /* 1-2. the two balances the curve was solved from, checked back */
+  (function(){
+    let wq = 0, wm = 0;
+    for (const b of bench){
+      const veq = M.veq(b.Ca, VA, b.Cb);
+      for (let i = 0; i <= 20; i++){
+        const vb = veq * 2 * i / 20, V = VA + vb;
+        const CA = b.Ca * VA / V, CB = b.Cb * vb / V;
+        const hh = M.h(b.Ca, VA, b.Cb, vb, b.Ka);
+        const A = CA * b.Ka / (b.Ka + hh), HA = CA * hh / (b.Ka + hh);
+        wq = Math.max(wq, Math.abs(CB + hh - A - Kw / hh));
+        wm = Math.max(wm, Math.abs(HA + A - CA));
+      }
+    }
+    push("charge balance holds at every point of the curve", wq <= 1e-14,
+         "worst residual over 300 acids at 21 volumes each " + wq.toExponential(3) + " molar");
+    push("mass balance on the acid holds at every point", wm <= 1e-14,
+         "worst residual " + wm.toExponential(3) + " molar");
+  })();
+
+  /* 3. the solver against the volume formula derived by hand */
+  (function(){
+    let worst = 0;
+    for (const b of bench){
+      const veq = M.veq(b.Ca, VA, b.Cb);
+      for (let i = 1; i <= 20; i++){
+        const vb = veq * 2 * i / 21;
+        const back = M.vbOf(M.h(b.Ca, VA, b.Cb, vb, b.Ka), b.Ca, VA, b.Cb, b.Ka);
+        worst = Math.max(worst, Math.abs(back - vb) / vb);
+      }
+    }
+    push("solving for pH and inverting for volume agree", worst <= 1e-11,
+         "worst relative round trip over 6000 points " + worst.toExponential(3));
+  })();
+
+  /* 4. the task file says half equivalence gives the pKa to 1e-9. It does not. */
+  (function(){
+    let worst = 0, eg = null;
+    for (const b of bench){
+      const e = Math.abs(M.halfEqPH(b.Ca, VA, b.Cb, b.Ka) - b.pKa);
+      if (e > worst){ worst = e; eg = b; }
+    }
+    push("half equivalence does not give the pKa exactly",
+         worst > 0.5,
+         "worst miss " + worst.toFixed(4) + " pH units: a pKa of " + eg.pKa.toFixed(2)
+         + " at " + eg.Ca.toExponential(2) + " molar reads "
+         + M.halfEqPH(eg.Ca, VA, eg.Cb, eg.Ka).toFixed(4));
+  })();
+
+  /* 5. ...and what governs the miss is the concentration, not the pKa */
+  (function(){
+    let dilute = 0, strongSol = 0, n = 0, egP = 0;
+    for (let pi = 0; pi <= 20; pi++){
+      const pKa = 4 + pi * 0.25, Ka = M.KaOf(pKa);
+      for (let li = 0; li <= 27; li++){
+        const Ca = Math.pow(10, -3 + li * 0.1);
+        const e = Math.abs(M.halfEqPH(Ca, VA, Ca, Ka) - pKa);
+        n++;
+        if (e > dilute){ dilute = e; egP = pKa; }
+        if (Ca >= 0.05 && e > strongSol) strongSol = e;
+      }
+    }
+    const ace = M.halfEqPH(0.1, VA, 0.1, M.KaOf(4.76));
+    push("what spoils the shortcut is dilution, not the pKa",
+         dilute > 0.1 && strongSol < 0.01 && Math.abs(ace - 4.76) < 0.002,
+         n + " points swept over pKa 4 to 9: worst miss " + dilute.toFixed(4)
+         + " at pKa " + egP.toFixed(2) + " and a millimolar, but only "
+         + strongSol.toFixed(4) + " once the acid is a twentieth molar or stronger; "
+         + "acetic acid at a tenth molar reads " + ace.toFixed(4) + " against 4.76");
+  })();
+
+  /* 6. the hydrolysis estimate for the equivalence pH is not exact either */
+  (function(){
+    let worst = 0, eg = null;
+    for (const b of bench){
+      const e = Math.abs(M.eqPH(b.Ca, VA, b.Cb, b.Ka) - M.eqClosed(b.Ca, VA, b.Cb, b.pKa));
+      if (e > worst){ worst = e; eg = b; }
+    }
+    push("the conjugate base formula does not give the equivalence pH exactly",
+         worst > 0.1,
+         "worst miss " + worst.toFixed(4) + " pH units: the formula says "
+         + M.eqClosed(eg.Ca, VA, eg.Cb, eg.pKa).toFixed(3) + " where the answer is "
+         + M.eqPH(eg.Ca, VA, eg.Cb, eg.Ka).toFixed(3));
+  })();
+
+  /* 7. a strong acid lands on seven, and lands on it exactly */
+  (function(){
+    let worst = 0;
+    const r = mulberry32(4242);
+    for (let k = 0; k < 60; k++){
+      const Ca = Math.pow(10, -3 + r() * 2.3), Cb = Math.pow(10, -3 + r() * 2.3);
+      worst = Math.max(worst, Math.abs(M.eqPH(Ca, VA, Cb, M.STRONG) - 7));
+    }
+    push("a strong acid has its equivalence at pH 7.00 exactly", worst <= 1e-9,
+         "worst departure from 7 over 60 strong-acid titrations " + worst.toExponential(3)
+         + " pH units, across every concentration pair");
+  })();
+
+  /* 8. every weak acid overshoots it */
+  (function(){
+    let lowest = Infinity, bad = 0;
+    for (const b of bench){
+      const p = M.eqPH(b.Ca, VA, b.Cb, b.Ka);
+      lowest = Math.min(lowest, p);
+      if (p <= 7) bad++;
+    }
+    push("a weak acid always finishes basic", bad === 0 && lowest > 7,
+         "lowest equivalence pH over 300 acids " + lowest.toFixed(5) + ", none at or below 7");
+  })();
+
+  /* 9. Henderson and Hasselbalch is an identity given the true species */
+  (function(){
+    let worst = 0;
+    for (const b of bench){
+      const veq = M.veq(b.Ca, VA, b.Cb);
+      for (let i = 1; i < 20; i++){
+        const hh = M.h(b.Ca, VA, b.Cb, veq * i / 20, b.Ka);
+        const fA = M.fracA(hh, b.Ka);
+        worst = Math.max(worst, Math.abs(-Math.log10(hh) - (b.pKa + Math.log10(fA / (1 - fA)))));
+      }
+    }
+    push("pH equals pKa plus the log of the true ratio, always", worst <= 1e-12,
+         "worst residual over 5700 points in the buffer region " + worst.toExponential(3)
+         + " pH units, which is the floor of the arithmetic");
+  })();
+
+  /* 10. ...and the stoichiometric version of that ratio is where it goes wrong */
+  (function(){
+    let worst = 0, eg = null;
+    for (const b of bench){
+      const veq = M.veq(b.Ca, VA, b.Cb);
+      for (let i = 1; i < 20; i++){
+        const vb = veq * i / 20;
+        const exact = M.pH(b.Ca, VA, b.Cb, vb, b.Ka);
+        const stoich = b.pKa + Math.log10(vb / (veq - vb));
+        const e = Math.abs(exact - stoich);
+        if (e > worst){ worst = e; eg = { b: b, f: i / 20, exact: exact, stoich: stoich }; }
+      }
+    }
+    push("assuming the ratio follows the burette is the step that fails",
+         worst > 1,
+         "worst miss " + worst.toFixed(4) + " pH units at "
+         + (eg.f * 100).toFixed(0) + " per cent of the way: the shortcut says "
+         + eg.stoich.toFixed(3) + ", the answer is " + eg.exact.toFixed(3));
+  })();
+
+  /* 11. the starting pH, by a quadratic that drops the water term */
+  (function(){
+    let worst = 0, n = 0;
+    for (const b of bench){
+      if (b.pKa >= 8) continue;
+      n++;
+      worst = Math.max(worst, Math.abs(M.pH(b.Ca, VA, b.Cb, 0, b.Ka) - M.startQuadraticPH(b.Ca, b.Ka)));
+    }
+    push("the starting pH matches the quadratic that ignores water", worst <= 1e-3,
+         n + " acids below pKa 8, worst gap " + worst.toExponential(3) + " pH units");
+  })();
+
+  /* 12. the curve only ever goes up */
+  (function(){
+    let worst = 0;
+    for (const b of bench){
+      const veq = M.veq(b.Ca, VA, b.Cb);
+      let prev = -Infinity;
+      for (let i = 0; i <= 40; i++){
+        const p = M.pH(b.Ca, VA, b.Cb, veq * 2 * i / 40, b.Ka);
+        if (p < prev) worst = Math.max(worst, prev - p);
+        prev = p;
+      }
+    }
+    push("adding base never lowers the pH", worst === 0,
+         "12300 consecutive pairs checked, largest fall " + worst.toExponential(3));
+  })();
+
+  /* 13. nothing blows up anywhere the controls reach */
+  (function(){
+    let bad = 0, n = 0;
+    for (const strong of [false, true])
+      for (let pi = 0; pi <= 10; pi++)
+        for (let ai = 0; ai <= 6; ai++) for (let bi = 0; bi <= 6; bi++){
+          const Ka = strong ? M.STRONG : M.KaOf(1 + pi);
+          const Ca = Math.pow(10, -3 + ai * 0.45), Cb = Math.pow(10, -3 + bi * 0.45);
+          const veq = M.veq(Ca, VA, Cb);
+          for (let i = 0; i <= 8; i++){
+            const p = M.pH(Ca, VA, Cb, veq * 2 * i / 8, Ka); n++;
+            if (!Number.isFinite(p) || p < 0 || p > 14) bad++;
+          }
+        }
+    push("the pH stays a pH across every control setting", bad === 0,
+         n.toLocaleString("en") + " points swept, " + bad + " non-finite or outside 0 to 14");
+  })();
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "slug": "convolution-as-blurring",
+  "title": "The Kernel Is The Whole Story",
+  "domain": "mathematics",
+  "difficulty": 2,
+  "summary": "A convolution is a sliding weighted average, so its weights are the whole behaviour. Draw a signal, switch kernels, and read blurring, ringing and overshoot straight off the kernel's own spectrum.",
+  "prerequisites": [],
+  "tags": ["convolution", "kernel", "frequency-response", "blur", "ringing", "central-limit-theorem"],
+  "interaction_pattern": "draw-input",
+  "sources": [
+    { "title": "Oppenheim and Schafer, Discrete-Time Signal Processing, 3rd edition, chapters 2 and 5", "url": "https://www.pearson.com/en-us/subject-catalog/p/discrete-time-signal-processing/P200000003226" },
+    { "title": "Smith, The Scientist and Engineer's Guide to Digital Signal Processing, chapters 6 to 15", "url": "https://www.dspguide.com/" },
+    { "title": "Bracewell, The Fourier Transform and Its Applications, 3rd edition, chapter 3", "url": "https://search.worldcat.org/title/41273959" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 13
+}
