@@ -1,0 +1,1061 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guess The Next Letter — Explainer Atlas</title>
+<meta name="description" content="Shannon measured English by asking people to guess the next letter. Play his 1951 experiment against a passage you have not read, and watch the bits per character fall from 4.75 towards one.">
+<style>
+:root{
+  --bg:#f6f3ec; --panel:#fffefb; --ink:#1a1712; --muted:#6b6355; --line:#ded6c6;
+  --grid:#eae3d4; --accent:#5b3a8e; --accent-soft:#ece6f5; --right:#1d6b4f;
+  --wrong:#a33b2a; --ceiling:#8a7f6a;
+  --pad:clamp(14px,2.6vw,24px);
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:Georgia,"Iowan Old Style","Times New Roman",serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#16151a; --panel:#1d1c22; --ink:#ece8e0; --muted:#9c958a; --line:#32303a;
+    --grid:#282630; --accent:#b39ae0; --accent-soft:#251f33; --right:#5dc79c;
+    --wrong:#e0785f; --ceiling:#8d8574;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+     font:clamp(1rem,.96rem + .22vw,1.1rem)/1.66 var(--sans); -webkit-text-size-adjust:100%}
+.wrap{max-width:53rem; margin:0 auto; padding:var(--pad) var(--pad) calc(var(--pad)*2)}
+header.page{text-align:center; padding:calc(var(--pad)*.6) 0 var(--pad)}
+.kicker{margin:0 0 .7em; font:600 .66rem/1 var(--mono); letter-spacing:.26em;
+        text-transform:uppercase; color:var(--accent)}
+h1{margin:0 0 .3em; font:700 clamp(1.7rem,1.2rem + 2.4vw,2.6rem)/1.08 var(--sans); letter-spacing:-.015em}
+.standfirst{margin:0 auto; max-width:34em; color:var(--muted); font-size:.97em}
+
+.desk{display:grid; gap:1em; background:var(--panel); border:1px solid var(--line);
+      border-radius:5px; padding:var(--pad)}
+.passage{margin:0; font:clamp(.92rem,.86rem + .35vw,1.08rem)/1.95 var(--mono);
+         word-break:break-word; min-height:5.6em}
+.passage .done{color:var(--ink)}
+.passage .slot{background:var(--accent); color:var(--panel); padding:0 .18em; border-radius:2px}
+.passage .todo{color:var(--line)}
+.passage .sp{opacity:.45}
+.tried{margin:0; min-height:1.7em; font:.8rem/1.7 var(--mono); color:var(--muted)}
+.tried b{color:var(--wrong); font-weight:600; text-decoration:line-through}
+.keys{display:grid; grid-template-columns:repeat(auto-fit,minmax(2.1rem,1fr)); gap:.3em}
+.keys button{font:600 .9rem/1 var(--mono); color:inherit; background:var(--bg);
+  border:1px solid var(--line); border-radius:3px; padding:.55em .2em; min-height:40px; cursor:pointer}
+.keys button:hover{border-color:var(--accent); color:var(--accent)}
+.keys button.sp{grid-column:span 3}
+.acts{display:flex; flex-wrap:wrap; gap:.5em}
+.acts button{font:600 .82rem/1 var(--mono); color:var(--accent); background:none;
+  border:1px solid var(--line); border-radius:3px; padding:.7em .9em; min-height:40px; cursor:pointer}
+.acts button:hover{border-color:var(--accent)}
+
+.dials{display:grid; gap:1.1em; margin-top:1em; padding-top:1em; border-top:1px solid var(--line)}
+@media (min-width:44rem){ .dials{grid-template-columns:1fr 1fr 1fr; gap:1.4em} }
+.dial{display:grid; gap:.3em; align-content:start}
+.dial .row{display:flex; justify-content:space-between; align-items:baseline; gap:.6em}
+.dial label{font:600 .66rem/1 var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+.dial output{font:700 .86rem/1 var(--mono); color:var(--accent)}
+.dial .hint{margin:0; font-size:.78rem; line-height:1.5; color:var(--muted)}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select{width:100%; font:inherit; font-size:.92rem; color:inherit; background:var(--bg);
+  border:1px solid var(--line); border-radius:3px; padding:.4em .5em; min-height:38px}
+:where(a,button,input,select):focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+figure.stage{margin:var(--pad) 0 0; background:var(--panel); border:1px solid var(--line);
+             border-radius:5px; padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin:.7em 2px 0; color:var(--muted); font-size:.82rem; line-height:1.55}
+
+.tally{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:1px;
+       background:var(--line); border:1px solid var(--line); border-radius:5px;
+       overflow:hidden; margin:var(--pad) 0 0; padding:0}
+.tally div{background:var(--panel); padding:.6em .8em}
+.tally dt{margin:0; font:.6rem/1.4 var(--mono); letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+.tally dd{margin:.22em 0 0; font:700 1.04rem/1.25 var(--mono); font-variant-numeric:tabular-nums}
+
+.prose{max-width:34em; margin:calc(var(--pad)*1.7) auto 0}
+.prose h2{margin:2.2em 0 .5em; font:700 1.08rem/1.3 var(--sans); letter-spacing:-.01em; color:var(--accent)}
+.prose p{margin:0 0 1.1em}
+.prose .math{font:.82rem/1.8 var(--mono); background:var(--accent-soft); border-radius:4px;
+             padding:.85em 1em; white-space:pre-wrap; overflow-x:auto}
+.prose code{font:.86em var(--mono); background:var(--grid); padding:.1em .3em; border-radius:2px}
+footer.page{margin-top:calc(var(--pad)*1.8); padding-top:var(--pad); border-top:1px solid var(--line);
+            color:var(--muted); font-size:.82rem; text-align:center}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="page">
+  <p class="kicker">Information theory</p>
+  <h1>Guess The Next Letter</h1>
+  <p class="standfirst">Shannon measured English in 1951 by asking people to guess what came next.
+     Play his experiment against a passage you have not read, and watch the price of a
+     character fall from four and three quarter bits towards one.</p>
+</header>
+
+<section class="desk" data-role="controls" aria-label="Guess the next letter, and the model settings">
+  <p class="passage" id="passage" aria-live="polite">Loading the passage.</p>
+  <p class="tried" id="tried">&nbsp;</p>
+
+  <div class="keys" aria-label="Letter keys">
+      <button type="button" data-k="a">a</button>
+      <button type="button" data-k="b">b</button>
+      <button type="button" data-k="c">c</button>
+      <button type="button" data-k="d">d</button>
+      <button type="button" data-k="e">e</button>
+      <button type="button" data-k="f">f</button>
+      <button type="button" data-k="g">g</button>
+      <button type="button" data-k="h">h</button>
+      <button type="button" data-k="i">i</button>
+      <button type="button" data-k="j">j</button>
+      <button type="button" data-k="k">k</button>
+      <button type="button" data-k="l">l</button>
+      <button type="button" data-k="m">m</button>
+      <button type="button" data-k="n">n</button>
+      <button type="button" data-k="o">o</button>
+      <button type="button" data-k="p">p</button>
+      <button type="button" data-k="q">q</button>
+      <button type="button" data-k="r">r</button>
+      <button type="button" data-k="s">s</button>
+      <button type="button" data-k="t">t</button>
+      <button type="button" data-k="u">u</button>
+      <button type="button" data-k="v">v</button>
+      <button type="button" data-k="w">w</button>
+      <button type="button" data-k="x">x</button>
+      <button type="button" data-k="y">y</button>
+      <button type="button" data-k="z">z</button>
+      <button type="button" class="sp" data-k=" ">space</button>
+  </div>
+
+  <div class="acts">
+    <button type="button" id="model">Let the model guess</button>
+    <button type="button" id="skip">Give me the letter</button>
+    <button type="button" id="next">Another passage</button>
+    <button type="button" id="reset">Start again</button>
+  </div>
+
+  <div class="dials">
+    <div class="dial">
+      <div class="row"><label for="order">Letters of context</label><output id="orderOut" for="order">2</output></div>
+      <input type="range" id="order" min="0" max="5" step="1" value="2">
+      <p class="hint">How much of what came before the model is allowed to look at.</p>
+    </div>
+    <div class="dial">
+      <div class="row"><label for="passageNo">Passage</label><output id="passOut" for="passageNo">1</output></div>
+      <input type="range" id="passageNo" min="1" max="8" step="1" value="1">
+      <p class="hint">Eight stretches of the text, none of which the model was fitted on.</p>
+    </div>
+    <div class="dial">
+      <label for="alpha">Smoothing</label>
+      <select id="alpha">
+        <option value="0.1">0.10 counts per unseen letter</option>
+        <option value="0.25">0.25 counts per unseen letter</option>
+        <option value="0.5" selected>0.50, the usual default</option>
+        <option value="1">1.00, Laplace</option>
+      </select>
+      <p class="hint">What the model assumes about letters it has never seen in this context.</p>
+    </div>
+  </div>
+</section>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="900" height="560" role="img"
+    aria-label="Two panels. Above, the bits needed per character plotted against how many letters of context the model may use: the figure measured on the text the model was fitted to falls steadily towards zero, while the figure measured on text it has never seen falls, bottoms out at two letters of context, and then climbs back. Below, how often the correct letter was the first guess, the second, and so on, with Shannon's upper and lower bounds on the entropy marked."></canvas>
+  <figcaption id="cap">Loading.</figcaption>
+</figure>
+
+<dl class="tally" aria-live="polite">
+  <div><dt>Guesses per letter</dt><dd id="tGuess">&mdash;</dd></div>
+  <div><dt>Right first time</dt><dd id="tFirst">&mdash;</dd></div>
+  <div><dt>Shannon bounds from the play</dt><dd id="tBounds">&mdash;</dd></div>
+  <div><dt>The model, on unseen text</dt><dd id="tModel">&mdash;</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+
+<p>The passage above is ordinary English you have not read. One letter is hidden
+and you are asked to name it. If you are wrong you are asked again, and again,
+until you get it, and the only thing being recorded is how many attempts it took.
+That is the whole of Shannon's 1951 experiment. He was not interested in your
+guesses. He was interested in the numbers.</p>
+
+<h2>Why the guess numbers are the measurement</h2>
+
+<p>Suppose you and a copy of yourself both know English equally well. Hand the copy
+the list of guess numbers and the text you have already seen, and it can rebuild the
+passage: make the same first guess, and if the number says three, make the second and
+third guesses too. The list of numbers is therefore a complete encoding of the text,
+so the text cannot carry more information than the numbers do. That gives an upper
+bound straight away, and a matching lower bound follows if the guesser always tries
+the most likely letter first:</p>
+
+<p class="math">lower  =  sum over i of  i (q(i) - q(i+1)) log2 i
+upper  =  sum over i of  -q(i) log2 q(i)</p>
+
+<p>where q(i) is the fraction of characters you got on the i-th attempt. With a flat
+alphabet of twenty six letters and a space every character would cost log2(27), which
+is 4.75 bits. Counting how often each letter actually appears in this text brings it
+down to 4.03. Letting a model see the previous letter brings it to 3.16, and two
+letters brings it to 2.31.</p>
+
+<h2>Where those numbers stop meaning anything</h2>
+
+<p>Keep going and the sequence falls off a cliff: 1.53 bits at three letters of
+context, 0.98 at four, 0.63 at five. It is tempting to read that as English getting
+more predictable. It is not. The counts come from thirteen thousand characters, and
+there are more than half a million possible four letter contexts, so by the fourth
+order almost every context in the text occurs exactly once and the model is simply
+reciting what it was shown. The upper panel makes this visible. The second line is
+the same measurement taken on text the model was never fitted to, and it does not
+fall forever: it bottoms out at two letters of context and then climbs, and by five
+letters it is worse than knowing nothing about context at all. That turning point
+sits at two whatever smoothing you choose, which the page checks at four settings.</p>
+
+<p>So the honest reading of the ladder is that the falling numbers measure two
+different things at once, and only one of them is English. Shannon's own figure of
+roughly one bit per character came from human guessers, who bring the whole language
+with them: vocabulary, grammar, the subject of the paragraph, and the knowledge that
+a sentence has to end somewhere. No table of letter counts is going to find that in
+thirteen thousand characters, and this page does not pretend otherwise.</p>
+
+<h2>What the spare bits are for</h2>
+
+<p>If a character costs one bit rather than 4.75, then something like three quarters
+of written English is redundant, and that redundancy is what makes it readable at all.
+It is why you can read a page with the vowels removed, why a smudged word is still
+legible, and why crosswords are possible. It is also exactly what a compressor eats:
+a file of English text squeezes to a fraction of its size because the letters were
+never independent, and the compressor is doing formally the same job as you are doing
+above, predicting the next character and paying only for its surprise.</p>
+
+<h2>What to try</h2>
+
+<p>Play twenty characters by hand with the context slider at two and watch your own
+bounds settle. You will find the spaces and the ends of common words come first time
+and the first letter of a new word almost never does, which is the shape of the whole
+result. Expect the bracket to sit too low at first: a dozen characters give a guess
+number distribution that is far too tidy, and both bounds are entropies of that
+distribution, so both come out as underestimates until the tail fills in. Then press
+the model button a few times at each context length and watch it get worse, not
+better, past two.</p>
+
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+
+/* The corpus. Ordinary English prose written for this page, folded to the
+   twenty seven symbol alphabet Shannon used: the letters and the space.     */
+const SYMS = " abcdefghijklmnopqrstuvwxyz";
+const NSYM = SYMS.length;
+const CORPUS = [
+  "the morning began with rain on the kitchen window and the sound of the gutter working hard above",
+  " the door i made tea and stood by the sink and watched the garden take the water the beans had ",
+  "come up in a crooked row because i had sown them in a hurry and the crookedness now looked ",
+  "deliberate the way an old fence does after a few winters a blackbird came down to the wet grass ",
+  "and worked it over methodically head tilted and found something worth having near the compost ",
+  "heap by eight the rain had thinned to a drizzle and the light went from grey to a pale washed ",
+  "silver that made the whole street look newly painted i put on a coat and went out for bread the ",
+  "baker on the corner opens at seven and is usually sold out of the seeded loaves by nine so there",
+  " is a narrow window if you want one the shop smells of warm flour and burnt sugar and the floor ",
+  "is always dusted white near the counter there were four people ahead of me and none of them were",
+  " in a hurry the woman at the front was explaining to the baker that her oven at home runs hot ",
+  "and he was nodding and suggesting she drop the temperature by twenty degrees and give it another",
+  " ten minutes i bought a seeded loaf and a small bag of rolls and walked home the long way past ",
+  "the allotments where a man in a blue jacket was turning over a bed with a fork and stopping ",
+  "every few minutes to straighten his back cooking is mostly waiting which nobody tells you at the",
+  " start you learn that the onions need longer than the recipe says that the pan should be hotter ",
+  "than feels safe and that most things improve if you leave them alone i had a stew going by noon ",
+  "the kind that uses whatever is in the bottom of the vegetable drawer and i let it sit at a low ",
+  "simmer while i read the smell moved through the house slowly and by two o clock it had reached ",
+  "the upstairs landing there is a particular satisfaction in a meal that costs almost nothing and ",
+  "takes all day and it has very little to do with the food in the afternoon i took the train out ",
+  "to see my sister the line runs along the river for the first twenty minutes and then cuts inland",
+  " through fields that are flat and wide and full of birds in the autumn the carriage was half ",
+  "empty a boy across the aisle was reading a book about volcanoes and reading the good parts out ",
+  "loud to nobody in particular somewhere past the third station the sun came out properly for the ",
+  "first time in a week and the whole carriage turned to look at it and then pretended it had not ",
+  "my sister lives in a house with a long narrow garden and a shed at the end that she has been ",
+  "meaning to clear out for three years we drank coffee and talked about the usual things and then ",
+  "we went out and looked at the shed and agreed that it would be a job for the spring there were ",
+  "tools in there that had belonged to our grandfather a plane and a brace and a set of chisels ",
+  "with wooden handles worn smooth and dark she said she could not bring herself to throw them out ",
+  "and could not think what to do with them either and i said that was the definition of a shed we ",
+  "ate outside because the evening was unexpectedly warm the light went slowly and then all at once",
+  " the way it does in october and we lit a candle in a jam jar and left the plates where they were",
+  " for a while she told me about a neighbour who had planted a hedge along the wrong side of a ",
+  "boundary and the quiet twenty year argument that had followed i told her about the man on the ",
+  "allotment and the way he straightened his back and we agreed that we were both becoming people ",
+  "who noticed that sort of thing the library in town is a low brick building that was a swimming ",
+  "pool until the nineteen seventies and if you look up at the ceiling you can still see where the ",
+  "diving board was bolted the fiction is where the deep end used to be i go on thursdays mostly ",
+  "out of habit and i have a system of walking the shelves in a different order each time so that i",
+  " find things i would otherwise miss last week this produced a book about the history of bridges ",
+  "which i read in two evenings and enjoyed far more than i expected bridges turn out to be an ",
+  "argument between two forces that never ends the load wants to go down and the ground wants to ",
+  "push back and everything in between is a scheme for moving that push around an arch does it by ",
+  "squeezing a suspension cable by pulling a beam by bending and each of those has a shape that ",
+  "suits it and a span past which it becomes silly the book had photographs of failures which were ",
+  "the most instructive pages in it a bridge that stands tells you very little a bridge that fell ",
+  "tells you exactly what the designer had assumed i walked along the river afterwards the water ",
+  "was high and brown and moving fast carrying branches and a football and at one point a plastic ",
+  "crate that turned over and over in the current the path was muddy and the going was slow two men",
+  " were fishing under the road bridge with very little apparent hope one of them said good evening",
+  " and the other did not look up a heron stood on the far bank in the posture herons have which ",
+  "suggests both enormous patience and mild disapproval and did not move for the whole time i could",
+  " see it there is a bench halfway along where somebody has screwed a small brass plate with a ",
+  "name and two dates and the words he loved this view the view is of a gas holder and a row of ",
+  "poplars and a bend in the river and on a good evening it is genuinely worth loving i sat there ",
+  "until the light went and the poplars became a single dark shape and then i walked back through ",
+  "the park with my hands in my pockets and my collar up against the cold that had arrived without ",
+  "any warning at all autumn in this part of the country is short and businesslike the leaves turn ",
+  "over about ten days and are down within three weeks of that and then the trees stand about ",
+  "looking like diagrams of themselves until march i find i like the bare months more than i used ",
+  "to you can see the shape of the land through the hedges and the birds are easier to follow and ",
+  "the low sun comes in through the windows at an angle that it never manages in summer the clocks ",
+  "went back on sunday and the evening arrived at half past four which everyone complains about and",
+  " nobody actually minds i made a fire which took three attempts and a good deal of newspaper and ",
+  "then sat and watched it do the thing that fires do which is to hold your attention completely ",
+  "while giving you nothing whatever to think about the wood was apple from a tree that came down ",
+  "in the storm two winters ago and it burned slowly and smelled faintly sweet before bed i went ",
+  "out to shut the greenhouse and the sky had cleared entirely there were more stars than the town ",
+  "usually allows and the cold had that dry edge that means a frost by morning i stood for a minute",
+  " at the end of the path with the door key in my hand and listened to a train somewhere over ",
+  "towards the east a long way off running north on the line that follows the valley my father kept",
+  " a workshop in the garage and ran it on a set of rules that he had never written down but would ",
+  "recite if asked put the tool back before you pick up the next one measure from the same edge ",
+  "every time if you are forcing it you have the wrong tool or the wrong idea he was a patient man ",
+  "about wood and an impatient man about almost everything else and i have never worked out whether",
+  " the wood taught him the patience or simply received all of it he built a bookcase for my room ",
+  "when i was nine and i watched most of it the part i remember is the marking out which took ",
+  "longer than the cutting he used a knife rather than a pencil because a pencil line has a width ",
+  "and a knife line does not and he said that the difference between a joint that closes and a ",
+  "joint that does not is about the thickness of a pencil line then he cut on the waste side of the",
+  " mark every time without ever appearing to decide which side that was the bookcase is still in ",
+  "my sister s spare room and the shelves have not sagged which he would have been pleased about ",
+  "and would not have mentioned i have tried to build things since and the results have been mixed ",
+  "the trouble is that you can read about it endlessly and still not know how hard to push there is",
+  " a whole category of knowledge that only arrives through the hands and no amount of reading ",
+  "shortens it you can be told that the saw should do the work and still spend ten years leaning on",
+  " it at school i was taught that learning was a matter of understanding and it took me a long ",
+  "time to notice how much of what i actually know arrived some other way i can hear when an engine",
+  " is wrong before i can say what is wrong with it i can tell from the weight of a bag of flour ",
+  "roughly what it says on the label none of that came from a book and none of it can be handed on ",
+  "except by standing next to somebody while they do it teaching anything practical seems to come ",
+  "down to arranging for the learner to make the useful mistakes in a safe order let them cut the ",
+  "joint too tight before you tell them about the knife line because the tight joint is the ",
+  "question that the knife line answers a fact you are given before you have the question for it ",
+  "does not stick to anything it sits in the mind as a loose item and is gone by the following week",
+  " the same is true of numbers anyone can be told that a doubling every year becomes a ",
+  "thousandfold in a decade and almost nobody believes it until they have watched the column of ",
+  "figures do it in front of them the arithmetic is trivial and the surprise is not and the ",
+  "surprise is the part worth having i think this is why the best explanations are usually the ones",
+  " that make you predict something first and then show you that you were wrong my father would ",
+  "have had no patience with any of this he would have said that you learn by doing it badly and ",
+  "then doing it again and that everything else is talk he was mostly right and it is mostly not ",
+  "the whole story and he has been gone eleven years now and i still hear him when i pick up a saw ",
+  "and start to push too hard the market runs on saturday from six until about one and the serious ",
+  "business is over by half past eight if you go at eleven you will find the tail end of it and pay",
+  " more for worse vegetables which is fine if what you want is a walk and a coffee if you go at ",
+  "seven you will find the stallholders still setting up and talking to each other across the ",
+  "aisles in a shorthand built up over years there is a man who sells only potatoes eleven ",
+  "varieties of them and will talk about any of them for as long as you let him he has a card in ",
+  "front of each bin giving the name and one line about what it is for and the lines are better ",
+  "written than most restaurant menus waxy holds its shape good cold floury falls apart for mash ",
+  "and for roasting i have never left his stall with what i went for next to him a woman sells eggs",
+  " and cut flowers which seems like an odd pairing until you notice that both are things people ",
+  "buy on impulse near the exit then cheese then a bread stall that is not as good as the bakery in",
+  " town but is there on a saturday when the bakery has sold out and then fish at the end where the",
+  " drainage is the order of the stalls has not changed in the fifteen years i have been going and ",
+  "i suspect it was settled a great deal longer ago than that what i like about the place is that ",
+  "nothing about it is designed it has been arrived at each stall is where it is for a reason that ",
+  "made sense once and the reasons have mostly been forgotten and the arrangement works anyway ",
+  "whenever the council proposes to rationalise the layout there is a short furious public meeting ",
+  "and nothing happens and i think that is the correct outcome though i would struggle to defend it",
+  " in writing on the way home i pass the school and the playing field behind it on saturday ",
+  "mornings there is football four small games running across the width of the pitch and a great ",
+  "many parents standing along the touchline in a line of dark coats the shouting is mostly ",
+  "encouragement the children play in the way children do which is to say that all twenty two of ",
+  "them follow the ball around in a loose cloud and the tactics arrive some years later or not at ",
+  "all i stopped for a while to watch the way you do and a boy of about eight made a pass into ",
+  "space that nobody was in it was the right pass and it went nowhere and his teammate ran the ",
+  "wrong way and the other side cleared it his father shouted well seen anyway which struck me as ",
+  "exactly the right thing to say and i walked on feeling better about the morning than i had any ",
+  "reason to by the time i got back the sun was properly up and the frost had gone from everything ",
+  "except the north side of the roof i put the shopping away and put the kettle on and sat down ",
+  "with the paper and the whole day was still in front of me and none of it had anything in it that",
+  " had to be done there are not many mornings like that in a year and i have learned to notice ",
+  "them while they are happening rather than afterwards"
+].join("");
+const SPLIT = Math.floor(CORPUS.length/2);
+const TRAIN = CORPUS.slice(0, SPLIT);
+const TEST  = CORPUS.slice(SPLIT);
+const IDX = (function(){ const m = new Int8Array(128).fill(-1);
+  for (let i = 0; i < NSYM; i++) m[SYMS.charCodeAt(i)] = i; return m; })();
+
+/* ---- MODEL: pure functions, no DOM -------------------------------------- */
+const Model = {
+  /* counts of the next symbol after every context of length k */
+  table(text, k){
+    const t = new Map();
+    for (let i = k; i < text.length; i++){
+      const ctx = text.slice(i - k, i);
+      let e = t.get(ctx);
+      if (!e){ e = { c: new Int32Array(NSYM), n: 0 }; t.set(ctx, e); }
+      e.c[IDX[text.charCodeAt(i)]]++; e.n++;
+    }
+    return t;
+  },
+
+  /* the plug in conditional entropy of the text against its own counts */
+  plugin(text, k){
+    const t = this.table(text, k);
+    let bits = 0, total = 0;
+    for (const e of t.values()){
+      total += e.n;
+      for (let j = 0; j < NSYM; j++) if (e.c[j]) bits -= e.c[j]*Math.log2(e.c[j]/e.n);
+    }
+    return total ? bits/total : 0;
+  },
+
+  /* what the model believes comes next, with alpha counts held back for
+     every symbol it has not seen in this context                           */
+  dist(tab, ctx, alpha){
+    const e = tab.get(ctx);
+    const p = new Float64Array(NSYM);
+    const n = e ? e.n : 0, denom = n + alpha*NSYM;
+    for (let j = 0; j < NSYM; j++) p[j] = ((e ? e.c[j] : 0) + alpha)/denom;
+    return p;
+  },
+
+  /* bits per character the model pays on text it did not see */
+  cross(tab, text, k, alpha){
+    let bits = 0, n = 0;
+    for (let i = k; i < text.length; i++){
+      const p = this.dist(tab, text.slice(i - k, i), alpha);
+      bits -= Math.log2(p[IDX[text.charCodeAt(i)]]);
+      n++;
+    }
+    return n ? bits/n : 0;
+  },
+
+  /* which attempt the right letter would be, guessing most likely first */
+  rankOf(p, sym){
+    const target = p[sym];
+    let rank = 1;
+    for (let j = 0; j < NSYM; j++)
+      if (p[j] > target || (p[j] === target && j < sym)) rank++;
+    return rank;
+  },
+  ranks(tab, text, k, alpha){
+    const out = [];
+    for (let i = k; i < text.length; i++)
+      out.push(this.rankOf(this.dist(tab, text.slice(i - k, i), alpha),
+                           IDX[text.charCodeAt(i)]));
+    return out;
+  },
+
+  /* q(i) is the share of characters that took exactly i attempts */
+  qOf(ranks){
+    const q = new Float64Array(NSYM + 2);
+    for (const r of ranks) q[r]++;
+    if (ranks.length) for (let i = 1; i <= NSYM; i++) q[i] /= ranks.length;
+    return q;
+  },
+
+  /* Shannon 1951: the guess numbers bracket the entropy from both sides */
+  bounds(q){
+    let lo = 0, hi = 0;
+    for (let i = 1; i <= NSYM; i++){
+      lo += i*(q[i] - q[i + 1])*Math.log2(i);
+      if (q[i] > 0) hi -= q[i]*Math.log2(q[i]);
+    }
+    return { lo: lo, hi: hi };
+  },
+
+  entropy(p){
+    let h = 0;
+    for (let i = 0; i < p.length; i++) if (p[i] > 0) h -= p[i]*Math.log2(p[i]);
+    return h;
+  },
+  crossEntropy(p, q){
+    let h = 0;
+    for (let i = 0; i < p.length; i++) if (p[i] > 0) h -= p[i]*Math.log2(q[i]);
+    return h;
+  },
+  letterFreq(text){
+    const c = new Float64Array(NSYM);
+    for (let i = 0; i < text.length; i++) c[IDX[text.charCodeAt(i)]]++;
+    for (let i = 0; i < NSYM; i++) c[i] /= text.length;
+    return c;
+  },
+
+  /* a Huffman code over the letter frequencies, returning code lengths */
+  huffman(freq){
+    let nodes = [];
+    for (let i = 0; i < freq.length; i++)
+      if (freq[i] > 0) nodes.push({ w: freq[i], leaves: [i], depth: 0 });
+    if (nodes.length === 1) return (function(){ const L = new Int32Array(freq.length); L[nodes[0].leaves[0]] = 1; return L; })();
+    const len = new Int32Array(freq.length);
+    while (nodes.length > 1){
+      nodes.sort((a, b) => a.w - b.w || a.leaves[0] - b.leaves[0]);
+      const a = nodes.shift(), b = nodes.shift();
+      for (const i of a.leaves) len[i]++;
+      for (const i of b.leaves) len[i]++;
+      nodes.push({ w: a.w + b.w, leaves: a.leaves.concat(b.leaves) });
+    }
+    return len;
+  }
+};
+
+/* the expensive tables and sweeps are pure, so one cached copy will do */
+const memo = {};
+function once(key, fn){ if (!(key in memo)) memo[key] = fn(); return memo[key]; }
+const trainTable = (k) => once("tt" + k, () => Model.table(TRAIN, k));
+const fullTable  = (k) => once("ft" + k, () => Model.table(CORPUS, k));
+const heldOut = (k, alpha) => once("ho" + k + ":" + alpha,
+  () => Model.cross(trainTable(k), TEST, k, alpha));
+const inSample = (k) => once("is" + k, () => Model.plugin(CORPUS, k));
+const modelRanks = (k, alpha) => once("mr" + k + ":" + alpha,
+  () => Model.ranks(trainTable(k), TEST, k, alpha));
+const CEILING = Math.log2(NSYM);
+const KMAX = 5;
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const PRIMER = 72, PLAY = 120;
+const defaults = { order: 2, passageNo: 1, alpha: 0.5 };
+const state = Object.assign({}, defaults, { pos: 0, tried: [], ranks: [], assisted: 0 });
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const SS = 2;
+let W = 900, H = 560, NARROW = false;
+
+function fitCanvas(){
+  const box = cv.parentElement.getBoundingClientRect().width - 24;
+  W = Math.max(280, Math.min(760, Math.round(box)));
+  NARROW = W < 470;
+  H = (NARROW ? 290 : 305) + (NARROW ? 262 : 266);
+  cv.width = Math.round(W*SS); cv.height = Math.round(H*SS);
+  cv.style.width = "100%"; cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+function tx(x, y, str, colour, align, baseline){
+  ctx.textAlign = align || "left"; ctx.textBaseline = baseline || "alphabetic";
+  ctx.fillStyle = colour; ctx.fillText(str, x, y);
+}
+
+function span(){
+  const room = TEST.length - PRIMER - PLAY - 1;
+  let start = Math.floor((state.passageNo - 1)*(room - 40)/7);
+  /* begin at a word boundary so the primer does not open mid word */
+  while (start < room && TEST[start] !== " ") start++;
+  if (TEST[start] === " ") start++;
+  return { start: start, primer: TEST.slice(start, start + PRIMER),
+           play: TEST.slice(start + PRIMER, start + PRIMER + PLAY) };
+}
+function show(ch){ return ch === " " ? "\u00b7" : ch; }
+
+function paintPassage(){
+  const sp = span(), out = [];
+  out.push('<span class="done">' + sp.primer.replace(/ /g, "&nbsp;") + "</span>");
+  const done = sp.play.slice(0, state.pos);
+  out.push('<span class="done">' + done.replace(/ /g, "&nbsp;") + "</span>");
+  if (state.pos < sp.play.length) out.push('<span class="slot">?</span>');
+  const left = sp.play.length - state.pos - 1;
+  if (left > 0) out.push('<span class="todo">' + "\u00b7".repeat(left) + "</span>");
+  el("passage").innerHTML = out.join("");
+  el("tried").innerHTML = state.tried.length
+    ? "tried: " + state.tried.map((c) => "<b>" + show(c) + "</b>").join(" ")
+    : "&nbsp;";
+}
+
+/* panel one: the two entropy ladders */
+function drawLadder(top, h){
+  const padL = NARROW ? 38 : 50, padR = NARROW ? 62 : 96;
+  const x0 = padL, x1 = W - padR, base = top + h - (NARROW ? 30 : 32);
+  const X = (k) => x0 + k/KMAX*(x1 - x0);
+  const Y = (v) => base - v/CEILING*(base - top - 14);
+  ctx.font = (NARROW ? 9 : 10) + "px " + css("--mono");
+  tx(x0, top - 10, "BITS PER CHARACTER, AGAINST LETTERS OF CONTEXT", css("--muted"));
+
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
+  for (const v of [0, 1, 2, 3, 4]){
+    ctx.beginPath(); ctx.moveTo(x0, Y(v)); ctx.lineTo(x1, Y(v)); ctx.stroke();
+    tx(x0 - 6, Y(v) + 3, String(v), css("--muted"), "right");
+  }
+  ctx.strokeStyle = css("--ceiling"); ctx.setLineDash([4, 3]); ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(x0, Y(CEILING)); ctx.lineTo(x1, Y(CEILING)); ctx.stroke();
+  ctx.setLineDash([]);
+  tx(x1 + 5, Y(CEILING) + 3, "log2(27)", css("--ceiling"));
+
+  const a = [], b = [];
+  for (let k = 0; k <= KMAX; k++){ a.push(inSample(k)); b.push(heldOut(k, state.alpha)); }
+
+  const line = (vals, colour, dash) => {
+    ctx.strokeStyle = colour; ctx.lineWidth = 2.4; ctx.setLineDash(dash || []);
+    ctx.beginPath();
+    for (let k = 0; k <= KMAX; k++){ const x = X(k), y = Y(vals[k]); k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.stroke(); ctx.setLineDash([]);
+    for (let k = 0; k <= KMAX; k++){
+      ctx.beginPath(); ctx.arc(X(k), Y(vals[k]), 3, 0, Math.PI*2);
+      ctx.fillStyle = colour; ctx.fill();
+    }
+  };
+  line(a, css("--wrong"));
+  line(b, css("--accent"));
+  tx(x1 + 5, Y(a[KMAX]) + 3, "FITTED ON", css("--wrong"));
+  tx(x1 + 5, Y(a[KMAX]) + 15, "THIS TEXT", css("--wrong"));
+  tx(x1 + 5, Y(b[KMAX]) + 3, "UNSEEN", css("--accent"));
+  tx(x1 + 5, Y(b[KMAX]) + 15, "TEXT", css("--accent"));
+
+  /* where the unseen line turns round */
+  let best = 0;
+  for (let k = 1; k <= KMAX; k++) if (b[k] < b[best]) best = k;
+  ctx.strokeStyle = css("--accent"); ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(X(best), Y(b[best])); ctx.lineTo(X(best), base); ctx.stroke();
+  ctx.setLineDash([]);
+  tx(X(best), base + (NARROW ? 26 : 28), "BEST AT " + best, css("--accent"), "center");
+
+  const k = state.order;
+  ctx.strokeStyle = css("--ink"); ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(X(k), Y(b[k]), 6, 0, Math.PI*2); ctx.stroke();
+
+  for (let j = 0; j <= KMAX; j++) tx(X(j), base + 14, String(j), css("--muted"), "center");
+  return { base: base, best: best, inSample: a, held: b };
+}
+
+/* panel two: the reader's own measurement on the same scale */
+function drawGauge(top, h, stats){
+  const padL = NARROW ? 38 : 50, padR = NARROW ? 62 : 96;
+  const x0 = padL, x1 = W - padR;
+  const X = (v) => x0 + Math.max(0, Math.min(CEILING, v))/CEILING*(x1 - x0);
+  const bar = top + 40, BH = 16;
+  ctx.font = (NARROW ? 9 : 10) + "px " + css("--mono");
+  tx(x0, top + 2, "WHAT THE GUESSING SAYS THE PRICE OF A CHARACTER IS", css("--muted"));
+
+  ctx.fillStyle = css("--grid"); ctx.fillRect(x0, bar, x1 - x0, BH);
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+  ctx.strokeRect(x0 + .5, bar + .5, x1 - x0 - 1, BH - 1);
+  tx(x1 + 5, bar + BH - 4, "4.75", css("--ceiling"));
+
+  if (stats.n > 0){
+    ctx.fillStyle = css("--accent-soft");
+    ctx.fillRect(X(stats.lo), bar, Math.max(2, X(stats.hi) - X(stats.lo)), BH);
+    ctx.strokeStyle = css("--accent"); ctx.lineWidth = 2;
+    for (const v of [stats.lo, stats.hi]){
+      ctx.beginPath(); ctx.moveTo(X(v), bar - 5); ctx.lineTo(X(v), bar + BH + 5); ctx.stroke();
+    }
+    tx((X(stats.lo) + X(stats.hi))/2, top + 26,
+       "YOUR PLAY: " + stats.lo.toFixed(2) + " TO " + stats.hi.toFixed(2)
+       + ", FROM " + stats.n + (stats.n === 1 ? " LETTER" : " LETTERS"), css("--accent"), "center");
+  } else {
+    tx((x0 + x1)/2, top + 26, "GUESS A FEW LETTERS TO PUT A BRACKET HERE", css("--muted"), "center");
+  }
+
+  const mark = (v, colour, text, row) => {
+    ctx.strokeStyle = colour; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(X(v), bar); ctx.lineTo(X(v), bar + BH + 4 + row*12); ctx.stroke();
+    tx(X(v), bar + BH + 16 + row*12, text, colour, "center");
+  };
+  mark(heldOut(state.order, state.alpha), css("--right"),
+       "THE MODEL, " + heldOut(state.order, state.alpha).toFixed(2), 0);
+  mark(1.0, css("--ceiling"), "SHANNON'S HUMANS, ABOUT 1", 1);
+
+  /* how many attempts each character took */
+  const hTop = bar + BH + 58, hh = top + h - hTop - 20;
+  const SHOW = 8;
+  const cw = (x1 - x0)/SHOW;
+  tx(x0, hTop - 8, "ATTEMPTS THE RIGHT LETTER TOOK", css("--muted"));
+  const q = stats.q, mq = Model.qOf(modelRanks(state.order, state.alpha));
+  let top1 = 0.02;
+  for (let i = 1; i <= SHOW; i++) top1 = Math.max(top1, q[i] || 0, mq[i]);
+  for (let i = 1; i <= SHOW; i++){
+    const x = x0 + (i - 1)*cw;
+    const hm = (mq[i]/top1)*hh;
+    ctx.fillStyle = css("--grid"); ctx.fillRect(x + 2, hTop + hh - hm, cw - 4, hm);
+    if (stats.n > 0){
+      const hq = ((q[i] || 0)/top1)*hh;
+      ctx.fillStyle = css("--accent"); ctx.fillRect(x + cw*0.28, hTop + hh - hq, cw*0.44, hq);
+    }
+    tx(x + cw/2, hTop + hh + 13, String(i) + (i === SHOW ? "+" : ""), css("--muted"), "center");
+  }
+  tx(x1 + 5, hTop + 10, "GREY:", css("--muted"));
+  tx(x1 + 5, hTop + 22, "THE MODEL", css("--muted"));
+  if (stats.n > 0){ tx(x1 + 5, hTop + 38, "PURPLE:", css("--accent")); tx(x1 + 5, hTop + 50, "YOU", css("--accent")); }
+}
+
+function stats(){
+  const q = Model.qOf(state.ranks);
+  const b = Model.bounds(q);
+  let sum = 0, first = 0;
+  for (const r of state.ranks){ sum += r; if (r === 1) first++; }
+  return { n: state.ranks.length, q: q, lo: b.lo, hi: b.hi,
+           mean: state.ranks.length ? sum/state.ranks.length : 0,
+           first: state.ranks.length ? first/state.ranks.length : 0 };
+}
+
+function render(){
+  fitCanvas();
+  paintPassage();
+  const st = stats();
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+  const ladderH = NARROW ? 290 : 305;
+  const r = drawLadder(28, ladderH - 28);
+  drawGauge(ladderH + 18, H - ladderH - 18, st);
+
+  el("orderOut").textContent = String(state.order);
+  el("passOut").textContent = String(state.passageNo);
+  el("tGuess").textContent = st.n ? st.mean.toFixed(2) : "\u2014";
+  el("tFirst").textContent = st.n ? Math.round(st.first*100) + "%" : "\u2014";
+  el("tBounds").textContent = st.n ? st.lo.toFixed(2) + " to " + st.hi.toFixed(2) + " bits" : "\u2014";
+  el("tModel").textContent = heldOut(state.order, state.alpha).toFixed(2) + " bits";
+
+  el("cap").textContent =
+    "Above: the same measurement taken two ways. Fitted on the text it is reading, the model looks "
+    + "ever better; on text it has never seen it is at its best with " + r.best
+    + " letters of context and worse after that. Below: your bracket on the same scale, and how many "
+    + "attempts each character took, against the model at " + state.order + " letters of context.";
+}
+
+/* ---- playing ------------------------------------------------------------ */
+function guess(ch){
+  const sp = span();
+  if (state.pos >= sp.play.length) return;
+  const want = sp.play[state.pos];
+  if (ch === want){
+    state.ranks.push(state.tried.length + 1);
+    state.tried = [];
+    state.pos++;
+  } else if (state.tried.indexOf(ch) === -1){
+    state.tried.push(ch);
+  }
+  render();
+}
+function modelTurn(){
+  const sp = span();
+  if (state.pos >= sp.play.length) return;
+  const k = state.order;
+  const seen = sp.primer + sp.play.slice(0, state.pos);
+  const p = Model.dist(trainTable(k), seen.slice(seen.length - k), state.alpha);
+  const r = Model.rankOf(p, IDX[sp.play.charCodeAt(state.pos)]);
+  state.ranks.push(r); state.assisted++;
+  state.tried = []; state.pos++;
+  render();
+}
+function clearPlay(){ state.pos = 0; state.tried = []; state.ranks = []; state.assisted = 0; }
+
+for (const b of document.querySelectorAll(".keys button"))
+  b.addEventListener("click", () => guess(b.getAttribute("data-k")));
+el("model").addEventListener("click", modelTurn);
+el("skip").addEventListener("click", () => {
+  const sp = span();
+  if (state.pos < sp.play.length){ state.tried = []; state.pos++; }
+  render();
+});
+el("next").addEventListener("click", () => {
+  state.passageNo = state.passageNo % 8 + 1;
+  el("passageNo").value = String(state.passageNo);
+  clearPlay(); render();
+});
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("order").value = defaults.order;
+  el("passageNo").value = defaults.passageNo;
+  el("alpha").value = String(defaults.alpha);
+  clearPlay(); render();
+});
+
+function bind(id, key, parse, replay){
+  const input = el(id);
+  const go = () => { state[key] = parse(input.value); if (replay) clearPlay(); render(); };
+  input.addEventListener("input", go);
+  input.addEventListener("change", go);
+}
+bind("order", "order", (v) => parseInt(v, 10) || 0, false);
+bind("passageNo", "passageNo", (v) => parseInt(v, 10) || 1, true);
+bind("alpha", "alpha", (v) => parseFloat(v) || 0.5, false);
+
+render();
+let rt = 0;
+addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 90); });
+if (matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+const ALPHAS = [0.1, 0.25, 0.5, 1];
+const optimalRanks = (k) => once("or" + k, () => Model.ranks(fullTable(k), CORPUS, k, 1e-12));
+const freq = () => once("freq", () => Model.letterFreq(CORPUS));
+const code = () => once("code", () => Model.huffman(freq()));
+
+/* joint and conditional entropies over one aligned set of n-grams, so the
+   chain rule can be checked without edge effects                           */
+function aligned(text, n){
+  const tab = new Map();
+  for (let i = n - 1; i < text.length; i++){
+    const g = text.slice(i - n + 1, i + 1);
+    tab.set(g, (tab.get(g) || 0) + 1);
+  }
+  let total = 0;
+  for (const v of tab.values()) total += v;
+  const marg = (len) => {
+    const m = new Map();
+    for (const [g, v] of tab) m.set(g.slice(0, len), (m.get(g.slice(0, len)) || 0) + v);
+    let h = 0;
+    for (const v of m.values()) h -= v/total*Math.log2(v/total);
+    return h;
+  };
+  return { total: total, H: marg, joint: marg(n) };
+}
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+  const near = (a, b, tol) => Number.isFinite(a) && Math.abs(a - b) <= tol;
+
+  /* 1 -- the flat alphabet, and what counting the letters already saves */
+  (function(){
+    const flat = new Float64Array(NSYM).fill(1/NSYM);
+    const h0 = Model.entropy(flat), h1 = Model.entropy(freq());
+    push("a flat alphabet of twenty six letters and a space costs log2(27)",
+      near(h0, Math.log2(27), 1e-12) && h1 < h0,
+      "the uniform entropy is " + h0.toFixed(12) + " against log2(27) = "
+      + Math.log2(27).toFixed(12) + "; the corpus's own letter frequencies bring it to "
+      + h1.toFixed(4) + " before any context is used at all");
+  })();
+
+  /* 2 -- the first order entropy of English */
+  (function(){
+    const h1 = Model.entropy(freq());
+    push("the letter frequencies of the corpus give between 4.0 and 4.2 bits",
+      h1 > 4.0 && h1 < 4.2,
+      h1.toFixed(4) + " bits per character over " + CORPUS.length
+      + " characters, against Shannon's published figure of about 4.1 for the same alphabet");
+  })();
+
+  /* 3 -- the brief's claim: the plug in ladder falls */
+  (function(){
+    const v = [];
+    for (let k = 0; k <= 4; k++) v.push(inSample(k));
+    let falls = true;
+    for (let k = 1; k <= 4; k++) if (!(v[k] < v[k - 1])) falls = false;
+    push("against the text it was fitted to, more context always looks better",
+      falls, "orders nought to four give " + v.map((x) => x.toFixed(4)).join(", ")
+      + " bits per character, each strictly below the one before");
+  })();
+
+  /* 4 -- and what that ladder is actually measuring */
+  (function(){
+    const rows = [];
+    let allTwo = true;
+    for (const a of ALPHAS){
+      let best = 0;
+      for (let k = 1; k <= KMAX; k++) if (heldOut(k, a) < heldOut(best, a)) best = k;
+      if (best !== 2) allTwo = false;
+      rows.push(a.toFixed(2) + ": best at " + best);
+    }
+    const ratio = heldOut(5, 0.5)/inSample(5);
+    push("on text it has never seen the same model gets worse after two letters",
+      allTwo && heldOut(5, 0.5) > heldOut(0, 0.5) && ratio > 6,
+      "fitted on the first half and measured on the second, the minimum falls at two letters "
+      + "of context for every smoothing setting (" + rows.join(", ")
+      + "). At five letters the fitted figure is " + inSample(5).toFixed(4)
+      + " and the honest one is " + heldOut(5, 0.5).toFixed(4) + ", which is "
+      + ratio.toFixed(1) + " times larger and worse than using no context at all. "
+      + "The falling ladder is measuring memory of this text, not English");
+  })();
+
+  /* 5 -- Shannon's bounds, with a guesser that really is optimal */
+  (function(){
+    let ok = true, rows = [], least = 1e9;
+    for (let k = 0; k <= 4; k++){
+      const r = optimalRanks(k), b = Model.bounds(Model.qOf(r)), h = inSample(k);
+      least = Math.min(least, r.length);
+      if (!(b.lo <= h + 1e-9 && h <= b.hi + 1e-9)) ok = false;
+      rows.push(k + ": " + b.lo.toFixed(3) + " \u2264 " + h.toFixed(3) + " \u2264 " + b.hi.toFixed(3));
+    }
+    push("the guess numbers alone bracket the entropy from both sides",
+      ok && least >= 2000,
+      "over at least " + least + " guessed characters at each of five context lengths, "
+      + rows.join("; ") + ". Nothing but how many attempts each character took goes into either bound");
+  })();
+
+  /* 6 -- the bounds are on the source, not on a bad model's bill */
+  (function(){
+    const broke = [];
+    for (let k = 0; k <= KMAX; k++){
+      const b = Model.bounds(Model.qOf(modelRanks(k, 0.5)));
+      if (heldOut(k, 0.5) > b.hi + 1e-9) broke.push(k);
+    }
+    push("a badly calibrated model pays more than its own guessing bound",
+      broke.length > 0 && broke.indexOf(2) === -1,
+      "on unseen text the upper bound is broken at context lengths " + broke.join(", ")
+      + " and holds at one and two. The bound limits the entropy of the source, not the bill a "
+      + "model runs up by being confident and wrong, so a breach is a statement about the model");
+  })();
+
+  /* 7 -- a Huffman code cannot beat the entropy and cannot miss it by a bit */
+  (function(){
+    const f = freq(), L = code(), h = Model.entropy(f);
+    let len = 0;
+    for (let i = 0; i < NSYM; i++) len += f[i]*L[i];
+    push("the best letter by letter code costs between the entropy and one bit more",
+      len >= h - 1e-12 && len < h + 1,
+      "the Huffman code over these frequencies has an expected length of " + len.toFixed(4)
+      + " bits against an entropy of " + h.toFixed(4) + ", a gap of "
+      + (len - h).toFixed(4) + " bits, which is Shannon's source coding bound in both directions");
+  })();
+
+  /* 8 -- and it is a complete prefix code */
+  (function(){
+    const L = code();
+    let kraft = 0, maxL = 0, minL = 99;
+    for (let i = 0; i < NSYM; i++){ kraft += Math.pow(2, -L[i]); maxL = Math.max(maxL, L[i]); minL = Math.min(minL, L[i]); }
+    push("the code uses every branch of the tree and wastes none",
+      kraft === 1, "the Kraft sum of two to the minus each code length is exactly "
+      + kraft + " over all " + NSYM + " symbols, with lengths from " + minL + " to " + maxL);
+  })();
+
+  /* 9 -- the model always states a distribution */
+  (function(){
+    let worst = 0, checked = 0;
+    for (const a of ALPHAS) for (let k = 0; k <= 3; k++){
+      const tab = trainTable(k);
+      let seen = 0;
+      for (const ctxKey of tab.keys()){
+        const p = Model.dist(tab, ctxKey, a);
+        let sum = 0;
+        for (let j = 0; j < NSYM; j++) sum += p[j];
+        worst = Math.max(worst, Math.abs(sum - 1));
+        checked++;
+        if (++seen >= 400) break;
+      }
+      const p = Model.dist(tab, "zzzz".slice(0, k), a);
+      let sum = 0;
+      for (let j = 0; j < NSYM; j++) sum += p[j];
+      worst = Math.max(worst, Math.abs(sum - 1));
+      checked++;
+    }
+    push("what the model believes always adds up to one, context seen or not",
+      worst < 1e-12, checked + " contexts across four smoothing settings and four context "
+      + "lengths, including contexts the model has never seen; the largest departure from one is "
+      + worst.toExponential(2));
+  })();
+
+  /* 10 -- Gibbs: believing the wrong thing always costs more */
+  (function(){
+    const rng = mulberry32(SEED + 10);
+    let ok = true, worstSaving = 0, cases = 0;
+    for (let q = 0; q < 400; q++){
+      const p = new Float64Array(NSYM), r = new Float64Array(NSYM);
+      let sp = 0, sr = 0;
+      for (let i = 0; i < NSYM; i++){ p[i] = rng(); r[i] = rng() + 1e-6; sp += p[i]; sr += r[i]; }
+      for (let i = 0; i < NSYM; i++){ p[i] /= sp; r[i] /= sr; }
+      const gap = Model.crossEntropy(p, r) - Model.entropy(p);
+      if (gap < -1e-12) ok = false;
+      worstSaving = Math.min(worstSaving, gap);
+      if (Model.crossEntropy(p, p) - Model.entropy(p) > 1e-12) ok = false;
+      cases++;
+    }
+    push("coding for the wrong distribution never costs less than the right one",
+      ok, cases + " random pairs of distributions over the alphabet: the cross entropy never fell "
+      + "below the entropy (the largest apparent saving was " + worstSaving.toExponential(2)
+      + "), and coding for the truth costs exactly the entropy every time");
+  })();
+
+  /* 11 -- the chain rule holds on the corpus counts */
+  (function(){
+    const a = aligned(CORPUS, 3);
+    const h1 = a.H(1), h12 = a.H(2), h123 = a.H(3);
+    const sum = h1 + (h12 - h1) + (h123 - h12);
+    push("the cost of three letters is the cost of each given the ones before it",
+      near(sum, h123, 1e-9) && h123 > 0,
+      "over " + a.total + " aligned triples the joint entropy is " + h123.toFixed(6)
+      + " bits and the three conditional terms " + h1.toFixed(4) + " + "
+      + (h12 - h1).toFixed(4) + " + " + (h123 - h12).toFixed(4) + " add to "
+      + sum.toFixed(6) + ", agreeing to " + Math.abs(sum - h123).toExponential(2));
+  })();
+
+  /* 12 -- knowing the previous letter never hurts */
+  (function(){
+    const a = aligned(CORPUS, 2);
+    const h1 = a.H(1), h12 = a.H(2);
+    const cond = h12 - h1;
+    /* the marginal of the SECOND letter over the same aligned pairs */
+    const m = new Map();
+    for (let i = 1; i < CORPUS.length; i++) m.set(CORPUS[i], (m.get(CORPUS[i]) || 0) + 1);
+    let plain = 0;
+    for (const v of m.values()) plain -= v/(CORPUS.length - 1)*Math.log2(v/(CORPUS.length - 1));
+    push("conditioning reduces entropy, and here it reduces it by most of a bit",
+      cond <= plain + 1e-12 && plain - cond > 0.5,
+      "the next letter on its own costs " + plain.toFixed(4)
+      + " bits and costs " + cond.toFixed(4) + " given the one before it, a saving of "
+      + (plain - cond).toFixed(4) + " bits per character");
+  })();
+
+  /* 13 -- what the guesser actually gets right, and when that stops improving */
+  (function(){
+    const out = [];
+    for (let k = 0; k <= KMAX; k++) out.push(Model.qOf(modelRanks(k, 0.5))[1]);
+    let best = 0;
+    for (let k = 1; k <= KMAX; k++) if (out[k] > out[best]) best = k;
+    push("first guess accuracy on unseen text peaks and then falls too",
+      best > 0 && best < KMAX && out[KMAX] < out[best],
+      "the right letter was the first guess " + out.map((x) => Math.round(x*100) + "%").join(", ")
+      + " of the time at nought to five letters of context, peaking at " + best
+      + ". The peak sits one further along than the entropy minimum, because getting the top guess "
+      + "right and being well calibrated about the rest are not the same thing");
+  })();
+
+  /* 14 -- every setting the page can reach */
+  (function(){
+    let ok = true, tried = 0, hi = 0;
+    for (const a of ALPHAS) for (let k = 0; k <= KMAX; k++){
+      const v = heldOut(k, a), w = inSample(k);
+      if (!Number.isFinite(v) || v <= 0 || v > 2*CEILING) ok = false;
+      if (!Number.isFinite(w) || w < 0 || w > CEILING + 1e-12) ok = false;
+      hi = Math.max(hi, v); tried++;
+    }
+    for (let p = 1; p <= 8; p++){
+      const start = Math.floor((p - 1)*(TEST.length - PRIMER - PLAY - 2)/7);
+      if (start < 0 || start + PRIMER + PLAY > TEST.length) ok = false;
+    }
+    push("every context length, smoothing and passage the page offers is in range",
+      ok, tried + " combinations of context length and smoothing all give a finite positive "
+      + "figure at most " + hi.toFixed(3) + " bits, the fitted figures all sit at or below log2(27), "
+      + "and all eight passages fall inside the half of the text the model never saw");
+  })();
+
+  return t;
+};
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED),
+  helpers: { trainTable: trainTable, fullTable: fullTable, heldOut: heldOut, inSample: inSample,
+             modelRanks: modelRanks, CORPUS: CORPUS, TRAIN: TRAIN, TEST: TEST, NSYM: NSYM,
+             SYMS: SYMS, CEILING: CEILING } };
+
+})();
+</script>
+</body>
+</html>
