@@ -1,0 +1,18 @@
+{
+  "slug": "photoelectric-threshold",
+  "title": "Brighter Light Does Not Help",
+  "domain": "physics",
+  "difficulty": 2,
+  "summary": "Guess what the ammeter will do, then run it. Below a threshold frequency no brightness ejects a single electron, and above it the electron energy ignores brightness entirely.",
+  "prerequisites": [],
+  "tags": ["photoelectric-effect", "work-function", "planck-constant", "photons", "stopping-voltage", "quantum"],
+  "interaction_pattern": "guess-then-reveal",
+  "sources": [
+    { "title": "Einstein, On a Heuristic Point of View Concerning the Production and Transformation of Light, Annalen der Physik 17 (1905)", "url": "https://doi.org/10.1002/andp.19053220607" },
+    { "title": "Millikan, A Direct Photoelectric Determination of Planck's h, Physical Review 7, 355 (1916)", "url": "https://doi.org/10.1103/PhysRev.7.355" },
+    { "title": "CRC Handbook of Chemistry and Physics, Electron Work Function of the Elements (after Michaelson, J. Appl. Phys. 48, 4729, 1977)", "url": "https://doi.org/10.1063/1.323539" },
+    { "title": "CODATA recommended values of the fundamental physical constants (h, c and e are exact in the 2019 SI)", "url": "https://physics.nist.gov/cuu/Constants/" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 12
+}
