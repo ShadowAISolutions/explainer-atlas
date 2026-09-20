@@ -1,0 +1,17 @@
+{
+  "slug": "comma-pump-drift",
+  "title": "Sing It Round Again And You Are Flat",
+  "domain": "music-theory",
+  "difficulty": 3,
+  "summary": "Tune every chord of I vi ii V pure against the one before and the tonic comes back a syntonic comma flat, every time round. Step through it, then watch tempering close the loop.",
+  "prerequisites": [],
+  "tags": ["just-intonation", "syntonic-comma", "temperament", "meantone", "equal-temperament", "cents"],
+  "interaction_pattern": "step-through",
+  "sources": [
+    { "title": "Barbour, Tuning and Temperament: A Historical Survey", "url": "https://store.doverpublications.com/products/9780486434063" },
+    { "title": "Benson, Music: A Mathematical Offering, chapter 5 (scales and temperaments)", "url": "https://homepages.abdn.ac.uk/d.j.benson/pages/html/maths-music.html" },
+    { "title": "Helmholtz, On the Sensations of Tone, appendix XX (tempered intervals)", "url": "https://archive.org/details/onsensationston00helmgoog" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 12
+}
