@@ -1,0 +1,17 @@
+{
+  "slug": "syllable-weight-and-stress",
+  "title": "Four Thousand Words, Two Places To Put The Stress",
+  "domain": "linguistics",
+  "difficulty": 2,
+  "summary": "Build a Latin word one syllable at a time and watch the accent jump when the second-from-last syllable turns heavy. The whole rule is three states read backwards.",
+  "prerequisites": [],
+  "tags": ["stress", "syllable-weight", "latin", "phonology", "finite-state", "prosody"],
+  "interaction_pattern": "build-from-parts",
+  "sources": [
+    { "title": "Allen, Vox Latina: the pronunciation of Classical Latin, 2nd ed., chapter on accent", "url": "https://www.cambridge.org/core/books/vox-latina/2E6B2C79A0FBDA0B0A1E0CD6E2DCCB45" },
+    { "title": "Hayes, Metrical Stress Theory: Principles and Case Studies", "url": "https://press.uchicago.edu/ucp/books/book/chicago/M/bo3618437.html" },
+    { "title": "Gordon, Syllable Weight: Phonetics, Phonology, Typology", "url": "https://www.routledge.com/Syllable-Weight-Phonetics-Phonology-Typology/Gordon/p/book/9780415976099" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 12
+}
