@@ -1,0 +1,17 @@
+{
+  "slug": "cache-line-stride",
+  "title": "You Asked For One Number And Paid For Sixteen",
+  "domain": "computer-science",
+  "difficulty": 3,
+  "summary": "Memory is sold by the cache line, not by the number. Write your own walk through an array and find the stride past which every read drags in a whole line and uses one element of it.",
+  "prerequisites": [],
+  "tags": ["computer-science", "caches", "memory", "locality", "performance", "data-layout"],
+  "interaction_pattern": "live-code",
+  "sources": [
+    { "title": "Drepper, What Every Programmer Should Know About Memory", "url": "https://people.freebsd.org/~lstewart/articles/cpumemory.pdf" },
+    { "title": "Hennessy and Patterson, Computer Architecture: A Quantitative Approach, appendix B on memory hierarchy", "url": "https://archive.org/details/computerarchitec0000henn" },
+    { "title": "Mattson, Gecsei, Slutz and Traiger, Evaluation techniques for storage hierarchies (the stack property of LRU)", "url": "https://ieeexplore.ieee.org/document/5388441" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 13
+}

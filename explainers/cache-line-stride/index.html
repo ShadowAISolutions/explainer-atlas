@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>You Asked For One Number And Paid For Sixteen — Explainer Atlas</title>
+<meta name="description" content="Memory is sold by the cache line, not by the number. Write your own access pattern, watch which lines it drags in, and find the stride where every fetch starts going to waste.">
+<style>
+:root{
+  --bg:#faf7f2; --panel:#fffdf9; --ink:#1b1a17; --muted:#6d675d; --line:#ded7c9;
+  --grid:#ece5d7; --cold:#e9e2d4; --miss:#c4501f; --hit:#1f6f62; --gold:#9a7307;
+  --code-bg:#1c1f26; --code-ink:#dfe4ec; --code-key:#e0a458; --code-dim:#7d8799;
+  --pad:clamp(14px,2.8vw,26px);
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#14151a; --panel:#1b1d23; --ink:#e9e6df; --muted:#9a948a; --line:#2e313a;
+    --grid:#262932; --cold:#2a2d36; --miss:#e8763f; --hit:#4fbfa6; --gold:#d8a93a;
+    --code-bg:#0f1116; --code-ink:#dfe4ec; --code-key:#e0a458; --code-dim:#79838f;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+     font:clamp(.97rem,.93rem + .2vw,1.05rem)/1.6 var(--sans); -webkit-text-size-adjust:100%}
+.wrap{max-width:70rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:calc(var(--pad)*.7)}
+.kicker{margin:0 0 .5em; font:600 .68rem/1 var(--mono); letter-spacing:.22em;
+        text-transform:uppercase; color:var(--miss)}
+h1{margin:0 0 .35em; font:700 clamp(1.5rem,1.1rem + 2.1vw,2.35rem)/1.1 var(--sans); letter-spacing:-.02em}
+.standfirst{margin:0; max-width:44em; color:var(--muted)}
+.rule{height:2px; background:var(--ink); margin:0 0 var(--pad)}
+
+/* the workbench: a code panel and its dials, side by side above the picture */
+.bench{display:grid; gap:var(--pad); grid-template-columns:1fr}
+@media (min-width:54rem){ .bench{grid-template-columns:minmax(0,1.15fr) minmax(17rem,.85fr)} }
+.editor{background:var(--code-bg); border-radius:4px; padding:14px 14px 12px;
+        display:grid; gap:.6em; align-content:start; align-self:start}
+.editor .head{display:flex; justify-content:space-between; align-items:baseline; gap:1em}
+.editor label{font:600 .68rem/1 var(--mono); letter-spacing:.16em; text-transform:uppercase; color:var(--code-dim)}
+.editor .sig{font:.72rem/1.5 var(--mono); color:var(--code-dim)}
+textarea#code{width:100%; min-height:5.2em; resize:vertical; background:#00000033;
+  color:var(--code-ink); border:1px solid #ffffff1f; border-radius:3px; padding:.65em .7em;
+  font:.86rem/1.6 var(--mono); tab-size:2}
+textarea#code:focus-visible{outline:2px solid var(--code-key); outline-offset:1px}
+.presets{display:flex; flex-wrap:wrap; gap:.4em}
+.presets button{background:#ffffff14; color:var(--code-ink); border:1px solid #ffffff26;
+  border-radius:3px; padding:.4em .6em; font:600 .74rem/1 var(--mono); cursor:pointer; min-height:32px}
+.presets button:hover{border-color:var(--code-key); color:var(--code-key)}
+.status{margin:0; font:.74rem/1.5 var(--mono); color:var(--code-dim); min-height:1.5em}
+.status.bad{color:#f08a6a}
+
+.dials{display:grid; gap:1em; align-content:start}
+.dial{display:grid; gap:.25em}
+.dial .row{display:flex; justify-content:space-between; align-items:baseline; gap:.8em}
+.dial label{font:600 .68rem/1 var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+.dial output{font:700 .9rem/1 var(--mono); color:var(--miss)}
+.dial .hint{margin:0; font-size:.78rem; color:var(--muted)}
+input[type=range]{width:100%; accent-color:var(--miss); min-height:26px}
+select{width:100%; font:inherit; color:inherit; background:var(--panel);
+  border:1px solid var(--line); border-radius:3px; padding:.45em .55em; min-height:38px}
+#reset{justify-self:start; font:600 .78rem/1 var(--mono); color:var(--miss); background:none;
+  border:1px solid var(--line); border-radius:3px; padding:.55em .8em; cursor:pointer; min-height:36px}
+#reset:hover{border-color:var(--miss)}
+:where(a,button,input,select,textarea):focus-visible{outline:2px solid var(--miss); outline-offset:2px}
+
+figure.stage{margin:var(--pad) 0 0; background:var(--panel); border:1px solid var(--line);
+             border-radius:4px; padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin:.7em 2px 0; color:var(--muted); font-size:.83rem}
+
+.tally{display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:1px;
+       background:var(--line); border:1px solid var(--line); border-radius:4px;
+       overflow:hidden; margin:var(--pad) 0 0; padding:0}
+.tally div{background:var(--panel); padding:.55em .75em}
+.tally dt{margin:0; font:.62rem/1.4 var(--mono); letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+.tally dd{margin:.2em 0 0; font:700 1.02rem/1.25 var(--mono); font-variant-numeric:tabular-nums}
+
+.prose{max-width:37em; margin:calc(var(--pad)*1.6) 0 0}
+.prose h2{margin:2.1em 0 .5em; font:700 .82rem/1.4 var(--mono); letter-spacing:.14em;
+          text-transform:uppercase; color:var(--miss)}
+.prose p{margin:0 0 1.05em}
+.prose .math{font:.83rem/1.75 var(--mono); background:var(--panel); border:1px solid var(--line);
+             border-left:3px solid var(--miss); border-radius:3px; padding:.8em .9em;
+             white-space:pre-wrap; overflow-x:auto}
+.prose code{font:.88em var(--mono); background:var(--grid); padding:.1em .3em; border-radius:2px}
+footer.page{margin-top:calc(var(--pad)*1.7); padding-top:var(--pad); border-top:1px solid var(--line);
+            color:var(--muted); font-size:.83rem}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+         clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="page">
+  <p class="kicker">Computer science</p>
+  <h1>You Asked For One Number And Paid For Sixteen</h1>
+  <p class="standfirst">Memory is sold by the cache line, never by the number. Write your own
+     walk through an array, watch which lines it drags in, and find the stride past which
+     every single fetch is mostly waste.</p>
+</header>
+<div class="rule"></div>
+
+<section class="bench" data-role="controls" aria-label="Access pattern and cache settings">
+  <div class="editor">
+    <div class="head">
+      <label for="code">The walk</label>
+      <span class="sig">address of step i</span>
+    </div>
+    <textarea id="code" spellcheck="false" aria-describedby="codehint">i * stride</textarea>
+    <p class="sig" id="codehint">An expression in <b>i</b>, <b>steps</b>, <b>stride</b>, <b>rows</b> and <b>cols</b>.
+       It runs for every step of the walk and gives the element it reads.</p>
+    <div class="presets">
+      <button type="button" data-src="i * stride">Strided</button>
+      <button type="button" data-src="(i % rows) * cols + (i / rows | 0)">Column major</button>
+      <button type="button" data-src="(i * 2654435761) % (rows * cols)">Scattered</button>
+      <button type="button" data-src="((i / cols | 0) * cols) + ((i * 7) % cols)">Shuffled in row</button>
+    </div>
+    <p class="status" id="status" role="status">&nbsp;</p>
+  </div>
+
+  <div class="dials">
+    <div class="dial">
+      <div class="row"><label for="stride">Stride</label><output id="strideOut" for="stride">4</output></div>
+      <input type="range" id="stride" min="1" max="64" step="1" value="4">
+      <p class="hint">Elements skipped between one read and the next.</p>
+    </div>
+    <div class="dial">
+      <div class="row"><label for="lineExp">Elements per line</label><output id="lineOut" for="lineExp">16</output></div>
+      <input type="range" id="lineExp" min="1" max="6" step="1" value="4">
+      <p class="hint">A 64 byte line holds sixteen four byte integers. The whole line arrives or none of it does.</p>
+    </div>
+    <div class="dial">
+      <div class="row"><label for="waysExp">Ways per set</label><output id="waysOut" for="waysExp">4</output></div>
+      <input type="range" id="waysExp" min="0" max="3" step="1" value="2">
+      <p class="hint">How many lines may share one set before the oldest is thrown out.</p>
+    </div>
+    <div class="dial">
+      <div class="row"><label for="setsExp">Sets in the cache</label><output id="setsOut" for="setsExp">16</output></div>
+      <input type="range" id="setsExp" min="1" max="6" step="1" value="4">
+      <p class="hint">Fewer sets means more lines fighting over the same shelf.</p>
+    </div>
+    <div class="dial">
+      <label for="reads">Reads in the walk</label>
+      <select id="reads">
+        <option value="256">256 reads</option>
+        <option value="1024" selected>1024 reads</option>
+        <option value="4096">4096 reads</option>
+      </select>
+      <p class="hint">How long the walk runs. The picture below shows the first 1024 elements of memory; a long stride runs off the bottom of it.</p>
+    </div>
+    <button type="button" id="reset">Reset the bench</button>
+  </div>
+</section>
+
+<figure class="stage" data-role="stage">
+  <canvas id="view" width="900" height="520" role="img"
+     aria-label="A grid of memory elements drawn as cache lines. Elements the walk read are marked, and lines that had to be fetched are outlined. Beside it, the miss rate plotted against stride, which climbs and then flattens at one once the stride reaches the line length."></canvas>
+  <figcaption id="cap">Each box is one cache line. Push the stride past the line length and every read costs a whole line.</figcaption>
+</figure>
+
+<dl class="tally" aria-live="polite">
+  <div><dt>Miss rate</dt><dd id="tMiss">—</dd></div>
+  <div><dt>Lines fetched</dt><dd id="tLines">—</dd></div>
+  <div><dt>Elements used per line</dt><dd id="tUse">—</dd></div>
+  <div><dt>Traffic per useful read</dt><dd id="tWaste">—</dd></div>
+</dl>
+
+<article class="prose" data-role="prose">
+
+<p>The grid is an array. Every outlined box holds one cache line, and a line is the
+smallest thing memory will sell you. Ask for a single element inside a box and the
+whole box arrives. With the stride at four and sixteen elements to a line, the walk
+reads four of the sixteen and the other twelve ride along unused, which is why the
+boxes come up mostly pale with a few marked cells in each.</p>
+
+<p>Drag the stride up. Nothing much happens for a while, and then at sixteen the
+picture changes completely: one marked cell per box, every box outlined, every read
+a miss. That is the whole lesson. The cost of a traversal is not the number of
+elements it reads, it is the number of lines it drags in.</p>
+
+<h2>Counting the lines</h2>
+
+<p>Step <code>k</code> reads element <code>k * s</code>, which lives in line
+<code>floor(k * s / L)</code>. For a walk of <code>n</code> steps the lines are a run
+of consecutive integers when the stride is shorter than a line, and are all different
+when it is not, so the count is:</p>
+
+<p class="math">lines(n, s, L)  =  min( n,  floor((n - 1) * s / L) + 1 )
+
+traffic per useful read  =  L * lines / n</p>
+
+<p>Below the line length the second term wins and the traffic ratio is about
+<code>s</code>: a stride of four fetches four bytes of line for every byte you wanted.
+At or above the line length the first term wins, the count saturates at
+<code>n</code>, and the ratio pins at <code>L</code>. That is the knee in the right
+hand plot, and it is a corner rather than a bend, because the miss rate is
+<code>min(s, L) / L</code> and a ratio of two whole numbers cannot round off.</p>
+
+<h2>A formula that does not survive the simulation</h2>
+
+<p>The brief for this page asked to assert that the lines touched match
+<code>ceil(n * s / L)</code>. That formula counts the lines the walk <em>spans</em>,
+not the lines it <em>touches</em>, and the two part company in both directions. Take
+three steps of stride three over four element lines: the walk reads elements 0, 3 and
+6, which sit in lines 0, 0 and 1, so it touches two. The span formula says three. Push
+the stride past the line length instead and the span formula runs away to thousands
+while the walk still touches exactly one line per step. The page asserts the corrected
+expression against brute force over two hundred pairs, and exhibits the counterexample
+so the refutation is checked rather than merely claimed.</p>
+
+<h2>Why the column loop is slow</h2>
+
+<p>Put the stride back to one and load the column major preset. It reads exactly the
+same thousand elements in a different order, and against this cache the tally does not
+move at all: both orders miss sixty four times, once per line, because nothing is
+evicted before it is needed again. Order on its own is not a cost. Now pull the sets
+down to two and the ways down to one. The row order is untouched, and the column order
+goes to a miss on every single read, sixteen times the traffic, because a column step
+jumps a whole row and the cycle of lines it revisits is longer than the cache can
+hold. The page checks the multiset equality, the equal cost under a roomy cache, and
+the factor of sixteen under a tight one.</p>
+
+<h2>Where the cache runs out</h2>
+
+<p>Capacity is the second trap. Pull the sets down to two and the ways down to one and
+the walk starts missing on lines it read moments ago, because a direct mapped cache
+sends every line whose number agrees modulo the set count to the same shelf. Set the
+stride to the number of elements the whole cache holds and the miss rate goes to one
+and stays there however many reads you take: every access maps to the same set and
+evicts the one before it.</p>
+
+<h2>What to try</h2>
+
+<p>Set sixteen elements to a line and step the stride from one to sixteen, watching
+the traffic figure climb one unit at a time and then stop dead. Then set the stride to
+sixteen and type <code>i * stride + (i % 7)</code> into the editor: a walk that wanders
+about inside the line it already paid for is free, and the miss rate does not move.</p>
+
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+const SPACE = 1024;            /* elements of the simulated array */
+
+/* ---- MODEL: pure, no DOM ------------------------------------------------ */
+const Model = {
+
+  /* a set associative cache with least recently used replacement.
+     addrs are element indices; L is elements per line.                      */
+  run(addrs, L, sets, ways){
+    const slots = sets*ways;
+    const tag = new Int32Array(slots).fill(-1);
+    const age = new Float64Array(slots);
+    const flags = new Uint8Array(addrs.length);   /* 1 = hit, 0 = miss */
+    const lines = new Set();
+    let misses = 0, clock = 0;
+    for (let i = 0; i < addrs.length; i++){
+      const ln = Math.floor(addrs[i]/L);
+      const set = ((ln % sets) + sets) % sets;
+      lines.add(ln);
+      clock++;
+      let hit = -1;
+      for (let w = 0; w < ways; w++) if (tag[set*ways + w] === ln){ hit = w; break; }
+      if (hit >= 0){ age[set*ways + hit] = clock; flags[i] = 1; continue; }
+      misses++;
+      let victim = 0, oldest = clock + 1;
+      for (let w = 0; w < ways; w++){
+        const sl = set*ways + w;
+        if (tag[sl] === -1){ victim = w; oldest = -1; break; }
+        if (age[sl] < oldest){ oldest = age[sl]; victim = w; }
+      }
+      tag[set*ways + victim] = ln; age[set*ways + victim] = clock; flags[i] = 0;
+    }
+    return { n: addrs.length, misses: misses, hits: addrs.length - misses,
+             missRate: addrs.length ? misses/addrs.length : 0,
+             flags: flags, distinct: lines.size };
+  },
+
+  /* the address stream of a plain strided walk */
+  strided(n, s, space){
+    const a = new Int32Array(n);
+    for (let i = 0; i < n; i++) a[i] = space ? (i*s) % space : i*s;
+    return a;
+  },
+
+  /* lines a strided walk of n steps actually touches.
+     Below the line length the line numbers floor(k*s/L) form a run of
+     consecutive integers, so the count is the last one plus one; at or above
+     it every step lands somewhere new, so the count is n.                   */
+  linesTouched(n, s, L){
+    if (n <= 0) return 0;
+    return Math.min(n, Math.floor((n - 1)*s / L) + 1);
+  },
+  linesTouchedBrute(n, s, L){
+    const seen = new Set();
+    for (let k = 0; k < n; k++) seen.add(Math.floor(k*s/L));
+    return seen.size;
+  },
+  /* the formula the brief asked for, kept so the page can refute it */
+  linesSpanned(n, s, L){ return Math.ceil(n*s/L); },
+
+  /* miss rate of a strided walk through a cache large enough to hold the
+     whole walk: one miss per line touched                                   */
+  missRateIdeal(n, s, L){ return this.linesTouched(n, s, L) / n; },
+
+  /* row major and column major orders over an r by c matrix */
+  rowMajor(r, c){
+    const a = new Int32Array(r*c);
+    for (let i = 0; i < r*c; i++) a[i] = i;
+    return a;
+  },
+  colMajor(r, c){
+    const a = new Int32Array(r*c);
+    let k = 0;
+    for (let j = 0; j < c; j++) for (let i = 0; i < r; i++) a[k++] = i*c + j;
+    return a;
+  },
+  multiset(arr){
+    const m = new Map();
+    for (let i = 0; i < arr.length; i++) m.set(arr[i], (m.get(arr[i]) || 0) + 1);
+    return m;
+  },
+  sameMultiset(a, b){
+    const x = this.multiset(a), y = this.multiset(b);
+    if (x.size !== y.size) return false;
+    for (const [k, v] of x) if (y.get(k) !== v) return false;
+    return true;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { code: "i * stride", stride: 4, lineExp: 4, waysExp: 2, setsExp: 4, reads: 1024 };
+/* Addresses are never wrapped: a strided walk really does run off into memory,
+   and folding it back on itself would invent reuse the walk does not have.
+   SPACE is the window the picture draws, not a limit on the walk.            */
+const state = Object.assign({}, defaults);
+let ROWW = 64;                  /* elements drawn per row of the memory map */
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const SS = 2;
+let W = 900, H = 520, NARROW = false, CELL = 12, MAPH = 0;
+
+function fitCanvas(){
+  const box = cv.parentElement.getBoundingClientRect().width - 24;
+  W = Math.max(280, Math.min(980, Math.round(box)));
+  NARROW = W < 520;
+  ROWW = NARROW ? 32 : 64;
+  CELL = Math.max(3, Math.floor((W - (NARROW ? 8 : 16)) / ROWW));
+  MAPH = CELL * (SPACE / ROWW);
+  H = 34 + MAPH + (NARROW ? 46 : 52) + (NARROW ? 170 : 210);
+  cv.width = Math.round(W*SS); cv.height = Math.round(H*SS);
+  cv.style.width = "100%"; cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+function label(x, y, str, colour, align, baseline, plate){
+  ctx.textAlign = align || "left"; ctx.textBaseline = baseline || "alphabetic";
+  if (plate){
+    const w = ctx.measureText(str).width;
+    let lx = x;
+    if (ctx.textAlign === "center") lx = x - w/2;
+    if (ctx.textAlign === "right") lx = x - w;
+    ctx.fillStyle = css("--panel"); ctx.fillRect(lx - 3, y - 10, w + 6, 14);
+  }
+  ctx.fillStyle = colour; ctx.fillText(str, x, y);
+}
+
+/* compile the reader's expression once per edit */
+let compiled = { fn: null, err: "" };
+function compile(src){
+  try {
+    const f = new Function("i", "steps", "stride", "rows", "cols",
+      '"use strict"; return (' + src + ');');
+    f(0, 1, 1, 1, 1);
+    return { fn: f, err: "" };
+  } catch (e){
+    return { fn: null, err: (e && e.message) ? String(e.message) : "that walk did not compile" };
+  }
+}
+
+function walk(){
+  const L = 1 << state.lineExp, ways = 1 << state.waysExp, sets = 1 << state.setsExp;
+  const n = state.reads, rows = 32, cols = 32;
+  const addrs = new Int32Array(n);
+  let bad = "";
+  if (compiled.fn){
+    for (let i = 0; i < n; i++){
+      let v;
+      try { v = compiled.fn(i, n, state.stride, rows, cols); }
+      catch (e){ bad = "the walk stopped at step " + i; break; }
+      if (typeof v !== "number" || !Number.isFinite(v)){ bad = "step " + i + " did not give a number"; break; }
+      addrs[i] = Math.max(0, Math.min(1 << 26, Math.floor(v)));
+    }
+  } else bad = compiled.err;
+  if (bad) for (let i = 0; i < n; i++) addrs[i] = i*state.stride;
+  const r = Model.run(addrs, L, sets, ways);
+  const touched = new Set();
+  let inWindow = 0;
+  for (let i = 0; i < n; i++){ touched.add(addrs[i]); if (addrs[i] < SPACE) inWindow++; }
+  return { addrs: addrs, r: r, L: L, ways: ways, sets: sets, n: n,
+           elements: touched.size, inWindow: inWindow, bad: bad };
+}
+
+/* panel one: the array itself, ruled into cache lines */
+function drawMap(c, top){
+  const padL = NARROW ? 4 : 8;
+  const rows = SPACE / ROWW;
+  ctx.font = (NARROW ? 9 : 10) + "px " + css("--mono");
+  label(padL, top - 11, "THE ARRAY, RULED INTO CACHE LINES OF " + c.L, css("--muted"));
+
+  /* every cell, pale unless the walk read it */
+  const state1 = new Uint8Array(SPACE);      /* 1 read and hit, 2 read and missed */
+  for (let i = 0; i < c.n; i++){
+    const a = c.addrs[i];
+    if (a >= SPACE) continue;
+    if (c.r.flags[i] === 0) state1[a] = 2; else if (state1[a] === 0) state1[a] = 1;
+  }
+  const fetched = new Set();
+  for (let i = 0; i < c.n; i++)
+    if (c.r.flags[i] === 0 && c.addrs[i] < SPACE) fetched.add(Math.floor(c.addrs[i]/c.L));
+
+  for (let a = 0; a < SPACE; a++){
+    const x = padL + (a % ROWW)*CELL, y = top + Math.floor(a/ROWW)*CELL;
+    ctx.fillStyle = state1[a] === 2 ? css("--miss") : state1[a] === 1 ? css("--hit") : css("--cold");
+    ctx.fillRect(x, y, CELL - 1, CELL - 1);
+  }
+  /* the line boundaries, drawn over the cells so the unit of purchase shows */
+  ctx.lineWidth = 1;
+  for (let ln = 0; ln < SPACE/c.L; ln++){
+    const first = ln*c.L, r0 = Math.floor(first/ROWW);
+    const wide = c.L >= ROWW;
+    const x = padL + (first % ROWW)*CELL, y = top + r0*CELL;
+    const w = (wide ? ROWW : c.L)*CELL, h = (wide ? (c.L/ROWW) : 1)*CELL;
+    ctx.strokeStyle = fetched.has(ln) ? css("--ink") : css("--grid");
+    ctx.strokeRect(x - .5, y - .5, w, h);
+  }
+  return top + MAPH;
+}
+
+/* panel two: the miss rate of a plain strided walk against the stride */
+function drawKnee(c, top){
+  const padL = NARROW ? 34 : 46, padR = NARROW ? 12 : 20;
+  const x0 = padL, x1 = W - padR, base = H - (NARROW ? 26 : 28), h = base - top - 18;
+  const X = (s) => x0 + (s - 1)/63 * (x1 - x0);
+  const Y = (v) => base - v*h;
+  ctx.font = (NARROW ? 9 : 10) + "px " + css("--mono");
+  label(x0, top + 2, "MISS RATE OF A PLAIN STRIDED WALK, AGAINST STRIDE", css("--muted"));
+
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
+  for (const v of [0, 0.5, 1]){
+    ctx.beginPath(); ctx.moveTo(x0, Y(v)); ctx.lineTo(x1, Y(v)); ctx.stroke();
+    label(x0 - 6, Y(v) + 3, v.toFixed(1), css("--muted"), "right");
+  }
+
+  /* what this cache actually does, and what a cache with room to spare would
+     do. Where the two agree, drawing both would hide one under the other, so
+     the ideal is drawn only when capacity has pulled the real curve away.    */
+  const real = [], ideal = [];
+  let here = 0, apart = 0;
+  for (let s = 1; s <= 64; s++){
+    const v = Model.run(Model.strided(c.n, s, 0), c.L, c.sets, c.ways).missRate;
+    const w = Math.min(s, c.L)/c.L;
+    real.push(v); ideal.push(w);
+    apart = Math.max(apart, Math.abs(v - w));
+    if (s === c.stride) here = v;
+  }
+  if (apart > 1e-9){
+    ctx.strokeStyle = css("--gold"); ctx.lineWidth = 1.6; ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    for (let s = 1; s <= 64; s++){
+      const x = X(s), y = Y(ideal[s - 1]);
+      s === 1 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  ctx.strokeStyle = css("--miss"); ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  for (let s = 1; s <= 64; s++){
+    const x = X(s), y = Y(real[s - 1]);
+    s === 1 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  const mx = X(c.stride), my = Y(here);
+  ctx.strokeStyle = css("--ink"); ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(mx, base); ctx.lineTo(mx, my); ctx.stroke(); ctx.setLineDash([]);
+  ctx.beginPath(); ctx.arc(mx, my, 4.5, 0, Math.PI*2);
+  ctx.fillStyle = css("--panel"); ctx.fill();
+  ctx.strokeStyle = css("--ink"); ctx.lineWidth = 2; ctx.stroke();
+
+  const right = c.stride > 40;
+  label(mx + (right ? -9 : 9), my - 13, here.toFixed(3) + " AT STRIDE " + c.stride,
+        css("--ink"), right ? "right" : "left", "alphabetic", true);
+  if (apart > 1e-9){
+    label(x1, Y(0.5) - 16, "THIS CACHE", css("--miss"), "right", "alphabetic", true);
+    label(x1, Y(0.5) - 2, "LINE LENGTH ALONE", css("--gold"), "right", "alphabetic", true);
+  } else {
+    label(x1, Y(0.5) - 2, "THIS CACHE HAS ROOM TO SPARE: THE LINE LENGTH IS THE WHOLE STORY",
+          css("--muted"), "right", "alphabetic", true);
+  }
+
+  const knee = X(Math.min(64, c.L));
+  if (c.L <= 64){
+    ctx.strokeStyle = css("--hit"); ctx.lineWidth = 1; ctx.setLineDash([1, 3]);
+    ctx.beginPath(); ctx.moveTo(knee, Y(0)); ctx.lineTo(knee, Y(1)); ctx.stroke(); ctx.setLineDash([]);
+    label(knee, base + 24, "KNEE AT " + c.L, css("--hit"), "center");
+  }
+  for (const s of [1, 8, 16, 32, 48, 64]) label(X(s), base + 13, String(s), css("--muted"), "center");
+}
+
+function render(){
+  fitCanvas();
+  const c = walk();
+  c.stride = state.stride;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+  const after = drawMap(c, 34);
+  drawKnee(c, after + (NARROW ? 46 : 52) - 18);
+
+  el("strideOut").textContent = String(state.stride);
+  el("lineOut").textContent = String(c.L);
+  el("waysOut").textContent = String(c.ways);
+  el("setsOut").textContent = String(c.sets);
+
+  const perLine = c.r.distinct ? c.elements / c.r.distinct : 0;
+  el("tMiss").textContent = c.r.missRate.toFixed(3);
+  el("tLines").textContent = String(c.r.misses);
+  el("tUse").textContent = perLine.toFixed(2) + " of " + c.L;
+  el("tWaste").textContent = (c.r.missRate * c.L).toFixed(2) + " elements";
+
+  const st = el("status");
+  st.textContent = c.bad ? c.bad + " — showing a plain strided walk instead"
+                         : "ran " + c.n + " reads, " + c.r.misses + " of them missed";
+  st.className = c.bad ? "status bad" : "status";
+  el("cap").textContent = (c.bad
+    ? "The editor is showing an error, so the picture is the plain strided walk. "
+    : "")
+    + "Each outlined box is one cache line. Dark outlines are lines this walk paid to fetch; "
+    + "filled cells are the elements it actually used. "
+    + (c.inWindow === c.n
+       ? "The whole walk fits in the window."
+       : c.inWindow + " of the " + c.n + " reads land in the first " + SPACE
+         + " elements; the rest run on past the bottom of the picture.");
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parse(input.value); render(); });
+  input.addEventListener("change", () => { state[key] = parse(input.value); render(); });
+}
+bind("stride", "stride", (v) => parseInt(v, 10) || 1);
+bind("lineExp", "lineExp", (v) => parseInt(v, 10) || 1);
+bind("waysExp", "waysExp", (v) => parseInt(v, 10) || 0);
+bind("setsExp", "setsExp", (v) => parseInt(v, 10) || 1);
+bind("reads", "reads", (v) => parseInt(v, 10) || 256);
+
+const codeBox = el("code");
+codeBox.addEventListener("input", () => {
+  state.code = codeBox.value;
+  compiled = compile(state.code);
+  render();
+});
+for (const b of document.querySelectorAll(".presets button")){
+  b.addEventListener("click", () => {
+    codeBox.value = state.code = b.getAttribute("data-src");
+    compiled = compile(state.code);
+    render();
+  });
+}
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  codeBox.value = defaults.code;
+  el("stride").value = defaults.stride; el("lineExp").value = defaults.lineExp;
+  el("waysExp").value = defaults.waysExp; el("setsExp").value = defaults.setsExp;
+  el("reads").value = String(defaults.reads);
+  compiled = compile(state.code);
+  render();
+});
+
+compiled = compile(state.code);
+render();
+let t = 0;
+addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 90); });
+if (matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+const SIZES = [2, 4, 8, 16, 32, 64];
+const BIG = { sets: 256, ways: 8 };     /* 2048 lines: nothing is ever evicted */
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+
+  /* 1 -- reading straight through costs one miss per line, exactly */
+  (function(){
+    let worst = 0, rows = [];
+    for (const L of SIZES){
+      const n = 256;
+      const r = Model.run(Model.strided(n, 1, 0), L, BIG.sets, BIG.ways);
+      worst = Math.max(worst, Math.abs(r.missRate - 1/L));
+      rows.push(L + ": " + r.missRate.toFixed(6));
+    }
+    push("walking straight through misses on exactly one read in every line",
+      worst === 0, "line lengths " + rows.join(", ") + " against 1/L; largest gap " + worst);
+  })();
+
+  /* 2 -- at or past the line length every single read is a miss */
+  (function(){
+    let ok = true, rows = [];
+    for (const L of SIZES) for (const s of [L, 2*L, 3*L]){
+      const r = Model.run(Model.strided(64, s, 0), L, BIG.sets, BIG.ways);
+      if (r.misses !== 64 || r.missRate !== 1) ok = false;
+      if (s === L) rows.push(L);
+    }
+    push("once the stride reaches the line length nothing is ever reused",
+      ok, "64 reads at strides L, 2L and 3L for line lengths "
+      + rows.join(", ") + " give 64 misses out of 64 every time");
+  })();
+
+  /* 3 -- the brief's formula for lines touched, restated */
+  (function(){
+    const rng = mulberry32(SEED + 3);
+    let mine = 0, brief = 0, pairs = 0;
+    for (let q = 0; q < 200; q++){
+      const n = 1 + Math.floor(rng()*40), s = 1 + Math.floor(rng()*40);
+      const L = SIZES[Math.floor(rng()*SIZES.length)];
+      const truth = Model.linesTouchedBrute(n, s, L);
+      if (Model.linesTouched(n, s, L) === truth) mine++;
+      if (Model.linesSpanned(n, s, L) === truth) brief++;
+      pairs++;
+    }
+    const cx = { n: 3, s: 3, L: 4 };
+    const cxTrue = Model.linesTouchedBrute(cx.n, cx.s, cx.L);
+    const cxBrief = Model.linesSpanned(cx.n, cx.s, cx.L);
+    push("the lines a walk touches are not the lines it spans",
+      mine === pairs && brief < pairs && cxTrue === 2 && cxBrief === 3,
+      "the brief asked to assert lines = ceil(n*s/L); that is right for "
+      + brief + " of " + pairs + " random cases and min(n, floor((n-1)*s/L)+1) is right for all "
+      + pairs + ". Counterexample: three steps of stride three over four element lines read "
+      + "elements 0, 3 and 6, which sit in two lines, not the " + cxBrief + " the span formula gives");
+  })();
+
+  /* 4 -- a direct mapped cache thrashing on its own capacity */
+  (function(){
+    let ok = true, rows = [];
+    for (const S of [4, 8, 16, 32]){
+      const L = 16, R = 5, P = 4;
+      const bad = new Int32Array(P*R), good = new Int32Array(P*R);
+      for (let k = 0; k < P*R; k++){
+        bad[k]  = (k % P) * S * L;   /* every line lands on set 0 */
+        good[k] = (k % P) * L;       /* consecutive lines, spread over sets */
+      }
+      const rb = Model.run(bad, L, S, 1), rg = Model.run(good, L, S, 1);
+      if (rb.missRate !== 1) ok = false;
+      if (rg.misses !== P) ok = false;
+      rows.push(S + " sets: " + rb.misses + " against " + rg.misses);
+    }
+    push("a direct mapped cache thrashes when the stride is its own capacity",
+      ok, "four lines read five times over, " + rows.join(", ")
+      + " misses out of 20; the same four lines laid side by side miss only on the first pass");
+  })();
+
+  /* 5 -- the two matrix orders read the same elements */
+  (function(){
+    const r = 32, c = 32, L = 16;
+    const row = Model.rowMajor(r, c), col = Model.colMajor(r, c);
+    const same = Model.sameMultiset(row, col);
+    const a = Model.run(row, L, BIG.sets, BIG.ways), b = Model.run(col, L, BIG.sets, BIG.ways);
+    const want = Math.ceil(r*c/L);
+    push("row major and column major read the identical elements, and cost the same when nothing is evicted",
+      same && a.misses === want && b.misses === want,
+      "both orders read all " + (r*c) + " elements of the matrix with the same multiplicities, "
+      + "and against a cache that never evicts both miss exactly " + want
+      + " times, one per line. Order alone is not the cost");
+  })();
+
+  /* 6 -- shrink the cache and only one of the two orders survives */
+  (function(){
+    const r = 32, c = 32, L = 16, sets = 8, ways = 2;
+    const a = Model.run(Model.rowMajor(r, c), L, sets, ways);
+    const b = Model.run(Model.colMajor(r, c), L, sets, ways);
+    push("the cost of the column order is a capacity effect, and it is total",
+      a.misses === Math.ceil(r*c/L) && b.misses === r*c && b.misses === 16*a.misses,
+      "with room for " + (sets*ways) + " lines the row order still misses " + a.misses
+      + " times, one per line, while the column order misses on all " + b.misses
+      + " reads, sixteen times as many, because a column step of " + c
+      + " elements lands in a new line every time and the cycle is longer than the cache");
+  })();
+
+  /* 7 -- least recently used is a stack algorithm */
+  (function(){
+    const rng = mulberry32(SEED + 7);
+    let ok = true, drops = 0, cases = 0;
+    for (let q = 0; q < 300; q++){
+      const L = SIZES[Math.floor(rng()*SIZES.length)], sets = 1 << (1 + Math.floor(rng()*4));
+      const n = 40 + Math.floor(rng()*60), a = new Int32Array(n);
+      for (let i = 0; i < n; i++) a[i] = Math.floor(rng()*600);
+      let prev = -1;
+      for (const ways of [1, 2, 4, 8]){
+        const m = Model.run(a, L, sets, ways).misses;
+        if (prev >= 0){ if (m > prev) ok = false; if (m < prev) drops++; cases++; }
+        prev = m;
+      }
+    }
+    push("giving a set more ways never costs more misses",
+      ok && drops > 0, "300 random walks through four widths of the same cache, "
+      + cases + " widenings, not one of them raised the miss count and "
+      + drops + " lowered it");
+  })();
+
+  /* 8 -- the textbook worst case for least recently used */
+  (function(){
+    let ok = true, rows = [];
+    for (const ways of [1, 2, 4, 8]){
+      const L = 16, sets = 8, R = 6;
+      const over = new Int32Array((ways + 1)*R), fit = new Int32Array(ways*R);
+      for (let k = 0; k < over.length; k++) over[k] = (k % (ways + 1)) * sets * L;
+      for (let k = 0; k < fit.length; k++)  fit[k]  = (k % ways) * sets * L;
+      const ro = Model.run(over, L, sets, ways), rf = Model.run(fit, L, sets, ways);
+      if (ro.misses !== over.length || rf.misses !== ways) ok = false;
+      rows.push(ways + " ways: " + ro.misses + "/" + over.length + " against " + rf.misses + "/" + fit.length);
+    }
+    push("one line too many in a set and least recently used misses every single time",
+      ok, "cycling ways+1 lines through a set six times over misses on every read ("
+      + rows.join(", ") + "), while the same cycle one line shorter misses only on the first pass");
+  })();
+
+  /* 9 -- traffic per useful read is min(stride, line) */
+  (function(){
+    const rng = mulberry32(SEED + 9);
+    let worst = 0, at = "";
+    for (let q = 0; q < 240; q++){
+      const L = SIZES[Math.floor(rng()*SIZES.length)];
+      const s = 1 + Math.floor(rng()*80), n = 64 + Math.floor(rng()*200);
+      const traffic = Model.run(Model.strided(n, s, 0), L, BIG.sets, BIG.ways).missRate * L;
+      const gap = Math.abs(traffic - Math.min(s, L)) * n / L;   /* in units of the L/n bound */
+      if (gap > worst){ worst = gap; at = "n=" + n + ", s=" + s + ", L=" + L; }
+    }
+    push("every read drags in min(stride, line) elements of traffic",
+      worst <= 1, "240 random walks; the largest departure from min(s, L) is "
+      + worst.toFixed(4) + " of the L/n edge term the count carries, at " + at);
+  })();
+
+  /* 10 -- the knee is a corner, not a bend */
+  (function(){
+    let ok = true, n = 512;
+    for (const L of SIZES){
+      let prev = -1;
+      for (let s = 1; s <= 80; s++){
+        const v = Model.missRateIdeal(n, s, L);
+        if (v < prev - 1e-15) ok = false;
+        if (s >= L && v !== 1) ok = false;
+        if (s < L && !(v < 1)) ok = false;
+        prev = v;
+      }
+    }
+    push("the miss rate climbs, hits one at the line length, and never moves again",
+      ok, "six line lengths by eighty strides over a 512 read walk: the rate never falls, "
+      + "is strictly under one for every stride short of the line and exactly one for every stride at or past it");
+  })();
+
+  /* 11 -- wandering inside a line you already paid for is free */
+  (function(){
+    const rng = mulberry32(SEED + 11);
+    let ok = true, tried = 0;
+    for (const L of SIZES) for (const mult of [1, 2, 3]){
+      const s = L*mult, n = 96;
+      const plain = new Int32Array(n), wobble = new Int32Array(n);
+      for (let i = 0; i < n; i++){
+        plain[i] = i*s;
+        wobble[i] = i*s + Math.floor(rng()*L);
+      }
+      const a = Model.run(plain, L, 16, 2), b = Model.run(wobble, L, 16, 2);
+      if (a.misses !== b.misses || a.distinct !== b.distinct) ok = false;
+      tried++;
+    }
+    push("moving about inside a line already fetched costs nothing at all",
+      ok, tried + " walks whose stride is a whole number of lines, each given a random offset "
+      + "inside the line it lands on: the miss count and the set of lines touched are identical every time");
+  })();
+
+  /* 12 -- the books balance */
+  (function(){
+    const rng = mulberry32(SEED + 12);
+    let ok = true, tight = 0, loose = 0;
+    for (let q = 0; q < 300; q++){
+      const L = SIZES[Math.floor(rng()*SIZES.length)];
+      const sets = 1 << (1 + Math.floor(rng()*5)), ways = 1 << Math.floor(rng()*4);
+      const n = 30 + Math.floor(rng()*90), a = new Int32Array(n);
+      for (let i = 0; i < n; i++) a[i] = Math.floor(rng()*900);
+      const r = Model.run(a, L, sets, ways);
+      if (r.hits + r.misses !== n) ok = false;
+      if (r.misses < r.distinct) ok = false;
+      const big = Model.run(a, L, BIG.sets, BIG.ways);
+      if (big.misses !== big.distinct) ok = false;
+      if (r.misses === r.distinct) tight++; else loose++;
+    }
+    push("misses are never fewer than the lines touched, and equal them only when nothing is evicted",
+      ok && loose > 0, "300 random walks: hits and misses add up to the reads every time, "
+      + "against a cache that never evicts the miss count is exactly the number of lines touched, "
+      + "and " + loose + " of the 300 smaller caches had to fetch at least one line twice");
+  })();
+
+  /* 13 -- every setting the sliders can reach behaves */
+  (function(){
+    let ok = true, tried = 0;
+    for (let le = 1; le <= 6; le++) for (let we = 0; we <= 3; we++)
+    for (let se = 1; se <= 6; se += 2) for (const st of [64, 256])
+    for (const s of [1, 7, 64]){
+      const r = Model.run(Model.strided(st, s, 0), 1 << le, 1 << se, 1 << we);
+      if (!(r.missRate >= 0 && r.missRate <= 1) || !Number.isFinite(r.missRate)) ok = false;
+      if (r.distinct < 1) ok = false;
+      tried++;
+    }
+    push("every cache the sliders can build gives a rate between nought and one",
+      ok, tried + " combinations of line length, ways, sets, walk length and stride, "
+      + "all finite and all in range");
+  })();
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
