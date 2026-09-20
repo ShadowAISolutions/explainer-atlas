@@ -33,6 +33,61 @@ files in `AUDIT/` before starting any batch.
 
 ## Batches
 
+### batch/015 — 2026-09-20
+- merged: nash-equilibrium-mixed, le-chatelier-equilibrium-shift,
+  multiple-comparisons-p-hacking, cache-line-stride, entropy-of-english-guessing
+- blocked: none
+- patterns: spatial-explore, perturb-and-observe, step-through, live-code,
+  guess-then-reveal
+- queue: refilled from 12 to 52 (forty new tasks, numbered 101-140)
+- learned:
+  - **Two series drawn on the same axes in two colours hide one another where
+    they agree.** It happened twice in one batch: the p-hacking page drew the
+    corrected curve over the uncorrected one when no correction was in force, so
+    the reader saw a blue line where the prose promised a red one; the cache page
+    drew the ideal miss-rate curve under the measured one whenever the cache was
+    big enough, and labelled a line that was not visible. The fix is the same
+    both times — compute both series first, compare them, and draw the second
+    only when it departs from the first, saying so in words when it does not.
+    A legend entry pointing at an invisible line is worse than no legend.
+  - **A tolerance below the sampling floor is not a strict assertion, it is a
+    broken one.** The p-hacking page asserted the family-wise rate to within 1
+    per cent relative over 40000 families; at k = 1 the rate is 0.05 and one
+    standard error is already 2.2 per cent of it, so the assertion was asking
+    the simulation to beat its own noise. Measure the gap in standard errors of
+    the binomial floor instead — it is stricter at large k, honest at small k,
+    and it says what it is doing.
+  - **A page whose walk is bounded by the picture will lie about the walk.**
+    The cache page originally wrapped addresses into the 1024-element array it
+    drew, which invented reuse the traversal does not have and flattened the
+    knee the page exists to show. Let the model run past the edge and treat the
+    drawing as a window, saying in the caption how much of the walk fell inside
+    it.
+  - The task-file claim count is now **eighteen**. This batch refuted three:
+    that the best-reply correspondences intersect at *the* equilibrium (Battle
+    of the Sexes and Hawk-Dove have three each), that Benjamini-Hochberg holds
+    the false discovery rate below 0.05 (under the global null Simes puts it at
+    exactly the level, and the simulation exceeds 0.05 at six of nine values of
+    k), and that the lines a strided walk touches are ceil(n*s/L) (that counts
+    the lines it *spans*; right in only 53 of 200 random cases). One of my own
+    claims was refuted the same way on the Le Chatelier page.
+  - **A true assertion can still be measuring the wrong thing.** The entropy
+    page's brief asked to assert that the order-1 to order-4 conditional
+    entropies fall. They do — 4.03, 3.16, 2.31, 1.53, 0.98 — but on thirteen
+    thousand characters the fourth-order model has seen almost every context
+    once, so the fall is memorisation. Fitting on half the corpus and scoring
+    on the other half puts the minimum at two letters of context and sends the
+    curve back up to 4.12 by five, worse than using no context at all, at every
+    smoothing setting. Assert the brief's claim, then assert what it is
+    actually measuring.
+  - Screenshot review after a green verifier caught a real defect on **every one
+    of the five pages** again: guide lines invisible under the curves they
+    coincided with, a page about disturbances opening undisturbed, a shared
+    scale squashing the species that carried the argument, an axis row colliding
+    with the next panel's heading, and an empty half-panel that read as a bug.
+    That is nine batches running. The verifier proves the maths; it cannot see a
+    label sitting on a curve.
+
 ### batch/014 — 2026-09-19
 - merged: neuron-integrate-and-fire, coriolis-deflection, river-meander-migration,
   chord-voice-leading-distance, heat-sink-fin-efficiency

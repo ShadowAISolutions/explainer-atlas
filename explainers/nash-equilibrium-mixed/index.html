@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Own Payoffs Don't Set Your Own Odds — Explainer Atlas</title>
+<meta name="description" content="In a game with no pure equilibrium each player randomises to make the opponent indifferent, so your mixing probability is read off your opponent's payoffs, never your own.">
+<style>
+:root{
+  --bg:#f2f4f1; --panel:#ffffff; --ink:#12171c; --muted:#5d6773; --line:#d5dbd3;
+  --row:#b02a37; --col:#16558f; --row-soft:#f7e6e7; --col-soft:#e4eef8;
+  --grid:#e6ebe4; --accent:#b02a37; --accent-soft:#f7e6e7;
+  --pad:clamp(14px,3vw,26px);
+  --serif:"Iowan Old Style",Georgia,"Times New Roman",ui-serif,serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f1214; --panel:#171b1f; --ink:#e6e9ec; --muted:#98a2ac; --line:#282f36;
+    --row:#f07c86; --col:#6fb0ee; --row-soft:#2c1b1e; --col-soft:#15222f;
+    --grid:#1d2329; --accent:#f07c86; --accent-soft:#2c1b1e;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font:clamp(1rem,.97rem + .2vw,1.08rem)/1.65 var(--serif); -webkit-text-size-adjust:100%}
+.wrap{max-width:62rem; margin:0 auto; padding:var(--pad)}
+header.page{padding-bottom:calc(var(--pad)*.8)}
+.kicker{margin:0 0 .5em; color:var(--muted); font:600 .72rem/1 var(--mono);
+  text-transform:uppercase; letter-spacing:.16em}
+h1{font-size:clamp(1.7rem,1.1rem + 3.1vw,3rem); line-height:1.06; margin:0 0 .35em;
+  font-weight:600; letter-spacing:-.02em}
+.standfirst{margin:0; color:var(--muted); max-width:34em; font-size:1.02em}
+
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); padding:0; overflow:hidden}
+.stagegrid{display:grid; grid-template-columns:1fr; gap:0}
+@media (min-width:50rem){ .stagegrid{grid-template-columns:minmax(0,1.5fr) minmax(15rem,.85fr)} }
+.canvasbox{padding:10px; min-width:0}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y; cursor:crosshair}
+.matrixwrap{border-top:1px solid var(--line); padding:var(--pad); min-width:0}
+@media (min-width:50rem){ .matrixwrap{border-top:0; border-left:1px solid var(--line)} }
+table.payoff{border-collapse:collapse; width:100%; font:var(--mono); font-size:.84rem}
+table.payoff caption{caption-side:top; text-align:left; color:var(--muted);
+  font:600 .68rem/1.5 var(--mono); text-transform:uppercase; letter-spacing:.12em; padding-bottom:.6em}
+table.payoff th{color:var(--muted); font:600 .68rem/1.4 var(--mono); text-transform:uppercase;
+  letter-spacing:.08em; padding:.35em .4em; text-align:center; font-weight:600}
+table.payoff th.rh{text-align:right; white-space:nowrap}
+table.payoff td{border:1px solid var(--line); padding:.5em .35em; text-align:center;
+  font-variant-numeric:tabular-nums; white-space:nowrap}
+table.payoff td.hit{background:var(--accent-soft)}
+td .a{color:var(--row); font-weight:700}
+td .b{color:var(--col); font-weight:700}
+td .sep{color:var(--muted)}
+.mnote{margin:.9em 0 0; color:var(--muted); font-size:.85rem; line-height:1.5}
+figcaption{margin:0; padding:.75em var(--pad) 1em; color:var(--muted); font-size:.86rem;
+  border-top:1px solid var(--line)}
+
+.controls{margin-top:var(--pad); background:var(--panel); border:1px solid var(--line);
+  padding:var(--pad); display:grid; gap:1.1em}
+@media (min-width:44rem){ .controls{grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.1em 2em} }
+.control{display:grid; gap:.3em; min-width:0}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control label{font:600 .8rem/1.3 var(--mono); text-transform:uppercase; letter-spacing:.07em}
+.control output{font:700 .84rem/1 var(--mono); color:var(--accent); background:var(--accent-soft);
+  padding:.3em .5em; font-variant-numeric:tabular-nums}
+.control .hint{margin:0; color:var(--muted); font-size:.8rem; line-height:1.45}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; font-family:var(--mono); font-size:.86rem; color:inherit;
+  background:var(--bg); border:1px solid var(--line); padding:.55em .7em; min-height:42px; border-radius:0}
+button{cursor:pointer; font-weight:700; text-transform:uppercase; letter-spacing:.07em}
+button:hover,select:hover{border-color:var(--accent)}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px}
+.span2{grid-column:1/-1}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:1px;
+  margin:0; padding:0; background:var(--line); border:1px solid var(--line)}
+.readout div{background:var(--panel); padding:.6em .7em}
+.readout dt{margin:0; color:var(--muted); font:.66rem/1.4 var(--mono); text-transform:uppercase; letter-spacing:.1em}
+.readout dd{margin:.2em 0 0; font:700 1rem/1.25 var(--mono); font-variant-numeric:tabular-nums}
+
+.prose{max-width:37em; margin:calc(var(--pad)*1.5) auto 0}
+.prose h2{font:600 .78rem/1.4 var(--mono); text-transform:uppercase; letter-spacing:.14em;
+  color:var(--muted); margin:2.2em 0 .6em}
+.prose p{margin:0 0 1.05em}
+.prose .math{font-family:var(--mono); font-size:.88rem; background:var(--panel);
+  padding:.85em 1em; border-left:3px solid var(--accent); overflow-x:auto; line-height:1.7;
+  white-space:pre-wrap}
+footer.page{max-width:37em; margin:calc(var(--pad)*1.8) auto 0; padding-top:var(--pad);
+  border-top:1px solid var(--line); color:var(--muted); font-size:.84rem}
+footer.page a{color:var(--accent)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Game theory</p>
+  <h1>Your Own Payoffs Don't Set Your Own Odds</h1>
+  <p class="standfirst">When no pure strategy is safe, each player randomises. The surprise is
+  whose numbers decide the odds: drag your own payoff and your own mixing probability will
+  not move.</p>
+</header>
+
+<figure class="stage" data-role="stage">
+  <div class="stagegrid">
+    <div class="canvasbox">
+      <canvas id="view" width="900" height="620" role="img"
+        aria-label="A unit square of mixing probabilities. A red path shows the row player's best response to each column mix, a blue path shows the column player's best response to each row mix, and the equilibrium sits where they cross."></canvas>
+    </div>
+    <div class="matrixwrap">
+      <table class="payoff" id="mtx">
+        <caption id="mcap">Payoffs — row, column</caption>
+        <tbody id="mbody"></tbody>
+      </table>
+      <p class="mnote" id="mnote"></p>
+    </div>
+  </div>
+  <figcaption id="cap">The red path is every best reply the row player has; the blue path is
+  the column player's. They meet where neither side can gain by changing its odds.</figcaption>
+</figure>
+
+<section class="controls" data-role="controls" aria-label="Game and strategy controls">
+  <div class="control">
+    <div class="row"><label for="preset">Game</label></div>
+    <select id="preset">
+      <option value="mp" selected>Matching pennies</option>
+      <option value="bos">Battle of the sexes</option>
+      <option value="hd">Hawk and dove</option>
+      <option value="rps">Rock, paper, scissors</option>
+    </select>
+    <p class="hint">The first three are two-by-two and draw a square. Rock, paper, scissors
+    has three actions and draws a triangle instead.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="arow">Row's own payoff</label>
+      <output id="arowout" for="arow">1.0</output>
+    </div>
+    <input type="range" id="arow" min="-4" max="4" step="0.1" value="1">
+    <p class="hint">What the row player collects when both sides pick their first action.
+    Watch the red path move and the vertical line stay where it is.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="bcol">Column's own payoff</label>
+      <output id="bcolout" for="bcol">-1.0</output>
+    </div>
+    <input type="range" id="bcol" min="-4" max="4" step="0.1" value="-1">
+    <p class="hint">The same cell, from the column player's side. This one moves the vertical
+    line, which is the row player's mix.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="p" id="plab">Row plays its first action</label>
+      <output id="pout" for="p">0.25</output>
+    </div>
+    <input type="range" id="p" min="0" max="1" step="0.005" value="0.25">
+    <p class="hint" id="phint">Moves the probe marker sideways. Arrow keys step it.</p>
+  </div>
+
+  <div class="control">
+    <div class="row">
+      <label for="q" id="qlab">Column plays its first action</label>
+      <output id="qout" for="q">0.75</output>
+    </div>
+    <input type="range" id="q" min="0" max="1" step="0.005" value="0.75">
+    <p class="hint" id="qhint">Moves the probe marker up and down. You can also drag on the
+    picture.</p>
+  </div>
+
+  <div class="control">
+    <div class="row"><label for="reset">Restore</label></div>
+    <button type="button" id="reset">Reset to defaults</button>
+    <p class="hint">Puts the game, both payoffs and the probe marker back where they started.</p>
+  </div>
+
+  <dl class="readout span2" aria-live="polite">
+    <div><dt>Row's mix at equilibrium</dt><dd id="r1">—</dd></div>
+    <div><dt>Column's mix at equilibrium</dt><dd id="r2">—</dd></div>
+    <div><dt>Row's payoff at the probe</dt><dd id="r3">—</dd></div>
+    <div><dt>Best gain from deviating</dt><dd id="r4">—</dd></div>
+  </dl>
+</section>
+
+<article class="prose" data-role="prose">
+  <p>Matching pennies has no safe move. If you always show heads, I show heads and take your
+  coin; if you always show tails, I follow you there. The only way to stop being read is to
+  flip, and the question the picture answers is what odds to flip at.</p>
+
+  <p>The square holds every pair of odds. Sideways is how often the row player picks its first
+  action, upwards is how often the column player picks its. The red path marks the row player's
+  best reply to each column mix, and the blue path marks the column player's best reply to each
+  row mix. Both are staircases, because against any fixed opponent mix one pure action is
+  strictly better than the other until a single crossover point, where the two are exactly
+  equal and every mix is as good as any other. Equilibrium is where the two staircases meet:
+  each side is already replying as well as it can to what the other is doing.</p>
+
+  <h2>The condition that fixes the odds</h2>
+
+  <p>Look at where the red staircase turns. It turns at the column mix that makes the row
+  player's two actions pay exactly the same. That is the whole mechanism. The row player is
+  only willing to randomise if randomising costs nothing, and it costs nothing only when both
+  actions pay alike, so in equilibrium the column player must be mixing at precisely the odds
+  that make its opponent indifferent.</p>
+
+  <p class="math">q* solves  q(a11 - a12) + a12 = q(a21 - a22) + a22
+p* solves  p(b11 - b21) + b21 = p(b12 - b22) + b22</p>
+
+  <p>Read the two lines carefully. The column player's odds q* are built entirely from a, the
+  row player's payoffs. The row player's odds p* are built entirely from b, the column
+  player's. Neither player's own numbers appear anywhere in their own answer. Drag <em>Row's
+  own payoff</em> and you will see the red staircase slide up or down while the vertical line
+  through the crossing does not move a pixel; drag <em>Column's own payoff</em> and the
+  opposite happens. Your payoffs do not set your odds. They set your opponent's.</p>
+
+  <h2>What the crossing is not</h2>
+
+  <p>It is tempting to read the crossing as the only place the two paths touch. In matching
+  pennies it is. Switch to battle of the sexes or hawk and dove and count again: the staircases
+  also touch at two corners, because those games have pure equilibria as well as the mixed one,
+  and a corner is a meeting point too. The page asserts all three counts rather than the tidy
+  claim. In battle of the sexes the mixed equilibrium is the worst of the three for both
+  players, paying each two thirds of a point against the one or two points either pure
+  agreement would pay. Randomising is what you are left with when you cannot coordinate, not
+  something either side wants.</p>
+
+  <h2>Three actions, same argument</h2>
+
+  <p>Rock, paper, scissors replaces the square with a triangle, because a mix over three
+  actions is a point in a triangle. Colour each point by which action beats it best and the
+  triangle splits into three regions; the only mix that no single action beats is the point
+  where all three regions meet, one third each. Nudge <em>Row's own payoff</em> so that rock
+  against rock is worth something, and the meeting point slides away from the centre, still
+  obeying the same rule.</p>
+
+  <h2>What to try</h2>
+
+  <p>Start on matching pennies and put the probe marker somewhere off the crossing: the
+  deviation readout tells you how much the better-placed player can take by shifting its odds.
+  Slide it onto the crossing and that number falls to zero, which is the definition of
+  equilibrium and the only place it holds. Then take Row's own payoff from 1 up to 4 and watch
+  the vertical line refuse to move.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &middot; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+
+/* ---- deterministic RNG -------------------------------------------------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+
+/* ---- MODEL: pure. No DOM. ----------------------------------------------- */
+const Model = {
+  /* base games. A = row payoffs, B = column payoffs, indexed [row][col]. */
+  base(kind){
+    if (kind === "bos") return { A: [[2, 0], [0, 1]], B: [[1, 0], [0, 2]], n: 2,
+      labels: ["Opera", "Boxing"] };
+    if (kind === "hd")  return { A: [[-0.5, 2], [0, 1]], B: [[-0.5, 0], [2, 1]], n: 2,
+      labels: ["Hawk", "Dove"] };
+    if (kind === "rps") return { A: [[0,-1,1],[1,0,-1],[-1,1,0]],
+                                 B: [[0,1,-1],[-1,0,1],[1,-1,0]], n: 3,
+      labels: ["Rock", "Paper", "Scissors"] };
+    return { A: [[1,-1],[-1,1]], B: [[-1,1],[1,-1]], n: 2, labels: ["Heads", "Tails"] };
+  },
+  /* the two sliders overwrite one cell each; everything else is the base game */
+  game(kind, a11, b11){
+    const g = this.base(kind);
+    const A = g.A.map(r => r.slice()), B = g.B.map(r => r.slice());
+    A[0][0] = a11; B[0][0] = b11;
+    return { A, B, n: g.n, labels: g.labels };
+  },
+
+  /* --- two-by-two ------------------------------------------------------- */
+  rowPure(A, q){ return [q*A[0][0] + (1-q)*A[0][1], q*A[1][0] + (1-q)*A[1][1]]; },
+  colPure(B, p){ return [p*B[0][0] + (1-p)*B[1][0], p*B[0][1] + (1-p)*B[1][1]]; },
+  evRow(A, p, q){ const r = this.rowPure(A, q); return p*r[0] + (1-p)*r[1]; },
+  evCol(B, p, q){ const c = this.colPure(B, p); return q*c[0] + (1-q)*c[1]; },
+
+  /* closed form. p* is read off B alone; q* off A alone. Null when the
+     crossover falls outside the open interval, i.e. no interior mix.       */
+  pStar(B){
+    const d = (B[0][0] - B[0][1]) - (B[1][0] - B[1][1]);
+    if (Math.abs(d) < 1e-12) return null;
+    const p = (B[1][1] - B[1][0]) / d;
+    return (p > 0 && p < 1) ? p : null;
+  },
+  qStar(A){
+    const d = (A[0][0] - A[0][1]) - (A[1][0] - A[1][1]);
+    if (Math.abs(d) < 1e-12) return null;
+    const q = (A[1][1] - A[0][1]) / d;
+    return (q > 0 && q < 1) ? q : null;
+  },
+
+  /* second, independent derivation: bisect on WHICH pure action is better.
+     No algebra from the closed form is reused.                             */
+  flip(f){
+    let lo = 0, hi = 1, flo = f(0), fhi = f(1);
+    if (!((flo < 0) !== (fhi < 0))) return null;
+    for (let i = 0; i < 80; i++){
+      const m = (lo + hi) / 2, fm = f(m);
+      if ((fm < 0) === (flo < 0)){ lo = m; flo = fm; } else hi = m;
+    }
+    return (lo + hi) / 2;
+  },
+  pStarBisect(B){ return this.flip((p) => { const c = this.colPure(B, p); return c[0] - c[1]; }); },
+  qStarBisect(A){ return this.flip((q) => { const r = this.rowPure(A, q); return r[0] - r[1]; }); },
+
+  /* third characterisation, valid for zero sum only: the row player's
+     maximin mix, found by ternary search on a concave piecewise line.      */
+  maximin(A){
+    const f = (p) => Math.min(p*A[0][0] + (1-p)*A[1][0], p*A[0][1] + (1-p)*A[1][1]);
+    let lo = 0, hi = 1;
+    for (let i = 0; i < 200; i++){
+      const m1 = lo + (hi - lo)/3, m2 = hi - (hi - lo)/3;
+      if (f(m1) < f(m2)) lo = m1; else hi = m2;
+    }
+    const p = (lo + hi) / 2;
+    return { p, value: f(p) };
+  },
+
+  /* how much the better placed side can take by changing its own odds */
+  gain(A, B, p, q){
+    const r = this.rowPure(A, q), c = this.colPure(B, p);
+    return { row: Math.max(r[0], r[1]) - this.evRow(A, p, q),
+             col: Math.max(c[0], c[1]) - this.evCol(B, p, q) };
+  },
+
+  /* every equilibrium of a two-by-two: the four corners that survive, plus
+     the interior mix when it exists. Counting these is the point of
+     assertion 10 -- the crossing is not always alone.                      */
+  equilibria(A, B){
+    const out = [];
+    for (const p of [0, 1]) for (const q of [0, 1]){
+      const g = this.gain(A, B, p, q);
+      if (g.row <= 1e-12 && g.col <= 1e-12) out.push({ p, q, kind: "pure" });
+    }
+    const p = this.pStar(B), q = this.qStar(A);
+    if (p !== null && q !== null) out.push({ p, q, kind: "mixed" });
+    return out;
+  },
+
+  /* --- three actions ---------------------------------------------------- */
+  /* Row's payoff to pure action i against a column mix (q1,q2,1-q1-q2). */
+  rowPure3(A, q1, q2){
+    const q3 = 1 - q1 - q2;
+    return [0,1,2].map(i => A[i][0]*q1 + A[i][1]*q2 + A[i][2]*q3);
+  },
+  /* column mix that makes all three of Row's actions pay alike: a 2x2 solve */
+  qStar3(A){
+    const d = (i,k,j) => A[i][j] - A[k][j];
+    const c11 = d(0,1,0) - d(0,1,2), c12 = d(0,1,1) - d(0,1,2), b1 = -d(0,1,2);
+    const c21 = d(1,2,0) - d(1,2,2), c22 = d(1,2,1) - d(1,2,2), b2 = -d(1,2,2);
+    const det = c11*c22 - c12*c21;
+    if (Math.abs(det) < 1e-12) return null;
+    const q1 = (b1*c22 - c12*b2) / det, q2 = (c11*b2 - b1*c21) / det;
+    const q3 = 1 - q1 - q2;
+    if (!(q1 > 0 && q2 > 0 && q3 > 0)) return null;
+    return [q1, q2, q3];
+  },
+  /* which action best answers a given column mix */
+  best3(A, q1, q2){
+    const v = this.rowPure3(A, q1, q2);
+    let bi = 0; for (let i = 1; i < 3; i++) if (v[i] > v[bi]) bi = i;
+    return { index: bi, values: v };
+  },
+
+  /* fictitious play: each side best replies to the running frequency of what
+     it has seen. A dynamic route to the same odds.                          */
+  fictitious(A, B, rounds){
+    const seenR = [1, 0], seenC = [1, 0], playedR = [0, 0], playedC = [0, 0];
+    for (let t = 0; t < rounds; t++){
+      const q = seenC[0] / (seenC[0] + seenC[1]);
+      const p = seenR[0] / (seenR[0] + seenR[1]);
+      const r = this.rowPure(A, q), c = this.colPure(B, p);
+      const ar = r[0] >= r[1] ? 0 : 1, ac = c[0] >= c[1] ? 0 : 1;
+      playedR[ar]++; playedC[ac]++; seenR[ar]++; seenC[ac]++;
+    }
+    return { p: playedR[0] / rounds, q: playedC[0] / rounds };
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { preset: "mp", a11: 1, b11: -1, p: 0.25, q: 0.75 };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const SS = 2;
+let W = 900, H = 620, NARROW = false, PLOT = { x:0, y:0, s:0 };
+
+function fitCanvas(){
+  const box = cv.parentElement.getBoundingClientRect().width - 20;
+  W = Math.max(280, Math.min(760, Math.round(box)));
+  NARROW = W < 430;
+  const three = Model.base(state.preset).n === 3;
+  const gutL = NARROW ? 40 : 58, gutR = NARROW ? 14 : 22;
+  const gutT = NARROW ? 34 : 42, gutB = NARROW ? 46 : 56;
+  const s = Math.max(120, Math.min(W - gutL - gutR, 470));
+  /* a triangle is only 0.866 of its side tall, and needs no axis titles, so
+     it gets its own height and sits centred rather than leaving a white band */
+  H = (three ? Math.round(s * 0.866) + 18 : s) + gutT + gutB;
+  PLOT = { x: three ? Math.round((W - s) / 2) : gutL, y: gutT, s: s };
+  cv.width = Math.round(W * SS); cv.height = Math.round(H * SS);
+  cv.style.width = "100%"; cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+const fx = (p) => PLOT.x + p * PLOT.s;
+const fy = (q) => PLOT.y + (1 - q) * PLOT.s;
+
+function label(x, y, text, colour, align, baseline, plate){
+  ctx.textAlign = align || "left"; ctx.textBaseline = baseline || "alphabetic";
+  if (plate){
+    const w = ctx.measureText(text).width, h = 12;
+    let lx = x; if (ctx.textAlign === "center") lx = x - w/2; if (ctx.textAlign === "right") lx = x - w;
+    ctx.fillStyle = css("--panel");
+    ctx.fillRect(lx - 3, y - (ctx.textBaseline === "middle" ? h/2 + 1 : h), w + 6, h + 5);
+  }
+  ctx.fillStyle = colour; ctx.fillText(text, x, y);
+}
+
+function drawSquare(g){
+  const A = g.A, B = g.B, L = g.labels;
+  const f = NARROW ? 9 : 11;
+  ctx.font = f + "px " + css("--mono");
+
+  /* grid */
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
+  for (let k = 0; k <= 10; k++){
+    const t = k / 10;
+    ctx.beginPath(); ctx.moveTo(fx(t), fy(0)); ctx.lineTo(fx(t), fy(1)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(fx(0), fy(t)); ctx.lineTo(fx(1), fy(t)); ctx.stroke();
+  }
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1.2;
+  ctx.strokeRect(fx(0), fy(1), PLOT.s, PLOT.s);
+
+  /* axis ticks */
+  ctx.fillStyle = css("--muted");
+  for (const t of [0, 0.5, 1]){
+    label(fx(t), fy(0) + 14, t.toFixed(1), css("--muted"), "center", "top");
+    label(fx(0) - 6, fy(t), t.toFixed(1), css("--muted"), "right", "middle");
+  }
+  label(fx(0.5), fy(0) + (NARROW ? 30 : 34),
+    NARROW ? "ROW PLAYS " + L[0].toUpperCase() : "HOW OFTEN ROW PLAYS " + L[0].toUpperCase(),
+    css("--row"), "center", "top");
+  ctx.save();
+  ctx.translate(NARROW ? 12 : 16, fy(0.5)); ctx.rotate(-Math.PI/2);
+  label(0, 0, NARROW ? "COLUMN PLAYS " + L[0].toUpperCase()
+                     : "HOW OFTEN COLUMN PLAYS " + L[0].toUpperCase(),
+        css("--col"), "center", "middle");
+  ctx.restore();
+
+  /* --- column player's best reply: q as a function of p ----------------- */
+  const pS = Model.pStar(B);
+  ctx.strokeStyle = css("--col"); ctx.lineWidth = 3; ctx.lineCap = "butt";
+  const colAt = (p) => { const c = Model.colPure(B, p); return c[0] - c[1]; };
+  if (pS === null){
+    const q = colAt(0.5) > 0 ? 1 : 0;
+    ctx.beginPath(); ctx.moveTo(fx(0), fy(q)); ctx.lineTo(fx(1), fy(q)); ctx.stroke();
+  } else {
+    const lowQ = colAt(pS/2) > 0 ? 1 : 0;
+    ctx.beginPath(); ctx.moveTo(fx(0), fy(lowQ)); ctx.lineTo(fx(pS), fy(lowQ)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(fx(pS), fy(0)); ctx.lineTo(fx(pS), fy(1)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(fx(pS), fy(1 - lowQ)); ctx.lineTo(fx(1), fy(1 - lowQ)); ctx.stroke();
+  }
+
+  /* --- row player's best reply: p as a function of q -------------------- */
+  const qS = Model.qStar(A);
+  ctx.strokeStyle = css("--row"); ctx.lineWidth = 3;
+  const rowAt = (q) => { const r = Model.rowPure(A, q); return r[0] - r[1]; };
+  if (qS === null){
+    const p = rowAt(0.5) > 0 ? 1 : 0;
+    ctx.beginPath(); ctx.moveTo(fx(p), fy(0)); ctx.lineTo(fx(p), fy(1)); ctx.stroke();
+  } else {
+    const lowP = rowAt(qS/2) > 0 ? 1 : 0;
+    ctx.beginPath(); ctx.moveTo(fx(lowP), fy(0)); ctx.lineTo(fx(lowP), fy(qS)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(fx(0), fy(qS)); ctx.lineTo(fx(1), fy(qS)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(fx(1 - lowP), fy(qS)); ctx.lineTo(fx(1 - lowP), fy(1)); ctx.stroke();
+  }
+
+  /* --- the two guide lines. They lie exactly on top of a staircase segment,
+     so drawing them in either player's colour makes them invisible. Ink, thin,
+     dashed and drawn last, each carrying its own number, so the reader has
+     something to watch that is not the staircase.                           */
+  ctx.setLineDash([2, 5]); ctx.lineWidth = 1.2; ctx.strokeStyle = css("--ink");
+  if (pS !== null){
+    ctx.beginPath(); ctx.moveTo(fx(pS), fy(0)); ctx.lineTo(fx(pS), fy(1)); ctx.stroke();
+  }
+  if (qS !== null){
+    ctx.beginPath(); ctx.moveTo(fx(0), fy(qS)); ctx.lineTo(fx(1), fy(qS)); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  /* --- equilibria ------------------------------------------------------- */
+  const eqs = Model.equilibria(A, B);
+  for (const e of eqs){
+    ctx.beginPath(); ctx.arc(fx(e.p), fy(e.q), e.kind === "mixed" ? 6 : 4.5, 0, Math.PI*2);
+    ctx.fillStyle = e.kind === "mixed" ? css("--ink") : css("--panel");
+    ctx.fill();
+    ctx.strokeStyle = css("--ink"); ctx.lineWidth = 2; ctx.stroke();
+  }
+  /* each guide line is named where nothing else runs: the row mix above the
+     square in the top gutter, the column mix inside the right edge, both
+     clamped so a crossing near an edge cannot push its label off canvas   */
+  if (pS !== null){
+    const txt = "ROW'S MIX " + pS.toFixed(3);
+    const w = ctx.measureText(txt).width;
+    const x = Math.min(fx(1) - w/2, Math.max(fx(0) + w/2, fx(pS)));
+    label(x, PLOT.y - 5, txt, css("--ink"), "center", "bottom", true);
+  }
+  if (qS !== null){
+    const txt = "COLUMN'S MIX " + qS.toFixed(3);
+    const y = Math.min(fy(0) - 10, Math.max(PLOT.y + 10, fy(qS) - 10));
+    label(fx(1) - 9, y, txt, css("--ink"), "right", "middle", true);
+  }
+
+  /* --- probe marker ----------------------------------------------------- */
+  const px = fx(state.p), py = fy(state.q);
+  ctx.strokeStyle = css("--ink"); ctx.lineWidth = 1;
+  ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(fx(0), py); ctx.lineTo(px, py);
+  ctx.moveTo(px, fy(0)); ctx.lineTo(px, py); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.arc(px, py, 5.5, 0, Math.PI*2);
+  ctx.fillStyle = css("--bg"); ctx.fill();
+  ctx.strokeStyle = css("--ink"); ctx.lineWidth = 2.2; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(px - 8, py); ctx.lineTo(px + 8, py);
+  ctx.moveTo(px, py - 8); ctx.lineTo(px, py + 8);
+  ctx.lineWidth = 1; ctx.stroke();
+}
+
+/* polygon clipping against a half plane f(x,y) >= 0, both linear */
+function clipHalf(poly, f){
+  const out = [];
+  for (let i = 0; i < poly.length; i++){
+    const a = poly[i], b = poly[(i + 1) % poly.length];
+    const fa = f(a[0], a[1]), fb = f(b[0], b[1]);
+    if (fa >= 0) out.push(a);
+    if ((fa >= 0) !== (fb >= 0)){
+      const t = fa / (fa - fb);
+      out.push([a[0] + t*(b[0] - a[0]), a[1] + t*(b[1] - a[1])]);
+    }
+  }
+  return out;
+}
+
+function drawSimplex(g){
+  const A = g.A, L = g.labels;
+  const f = NARROW ? 9 : 11;
+  ctx.font = f + "px " + css("--mono");
+  const s = PLOT.s, ox = PLOT.x, oy = PLOT.y;
+  /* the three corners: first action bottom left, second at the top, third
+     bottom right. A mix is the barycentric combination of the three.      */
+  const V = { r: [ox, oy + s*0.866], p: [ox + s/2, oy], s3: [ox + s, oy + s*0.866] };
+  const XY = (q1, q2) => {
+    const q3 = 1 - q1 - q2;
+    return [V.r[0]*q1 + V.p[0]*q2 + V.s3[0]*q3, V.r[1]*q1 + V.p[1]*q2 + V.s3[1]*q3];
+  };
+  const tri = [[1,0],[0,1],[0,0]];   /* in (q1,q2) coordinates */
+  const tint = [css("--row-soft"), css("--col-soft"), css("--accent-soft")];
+  const edge = [css("--row"), css("--col"), css("--muted")];
+
+  for (let i = 0; i < 3; i++){
+    let poly = tri.slice();
+    for (let k = 0; k < 3; k++){
+      if (k === i) continue;
+      poly = clipHalf(poly, (q1, q2) => {
+        const v = Model.rowPure3(A, q1, q2);
+        return v[i] - v[k];
+      });
+      if (poly.length === 0) break;
+    }
+    if (poly.length < 3) continue;
+    ctx.beginPath();
+    poly.forEach((pt, j) => { const xy = XY(pt[0], pt[1]); j ? ctx.lineTo(xy[0], xy[1]) : ctx.moveTo(xy[0], xy[1]); });
+    ctx.closePath();
+    ctx.fillStyle = i === 2 ? css("--grid") : tint[i]; ctx.fill();
+    ctx.strokeStyle = edge[i]; ctx.lineWidth = 1.6; ctx.stroke();
+    /* name the region at its centroid */
+    let cx = 0, cy = 0;
+    poly.forEach(pt => { const xy = XY(pt[0], pt[1]); cx += xy[0]; cy += xy[1]; });
+    cx /= poly.length; cy /= poly.length;
+    label(cx, cy, L[i].toUpperCase().slice(0, NARROW ? 4 : 8), css("--ink"), "center", "middle", true);
+  }
+
+  /* outline and vertex names, each on its own side of the triangle */
+  ctx.beginPath();
+  ctx.moveTo(V.r[0], V.r[1]); ctx.lineTo(V.p[0], V.p[1]); ctx.lineTo(V.s3[0], V.s3[1]);
+  ctx.closePath(); ctx.strokeStyle = css("--line"); ctx.lineWidth = 1.4; ctx.stroke();
+  label(V.r[0], V.r[1] + 15, "ALL " + L[0].toUpperCase(), css("--muted"), "left", "top");
+  label(V.p[0], V.p[1] - 7, "ALL " + L[1].toUpperCase(), css("--muted"), "center", "bottom");
+  label(V.s3[0], V.s3[1] + 15, "ALL " + L[2].toUpperCase(), css("--muted"), "right", "top");
+
+  /* the meeting point */
+  const eq = Model.qStar3(A);
+  if (eq){
+    const xy = XY(eq[0], eq[1]);
+    ctx.beginPath(); ctx.arc(xy[0], xy[1], 6, 0, Math.PI*2);
+    ctx.fillStyle = css("--ink"); ctx.fill();
+    ctx.strokeStyle = css("--panel"); ctx.lineWidth = 1.5; ctx.stroke();
+  }
+
+  /* probe marker, projected into the simplex */
+  const pr = simplexProbe();
+  const xy = XY(pr[0], pr[1]);
+  ctx.beginPath(); ctx.arc(xy[0], xy[1], 5.5, 0, Math.PI*2);
+  ctx.fillStyle = css("--bg"); ctx.fill();
+  ctx.strokeStyle = css("--ink"); ctx.lineWidth = 2.2; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(xy[0] - 8, xy[1]); ctx.lineTo(xy[0] + 8, xy[1]);
+  ctx.moveTo(xy[0], xy[1] - 8); ctx.lineTo(xy[0], xy[1] + 8);
+  ctx.lineWidth = 1; ctx.stroke();
+}
+
+/* the two sliders are read as rock and paper shares, scaled into the simplex */
+function simplexProbe(){
+  const a = state.p, b = state.q, t = a + b;
+  if (t <= 1) return [a, b];
+  return [a / t, b / t];
+}
+
+function fmt(x, n){ return Number.isFinite(x) ? x.toFixed(n === undefined ? 3 : n) : "none"; }
+
+function renderMatrix(g){
+  const A = g.A, B = g.B, n = g.n, L = g.labels;
+  const rows = [];
+  let head = "<tr><th></th>";
+  for (let j = 0; j < n; j++) head += "<th>" + L[j] + "</th>";
+  rows.push(head + "</tr>");
+  const hit = bestCells(g);
+  for (let i = 0; i < n; i++){
+    let tr = "<tr><th class=\"rh\">" + L[i] + "</th>";
+    for (let j = 0; j < n; j++){
+      const on = hit.some(c => c[0] === i && c[1] === j) ? " class=\"hit\"" : "";
+      tr += "<td" + on + "><span class=\"a\">" + A[i][j].toFixed(1) + "</span>"
+          + "<span class=\"sep\">,</span> <span class=\"b\">" + B[i][j].toFixed(1) + "</span></td>";
+    }
+    rows.push(tr + "</tr>");
+  }
+  el("mbody").innerHTML = rows.join("");
+  el("mcap").textContent = "Payoffs — row, column";
+}
+
+/* cells a player would reach by best replying to the probe mix */
+function bestCells(g){
+  const out = [];
+  if (g.n === 2){
+    const r = Model.rowPure(g.A, state.q), c = Model.colPure(g.B, state.p);
+    const bi = r[0] >= r[1] ? 0 : 1, bj = c[0] >= c[1] ? 0 : 1;
+    out.push([bi, bj]);
+  } else {
+    const pr = simplexProbe();
+    out.push([Model.best3(g.A, pr[0], pr[1]).index, 0]);
+  }
+  return out;
+}
+
+function render(){
+  fitCanvas();
+  const g = Model.game(state.preset, state.a11, state.b11);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, W, H);
+
+  if (g.n === 2) drawSquare(g); else drawSimplex(g);
+  renderMatrix(g);
+
+  el("arowout").textContent = state.a11.toFixed(1);
+  el("bcolout").textContent = state.b11.toFixed(1);
+  el("pout").textContent = state.p.toFixed(3);
+  el("qout").textContent = state.q.toFixed(3);
+
+  if (g.n === 2){
+    const pS = Model.pStar(g.B), qS = Model.qStar(g.A);
+    const gain = Model.gain(g.A, g.B, state.p, state.q);
+    el("r1").textContent = pS === null ? "none" : fmt(pS);
+    el("r2").textContent = qS === null ? "none" : fmt(qS);
+    el("r3").textContent = fmt(Model.evRow(g.A, state.p, state.q));
+    el("r4").textContent = fmt(Math.max(gain.row, gain.col));
+    el("plab").textContent = "Row plays " + g.labels[0];
+    el("qlab").textContent = "Column plays " + g.labels[0];
+    const n = Model.equilibria(g.A, g.B).length;
+    el("mnote").textContent = "This game has " + n + (n === 1 ? " equilibrium" : " equilibria")
+      + ". The highlighted cell is what each side would reach by replying as well as it can to"
+      + " the probe marker.";
+    el("cap").textContent = "The red path is every best reply the row player has; the blue path"
+      + " is the column player's. They meet where neither side can gain by changing its odds.";
+  } else {
+    const eq = Model.qStar3(g.A);
+    const pr = simplexProbe(), bv = Model.best3(g.A, pr[0], pr[1]);
+    el("r1").textContent = eq ? fmt(eq[0]) : "none";
+    el("r2").textContent = eq ? fmt(eq[1]) : "none";
+    el("r3").textContent = fmt(bv.values[bv.index]);
+    el("r4").textContent = fmt(bv.values[bv.index] - (bv.values[0] + bv.values[1] + bv.values[2]) / 3);
+    el("plab").textContent = "Column plays " + g.labels[0];
+    el("qlab").textContent = "Column plays " + g.labels[1];
+    el("mnote").textContent = "The triangle is every mix the column player could use, and each"
+      + " region holds the mixes that one row action answers best. The probe sits in the "
+      + g.labels[bv.index].toLowerCase() + " region. All three regions meet at a single mix,"
+      + " and that mix is the equilibrium.";
+    el("cap").textContent = "Each region is the set of column mixes that one row action beats."
+      + " The only mix no single action beats is the point where all three regions meet.";
+  }
+}
+
+function bind(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parse(input.value); render(); });
+}
+bind("arow", "a11", parseFloat);
+bind("bcol", "b11", parseFloat);
+bind("p", "p", parseFloat);
+bind("q", "q", parseFloat);
+el("preset").addEventListener("change", () => {
+  state.preset = el("preset").value;
+  const b = Model.base(state.preset);
+  state.a11 = b.A[0][0]; state.b11 = b.B[0][0];
+  el("arow").value = String(state.a11); el("bcol").value = String(state.b11);
+  render();
+});
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("preset").value = defaults.preset;
+  el("arow").value = String(defaults.a11); el("bcol").value = String(defaults.b11);
+  el("p").value = String(defaults.p); el("q").value = String(defaults.q);
+  render();
+});
+
+/* dragging on the picture moves the probe */
+function pointerTo(ev){
+  const r = cv.getBoundingClientRect();
+  const x = (ev.clientX - r.left) / r.width * W, y = (ev.clientY - r.top) / r.height * H;
+  const p = Math.min(1, Math.max(0, (x - PLOT.x) / PLOT.s));
+  const q = Math.min(1, Math.max(0, 1 - (y - PLOT.y) / PLOT.s));
+  state.p = Math.round(p * 200) / 200; state.q = Math.round(q * 200) / 200;
+  el("p").value = String(state.p); el("q").value = String(state.q);
+  render();
+}
+let dragging = false;
+cv.addEventListener("pointerdown", (e) => { dragging = true; cv.setPointerCapture(e.pointerId); pointerTo(e); });
+cv.addEventListener("pointermove", (e) => { if (dragging) pointerTo(e); });
+cv.addEventListener("pointerup", () => { dragging = false; });
+cv.addEventListener("pointercancel", () => { dragging = false; });
+
+let rt;
+addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 90); });
+const mq = matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", render);
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name, pass: !!pass, detail: String(detail) });
+  const MP = Model.base("mp"), BOS = Model.base("bos"), HD = Model.base("hd"), RPS = Model.base("rps");
+
+  /* 1 */
+  const mpP = Model.pStar(MP.B), mpQ = Model.qStar(MP.A);
+  push("matching pennies is one half for both",
+    near(mpP, 0.5, 1e-15) && near(mpQ, 0.5, 1e-15),
+    "p* = " + mpP + ", q* = " + mpQ);
+
+  /* 2 -- closed form against a bisection that knows only which action is better */
+  (function(){
+    const rng = mulberry32(SEED);
+    let n = 0, wp = 0, wq = 0;
+    for (let k = 0; k < 40000 && n < 400; k++){
+      const A = [[0,0],[0,0]], B = [[0,0],[0,0]];
+      for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++){
+        A[i][j] = Math.round((rng()*20 - 10)*100)/100;
+        B[i][j] = Math.round((rng()*20 - 10)*100)/100;
+      }
+      const p = Model.pStar(B), q = Model.qStar(A);
+      if (p === null || q === null) continue;
+      const pb = Model.pStarBisect(B), qb = Model.qStarBisect(A);
+      if (pb === null || qb === null) continue;
+      n++; wp = Math.max(wp, Math.abs(p - pb)); wq = Math.max(wq, Math.abs(q - qb));
+    }
+    push("closed form matches a bisection on which action is better",
+      n === 400 && wp < 1e-12 && wq < 1e-12,
+      n + " games, worst gap " + Math.max(wp, wq).toExponential(2));
+  })();
+
+  /* 3 -- the equilibrium mix makes the OPPONENT indifferent */
+  (function(){
+    const rng = mulberry32(SEED + 1);
+    let n = 0, worst = 0;
+    for (let k = 0; k < 40000 && n < 400; k++){
+      const A = [[0,0],[0,0]], B = [[0,0],[0,0]];
+      for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++){
+        A[i][j] = Math.round((rng()*20 - 10)*100)/100;
+        B[i][j] = Math.round((rng()*20 - 10)*100)/100;
+      }
+      const p = Model.pStar(B), q = Model.qStar(A);
+      if (p === null || q === null) continue;
+      n++;
+      const c = Model.colPure(B, p), r = Model.rowPure(A, q);
+      worst = Math.max(worst, Math.abs(c[0] - c[1]), Math.abs(r[0] - r[1]));
+    }
+    push("each equilibrium mix leaves the opponent exactly indifferent",
+      n === 400 && worst < 1e-12,
+      n + " games, worst payoff gap " + worst.toExponential(2));
+  })();
+
+  /* 4 -- no profitable deviation at the equilibrium */
+  (function(){
+    const rng = mulberry32(SEED + 2);
+    let n = 0, worst = -Infinity;
+    for (let k = 0; k < 40000 && n < 300; k++){
+      const A = [[0,0],[0,0]], B = [[0,0],[0,0]];
+      for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++){
+        A[i][j] = Math.round((rng()*20 - 10)*100)/100;
+        B[i][j] = Math.round((rng()*20 - 10)*100)/100;
+      }
+      const p = Model.pStar(B), q = Model.qStar(A);
+      if (p === null || q === null) continue;
+      n++;
+      const rv = Model.evRow(A, p, q), cvv = Model.evCol(B, p, q);
+      for (let s = 0; s <= 20; s++){
+        const x = s / 20;
+        worst = Math.max(worst, Model.evRow(A, x, q) - rv, Model.evCol(B, p, x) - cvv);
+      }
+    }
+    push("no deviation from the equilibrium pays",
+      n === 300 && worst <= 1e-12,
+      n + " games, best gain over 21 alternative mixes " + worst.toExponential(2));
+  })();
+
+  /* 5 -- the headline: your own payoffs do not move your own odds */
+  (function(){
+    const rng = mulberry32(SEED + 3);
+    let n = 0, maxDp = 0, minDq = Infinity;
+    for (let k = 0; k < 40000 && n < 300; k++){
+      const A1 = [[0,0],[0,0]], B = [[0,0],[0,0]];
+      for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++){
+        A1[i][j] = Math.round((rng()*20 - 10)*100)/100;
+        B[i][j] = Math.round((rng()*20 - 10)*100)/100;
+      }
+      const A2 = A1.map(r => r.slice());
+      A2[0][0] += 1 + rng()*3;
+      /* both games must actually have an interior mix, or there is no pair of
+         odds to compare in the first place                                    */
+      if (Model.pStar(B) === null || Model.qStar(A1) === null || Model.qStar(A2) === null) continue;
+      const p1 = Model.pStarBisect(B), q1 = Model.qStarBisect(A1), q2 = Model.qStarBisect(A2);
+      if (p1 === null || q1 === null || q2 === null) continue;
+      const p2 = Model.pStarBisect(B);
+      n++;
+      maxDp = Math.max(maxDp, Math.abs(p1 - p2));
+      minDq = Math.min(minDq, Math.abs(q1 - q2));
+    }
+    push("changing row's own payoffs moves column's odds and not row's",
+      n === 300 && maxDp === 0 && minDq > 1e-6,
+      n + " perturbations: row's mix moved " + maxDp + ", column's moved at least "
+      + minDq.toExponential(2));
+  })();
+
+  /* 6 -- a third characterisation for zero sum: maximin, not indifference */
+  (function(){
+    const rng = mulberry32(SEED + 4);
+    let n = 0, worst = 0;
+    for (let k = 0; k < 40000 && n < 200; k++){
+      const A = [[0,0],[0,0]];
+      for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++)
+        A[i][j] = Math.round((rng()*20 - 10)*100)/100;
+      const B = A.map(r => r.map(v => -v));
+      const p = Model.pStar(B), q = Model.qStar(A);
+      if (p === null || q === null) continue;
+      n++;
+      const mm = Model.maximin(A);
+      worst = Math.max(worst, Math.abs(mm.p - p), Math.abs(mm.value - Model.evRow(A, p, q)));
+    }
+    push("zero sum: the maximin mix is the equilibrium mix",
+      n === 200 && worst < 1e-9,
+      n + " zero sum games, worst gap between maximin and indifference "
+      + worst.toExponential(2));
+  })();
+
+  /* 7 -- rock, paper, scissors */
+  (function(){
+    const eq = Model.qStar3(RPS.A);
+    const v = eq ? Model.rowPure3(RPS.A, eq[0], eq[1]) : [NaN, NaN, NaN];
+    const thirds = eq && eq.every(x => near(x, 1/3, 1e-12));
+    const zero = v.every(x => near(x, 0, 1e-15));
+    push("rock, paper, scissors is one third each and pays nothing",
+      thirds && zero,
+      "mix " + (eq ? eq.map(x => x.toFixed(12)).join(", ") : "none")
+      + "; pure payoffs " + v.join(", "));
+  })();
+
+  /* 8 -- hawk and dove: the hawk share is V over C */
+  (function(){
+    let worst = 0, n = 0;
+    for (let V = 1; V <= 8; V++) for (let C = V + 1; C <= 12; C++){
+      const A = [[(V - C)/2, V], [0, V/2]], B = [[(V - C)/2, 0], [V, V/2]];
+      const p = Model.pStar(B);
+      if (p === null) continue;
+      n++; worst = Math.max(worst, Math.abs(p - V/C));
+    }
+    push("hawk and dove settles at a hawk share of V over C",
+      n >= 50 && worst < 1e-12,
+      n + " value and cost pairs, worst gap " + worst.toExponential(2));
+  })();
+
+  /* 9 -- battle of the sexes: the mixed equilibrium is the worst of the three */
+  (function(){
+    const p = Model.pStar(BOS.B), q = Model.qStar(BOS.A);
+    const rv = Model.evRow(BOS.A, p, q), cvv = Model.evCol(BOS.B, p, q);
+    const ok = near(p, 2/3, 1e-12) && near(q, 1/3, 1e-12)
+      && near(rv, 2/3, 1e-12) && near(cvv, 2/3, 1e-12)
+      && rv < Math.min(BOS.A[0][0], BOS.A[1][1]) && cvv < Math.min(BOS.B[0][0], BOS.B[1][1]);
+    push("battle of the sexes: mixing pays both less than either agreement",
+      ok, "mix (" + p.toFixed(6) + ", " + q.toFixed(6) + ") pays " + rv.toFixed(6)
+      + " and " + cvv.toFixed(6) + " against 2 and 1, or 1 and 2, at the two pure equilibria");
+  })();
+
+  /* 10 -- the task file's claim, restated. The crossing is NOT always alone. */
+  (function(){
+    const nMP = Model.equilibria(MP.A, MP.B).length;
+    const nBOS = Model.equilibria(BOS.A, BOS.B).length;
+    const nHD = Model.equilibria(HD.A, HD.B).length;
+    push("the best reply paths meet once in matching pennies and three times otherwise",
+      nMP === 1 && nBOS === 3 && nHD === 3,
+      "matching pennies " + nMP + ", battle of the sexes " + nBOS + ", hawk and dove " + nHD
+      + " -- so 'they intersect exactly at the mixed equilibrium' is false in general");
+  })();
+
+  /* 11 -- zero sum pays out to nothing, everywhere, not only in equilibrium */
+  (function(){
+    const rng = mulberry32(SEED + 5);
+    let worst = 0;
+    for (let k = 0; k < 60; k++){
+      const A = [[0,0],[0,0]];
+      for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++)
+        A[i][j] = Math.round((rng()*20 - 10)*100)/100;
+      const B = A.map(r => r.map(v => -v));
+      for (let a = 0; a <= 10; a++) for (let b = 0; b <= 10; b++){
+        const p = a/10, q = b/10;
+        worst = Math.max(worst, Math.abs(Model.evRow(A, p, q) + Model.evCol(B, p, q)));
+      }
+    }
+    push("zero sum games pay out to nothing at every pair of mixes",
+      worst < 1e-12, "60 games over an 11 by 11 grid, worst total " + worst.toExponential(2));
+  })();
+
+  /* 12 -- a dynamic route: fictitious play drifts onto the same odds */
+  (function(){
+    const fp = Model.fictitious(MP.A, MP.B, 20000);
+    push("fictitious play drifts onto the matching pennies equilibrium",
+      near(fp.p, 0.5, 0.02) && near(fp.q, 0.5, 0.02),
+      "after 20000 rounds the play frequencies are " + fp.p.toFixed(4) + " and " + fp.q.toFixed(4));
+  })();
+
+  /* 13 -- nothing degenerate escapes as NaN */
+  (function(){
+    let ok = true, degenerate = 0;
+    for (const kind of ["mp", "bos", "hd", "rps"]){
+      for (let a = -4; a <= 4; a += 0.5) for (let b = -4; b <= 4; b += 0.5){
+        const g = Model.game(kind, a, b);
+        if (g.n === 2){
+          const p = Model.pStar(g.B), q = Model.qStar(g.A);
+          if (p === null || q === null) degenerate++;
+          if (p !== null && !(p > 0 && p < 1)) ok = false;
+          if (q !== null && !(q > 0 && q < 1)) ok = false;
+          for (let s = 0; s <= 4; s++) for (let u = 0; u <= 4; u++)
+            if (!Number.isFinite(Model.evRow(g.A, s/4, u/4))
+             || !Number.isFinite(Model.evCol(g.B, s/4, u/4))) ok = false;
+        } else {
+          const e = Model.qStar3(g.A);
+          if (e === null) degenerate++;
+          else if (!e.every(x => Number.isFinite(x) && x > 0 && x < 1)) ok = false;
+        }
+      }
+    }
+    push("no reachable setting produces a number that is not a number",
+      ok && degenerate > 0,
+      "every slider pair over all four games is finite or reported as none; "
+      + degenerate + " settings have no interior mix and say so");
+  })();
+
+  return t;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>

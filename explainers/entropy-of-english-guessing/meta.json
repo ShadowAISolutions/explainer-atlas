@@ -1,0 +1,17 @@
+{
+  "slug": "entropy-of-english-guessing",
+  "title": "Guess The Next Letter",
+  "domain": "information-theory",
+  "difficulty": 3,
+  "summary": "Shannon measured English by asking people to guess the next letter. Play his experiment against a passage you have not read, and watch what happens when a model is scored on text it has already memorised.",
+  "prerequisites": [],
+  "tags": ["information-theory", "entropy", "english", "prediction", "compression", "redundancy"],
+  "interaction_pattern": "guess-then-reveal",
+  "sources": [
+    { "title": "Shannon, Prediction and Entropy of Printed English, Bell System Technical Journal 30 (1951)", "url": "https://archive.org/details/bstj30-1-50" },
+    { "title": "Cover and King, A convergent gambling estimate of the entropy of English, IEEE Transactions on Information Theory 24 (1978)", "url": "https://ieeexplore.ieee.org/document/1055856" },
+    { "title": "Cover and Thomas, Elements of Information Theory, chapter 2 and chapter 6", "url": "https://archive.org/details/elementsofinform0000cove" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 14
+}

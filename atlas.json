@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-19",
-  "count": 65,
+  "generated_at": "2026-09-20",
+  "count": 70,
   "domains": {
     "biology": [
       "enzyme-michaelis-menten",
@@ -13,12 +13,14 @@
     "chemistry": [
       "electrochemical-cell-potential",
       "ideal-gas-law",
+      "le-chatelier-equilibrium-shift",
       "ph-buffer-capacity",
       "reaction-rate-order"
     ],
     "computer-science": [
       "big-o-crossover",
       "bloom-filter-false-positives",
+      "cache-line-stride",
       "dijkstra-vs-astar",
       "floating-point-precision",
       "hash-collisions-birthday",
@@ -47,6 +49,7 @@
     ],
     "game-theory": [
       "monty-hall",
+      "nash-equilibrium-mixed",
       "prisoners-dilemma-iterated",
       "schelling-segregation-model",
       "tragedy-of-the-commons"
@@ -54,6 +57,7 @@
     "information-theory": [
       "arithmetic-coding-interval",
       "checksum-vs-crc-collisions",
+      "entropy-of-english-guessing",
       "hamming-code",
       "huffman-coding",
       "shannon-channel-capacity"
@@ -90,6 +94,7 @@
       "bayes-base-rate",
       "central-limit-theorem",
       "confidence-interval-coverage",
+      "multiple-comparisons-p-hacking",
       "regression-to-the-mean",
       "simpsons-paradox"
     ]
@@ -99,12 +104,12 @@
     "compare-side-by-side": 6,
     "drag-parameter": 6,
     "draw-input": 5,
-    "guess-then-reveal": 5,
-    "live-code": 3,
-    "perturb-and-observe": 6,
+    "guess-then-reveal": 6,
+    "live-code": 4,
+    "perturb-and-observe": 7,
     "race-two-methods": 5,
-    "spatial-explore": 6,
-    "step-through": 5,
+    "spatial-explore": 7,
+    "step-through": 6,
     "time-scrubber": 6,
     "tune-to-match": 5
   },
@@ -333,6 +338,39 @@
         }
       ],
       "created_at": "2026-09-19",
+      "assertions_count": 13
+    },
+    {
+      "slug": "cache-line-stride",
+      "title": "You Asked For One Number And Paid For Sixteen",
+      "domain": "computer-science",
+      "difficulty": 3,
+      "summary": "Memory is sold by the cache line, not by the number. Write your own walk through an array and find the stride past which every read drags in a whole line and uses one element of it.",
+      "prerequisites": [],
+      "tags": [
+        "computer-science",
+        "caches",
+        "memory",
+        "locality",
+        "performance",
+        "data-layout"
+      ],
+      "interaction_pattern": "live-code",
+      "sources": [
+        {
+          "title": "Drepper, What Every Programmer Should Know About Memory",
+          "url": "https://people.freebsd.org/~lstewart/articles/cpumemory.pdf"
+        },
+        {
+          "title": "Hennessy and Patterson, Computer Architecture: A Quantitative Approach, appendix B on memory hierarchy",
+          "url": "https://archive.org/details/computerarchitec0000henn"
+        },
+        {
+          "title": "Mattson, Gecsei, Slutz and Traiger, Evaluation techniques for storage hierarchies (the stack property of LRU)",
+          "url": "https://ieeexplore.ieee.org/document/5388441"
+        }
+      ],
+      "created_at": "2026-09-20",
       "assertions_count": 13
     },
     {
@@ -708,6 +746,39 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 12
+    },
+    {
+      "slug": "entropy-of-english-guessing",
+      "title": "Guess The Next Letter",
+      "domain": "information-theory",
+      "difficulty": 3,
+      "summary": "Shannon measured English by asking people to guess the next letter. Play his experiment against a passage you have not read, and watch what happens when a model is scored on text it has already memorised.",
+      "prerequisites": [],
+      "tags": [
+        "information-theory",
+        "entropy",
+        "english",
+        "prediction",
+        "compression",
+        "redundancy"
+      ],
+      "interaction_pattern": "guess-then-reveal",
+      "sources": [
+        {
+          "title": "Shannon, Prediction and Entropy of Printed English, Bell System Technical Journal 30 (1951)",
+          "url": "https://archive.org/details/bstj30-1-50"
+        },
+        {
+          "title": "Cover and King, A convergent gambling estimate of the entropy of English, IEEE Transactions on Information Theory 24 (1978)",
+          "url": "https://ieeexplore.ieee.org/document/1055856"
+        },
+        {
+          "title": "Cover and Thomas, Elements of Information Theory, chapter 2 and chapter 6",
+          "url": "https://archive.org/details/elementsofinform0000cove"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 14
     },
     {
       "slug": "enzyme-michaelis-menten",
@@ -1150,6 +1221,39 @@
       "assertions_count": 13
     },
     {
+      "slug": "le-chatelier-equilibrium-shift",
+      "title": "It Only Undoes Part of What You Did",
+      "domain": "chemistry",
+      "difficulty": 3,
+      "summary": "Disturb a gas equilibrium and it shifts to oppose you, but only partly, and of the three obvious disturbances just one moves the equilibrium constant itself.",
+      "prerequisites": [],
+      "tags": [
+        "chemistry",
+        "equilibrium",
+        "le-chatelier",
+        "reaction-quotient",
+        "van-t-hoff",
+        "gas-phase"
+      ],
+      "interaction_pattern": "perturb-and-observe",
+      "sources": [
+        {
+          "title": "NIST Chemistry WebBook: nitrogen dioxide and dinitrogen tetroxide thermochemistry",
+          "url": "https://webbook.nist.gov/cgi/cbook.cgi?ID=C10544726"
+        },
+        {
+          "title": "Bodenstein's hydrogen iodide equilibrium measurements, as tabulated in Atkins, Physical Chemistry",
+          "url": "https://archive.org/details/physicalchemistr0000atki"
+        },
+        {
+          "title": "IUPAC Gold Book: van 't Hoff equation",
+          "url": "https://goldbook.iupac.org/terms/view/V06600"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 13
+    },
+    {
       "slug": "levenshtein-distance",
       "title": "Forty-Two Small Decisions",
       "domain": "linguistics",
@@ -1282,6 +1386,72 @@
       ],
       "created_at": "2026-09-19",
       "assertions_count": 9
+    },
+    {
+      "slug": "multiple-comparisons-p-hacking",
+      "title": "Twenty Questions, One Lucky Answer",
+      "domain": "statistics",
+      "difficulty": 3,
+      "summary": "Test twenty outcomes on pure noise at the five per cent level and something comes up significant about two thirds of the time; step through them and see what each correction costs.",
+      "prerequisites": [],
+      "tags": [
+        "statistics",
+        "multiple-comparisons",
+        "p-values",
+        "bonferroni",
+        "false-discovery-rate",
+        "hypothesis-testing"
+      ],
+      "interaction_pattern": "step-through",
+      "sources": [
+        {
+          "title": "Benjamini and Hochberg, Controlling the False Discovery Rate, JRSS B 1995",
+          "url": "https://www.jstor.org/stable/2346101"
+        },
+        {
+          "title": "Simes, An improved Bonferroni procedure for multiple tests of significance, Biometrika 1986",
+          "url": "https://doi.org/10.1093/biomet/73.3.751"
+        },
+        {
+          "title": "NIST/SEMATECH e-Handbook: critical values of the t distribution",
+          "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3672.htm"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 13
+    },
+    {
+      "slug": "nash-equilibrium-mixed",
+      "title": "Your Own Payoffs Don't Set Your Own Odds",
+      "domain": "game-theory",
+      "difficulty": 3,
+      "summary": "When no pure strategy is safe both players randomise, and each one's mixing probability is read off the opponent's payoffs rather than their own. Drag a payoff and watch the wrong line move.",
+      "prerequisites": [],
+      "tags": [
+        "game-theory",
+        "nash-equilibrium",
+        "mixed-strategy",
+        "best-response",
+        "zero-sum",
+        "indifference"
+      ],
+      "interaction_pattern": "spatial-explore",
+      "sources": [
+        {
+          "title": "Nash, Equilibrium Points in N-Person Games, PNAS 1950",
+          "url": "https://www.pnas.org/doi/10.1073/pnas.36.1.48"
+        },
+        {
+          "title": "Maynard Smith and Price, The Logic of Animal Conflict, Nature 1973 (hawk and dove)",
+          "url": "https://www.nature.com/articles/246015a0"
+        },
+        {
+          "title": "Robinson, An Iterative Method of Solving a Game, Annals of Mathematics 1951 (fictitious play)",
+          "url": "https://www.jstor.org/stable/1969530"
+        }
+      ],
+      "created_at": "2026-09-20",
+      "assertions_count": 13
     },
     {
       "slug": "neuron-integrate-and-fire",

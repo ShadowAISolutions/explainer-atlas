@@ -1,0 +1,17 @@
+{
+  "slug": "multiple-comparisons-p-hacking",
+  "title": "Twenty Questions, One Lucky Answer",
+  "domain": "statistics",
+  "difficulty": 3,
+  "summary": "Test twenty outcomes on pure noise at the five per cent level and something comes up significant about two thirds of the time; step through them and see what each correction costs.",
+  "prerequisites": [],
+  "tags": ["statistics", "multiple-comparisons", "p-values", "bonferroni", "false-discovery-rate", "hypothesis-testing"],
+  "interaction_pattern": "step-through",
+  "sources": [
+    { "title": "Benjamini and Hochberg, Controlling the False Discovery Rate, JRSS B 1995", "url": "https://www.jstor.org/stable/2346101" },
+    { "title": "Simes, An improved Bonferroni procedure for multiple tests of significance, Biometrika 1986", "url": "https://doi.org/10.1093/biomet/73.3.751" },
+    { "title": "NIST/SEMATECH e-Handbook: critical values of the t distribution", "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3672.htm" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 13
+}

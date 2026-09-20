@@ -1,0 +1,17 @@
+{
+  "slug": "le-chatelier-equilibrium-shift",
+  "title": "It Only Undoes Part of What You Did",
+  "domain": "chemistry",
+  "difficulty": 3,
+  "summary": "Disturb a gas equilibrium and it shifts to oppose you, but only partly, and of the three obvious disturbances just one moves the equilibrium constant itself.",
+  "prerequisites": [],
+  "tags": ["chemistry", "equilibrium", "le-chatelier", "reaction-quotient", "van-t-hoff", "gas-phase"],
+  "interaction_pattern": "perturb-and-observe",
+  "sources": [
+    { "title": "NIST Chemistry WebBook: nitrogen dioxide and dinitrogen tetroxide thermochemistry", "url": "https://webbook.nist.gov/cgi/cbook.cgi?ID=C10544726" },
+    { "title": "Bodenstein's hydrogen iodide equilibrium measurements, as tabulated in Atkins, Physical Chemistry", "url": "https://archive.org/details/physicalchemistr0000atki" },
+    { "title": "IUPAC Gold Book: van 't Hoff equation", "url": "https://goldbook.iupac.org/terms/view/V06600" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 13
+}
