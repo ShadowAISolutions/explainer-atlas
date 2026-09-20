@@ -299,7 +299,7 @@ const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n
    four effective pixels. Below 560 the two panels stack instead of sitting
    side by side, so each keeps the full width.                               */
 const SS = 2;
-let W, H, NARROW, PAD, FS, FSB, FST, MIRROR, INSET, MW, PH, A, B, RY0;
+let W, H, NARROW, PAD, FS, FSB, FST, MIRROR, INSET, MW, PH, A, B, RY0, TICK, R1Y, R2Y;
 function fitCanvas(){
   const avail = cv.parentElement.clientWidth;
   W = Math.max(280, Math.min(920, avail || 880));
@@ -325,7 +325,19 @@ function fitCanvas(){
     B = { x: PAD + left + gap, w: W - PAD * 2 - left - gap, top: FST + 14, h: PH };
   }
   RY0 = B.top + B.h + (NARROW ? 32 : 38);
-  H = RY0 + FS + 22 + (FSB + 14) + 26 + (FSB + 14) + 14;
+  /* The two ruler rows are laid out downward from RY0 and the second ruler's
+     label is the last thing this canvas paints, so the height is measured from
+     where that layout actually ends rather than from a constant. The constant
+     that used to stand here was right for the drawing as first written; once
+     the canvas could grow to 920 the layout ran about eight pixels past it and
+     the bottom edge cut "moving clock: NN ticks" -- half of the comparison this
+     page exists to make -- through the middle. The narrow layout still fitted,
+     by a pixel, which is why a sweep that only ever asked what happens as the
+     canvas narrows never saw it.                                            */
+  TICK = NARROW ? 7 : 9;
+  R1Y  = RY0 + FS + 22 + TICK;
+  R2Y  = R1Y + TICK + FSB + 5 + 26 + TICK;
+  H = R2Y + TICK + FSB + 5 + Math.ceil(FSB * 0.3) + (NARROW ? 8 : 10);
   cv.width = Math.round(W * SS); cv.height = Math.round(H * SS);
   cv.style.height = "auto";
   ctx.setTransform(SS, 0, 0, SS, 0, 0);
@@ -419,7 +431,7 @@ function render(){
   const drawRuler = (y, n, colour, label) => {
     ctx.strokeStyle = colour; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(RX, y); ctx.lineTo(RX + RW, y); ctx.stroke();
-    const tick = NARROW ? 7 : 9;
+    const tick = TICK;
     const shown = Math.min(n, 48);
     for (let i = 0; i <= shown; i++){
       const x = RX + RW * i / 48;
@@ -429,10 +441,8 @@ function render(){
     ctx.textAlign = "left";
     ctx.fillText(label, RX, y + tick + FSB + 5);
   };
-  const r1y = RY0 + FS + 22 + (NARROW ? 7 : 9);
-  const r2y = r1y + (NARROW ? 7 : 9) + FSB + 5 + 26 + (NARROW ? 7 : 9);
-  drawRuler(r1y, 48, rest, "your clock:  48 ticks");
-  drawRuler(r2y, 48 / g, moving, "moving clock:  " + (48 / g).toFixed(2) + " ticks");
+  drawRuler(R1Y, 48, rest, "your clock:  48 ticks");
+  drawRuler(R2Y, 48 / g, moving, "moving clock:  " + (48 / g).toFixed(2) + " ticks");
 
   /* readouts */
   el("betaout").textContent = beta < 1e-4 ? beta.toExponential(2) : beta.toFixed(3);
