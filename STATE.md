@@ -24,6 +24,18 @@ files in `AUDIT/` before starting any batch.
   from where the layout actually ends, and read the 1280 screenshot back as well
   as the 390 one. Found by AUDIT/003 on `special-relativity-time-dilation`.
 
+## Loop status
+
+- **2026-09-20, after batch/019** — The loop is **stopped, by Shadow's
+  instruction**: *"finish what you are doing, but when you are done with the
+  push, remove the daily routine, i dont want it to auto start without me
+  telling it to start"*. The daily 08:00 UTC restart routine has been deleted,
+  so nothing will wake a session on its own. The repo is in a clean resting
+  state: batch/019 merged, 90 pages, 32 tasks queued, `queue/in-progress/`
+  empty, nothing blocked. A future session resumes only when Shadow says so,
+  and then starts at step 1 of the session loop; the next AUDIT pass falls
+  after batch/020.
+
 ## Decisions
 
 - **2026-09-19** — The atlas lives in its own repository rather than inside
