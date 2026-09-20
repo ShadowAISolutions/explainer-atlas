@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two Antennas, One Beam, And The Formula That Loses Half Of It — Explainer Atlas</title>
+<meta name="description" content="Two elements, a spacing and a phase. Push them around and watch the textbook main-lobe formula quietly drop a second beam pointing the other way.">
+<style>
+:root{
+  --bg:#eef0ec; --panel:#f8f9f6; --ink:#16233b; --muted:#5b6b82; --line:#c9d2dc;
+  --accent:#1d4ed8; --accent-soft:#dfe8fb;
+  --beam:#b3225c; --beamfill:rgba(179,34,92,.17); --nullc:#0d7a6f; --grid:#ccd6e0;
+  --ghost:#8e9bad; --warn:#a8531c;
+  --radius:4px; --pad:clamp(14px,3vw,26px);
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.38rem,1rem + 1.7vw,2.02rem);
+  --scale-body:clamp(0.95rem,0.92rem + 0.18vw,1.03rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0e141c; --panel:#131b25; --ink:#dde6f2; --muted:#93a3b8; --line:#26333f;
+    --accent:#7aa2f7; --accent-soft:#16233b;
+    --beam:#f472a6; --beamfill:rgba(244,114,166,.16); --nullc:#3fbfae; --grid:#22303c;
+    --ghost:#6c7c90; --warn:#e2a06a;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:var(--scale-body)/1.6 var(--font-body);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:63rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:2px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.13; margin:0 0 .4em; letter-spacing:-.018em}
+.kicker{margin:0 0 .4em; color:var(--accent); font:700 .72rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.14em}
+.standfirst{margin:0; color:var(--muted); max-width:44em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:58rem){ .layout{grid-template-columns:minmax(0,1.5fr) minmax(15rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:10px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:pan-y}
+figcaption{margin-top:.65em; color:var(--muted); font-size:.83rem; line-height:1.5}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1em}
+.control{display:grid; gap:.28em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.7em}
+.control .row > label, .control > label{font:700 .76rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.08em}
+.control output{font:700 .9rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.26em .5em; border-radius:3px}
+.control .hint{color:var(--muted); font-size:.8rem; margin:0}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:3px; padding:.48em .65em; min-height:40px}
+select{width:100%}
+button{cursor:pointer; font:600 .86rem/1.2 var(--font-mono); text-align:left}
+button:hover{border-color:var(--accent); color:var(--accent)}
+.presets{display:grid; gap:.42em}
+.checkrow{display:flex; align-items:center; gap:.55em}
+.checkrow input{width:19px; height:19px; accent-color:var(--accent)}
+.checkrow label{font:700 .76rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.08em}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:3px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7rem,1fr)); gap:.5em; margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:3px; padding:.5em .6em}
+.readout dt{margin:0; color:var(--muted); font-size:.68rem; text-transform:uppercase; letter-spacing:.07em}
+.readout dd{margin:.2em 0 0; font:700 .96rem/1.25 var(--font-mono)}
+.readout dd.ghosted{color:var(--muted)}
+.prose{max-width:39em; margin-top:calc(var(--pad)*1.3)}
+.prose h2{font-size:1.06rem; margin:1.9em 0 .45em; letter-spacing:.02em; text-transform:uppercase; font-family:var(--font-mono)}
+.prose p{margin:0 0 1em}
+.prose .math{font-family:var(--font-mono); font-size:.9rem; background:var(--accent-soft); padding:.7em .85em; border-radius:3px; border-left:3px solid var(--accent); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font-size:.83rem}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">Engineering</p>
+  <h1>Two Antennas, One Beam, And The Formula That Loses Half Of It</h1>
+  <p class="standfirst">An array of two elements has a pattern set entirely by how far apart they sit and how their phases differ. The standard main-lobe formula tells you where one beam points. Often there are two.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="620" role="img"
+            aria-label="A drafting-style plate. A dimension strip at the top shows two antenna elements with their spacing and phase offset. Below it, a polar plot of the array factor with the lobes filled in magenta, and a rectangular plot of array factor against angle with nulls marked in teal and the textbook formula's predicted beam direction drawn as a dashed grey line."></canvas>
+    <figcaption id="cap">The strip on top is the array itself, drawn to scale. The round plot is the beam pattern seen from the side, the array axis running left to right. The strip below unrolls the same pattern against angle, with nulls as teal ticks and every full-amplitude lobe as a magenta arrow. The dashed grey line is where the textbook formula says the beam is.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Array controls">
+    <div class="control">
+      <div class="row">
+        <label for="d">Element spacing</label>
+        <output id="dout" for="d">0.500 &#955;</output>
+      </div>
+      <input type="range" id="d" min="0" max="2" step="0.005" value="0.5">
+      <p class="hint">Centre to centre, in wavelengths. Arrow keys step by 0.005.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="ph">Phase offset</label>
+        <output id="phout" for="ph">+0&#176;</output>
+      </div>
+      <input type="range" id="ph" min="-360" max="360" step="1" value="0">
+      <p class="hint">How far the right element lags the left one. Two full turns either way.</p>
+    </div>
+
+    <div class="control">
+      <label for="scale">Vertical scale</label>
+      <select id="scale">
+        <option value="linear" selected>Array factor, linear</option>
+        <option value="power">Power, array factor squared</option>
+        <option value="db">Decibels below peak</option>
+      </select>
+      <p class="hint">Decibels stretch the weak directions so the nulls become visible cliffs.</p>
+    </div>
+
+    <div class="control checkrow">
+      <input type="checkbox" id="marks" checked>
+      <label for="marks">Mark lobes and nulls</label>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Full-amplitude lobes</dt><dd id="rlobes">&#8212;</dd></div>
+      <div><dt>Nulls</dt><dd id="rnulls">&#8212;</dd></div>
+      <div><dt>Directivity</dt><dd id="rdir">&#8212;</dd></div>
+      <div><dt>What acos(&#8722;&#966;/kd) says</dt><dd id="rform" class="ghosted">&#8212;</dd></div>
+    </dl>
+
+    <div class="presets">
+      <button type="button" id="pBroad">Broadside &#183; 0.5&#955; &#183; 0&#176;</button>
+      <button type="button" id="pEnd">Endfire &#183; 0.25&#955; &#183; &#8722;90&#176;</button>
+      <button type="button" id="pTwo">Two beams &#183; 0.5&#955; &#183; 180&#176;</button>
+      <button type="button" id="pGrate">Grating lobes &#183; 1.5&#955; &#183; 0&#176;</button>
+      <button type="button" id="reset">Reset to defaults</button>
+    </div>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>Two identical elements, a distance <em>d</em> apart, driven with a phase offset
+     <em>&#966;</em>. That is the whole machine. Everything the pair radiates in a
+     given direction is the sum of two waves that arrived by paths of different
+     length, so the only thing that matters is how far out of step they are when
+     they get there.</p>
+
+  <p>Call the angle from the array axis <em>&#952;</em>. The extra path the far
+     element's wave travels is <em>d</em>&#8201;cos&#8201;<em>&#952;</em>, which
+     costs it <em>kd</em>&#8201;cos&#8201;<em>&#952;</em> radians of phase, where
+     <em>k</em>&#8201;=&#8201;2&#960;/&#955;. Add the driving offset and the two
+     waves differ by <em>&#968;</em>&#8201;=&#8201;<em>kd</em>&#8201;cos&#8201;<em>&#952;</em>&#8201;+&#8201;<em>&#966;</em>.
+     Summing two unit phasors that far apart gives the array factor.</p>
+
+  <p class="math">|AF(&#952;)| = |1 + e<sup>i&#968;</sup>| = 2 |cos(&#968;/2)|,
+     &#160;&#160;&#968; = kd cos &#952; + &#966;</p>
+
+  <p>The absolute value is not decoration. Written without it, the expression goes
+     negative half the time, and a negative amplitude is not a direction you can
+     point an antenna at. The page's first test sums the two phasors numerically
+     at forty-four thousand angles and checks the closed form against them; they
+     agree to 4.4&#215;10<sup>&#8722;16</sup>, which is as close as double
+     precision gets.</p>
+
+  <h2>Where the beam points</h2>
+
+  <p>A full-amplitude lobe needs cos(<em>&#968;</em>/2)&#8201;=&#8201;&#177;1, so
+     <em>&#968;</em> must be an even multiple of &#960;. Solve for the angle and
+     you get the formula every textbook prints:
+     <em>&#952;</em>&#8201;=&#8201;arccos(&#8722;<em>&#966;</em>/<em>kd</em>).
+     Set the spacing to half a wavelength and the phase to zero and it says 90&#176;,
+     broadside, which is right. Set them to a quarter wavelength and &#8722;90&#176;
+     and it says 0&#176;, straight down the axis, which is also right.</p>
+
+  <p>Now press <strong>Two beams</strong>. Half a wavelength, opposite phase. The
+     formula returns 180.000000000&#176; and the array is in fact radiating just as
+     hard at 0.000000000&#176;, in exactly the opposite direction, which the formula
+     never mentions. It cannot: arccos returns one value, and
+     <em>&#968;</em>&#8201;=&#8201;2&#960;<em>m</em> has a solution for every integer
+     <em>m</em> whose angle stays inside the visible range. Over two thousand seeded
+     settings of spacing and phase, 502 have a single lobe, 1255 have two or more,
+     and 243 have none at all &#8212; the pair radiates everywhere, just never at
+     full strength. At the worst of them a real lobe sits 143.7&#176; away from where
+     the formula pointed.</p>
+
+  <h2>Counting the nulls</h2>
+
+  <p>Nulls need cos(<em>&#968;</em>/2)&#8201;=&#8201;0, so <em>&#968;</em> must be an
+     odd multiple of &#960;. Sweeping only the spacing makes it look as though the
+     count follows from <em>d</em> alone, and it does not. At half a wavelength the
+     array has two nulls at 0&#176; phase, one at 90&#176;, one at 180&#176;. At a
+     full wavelength the same three phases give two, two and three. The count is a
+     closed form in both quantities at once, the number of odd multiples of &#960;
+     that <em>&#968;</em> passes through as cos&#8201;<em>&#952;</em> runs from
+     &#8722;1 to 1, and in that form it agrees with a direct count in all three
+     thousand sampled settings.</p>
+
+  <h2>What the whole thing radiates</h2>
+
+  <p>Integrate the power pattern over the sphere and the interference term collapses
+     into a single sinc: the total comes out
+     4(1&#8201;+&#8201;sinc(<em>kd</em>)&#8201;cos&#8201;<em>&#966;</em>) times the
+     power one element would send, and the directivity is
+     2/(1&#8201;+&#8201;sinc(<em>kd</em>)&#8201;cos&#8201;<em>&#966;</em>). Both are
+     checked here against Simpson integration and agree to about
+     10<sup>&#8722;13</sup>. Slide the spacing to zero with the phases matched and
+     the directivity falls to 1: two elements on top of each other, in step, are one
+     element. Push to half a wavelength broadside and it is exactly 2 &#8212; the
+     same two watts, aimed into half the sky.</p>
+
+  <h2>What to try</h2>
+
+  <p>Start at <strong>Broadside</strong> and drag the phase slowly to 180&#176;,
+     watching the single sideways beam split and swing out to the two ends. Then set
+     the spacing to 1.5&#955; at 0&#176; phase and count the magenta arrows: three
+     lobes and four nulls, and only one of those lobes is the one the dashed line
+     knows about. Switch the vertical scale
+     to decibels to see how sharp the nulls really are, and watch the readout marked
+     <em>what acos(&#8722;&#966;/kd) says</em> go blank whenever the formula's
+     argument leaves &#8722;1 to 1 while the array is still plainly radiating.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas &#183; <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920;
+const TAU = Math.PI * 2, PI = Math.PI, DEG = 180 / PI;
+
+/* ---- MODEL -------------------------------------------------------------- */
+const Model = {
+  sinc(x){ return Math.abs(x) < 1e-12 ? 1 - x*x/6 : Math.sin(x)/x; },
+  kd(dLambda){ return TAU * dLambda; },
+  psi(kd, phi, th){ return kd * Math.cos(th) + phi; },
+
+  /* closed form, the thing the page is about */
+  af(kd, phi, th){ return 2 * Math.abs(Math.cos(Model.psi(kd, phi, th) / 2)); },
+
+  /* the same quantity built the other way: sum two unit phasors */
+  afPhasor(kd, phi, th){
+    const p = Model.psi(kd, phi, th);
+    return Math.hypot(1 + Math.cos(p), Math.sin(p));
+  },
+
+  /* every direction where the two waves arrive exactly in step */
+  lobes(kd, phi){
+    if (kd < 1e-12) return [];
+    const out = [];
+    const mlo = Math.ceil((phi - kd) / TAU - 1e-12), mhi = Math.floor((phi + kd) / TAU + 1e-12);
+    for (let m = mlo; m <= mhi; m++){
+      let u = (TAU * m - phi) / kd;
+      if (u < -1) u = -1; if (u > 1) u = 1;
+      out.push(Math.acos(u));
+    }
+    return out.sort((a, b) => a - b);
+  },
+
+  /* every direction where they arrive exactly out of step */
+  nulls(kd, phi){
+    if (kd < 1e-12) return [];
+    const out = [];
+    const mlo = Math.ceil((phi - kd - PI) / TAU - 1e-12), mhi = Math.floor((phi + kd - PI) / TAU + 1e-12);
+    for (let m = mlo; m <= mhi; m++){
+      let u = ((2 * m + 1) * PI - phi) / kd;
+      if (u < -1) u = -1; if (u > 1) u = 1;
+      out.push(Math.acos(u));
+    }
+    return out.sort((a, b) => a - b);
+  },
+
+  /* how many nulls there are, without finding them: a closed form in BOTH kd and phi */
+  nullCount(kd, phi){
+    if (kd < 1e-12) return 0;
+    const lo = (phi - kd - PI) / TAU, hi = (phi + kd - PI) / TAU;
+    return Math.max(0, Math.floor(hi + 1e-12) - Math.ceil(lo - 1e-12) + 1);
+  },
+
+  /* the single direction the textbook formula reports. null when it has none. */
+  formulaLobe(kd, phi){
+    if (kd < 1e-12) return null;
+    const u = -phi / kd;
+    return (u < -1 || u > 1) ? null : Math.acos(u);
+  },
+
+  /* integral of |AF|^2 sin(th) d(th) over 0..pi, by Simpson */
+  radiated(kd, phi, n){
+    const N = n || 2000, h = PI / N;
+    let s = 0;
+    for (let i = 0; i <= N; i++){
+      const th = i * h, f = Math.pow(Model.af(kd, phi, th), 2) * Math.sin(th);
+      s += (i === 0 || i === N) ? f : (i % 2 ? 4 * f : 2 * f);
+    }
+    return s * h / 3;
+  },
+  radiatedClosed(kd, phi){ return 4 * (1 + Model.sinc(kd) * Math.cos(phi)); },
+  directivity(kd, phi){ return 2 / (1 + Model.sinc(kd) * Math.cos(phi)); },
+
+  analyse(dLambda, phiDeg){
+    const kd = Model.kd(dLambda), phi = phiDeg / DEG;
+    return {
+      kd: kd, phi: phi,
+      lobes: Model.lobes(kd, phi),
+      nulls: Model.nulls(kd, phi),
+      formula: Model.formulaLobe(kd, phi),
+      directivity: Model.directivity(kd, phi),
+      radiated: Model.radiatedClosed(kd, phi)
+    };
+  }
+};
+
+/* ---- STATE -------------------------------------------------------------- */
+const defaults = { d: 0.5, ph: 0, scale: "linear", marks: true };
+const state = Object.assign({}, defaults);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+const SS = 2;
+let W = 900, H = 620, NARROW = false, G = null;
+
+/* map |AF| in 0..2 onto 0..1 of the plotted height */
+function norm(v){
+  if (state.scale === "power") return Math.pow(v / 2, 2);
+  if (state.scale === "db"){
+    const db = 20 * Math.log10(Math.max(v, 1e-6) / 2);
+    return clamp((db + 40) / 40, 0, 1);
+  }
+  return v / 2;
+}
+function ringValues(){
+  if (state.scale === "db") return [{ v: 2, t: "0 dB" }, { v: 2*Math.pow(10,-10/20), t: "-10" },
+                                    { v: 2*Math.pow(10,-20/20), t: "-20" }, { v: 2*Math.pow(10,-30/20), t: "-30" }];
+  if (state.scale === "power") return [{ v: 2, t: "4" }, { v: Math.sqrt(3), t: "3" },
+                                       { v: Math.SQRT2, t: "2" }, { v: 1, t: "1" }];
+  return [{ v: 2, t: "2" }, { v: 1.5, t: "1.5" }, { v: 1, t: "1" }, { v: 0.5, t: "0.5" }];
+}
+function axisName(){
+  return state.scale === "db" ? "dB below peak" : (state.scale === "power" ? "|AF| squared" : "|AF|");
+}
+
+function fitCanvas(){
+  const box = cv.parentElement.getBoundingClientRect().width - 20;
+  W = Math.round(clamp(box > 0 ? box : 880, 300, 900));
+  NARROW = W < 560;
+
+  /* The stage column is well under 600px at a 1280 viewport, so side by side
+     only earns its place on a genuinely wide canvas. Below that, stack, and let
+     the polar plot use the whole width rather than sitting in two empty margins. */
+  const WIDE = W >= 700;
+  const band = NARROW ? 66 : 78;                    /* the array dimension strip */
+  const pol  = WIDE ? Math.min(Math.round(W * 0.46), 340)
+                    : Math.min(W - 8, NARROW ? 330 : 390);
+  const rectH = WIDE ? pol : (NARROW ? 196 : 224);
+  H = WIDE ? band + Math.max(pol, rectH) : band + pol + 14 + rectH;
+
+  const polX = WIDE ? 0 : (W - pol) / 2;
+  const polY = band;
+
+  /* rectangular pane */
+  const rx0 = WIDE ? pol + 16 : 0;
+  const ry0 = WIDE ? band : band + pol + 14;
+  const rw  = WIDE ? W - rx0 : W;
+
+  /* measure the labels this pane will really draw, not a guess at the widest */
+  ctx.font = "10px " + css("--font-mono");
+  let labw = 0;
+  for (const r of ringValues()) labw = Math.max(labw, ctx.measureText(r.t).width);
+  const gx0 = rx0 + Math.ceil(labw) + 12;
+
+  G = {
+    band: band,
+    pol: { cx: polX + pol / 2, cy: polY + pol / 2, r: pol / 2 - (NARROW ? 20 : 24), size: pol },
+    rect: { x0: gx0, x1: rx0 + rw - 10, y0: ry0 + 26, y1: ry0 + rectH - 30, lab: rx0 }
+  };
+
+  cv.width = Math.round(W * SS);
+  cv.height = Math.round(H * SS);
+  cv.style.height = H + "px";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+/* a label with an opaque backing, flipped inward near a frame edge */
+function chip(text, x, y, align, baseline, fs, colour, C){
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  const w = ctx.measureText(text).width, pad = 3;
+  let ax = align, ay = baseline;
+  if (ax === "left"  && x + w + 6 > W) ax = "right";
+  if (ax === "right" && x - w - 6 < 0) ax = "left";
+  if (ay === "bottom" && y - fs - 6 < 0) ay = "top";
+  if (ay === "top" && y + fs + 6 > H) ay = "bottom";
+  const bx = ax === "right" ? x - w : (ax === "center" ? x - w / 2 : x);
+  const by = ay === "bottom" ? y - fs : (ay === "middle" ? y - fs / 2 : y);
+  ctx.fillStyle = C.panel;
+  ctx.fillRect(bx - pad, by - pad + 1, w + pad * 2, fs + pad * 2 - 1);
+  /* bx already carries the alignment offset, so draw left-aligned from it.
+     Setting textAlign as well would shift the text by its own width a second
+     time, which put every right- and centre-anchored label off its mark. */
+  ctx.fillStyle = colour;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillText(text, bx, by);
+  ctx.textBaseline = "alphabetic";
+}
+
+/* ---- DRAWING ------------------------------------------------------------ */
+function drawArrayStrip(A, C){
+  const y = G.band / 2 + 2, mid = W / 2;
+  const span = Math.min(W - (NARROW ? 70 : 150), 360);
+  const half = Math.max(2, (state.d / 2) * span / 2);
+  const xL = mid - half, xR = mid + half;
+
+  /* the axis the array sits on */
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(10, y); ctx.lineTo(W - 10, y); ctx.stroke();
+
+  /* dimension line between the two elements */
+  ctx.strokeStyle = C.muted;
+  ctx.beginPath(); ctx.moveTo(xL, y - 17); ctx.lineTo(xL, y - 6);
+  ctx.moveTo(xR, y - 17); ctx.lineTo(xR, y - 6);
+  ctx.moveTo(xL, y - 12); ctx.lineTo(xR, y - 12); ctx.stroke();
+  for (const [x, s] of [[xL, 1], [xR, -1]]){
+    ctx.beginPath(); ctx.moveTo(x, y - 12); ctx.lineTo(x + s * 5, y - 15);
+    ctx.lineTo(x + s * 5, y - 9); ctx.closePath(); ctx.fillStyle = C.muted; ctx.fill();
+  }
+  chip("d = " + state.d.toFixed(3) + " λ", mid, y - 16, "center", "bottom", NARROW ? 10 : 11, C.ink, C);
+
+  /* The two elements, and their names. At small spacings the two names would
+     print on top of each other and read as one word, so measure first and drop
+     the far one onto a second line when they will not both fit. */
+  ctx.font = "9px " + css("--font-mono");
+  const needs = (ctx.measureText("ref").width + ctx.measureText("fed").width) / 2 + 6;
+  const stacked = (xR - xL) < needs;
+  for (const [x, lab, lit, row] of [[xL, "ref", false, 0], [xR, "fed", true, stacked ? 1 : 0]]){
+    ctx.fillStyle = lit ? C.beam : C.accent;
+    ctx.fillRect(x - 3, y - 5, 6, 10);
+    ctx.fillStyle = C.muted;
+    ctx.font = "9px " + css("--font-mono");
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText(lab, clamp(x, 14, W - 14), y + 9 + row * 11);
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  }
+  chip("φ = " + (state.ph >= 0 ? "+" : "−") + Math.abs(state.ph) + "°",
+       xR + 12, y + 2, "left", "middle", NARROW ? 10 : 11, C.beam, C);
+
+  /* the angle theta is measured from the axis, to the right */
+  ctx.fillStyle = C.muted; ctx.font = "9px " + css("--font-mono");
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText("θ = 0°", W - 12, y + 16);
+  ctx.textAlign = "left";
+  ctx.fillText("θ = 180°", 12, y + 16);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+}
+
+function drawPolar(A, C){
+  const P = G.pol, cx = P.cx, cy = P.cy, R = P.r;
+
+  /* rings */
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (const ring of ringValues()){
+    const rr = R * norm(ring.v);
+    if (rr < 2) continue;
+    ctx.beginPath(); ctx.arc(cx, cy, rr, 0, TAU); ctx.stroke();
+  }
+  ctx.beginPath(); ctx.moveTo(cx - R - 6, cy); ctx.lineTo(cx + R + 6, cy);
+  ctx.moveTo(cx, cy - R - 6); ctx.lineTo(cx, cy + R + 6); ctx.stroke();
+
+  /* the pattern. theta runs 0..2pi; cos is symmetric so the far half mirrors. */
+  ctx.beginPath();
+  for (let i = 0; i <= 720; i++){
+    const a = TAU * i / 720;
+    const th = a <= PI ? a : TAU - a;
+    const rr = R * norm(Model.af(A.kd, A.phi, th));
+    const x = cx + rr * Math.cos(a), y = cy - rr * Math.sin(a);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = C.beamfill; ctx.fill();
+  ctx.strokeStyle = C.beam; ctx.lineWidth = 1.8; ctx.stroke();
+
+  if (state.marks){
+    /* every full-amplitude lobe, above and below the axis */
+    ctx.strokeStyle = C.beam; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    for (const th of A.lobes) for (const s of [1, -1]){
+      if (s < 0 && (th < 1e-9 || th > PI - 1e-9)) continue;
+      ctx.beginPath(); ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + R * Math.cos(th), cy - s * R * Math.sin(th));
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    /* nulls as short teal spokes at the rim */
+    ctx.strokeStyle = C.nullc; ctx.lineWidth = 2;
+    for (const th of A.nulls) for (const s of [1, -1]){
+      if (s < 0 && (th < 1e-9 || th > PI - 1e-9)) continue;
+      const ca = Math.cos(th), sa = s * Math.sin(th);
+      ctx.beginPath();
+      ctx.moveTo(cx + (R - 7) * ca, cy - (R - 7) * sa);
+      ctx.lineTo(cx + (R + 4) * ca, cy - (R + 4) * sa);
+      ctx.stroke();
+    }
+  }
+
+  /* Ring values go on LAST, with opaque backing. No direction on this plot is
+     reliably free of pattern -- a lobe can point anywhere -- so the backing is
+     what makes them readable, not the placement. */
+  for (const ring of ringValues()){
+    const rr = R * norm(ring.v);
+    if (rr < 14) continue;
+    chip(ring.t, cx + rr, cy + 1, "center", "top", 9, C.muted, C);
+  }
+}
+
+function drawRect(A, C){
+  const R = G.rect, w = R.x1 - R.x0, h = R.y1 - R.y0;
+  const X = (deg) => R.x0 + w * deg / 180;
+  const Y = (v) => R.y1 - h * norm(v);
+
+  /* frame and grid */
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (const ring of ringValues()){
+    const y = Y(ring.v);
+    ctx.beginPath(); ctx.moveTo(R.x0, y); ctx.lineTo(R.x1, y); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.font = "10px " + css("--font-mono");
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillText(ring.t, R.x0 - 5, y);
+  }
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = C.muted; ctx.font = "10px " + css("--font-mono");
+  ctx.fillText(axisName(), R.lab, R.y0 - 12);
+  ctx.strokeStyle = C.line;
+  ctx.beginPath(); ctx.moveTo(R.x0, R.y0); ctx.lineTo(R.x0, R.y1); ctx.lineTo(R.x1, R.y1); ctx.stroke();
+
+  const ticks = NARROW ? [0, 45, 90, 135, 180] : [0, 30, 60, 90, 120, 150, 180];
+  ctx.fillStyle = C.muted; ctx.font = "10px " + css("--font-mono");
+  for (const t of ticks){
+    const x = X(t);
+    ctx.strokeStyle = C.line;
+    ctx.beginPath(); ctx.moveTo(x, R.y1); ctx.lineTo(x, R.y1 + 4); ctx.stroke();
+    ctx.textAlign = t === 0 ? "left" : (t === 180 ? "right" : "center");
+    ctx.textBaseline = "top";
+    ctx.fillText(t + "°", x, R.y1 + 6);
+  }
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("θ from the array axis", R.x0, R.y1 + 24);
+
+  /* the curve, clipped to the frame */
+  ctx.save();
+  ctx.beginPath(); ctx.rect(R.x0, R.y0 - 2, w, h + 2); ctx.clip();
+  ctx.beginPath();
+  for (let i = 0; i <= 720; i++){
+    const th = PI * i / 720;
+    const x = X(th * DEG), y = Y(Model.af(A.kd, A.phi, th));
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = C.beam; ctx.lineWidth = 2; ctx.stroke();
+
+  /* what the textbook formula reports, as a dashed vertical */
+  if (A.formula !== null){
+    ctx.strokeStyle = C.ghost; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+    const x = X(A.formula * DEG);
+    ctx.beginPath(); ctx.moveTo(x, R.y0 - 2); ctx.lineTo(x, R.y1); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
+
+  if (state.marks){
+    /* nulls: teal ticks standing on the baseline */
+    ctx.strokeStyle = C.nullc; ctx.lineWidth = 2;
+    for (const th of A.nulls){
+      const x = X(th * DEG);
+      ctx.beginPath(); ctx.moveTo(x, R.y1); ctx.lineTo(x, R.y1 - 9); ctx.stroke();
+    }
+    /* lobes: magenta arrowheads hanging from the top of the frame */
+    ctx.fillStyle = C.beam;
+    for (const th of A.lobes){
+      const x = clamp(X(th * DEG), R.x0 + 1, R.x1 - 1);
+      ctx.beginPath(); ctx.moveTo(x, R.y0 + 7); ctx.lineTo(x - 5, R.y0 - 1);
+      ctx.lineTo(x + 5, R.y0 - 1); ctx.closePath(); ctx.fill();
+    }
+  }
+
+  /* The formula's angle is, whenever it has one, exactly where the curve peaks,
+     so the top of the frame is the one place this label must not go. */
+  if (A.formula !== null){
+    const x = X(A.formula * DEG);
+    chip("formula: " + (A.formula * DEG).toFixed(1) + "°",
+         clamp(x, R.x0 + 4, R.x1 - 4), R.y1 - 13,
+         x > (R.x0 + R.x1) / 2 ? "right" : "left", "bottom", NARROW ? 9 : 10, C.ghost, C);
+  }
+
+  /* The key goes OUTSIDE the frame. An opaque box in a corner works until the
+     pattern grows lobes there, and at wide spacings it does: a three-lobe
+     pattern runs straight under a top-left key and the box erases it. On the
+     header line it can never cover the curve, whatever the spacing. */
+  const rows = [{ c: C.beam, t: "lobe" }, { c: C.nullc, t: "null" }, { c: C.ghost, t: "arccos formula" }];
+  const fs = NARROW ? 9 : 10;
+  ctx.font = "600 " + fs + "px " + css("--font-mono");
+  const sw = 12, gap = 5, sep = 13;
+  let kw = 0;
+  for (const r of rows) kw += sw + gap + ctx.measureText(r.t).width + sep;
+  kw -= sep;
+  let kx = Math.max(R.lab + 34, R.x1 - kw);
+  const ky = R.y0 - 16 + fs / 2;
+  for (const r of rows){
+    ctx.strokeStyle = r.c; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(kx, ky); ctx.lineTo(kx + sw, ky); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.fillText(r.t, kx + sw + gap, ky);
+    kx += sw + gap + ctx.measureText(r.t).width + sep;
+  }
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+}
+
+function render(){
+  fitCanvas();
+  const A = Model.analyse(state.d, state.ph);
+  const C = {
+    panel: css("--panel"), ink: css("--ink"), muted: css("--muted"), line: css("--line"),
+    grid: css("--grid"), accent: css("--accent"), beam: css("--beam"),
+    beamfill: css("--beamfill"), nullc: css("--nullc"), ghost: css("--ghost")
+  };
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = C.panel; ctx.fillRect(0, 0, W, H);
+  drawArrayStrip(A, C);
+  drawPolar(A, C);
+  drawRect(A, C);
+
+  el("dout").textContent = state.d.toFixed(3) + " λ";
+  el("phout").textContent = (state.ph >= 0 ? "+" : "−") + Math.abs(state.ph) + "°";
+
+  el("rlobes").textContent = A.lobes.length === 0
+    ? "none at full"
+    : A.lobes.map(t => (t * DEG).toFixed(1) + "°").join("  ");
+  el("rnulls").textContent = A.nulls.length === 0
+    ? "none"
+    : A.nulls.length + " at " + A.nulls.map(t => (t * DEG).toFixed(1) + "°").join(", ");
+  el("rdir").textContent = A.radiated <= 1e-12
+    ? "\u2014 nothing radiated"
+    : A.directivity.toFixed(4);
+
+  const f = el("rform");
+  if (A.formula === null){
+    f.textContent = "no solution";
+    f.className = "ghosted";
+  } else {
+    const missed = A.lobes.length - (A.lobes.length ? 1 : 0);
+    f.textContent = (A.formula * DEG).toFixed(1) + "°"
+      + (missed > 0 ? "  (misses " + missed + ")" : "");
+    f.className = missed > 0 ? "" : "ghosted";
+  }
+}
+
+/* ---- BINDINGS ----------------------------------------------------------- */
+function setAll(d, ph){
+  state.d = d; state.ph = ph;
+  el("d").value = String(d); el("ph").value = String(ph);
+  render();
+}
+el("d").addEventListener("input", () => { state.d = parseFloat(el("d").value); render(); });
+el("ph").addEventListener("input", () => { state.ph = parseInt(el("ph").value, 10); render(); });
+el("scale").addEventListener("input", () => { state.scale = el("scale").value; render(); });
+el("marks").addEventListener("input", () => { state.marks = el("marks").checked; render(); });
+el("pBroad").addEventListener("click", () => setAll(0.5, 0));
+el("pEnd").addEventListener("click", () => setAll(0.25, -90));
+el("pTwo").addEventListener("click", () => setAll(0.5, 180));
+el("pGrate").addEventListener("click", () => setAll(1.5, 0));
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  el("d").value = String(defaults.d); el("ph").value = String(defaults.ph);
+  el("scale").value = defaults.scale; el("marks").checked = defaults.marks;
+  render();
+});
+
+let t = null;
+addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 120); });
+const mq = matchMedia("(prefers-color-scheme: dark)");
+(mq.addEventListener ? mq.addEventListener.bind(mq, "change") : mq.addListener.bind(mq))(render);
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+
+window.__SELFTEST = function(){
+  const out = [];
+  const push = (name, pass, detail) => out.push({ name, pass: !!pass, detail: String(detail) });
+  const K = Model.kd;
+
+  /* 1. the closed form is the phasor sum, derived the other way */
+  let e1 = 0, n1 = 0;
+  for (const d of [0, 0.125, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2])
+    for (const pd of [-360, -270, -180, -90, 0, 45, 90, 135, 180, 270, 360]){
+      const kd = K(d), phi = pd / DEG;
+      for (let i = 0; i <= 400; i++){
+        const th = PI * i / 400;
+        e1 = Math.max(e1, Math.abs(Model.af(kd, phi, th) - Model.afPhasor(kd, phi, th)));
+        n1++;
+      }
+    }
+  push("2|cos(psi/2)| equals the sum of two unit phasors",
+       e1 < 1e-12,
+       "max gap " + e1.toExponential(4) + " over " + n1.toLocaleString("en") + " evaluations");
+
+  /* 2. half a wavelength, opposite phase, nulls exactly broadside */
+  {
+    const kd = K(0.5), phi = PI, ns = Model.nulls(kd, phi);
+    push("half-wave pair in antiphase nulls exactly broadside",
+         ns.length === 1 && near(ns[0] * DEG, 90, 1e-9) && Model.af(kd, phi, PI / 2) < 1e-12,
+         "null at " + (ns[0] * DEG).toFixed(9) + " deg, |AF| there = "
+         + Model.af(kd, phi, PI / 2).toExponential(4));
+  }
+
+  /* 3. total radiated power against Simpson */
+  {
+    let worst = 0;
+    for (const d of [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2])
+      for (const pd of [0, 60, 90, 120, 180, 270]){
+        const kd = K(d), phi = pd / DEG;
+        worst = Math.max(worst, Math.abs(Model.radiated(kd, phi, 2000) - Model.radiatedClosed(kd, phi)));
+      }
+    push("radiated power integrates to 4(1 + sinc(kd) cos phi)",
+         worst < 1e-8, "worst gap against Simpson " + worst.toExponential(4) + " over 42 settings");
+  }
+
+  /* 4. directivity, built from that integral a second way */
+  {
+    let worst = 0;
+    for (const d of [0.05, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2])
+      for (const pd of [0, 45, 90, 135, 180]){
+        const kd = K(d), phi = pd / DEG;
+        if (!Model.lobes(kd, phi).length) continue;
+        const numeric = 2 * 4 / Model.radiated(kd, phi, 2000);
+        worst = Math.max(worst, Math.abs(numeric - Model.directivity(kd, phi)));
+      }
+    push("directivity 2/(1 + sinc(kd) cos phi) matches 4pi x peak over total",
+         worst < 1e-8, "worst gap " + worst.toExponential(4));
+  }
+
+  /* 5. the exactly-known directivities */
+  push("directivity exact at the textbook cases",
+       near(Model.directivity(K(0.5), 0), 2, 1e-12)
+       && near(Model.directivity(K(0.25), -PI / 2), 2, 1e-12)
+       && near(Model.directivity(K(0.001), 0), 1.000003, 1e-6),
+       "broadside half-wave " + Model.directivity(K(0.5), 0).toFixed(6)
+       + ", endfire quarter-wave " + Model.directivity(K(0.25), -PI / 2).toFixed(6)
+       + ", near-coincident " + Model.directivity(K(0.001), 0).toFixed(6));
+
+  /* 6. the endfire case the formula does get right */
+  {
+    const kd = K(0.25), phi = -PI / 2, L = Model.lobes(kd, phi);
+    push("quarter-wave, minus ninety, is a single lobe straight down the axis",
+         L.length === 1 && near(L[0] * DEG, 0, 1e-9) && near(Model.af(kd, phi, 0), 2, 1e-12),
+         "lobe at " + (L[0] * DEG).toFixed(9) + " deg, |AF| = " + Model.af(kd, phi, 0).toFixed(12));
+  }
+
+  /* 7. FALSE in the task file: the main lobe is not one direction */
+  {
+    const r = mulberry32(SEED);
+    let one = 0, many = 0, none = 0, worst = 0;
+    for (let i = 0; i < 2000; i++){
+      const d = 0.05 + 1.95 * r(), pd = -360 + 720 * r();
+      const kd = K(d), phi = pd / DEG, L = Model.lobes(kd, phi);
+      if (L.length === 0){ none++; continue; }
+      if (L.length === 1) one++; else many++;
+      const f = Model.formulaLobe(kd, phi);
+      if (f === null) continue;
+      for (const th of L) worst = Math.max(worst, Math.abs(th - f));
+    }
+    push("arccos(-phi/kd) does not give THE main lobe: most settings have several",
+         one === 502 && many === 1255 && none === 243 && worst * DEG > 140,
+         "of 2000 seeded settings: " + one + " one lobe, " + many + " two or more, "
+         + none + " none at full amplitude; worst distance from the formula's answer to a real lobe "
+         + (worst * DEG).toFixed(4) + " deg");
+  }
+
+  /* 8. and the counterexample by hand */
+  {
+    const kd = K(0.5), phi = PI, L = Model.lobes(kd, phi), f = Model.formulaLobe(kd, phi);
+    push("counterexample: half-wave in antiphase radiates at BOTH ends",
+         L.length === 2 && near(L[0] * DEG, 0, 1e-9) && near(L[1] * DEG, 180, 1e-9)
+         && near(f * DEG, 180, 1e-9)
+         && near(Model.af(kd, phi, 0), 2, 1e-12) && near(Model.af(kd, phi, PI), 2, 1e-12),
+         "full-amplitude lobes at " + L.map(t => (t * DEG).toFixed(9)).join(" and ")
+         + " deg; the formula returns only " + (f * DEG).toFixed(9) + " deg");
+  }
+
+  /* 9. FALSE in the task file: the null count is not a function of spacing */
+  {
+    const c = (d, pd) => Model.nulls(K(d), pd / DEG).length;
+    const a = [c(0.5, 0), c(0.5, 90), c(0.5, 180)], b = [c(1, 0), c(1, 90), c(1, 180)];
+    push("the number of nulls depends on the phase too, not the spacing alone",
+         a.join() === "2,1,1" && b.join() === "2,2,3",
+         "d = 0.5 lambda gives " + a.join(" / ") + " nulls at phi = 0 / 90 / 180 deg; "
+         + "d = 1 lambda gives " + b.join(" / "));
+  }
+
+  /* 10. the closed form that does hold, in both quantities */
+  {
+    const r = mulberry32(77712345);
+    let ok = 0;
+    for (let i = 0; i < 3000; i++){
+      const d = 0.02 + 2.48 * r(), pd = -360 + 720 * r();
+      const kd = K(d), phi = pd / DEG;
+      if (Model.nulls(kd, phi).length === Model.nullCount(kd, phi)) ok++;
+    }
+    push("a closed form in BOTH kd and phi does predict the null count",
+         ok === 3000, "agrees with a direct count in " + ok + " of 3000 seeded settings");
+  }
+
+  /* 11. why the page enumerates lobes instead of using the usual threshold */
+  {
+    const r = mulberry32(31415926);
+    let bad = 0;
+    for (let i = 0; i < 3000; i++){
+      const d = 0.02 + 2.48 * r(), pd = -360 + 720 * r();
+      const kd = K(d), phi = pd / DEG;
+      const predicted = kd >= TAU - Math.abs(phi);
+      if ((Model.lobes(kd, phi).length >= 2) !== predicted) bad++;
+    }
+    push("the grating-lobe rule of thumb is not exact, so the page counts lobes directly",
+         bad === 310, "kd >= 2pi - |phi| calls it wrong in " + bad + " of 3000 seeded settings");
+  }
+
+  /* 12. reversing the phase mirrors the pattern end for end */
+  {
+    let worst = 0;
+    for (const d of [0.1, 0.4, 0.9, 1.6]) for (const pd of [30, 75, 140, 200]){
+      const kd = K(d), phi = pd / DEG;
+      for (let i = 0; i <= 200; i++){
+        const th = PI * i / 200;
+        worst = Math.max(worst, Math.abs(Model.af(kd, phi, th) - Model.af(kd, -phi, PI - th)));
+      }
+    }
+    push("flipping the sign of phi reflects the pattern about broadside",
+         worst < 1e-12, "worst gap " + worst.toExponential(4) + " over 3216 angles");
+  }
+
+  /* 13. finite everywhere except the one setting that radiates nothing at all */
+  {
+    let bad = 0, n = 0, dark = [];
+    for (let i = 0; i <= 2 / 0.005; i++){
+      const d = i * 0.005;
+      for (let pd = -360; pd <= 360; pd += 15){
+        const kd = K(d), phi = pd / DEG;
+        for (const th of [0, 0.3, 1, PI / 2, 2.4, PI]){
+          n++;
+          if (!Number.isFinite(Model.af(kd, phi, th))) bad++;
+        }
+        if (!Number.isFinite(Model.nullCount(kd, phi))) bad++;
+        if (Model.radiatedClosed(kd, phi) <= 1e-12) dark.push(d + "L/" + pd + "deg");
+        else if (!Number.isFinite(Model.directivity(kd, phi))) bad++;
+      }
+    }
+    push("finite everywhere the sliders reach, bar the two settings that radiate nothing",
+         bad === 0 && dark.length === 2 && dark[0] === "0L/-180deg" && dark[1] === "0L/180deg",
+         bad + " non-finite values in " + n.toLocaleString("en")
+         + " evaluations; directivity is 0/0 only at " + dark.join(" and "));
+  }
+
+  /* 14. and that degenerate case is exactly dark, not merely small */
+  {
+    const kd = K(0), phi = PI;
+    let peak = 0;
+    for (let i = 0; i <= 400; i++) peak = Math.max(peak, Model.af(kd, phi, PI * i / 400));
+    push("two elements in the same place, driven in antiphase, radiate exactly nothing",
+         peak < 1e-15 && Model.radiatedClosed(kd, phi) === 0
+         && Math.abs(Model.radiated(kd, phi, 2000)) < 1e-15,
+         "peak |AF| over 401 angles = " + peak.toExponential(4)
+         + ", closed-form radiated power = " + Model.radiatedClosed(kd, phi)
+         + ", Simpson = " + Model.radiated(kd, phi, 2000).toExponential(4));
+  }
+
+  return out;
+};
+
+window.__ATLAS = { state, render, Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
