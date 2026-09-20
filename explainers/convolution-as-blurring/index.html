@@ -1,0 +1,1141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Kernel Is The Whole Story — Explainer Atlas</title>
+<meta name="description" content="A sliding weighted average is decided entirely by its weights. Draw a signal, pick a kernel, and read its behaviour off its own spectrum: boxes ring, triangles cannot, and a negative tap is the licence to overshoot.">
+<style>
+:root{
+  --bg:#f4f6f9; --panel:#ffffff; --ink:#141922; --muted:#59636f; --line:#dde2e9;
+  --accent:#36479f; --accent-soft:#e7eaf7; --warn:#a4451a;
+  --sig:#6a7482; --out:#36479f; --ker:#c2521a; --neg:#9b2242; --grid:#e9edf3;
+  --radius:12px; --pad:clamp(14px,3vw,26px);
+  --font-body:Georgia,"Iowan Old Style","Times New Roman",serif;
+  --font-ui:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --scale-h1:clamp(1.6rem,1.08rem + 2.3vw,2.45rem);
+  --scale-body:clamp(1rem,0.96rem + 0.22vw,1.1rem);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0e1116; --panel:#161b22; --ink:#e7eaef; --muted:#98a2b0; --line:#252c36;
+    --accent:#8ea2ef; --accent-soft:#1a2136; --warn:#e29a6a;
+    --sig:#8b95a3; --out:#8ea2ef; --ker:#e88b4f; --neg:#e6748d; --grid:#1e2530;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0; background:var(--bg); color:var(--ink); font:var(--scale-body)/1.65 var(--font-body); -webkit-text-size-adjust:100%}
+.wrap{max-width:64rem; margin:0 auto; padding:var(--pad)}
+header.page{border-bottom:1px solid var(--line); padding-bottom:var(--pad)}
+h1{font-size:var(--scale-h1); line-height:1.12; margin:0 0 .4em; letter-spacing:-.015em}
+.kicker{margin:0 0 .4em; color:var(--ker); font:600 .74rem/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.14em}
+.standfirst{margin:0; color:var(--muted); max-width:44em; font-size:1.02em}
+.layout{display:grid; gap:var(--pad); grid-template-columns:1fr; margin-top:var(--pad)}
+@media (min-width:56rem){ .layout{grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); align-items:start} }
+figure.stage{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px; overflow:hidden}
+figure.stage canvas{display:block; width:100%; height:auto; touch-action:none; cursor:crosshair; border-radius:6px}
+figcaption{margin-top:.65em; color:var(--muted); font:.85rem/1.5 var(--font-ui)}
+.controls{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:var(--pad); display:grid; gap:1em; font-family:var(--font-ui)}
+.control{display:grid; gap:.3em}
+.control .row{display:flex; justify-content:space-between; align-items:baseline; gap:.75em}
+.control label{font-weight:600; font-size:.94rem}
+.control output{font:600 .9rem/1 var(--font-mono); color:var(--accent); background:var(--accent-soft); padding:.28em .5em; border-radius:6px}
+.control .hint{color:var(--muted); font-size:.81rem; margin:0}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:26px}
+select,button{font:inherit; font-family:var(--font-ui); color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .7em; min-height:40px; width:100%}
+button{cursor:pointer; font-weight:600}
+button:hover{border-color:var(--accent)}
+.checks{display:grid; gap:.45em}
+.checks label{display:flex; gap:.55em; align-items:flex-start; font-size:.9rem; font-weight:500; line-height:1.4}
+.checks input{accent-color:var(--accent); min-width:18px; min-height:18px; margin-top:.18em}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px}
+.readout{display:grid; grid-template-columns:repeat(auto-fit,minmax(7rem,1fr)); gap:.55em; margin:0; padding:0}
+.readout div{background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.5em .65em}
+.readout dt{margin:0; color:var(--muted); font:.71rem/1.3 var(--font-ui); text-transform:uppercase; letter-spacing:.07em}
+.readout dd{margin:.16em 0 0; font:600 1rem/1.2 var(--font-mono)}
+.prose{max-width:40em; margin-top:var(--pad)}
+.prose h2{font-size:1.2rem; margin:1.85em 0 .45em; letter-spacing:-.008em}
+.prose p{margin:0 0 1em}
+.prose .math{font:.93rem/1.6 var(--font-mono); background:var(--accent-soft); padding:.75em .9em; border-radius:8px; border-left:3px solid var(--ker); overflow-x:auto}
+footer.page{margin-top:calc(var(--pad)*1.6); padding-top:var(--pad); border-top:1px solid var(--line); color:var(--muted); font:.85rem/1.5 var(--font-ui)}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <p class="kicker">mathematics</p>
+  <h1>The Kernel Is The Whole Story</h1>
+  <p class="standfirst">A convolution is a sliding weighted average, so everything it does is decided by its weights. Draw a signal, choose a set of weights, and watch the same operation blur, sharpen, or differentiate — then read which of those it will do straight off the kernel's own spectrum.</p>
+</header>
+
+<div class="layout">
+  <figure class="stage" data-role="stage">
+    <canvas id="view" width="900" height="760" role="img" tabindex="0"
+            aria-label="Three stacked panels. The top panel shows an input signal in grey with the convolved output drawn over it in indigo, and shaded margins at both ends where the output is made of padding. The middle panel shows the kernel as a stem plot, with negative weights in crimson. The bottom panel shows the kernel's gain against frequency from zero to the Nyquist limit, with the zero line marked."></canvas>
+    <figcaption>Drag across the top panel to draw your own signal. The shaded strips at each end are where the kernel hangs off the edge of the data and the output is partly made of zeros. The bottom panel is the kernel's gain at each frequency: above the line the kernel passes that wiggle, below it the kernel passes it upside down.</figcaption>
+  </figure>
+
+  <section class="controls" data-role="controls" aria-label="Convolution controls">
+    <div class="control">
+      <label for="kernel">Kernel</label>
+      <select id="kernel">
+        <option value="box">Box — a flat average</option>
+        <option value="tri">Triangle — a box, twice</option>
+        <option value="gauss" selected>Gaussian — a bell</option>
+        <option value="deriv">Derivative — a slope meter</option>
+        <option value="lap">Second difference — a curvature meter</option>
+        <option value="sharp">Sharpen — bell subtracted from a spike</option>
+      </select>
+      <p class="hint">The six shapes differ only in their weights, and that is the only thing that differs about what they do.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="width">Reach</label>
+        <output id="widthout" for="width">2.0</output>
+      </div>
+      <input type="range" id="width" min="0.6" max="6" step="0.1" value="2">
+      <p class="hint">The kernel's standard deviation in samples. Every shape is scaled to this same reach so the six are comparable. Arrow keys step; Home and End jump.</p>
+    </div>
+
+    <div class="control">
+      <div class="row">
+        <label for="repeat">Applied how many times</label>
+        <output id="repeatout" for="repeat">1</output>
+      </div>
+      <input type="range" id="repeat" min="1" max="6" step="1" value="1">
+      <p class="hint">Convolving the kernel with itself. Push a box up to six and watch it turn into a bell.</p>
+    </div>
+
+    <div class="control">
+      <label for="signal">Signal</label>
+      <select id="signal">
+        <option value="edge" selected>A step edge</option>
+        <option value="bumps">Two bumps, one narrow</option>
+        <option value="pulses">A pulse train</option>
+        <option value="noisyramp">A ramp under noise</option>
+        <option value="spike">A single spike</option>
+        <option value="mine">Whatever you drew</option>
+      </select>
+      <p class="hint">Or draw one: drag across the top panel. Choosing a preset here is the keyboard route to the same thing.</p>
+    </div>
+
+    <div class="control checks">
+      <label for="band"><input type="checkbox" id="band" checked> Mark the input's own range on the output</label>
+      <label for="marks"><input type="checkbox" id="marks" checked> Mark the zeros of the gain</label>
+    </div>
+
+    <dl class="readout" aria-live="polite">
+      <div><dt>Taps</dt><dd id="rTaps">—</dd></div>
+      <div><dt>Weights add to</dt><dd id="rSum">—</dd></div>
+      <div><dt>Half-width</dt><dd id="rSd">—</dd></div>
+      <div><dt>Gain at Nyquist</dt><dd id="rNyq">—</dd></div>
+      <div><dt>Leaves the range by</dt><dd id="rOver">—</dd></div>
+      <div><dt>First zero of gain</dt><dd id="rZero">—</dd></div>
+    </dl>
+
+    <button type="button" id="rough">Roughen the signal</button>
+    <button type="button" id="reset">Reset everything</button>
+  </section>
+</div>
+
+<article class="prose" data-role="prose">
+  <p>The output in the top panel is built one sample at a time, and each one is a weighted average of the input around it. Slide a window across the data, multiply what is under it by a fixed list of weights, add the products, write the answer at the centre, move on. That is the whole operation. The list of weights is the kernel, and it is drawn beneath the signal as a row of stems so you can see the thing that is doing the work.</p>
+
+  <p>Because the weights are the only thing that varies, they are the only thing to look at. Switch from the bell to the derivative and nothing about the machinery changes — the same sliding sum now reports slope instead of a smoothed value, purely because half its weights went negative. The six kernels in the menu are all scaled to the same reach, so anything you see change between them is shape, not size.</p>
+
+  <h2>Sign is the licence to overshoot</h2>
+
+  <p>Turn on the range markers and drag the reach around with the box, triangle or bell selected. The output never once leaves the band. It cannot: if every weight is positive and the weights add to one, each output sample is a convex combination of input samples, and a convex combination of numbers sits between the smallest and the largest of them. No amount of blurring will ever invent a value that was not already bracketed by the data.</p>
+
+  <p>Now pick <em>Sharpen</em>. The output shoots past the band at every edge — the bright and dark fringes that a sharpening filter is famous for. Nothing subtle happened. The kernel has negative weights, the combination is no longer convex, and the guarantee is simply gone. Overshoot is not a flaw in the implementation; it is the arithmetic consequence of a minus sign, and the same minus sign is what makes the filter useful.</p>
+
+  <h2>Read the ringing off the spectrum</h2>
+
+  <p class="math">gain(f) = Σⱼ k[j] · cos(2πf·(j − centre))</p>
+
+  <p>The bottom panel evaluates that sum at every frequency up to the Nyquist limit of half a cycle per sample. It is the honest summary of the kernel: a sine wave of frequency f goes in, the same sine wave comes out scaled by gain(f), and when the gain is negative it comes out inverted.</p>
+
+  <p>The box kernel's gain is the one to stare at. It hits exactly zero at every multiple of 1/N and then goes <em>negative</em> between the zeros, dipping to about −0.22 and never fully recovering. That is what ringing is. A box average does not merely fail to smooth the fine detail, it flips some of it over, which is why a boxcar blur leaves those faint reversed ghosts beside a hard edge.</p>
+
+  <p>The triangle cannot do that, and the reason is visible in the menu's own description. A triangle is a box convolved with a box, so its gain is a box's gain multiplied by itself — a square, and squares are never negative. Two crude averages in a row are better behaved than one, not because anything was cleverly designed but because squaring removes the sign. Push <em>Applied how many times</em> up with the box selected and the same thing happens in front of you: the gain is raised to that power, the negative lobes get stamped out in pairs, and the kernel drifts into a bell. That is the central limit theorem happening in a filter.</p>
+
+  <h2>What to try</h2>
+
+  <p>Set the signal to a single spike. The output is the kernel itself, which is the cleanest way to see that a convolution is just a sum of shifted, scaled copies of the kernel — one per input sample. Then switch to the step edge with the derivative kernel: the output is flat and near zero everywhere except at the edge, because the slope of a constant is nothing. Push the reach up and watch the peak widen and shrink, since spreading the measurement over more samples reports the average slope over a longer stretch.</p>
+
+  <p>Finally, look at the shaded margins. Inside them the window hangs off the end of the data and the missing samples are taken as zero, so those outputs are partly fiction. That is where the tidy conservation law breaks: the total of the full output equals the total of the input times the total of the weights, exactly, but the trimmed output you are looking at has lost whatever was pushed off the ends. The selftest below checks both the law and the amount it loses.</p>
+</article>
+
+<footer class="page">
+  <p>Interactive Explainer Atlas · <a href="../../index.html">back to the atlas</a></p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 20260920, PI = Math.PI, N = 121;
+
+/* ---- MODEL ------------------------------------------------------------- */
+function norm(a){ let s = 0; for (const v of a) s += v; return a.map((v) => v / s); }
+
+const Model = {
+  N: N,
+
+  /* every kernel is centred, odd length, and scaled to standard deviation sd */
+  kernel(kind, sd){
+    if (kind === "box"){
+      const r = Math.max(1, Math.round(sd*Math.sqrt(3)));
+      return { taps: new Array(2*r + 1).fill(1/(2*r + 1)), r: r };
+    }
+    if (kind === "tri"){
+      const r = Math.max(1, Math.round(sd*Math.sqrt(6))), a = [];
+      for (let u = -r; u <= r; u++) a.push((r + 1) - Math.abs(u));
+      return { taps: norm(a), r: r };
+    }
+    if (kind === "gauss"){
+      const r = Math.max(1, Math.round(4*sd)), a = [];
+      for (let u = -r; u <= r; u++) a.push(Math.exp(-u*u/(2*sd*sd)));
+      return { taps: norm(a), r: r };
+    }
+    if (kind === "deriv"){
+      /* derivative of a Gaussian, scaled so a ramp of slope s reports s */
+      const r = Math.max(1, Math.round(4*sd)), a = []; let S = 0;
+      for (let u = -r; u <= r; u++){ const w = Math.exp(-u*u/(2*sd*sd)); a.push(-u*w); S += u*u*w; }
+      return { taps: a.map((v) => v/S), r: r };
+    }
+    if (kind === "lap"){
+      /* Laplacian of a Gaussian, mean-removed, scaled so x^2 reports 2 */
+      const r = Math.max(1, Math.round(4*sd)), a = []; let m = 0;
+      for (let u = -r; u <= r; u++){ const w = Math.exp(-u*u/(2*sd*sd)); a.push((u*u/(sd*sd) - 1)*w); }
+      for (const v of a) m += v; m /= a.length;
+      const b = a.map((v) => v - m); let S = 0;
+      for (let u = -r; u <= r; u++) S += u*u*b[u + r];
+      return { taps: b.map((v) => 2*v/S), r: r };
+    }
+    /* sharpen: a unit spike with a bell subtracted from it */
+    const g = Model.kernel("gauss", sd), r = g.r, amt = 1;
+    return { taps: g.taps.map((v, i) => (i === r ? (1 + amt) - amt*v : -amt*v)), r: r };
+  },
+
+  /* full linear convolution, length f + g - 1 */
+  conv(f, g){
+    const out = new Float64Array(f.length + g.length - 1);
+    for (let i = 0; i < f.length; i++){
+      const fi = f[i];
+      if (fi === 0) continue;
+      for (let j = 0; j < g.length; j++) out[i + j] += fi*g[j];
+    }
+    return Array.from(out);
+  },
+
+  /* the kernel convolved with itself rep times */
+  power(taps, rep){
+    let k = taps.slice();
+    for (let i = 1; i < rep; i++) k = Model.conv(k, taps);
+    return k;
+  },
+
+  /* 'same' length output, zero padded at both ends */
+  same(f, taps){
+    const r = (taps.length - 1) >> 1, out = new Array(f.length).fill(0);
+    for (let i = 0; i < f.length; i++){
+      let s = 0;
+      for (let j = 0; j < taps.length; j++){
+        const k = i + r - j;
+        if (k >= 0 && k < f.length) s += f[k]*taps[j];
+      }
+      out[i] = s;
+    }
+    return out;
+  },
+
+  /* complex gain at frequency f in cycles per sample */
+  gain(taps, f){
+    const c = (taps.length - 1)/2, w = 2*PI*f;
+    let re = 0, im = 0;
+    for (let j = 0; j < taps.length; j++){
+      const u = j - c;
+      re += taps[j]*Math.cos(w*u); im -= taps[j]*Math.sin(w*u);
+    }
+    return { re: re, im: im };
+  },
+
+  /* symmetric kernels have a real gain, antisymmetric ones a purely imaginary
+     one; report the signed branch that carries the information             */
+  signedGain(taps, f, anti){
+    const g = Model.gain(taps, f);
+    return anti ? g.im : g.re;
+  },
+
+  antisymmetric(kind){ return kind === "deriv"; },
+
+  /* every frequency in [0, 0.5] where the gain reaches zero — crossings AND
+     the touches that a squared response makes without ever inverting       */
+  zeros(taps, anti, steps){
+    const S = steps || 240, g = [], out = [];
+    let peak = 0;
+    for (let q = 0; q <= S; q++){
+      const f = 0.5*q/S, v = Model.signedGain(taps, f, anti);
+      g.push({ f: f, v: v }); peak = Math.max(peak, Math.abs(v));
+    }
+    if (peak === 0) return out;
+    const at = (f) => Model.signedGain(taps, f, anti);
+    const add = (f) => { if (!out.some((z) => Math.abs(z - f) < 1e-6)) out.push(f); };
+    /* past the point where the gain has fallen below a part in a billion of
+       its peak and never comes back, the sampled curve is underflow noise
+       and its wobbles are not zeros of anything                            */
+    let qEnd = 0;
+    for (let q = 0; q <= S; q++) if (Math.abs(g[q].v) > 1e-9*peak) qEnd = q;
+    const qTop = Math.min(S, qEnd + 1);
+    for (let q = 1; q <= qTop; q++){
+      const a0 = g[q - 1], b0 = g[q];
+      if (a0.v*b0.v < 0){
+        let lo = a0.f, hi = b0.f, sl = Math.sign(a0.v);
+        for (let i = 0; i < 60; i++){
+          const m = 0.5*(lo + hi);
+          if (Math.sign(at(m)) === sl) lo = m; else hi = m;
+        }
+        add(0.5*(lo + hi));
+      } else if (q < qTop && Math.abs(b0.v) < Math.abs(a0.v) && Math.abs(b0.v) <= Math.abs(g[q + 1].v)){
+        /* a local minimum of |gain|: refine and keep it only if it truly
+           reaches zero rather than merely dipping                          */
+        let lo = a0.f, hi = g[q + 1].f;
+        for (let i = 0; i < 80; i++){
+          const m1 = lo + (hi - lo)/3, m2 = hi - (hi - lo)/3;
+          if (Math.abs(at(m1)) < Math.abs(at(m2))) hi = m2; else lo = m1;
+        }
+        const m = 0.5*(lo + hi);
+        if (Math.abs(at(m)) <= 1e-9*peak) add(m);
+      }
+    }
+    /* the two endpoints cannot be local minima of an interior scan, and both
+       are real zeros for some kernels: DC for anything whose weights sum to
+       zero, and the Nyquist limit for a box or triangle of even length     */
+    if (Math.abs(at(0)) <= 1e-9*peak) add(0);
+    if (qEnd >= S - 1 && Math.abs(at(0.5)) <= 1e-9*peak) add(0.5);
+    out.sort((x, y) => x - y);
+    return out;
+  },
+
+  moments(taps){
+    const c = (taps.length - 1)/2;
+    let m0 = 0, m1 = 0, m2 = 0;
+    for (let i = 0; i < taps.length; i++){
+      const u = i - c;
+      m0 += taps[i]; m1 += taps[i]*u; m2 += taps[i]*u*u;
+    }
+    return { m0: m0, m1: m1, m2: m2 };
+  },
+
+  /* second route: convolve by transforming, multiplying and inverting */
+  convByDFT(f, g){
+    const n = f.length + g.length - 1;
+    const F = new Float64Array(n), G = new Float64Array(n);
+    F.set(f); G.set(g);
+    const Re = new Float64Array(n), Im = new Float64Array(n);
+    for (let k = 0; k < n; k++){
+      let fr = 0, fi = 0, gr = 0, gi = 0;
+      for (let t = 0; t < n; t++){
+        const a = -2*PI*k*t/n, c = Math.cos(a), s = Math.sin(a);
+        fr += F[t]*c; fi += F[t]*s; gr += G[t]*c; gi += G[t]*s;
+      }
+      Re[k] = fr*gr - fi*gi; Im[k] = fr*gi + fi*gr;
+    }
+    const out = new Array(n);
+    for (let t = 0; t < n; t++){
+      let s = 0;
+      for (let k = 0; k < n; k++){
+        const a = 2*PI*k*t/n;
+        s += Re[k]*Math.cos(a) - Im[k]*Math.sin(a);
+      }
+      out[t] = s/n;
+    }
+    return out;
+  },
+
+  signal(kind, rough){
+    const f = new Array(N).fill(0), rng = mulberry32(SEED + (rough ? 91 : 0));
+    const at = (i) => (i - (N - 1)/2);
+    if (kind === "edge"){
+      for (let i = 0; i < N; i++) f[i] = i < N*0.42 ? 0.12 : 0.88;
+    } else if (kind === "bumps"){
+      for (let i = 0; i < N; i++){
+        const a = (i - N*0.3)/9, b = (i - N*0.68)/2.4;
+        f[i] = 0.1 + 0.62*Math.exp(-a*a/2) + 0.72*Math.exp(-b*b/2);
+      }
+    } else if (kind === "pulses"){
+      const widths = [3, 5, 9, 15, 25];
+      let x = 6;
+      for (let w = 0; w < widths.length; w++){
+        for (let i = x; i < Math.min(N, x + widths[w]); i++) f[i] = 0.86;
+        x += widths[w] + Math.max(3, Math.round(widths[w]*0.7));
+      }
+      for (let i = 0; i < N; i++) f[i] += 0.08;
+    } else if (kind === "noisyramp"){
+      for (let i = 0; i < N; i++) f[i] = 0.16 + 0.62*(i/(N - 1)) + 0.11*(rng()*2 - 1);
+    } else if (kind === "spike"){
+      for (let i = 0; i < N; i++) f[i] = 0;
+      f[(N - 1)/2] = 1;
+    } else {
+      for (let i = 0; i < N; i++){ const u = at(i)/16; f[i] = 0.5 + 0.34*Math.sin(u)*Math.exp(-u*u/9); }
+    }
+    if (rough && kind !== "spike") for (let i = 0; i < N; i++) f[i] += 0.085*(rng()*2 - 1);
+    return f;
+  }
+};
+
+/* ---- STATE + VIEW ------------------------------------------------------- */
+const defaults = { kernel: "gauss", width: 2, repeat: 1, signal: "edge", band: true, marks: true, rough: false };
+const state = Object.assign({}, defaults);
+let drawn = Model.signal("mine", false);
+
+const el = (id) => document.getElementById(id);
+const cv = el("view"), ctx = cv.getContext("2d");
+const SS = 2;
+let W = 900, H = 760, G = null, hit = null;
+
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function colours(){
+  return { bg: css("--panel"), ink: css("--ink"), muted: css("--muted"), line: css("--line"),
+           grid: css("--grid"), sig: css("--sig"), out: css("--out"), ker: css("--ker"),
+           neg: css("--neg"), panel: css("--panel") };
+}
+
+function inputSignal(){
+  return state.signal === "mine" ? drawn.slice() : Model.signal(state.signal, state.rough);
+}
+function effKernel(){
+  const k = Model.kernel(state.kernel, state.width);
+  const taps = Model.power(k.taps, state.repeat);
+  return { taps: taps, r: (taps.length - 1) >> 1 };
+}
+
+/* a floating label on an opaque backing, flipped away from the frame edge */
+function chip(text, x, y, align, fs, colour, C, x0, x1){
+  ctx.font = "600 " + fs + "px ui-monospace,SFMono-Regular,Menlo,monospace";
+  const tw = ctx.measureText(text).width, pad = 3.5;
+  let bx = align === "right" ? x - tw : x;
+  if (x1 !== undefined && bx + tw + pad > x1) bx = x1 - tw - pad;
+  if (x0 !== undefined && bx - pad < x0) bx = x0 + pad;
+  ctx.fillStyle = C.panel;
+  ctx.fillRect(bx - pad, y - fs + 1.5, tw + 2*pad, fs + 3);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = colour;
+  ctx.fillText(text, bx, y + 1.5);
+  return { bx: bx, tw: tw };
+}
+
+function keyEntries(){
+  const e = [{ t: "signal in", k: "sig", dash: false },
+             { t: "signal out", k: "out", dash: false }];
+  if (state.band) e.push({ t: "its range", k: "muted", dash: true });
+  return e;
+}
+function keyLayout(entries, avail, fs){
+  ctx.font = "500 " + fs + "px system-ui,-apple-system,sans-serif";
+  const sw = 20, gapIn = 5, gapOut = 15;
+  const w = entries.map((e) => sw + gapIn + ctx.measureText(e.t).width);
+  const rows = []; let cur = [], used = 0;
+  for (let i = 0; i < entries.length; i++){
+    const need = w[i] + (cur.length ? gapOut : 0);
+    if (cur.length && used + need > avail){ rows.push(cur); cur = []; used = 0; }
+    cur.push({ e: entries[i], w: w[i] }); used += w[i] + (cur.length > 1 ? gapOut : 0);
+  }
+  if (cur.length) rows.push(cur);
+  const widths = rows.map((r) => r.reduce((a, b) => a + b.w, 0) + gapOut*(r.length - 1));
+  return { rows: rows, widths: widths, sw: sw, gapIn: gapIn, gapOut: gapOut, fs: fs };
+}
+function drawKey(L, x, y, C){
+  for (let ri = 0; ri < L.rows.length; ri++){
+    let cx = x;
+    for (const item of L.rows[ri]){
+      const col = C[item.e.k] || C.muted;
+      ctx.strokeStyle = col; ctx.lineWidth = item.e.dash ? 1.4 : 2.4;
+      ctx.setLineDash(item.e.dash ? [4, 3] : []);
+      ctx.beginPath(); ctx.moveTo(cx, y + ri*(L.fs + 6) - L.fs*0.3);
+      ctx.lineTo(cx + L.sw, y + ri*(L.fs + 6) - L.fs*0.3); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = "500 " + L.fs + "px system-ui,-apple-system,sans-serif";
+      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+      ctx.fillStyle = C.muted;
+      ctx.fillText(item.e.t, cx + L.sw + L.gapIn, y + ri*(L.fs + 6));
+      cx += item.w + L.gapOut;
+    }
+  }
+}
+
+function fitCanvas(){
+  const host = cv.parentElement;
+  const avail = (host ? host.clientWidth : 900) - 24;
+  W = Math.max(300, Math.min(1040, Math.round(avail > 0 ? avail : 900)));
+  const NARROW = W < 440;
+  const padL = NARROW ? 32 : 44, padR = 12, top = 6;
+  const titleH = NARROW ? 15 : 17, axisH = NARROW ? 15 : 17, gap = NARROW ? 13 : 18;
+  const hA = NARROW ? 146 : 188, hB = NARROW ? 90 : 112, hC = NARROW ? 118 : 146;
+  const fsKey = NARROW ? 10 : 11.5;
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const KL = keyLayout(keyEntries(), W - padL - padR, fsKey);
+  const keyBlock = KL.rows.length*(fsKey + 6) + 4;
+
+  const titleYA = top + titleH - (NARROW ? 6 : 7);
+  const keyTop = top + titleH;
+  let y = keyTop + keyBlock;
+  const A = { x0: padL, x1: W - padR, y0: y, y1: y + hA };
+  y = A.y1 + axisH + gap + titleH;
+  const B = { x0: padL, x1: W - padR, y0: y, y1: y + hB };
+  y = B.y1 + axisH + gap + titleH;
+  const Cp = { x0: padL, x1: W - padR, y0: y, y1: y + hC };
+  H = Cp.y1 + axisH + 8;
+
+  G = { W: W, H: H, NARROW: NARROW, padL: padL, padR: padR, titleH: titleH, axisH: axisH,
+        A: A, B: B, C: Cp, KL: KL, keyBlock: keyBlock, top: top,
+        titleYA: titleYA, keyTop: keyTop,
+        fsAx: NARROW ? 9.5 : 11, fsTi: NARROW ? 11 : 12.5, fsKey: fsKey };
+
+  cv.width = Math.round(W*SS); cv.height = Math.round(H*SS);
+  cv.style.height = "auto";
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+}
+
+function frame(R, C){
+  ctx.fillStyle = C.panel; ctx.fillRect(R.x0, R.y0, R.x1 - R.x0, R.y1 - R.y0);
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  ctx.strokeRect(R.x0 + 0.5, R.y0 + 0.5, R.x1 - R.x0 - 1, R.y1 - R.y0 - 1);
+}
+function title(text, R, C){
+  ctx.font = "600 " + G.fsTi + "px system-ui,-apple-system,sans-serif";
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = C.ink;
+  ctx.fillText(text, R.x0, R.y0 - (G.NARROW ? 5 : 6));
+}
+function axlabel(text, x, y, align, C){
+  ctx.font = G.fsAx + "px ui-monospace,SFMono-Regular,Menlo,monospace";
+  ctx.textAlign = align; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = C.muted; ctx.fillText(text, x, y);
+}
+
+function compute(){
+  const f = inputSignal(), k = effKernel();
+  const y = Model.same(f, k.taps);
+  const mo = Model.moments(k.taps);
+  const anti = Model.antisymmetric(state.kernel);
+  const lo = Math.min.apply(null, f), hi = Math.max.apply(null, f);
+  let over = 0;
+  for (let i = k.r; i < N - k.r; i++) over = Math.max(over, y[i] - hi, lo - y[i]);
+  const gains = [], STEPS = 240;
+  for (let q = 0; q <= STEPS; q++){
+    const fr = 0.5*q/STEPS;
+    gains.push({ f: fr, g: Model.signedGain(k.taps, fr, anti) });
+  }
+  const zeros = Model.zeros(k.taps, anti, STEPS);
+  let gLo = 0;
+  for (const p of gains) gLo = Math.min(gLo, p.g);
+  /* what the gain pane can honestly claim. A kernel that inverts has a comb
+     of real zeros worth marking; one that merely wobbles a few parts in a
+     hundred thousand below zero, because its own tail was cut off, has a
+     first "zero" that is truncation noise and must not be dressed up as a
+     feature of the kernel.                                                */
+  let verdict, marks;
+  if (gLo < -1e-3){ verdict = "inverts"; marks = zeros; }
+  else if (zeros.length && zeros[0] < 1e-9){ verdict = "dc"; marks = [zeros[0]]; }
+  else if (gLo < -1e-9){ verdict = "grazes"; marks = []; }
+  else if (zeros.length){ verdict = "touches"; marks = [zeros[0]]; }
+  else { verdict = "none"; marks = []; }
+  return { f: f, y: y, k: k, mo: mo, anti: anti, lo: lo, hi: hi, over: over,
+           gains: gains, zeros: zeros, gLo: gLo, verdict: verdict, marks: marks,
+           nyq: Model.signedGain(k.taps, 0.5, anti) };
+}
+
+function render(){
+  if (!G) fitCanvas();
+  const C = colours(), D = compute(), A = G.A, B = G.B, P = G.C;
+
+  ctx.setTransform(SS, 0, 0, SS, 0, 0);
+  ctx.clearRect(0, 0, G.W, G.H);
+  ctx.fillStyle = C.bg; ctx.fillRect(0, 0, G.W, G.H);
+
+  /* ---------- pane A: the signal and the output ---------- */
+  ctx.font = "600 " + G.fsTi + "px system-ui,-apple-system,sans-serif";
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = C.ink;
+  ctx.fillText("the signal, and what came out", A.x0, G.titleYA);
+  drawKey(G.KL, A.x0, G.keyTop + G.fsKey, C);
+  frame(A, C);
+
+  let lo = Math.min(D.lo, Math.min.apply(null, D.y));
+  let hi = Math.max(D.hi, Math.max.apply(null, D.y));
+  if (!(hi > lo)){ hi = lo + 1; }
+  const spanA = hi - lo, padA = spanA*0.12;
+  const aLo = lo - padA, aHi = hi + padA;
+  const ax = (i) => A.x0 + 6 + (A.x1 - A.x0 - 12)*(i/(N - 1));
+  const ay = (v) => A.y1 - 6 - (A.y1 - A.y0 - 12)*((v - aLo)/(aHi - aLo));
+
+  /* shaded margins where the window hangs off the data */
+  const r = Math.min(D.k.r, (N - 1)/2 - 1);
+  ctx.save(); ctx.beginPath(); ctx.rect(A.x0 + 1, A.y0 + 1, A.x1 - A.x0 - 2, A.y1 - A.y0 - 2); ctx.clip();
+  ctx.fillStyle = C.grid;
+  ctx.fillRect(A.x0 + 1, A.y0 + 1, ax(r) - A.x0 - 1, A.y1 - A.y0 - 2);
+  ctx.fillRect(ax(N - 1 - r), A.y0 + 1, A.x1 - ax(N - 1 - r) - 1, A.y1 - A.y0 - 2);
+
+  /* zero line */
+  if (aLo < 0 && aHi > 0){
+    ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(A.x0 + 1, ay(0)); ctx.lineTo(A.x1 - 1, ay(0)); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  /* the input's own range */
+  if (state.band){
+    ctx.strokeStyle = C.muted; ctx.lineWidth = 1.3; ctx.setLineDash([4, 3]);
+    for (const v of [D.lo, D.hi]){ ctx.beginPath(); ctx.moveTo(A.x0 + 1, ay(v)); ctx.lineTo(A.x1 - 1, ay(v)); ctx.stroke(); }
+    ctx.setLineDash([]);
+  }
+  /* input */
+  ctx.strokeStyle = C.sig; ctx.lineWidth = 1.7; ctx.beginPath();
+  for (let i = 0; i < N; i++){ const X = ax(i), Y = ay(D.f[i]); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }
+  ctx.stroke();
+  /* output */
+  ctx.strokeStyle = C.out; ctx.lineWidth = 2.6; ctx.lineJoin = "round"; ctx.beginPath();
+  for (let i = 0; i < N; i++){ const X = ax(i), Y = ay(D.y[i]); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }
+  ctx.stroke();
+  ctx.restore();
+
+  /* labels last, inside the frame */
+  chip("padded", A.x0 + 8, A.y0 + 14, "left", G.fsAx, C.muted, C, A.x0 + 2, A.x1 - 2);
+  if (D.over > 1e-9){
+    chip("leaves the range by " + D.over.toFixed(2), A.x0 + 8, A.y1 - 7,
+         "left", G.fsAx, C.neg, C, A.x0 + 2, A.x1 - 2);
+  }
+  axlabel("sample 0", A.x0, A.y1 + G.axisH - 4, "left", C);
+  axlabel("sample " + (N - 1), A.x1, A.y1 + G.axisH - 4, "right", C);
+  axlabel(aHi.toFixed(2), A.x0 - 3, A.y0 + 10, "right", C);
+  axlabel(aLo.toFixed(2), A.x0 - 3, A.y1 - 3, "right", C);
+
+  /* ---------- pane B: the kernel ---------- */
+  title("the kernel — " + D.k.taps.length + " weights", B, C);
+  frame(B, C);
+  {
+    const L = D.k.taps.length, R = (L - 1)/2, mid0 = (L - 1)/2;
+    let mx = 0, rest = 0;
+    for (let i = 0; i < L; i++){
+      const a2 = Math.abs(D.k.taps[i]);
+      mx = Math.max(mx, a2);
+      if (i !== mid0) rest = Math.max(rest, a2);
+    }
+    if (mx === 0) mx = 1;
+    /* one tap can dwarf every other — draw to the rest and say what the
+       centre really is, rather than flattening the whole skirt to a line  */
+    const clipped = rest > 0 && rest < 0.35*mx;
+    if (clipped) mx = rest*1.2;
+    const bx = (j) => B.x0 + 8 + (B.x1 - B.x0 - 16)*(L === 1 ? 0.5 : j/(L - 1));
+    const mid = (B.y0 + B.y1)/2, halfB = (B.y1 - B.y0)/2 - 12;
+    const by = (v) => mid - halfB*(v/mx);
+    ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(B.x0 + 1, mid); ctx.lineTo(B.x1 - 1, mid); ctx.stroke();
+    ctx.save(); ctx.beginPath();
+    ctx.rect(B.x0 + 1, B.y0 + 1, B.x1 - B.x0 - 2, B.y1 - B.y0 - 2); ctx.clip();
+    const wStem = Math.max(1.2, Math.min(7, (B.x1 - B.x0 - 16)/Math.max(1, L)*0.55));
+    for (let j = 0; j < L; j++){
+      const v = D.k.taps[j], X = bx(j);
+      ctx.strokeStyle = v < 0 ? C.neg : C.ker; ctx.lineWidth = wStem;
+      ctx.beginPath(); ctx.moveTo(X, mid); ctx.lineTo(X, by(v)); ctx.stroke();
+      if (L <= 61){
+        ctx.fillStyle = v < 0 ? C.neg : C.ker;
+        ctx.beginPath(); ctx.arc(X, by(v), Math.max(1.3, wStem*0.42), 0, 2*PI); ctx.fill();
+      }
+    }
+    ctx.restore();
+    axlabel("-" + R, B.x0, B.y1 + G.axisH - 4, "left", C);
+    axlabel("offset from centre, samples", (B.x0 + B.x1)/2, B.y1 + G.axisH - 4, "center", C);
+    axlabel("+" + R, B.x1, B.y1 + G.axisH - 4, "right", C);
+    let anyNeg = false;
+    for (const v of D.k.taps) if (v < -1e-12) anyNeg = true;
+    chip(anyNeg ? "has negative weights" : "all weights positive",
+         B.x1 - 8, B.y0 + 14, "right", G.fsAx, anyNeg ? C.neg : C.ker, C, B.x0 + 2, B.x1 - 2);
+    if (clipped){
+      chip("centre tap " + D.k.taps[mid0].toFixed(2) + ", off the top",
+           B.x0 + 8, B.y0 + 14, "left", G.fsAx, C.ker, C, B.x0 + 2, B.x1 - 2);
+    }
+  }
+
+  /* ---------- pane C: the gain ---------- */
+  title(D.anti ? "gain at each frequency (quarter turn)" : "gain at each frequency", P, C);
+  frame(P, C);
+  {
+    let gLo = 0, gHi = 0;
+    for (const p of D.gains){ gLo = Math.min(gLo, p.g); gHi = Math.max(gHi, p.g); }
+    if (gHi - gLo < 1e-9){ gHi = gLo + 1; }
+    const padG = (gHi - gLo)*0.14;
+    const cLo = gLo - padG, cHi = gHi + padG;
+    const cx = (fr) => P.x0 + 8 + (P.x1 - P.x0 - 16)*(fr/0.5);
+    const cy = (v) => P.y1 - 8 - (P.y1 - P.y0 - 16)*((v - cLo)/(cHi - cLo));
+
+    ctx.save(); ctx.beginPath(); ctx.rect(P.x0 + 1, P.y0 + 1, P.x1 - P.x0 - 2, P.y1 - P.y0 - 2); ctx.clip();
+    /* gridlines first, always under everything */
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+    for (let q = 1; q <= 4; q++){
+      const X = cx(0.5*q/5);
+      ctx.beginPath(); ctx.moveTo(X, P.y0 + 1); ctx.lineTo(X, P.y1 - 1); ctx.stroke();
+    }
+    /* the zero line, which is the whole point of the pane */
+    ctx.strokeStyle = C.muted; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(P.x0 + 1, cy(0)); ctx.lineTo(P.x1 - 1, cy(0)); ctx.stroke();
+    /* shade where the gain is negative */
+    ctx.fillStyle = C.neg; ctx.globalAlpha = 0.1;
+    ctx.beginPath(); ctx.moveTo(cx(0), cy(0));
+    for (const p of D.gains) ctx.lineTo(cx(p.f), cy(Math.min(0, p.g)));
+    ctx.lineTo(cx(0.5), cy(0)); ctx.closePath(); ctx.fill();
+    ctx.globalAlpha = 1;
+    /* the gain itself */
+    ctx.strokeStyle = C.ker; ctx.lineWidth = 2.5; ctx.lineJoin = "round"; ctx.beginPath();
+    for (let q = 0; q < D.gains.length; q++){
+      const X = cx(D.gains[q].f), Y = cy(D.gains[q].g);
+      q ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
+    }
+    ctx.stroke();
+    if (state.marks){
+      ctx.fillStyle = C.neg;
+      for (const z of D.marks){ ctx.beginPath(); ctx.arc(cx(z), cy(0), 3.1, 0, 2*PI); ctx.fill(); }
+    }
+    ctx.restore();
+
+    /* labels last */
+    let lab, labCol = C.ker;
+    if (D.verdict === "inverts"){ lab = "inverts, first zero at " + D.zeros[0].toFixed(3); labCol = C.neg; }
+    else if (D.verdict === "dc"){ lab = "zero gain at DC"; }
+    else if (D.verdict === "grazes"){ lab = "grazes zero, dips " + (-D.gLo).toExponential(1); }
+    else if (D.verdict === "touches"){ lab = "touches zero at " + D.zeros[0].toFixed(3); }
+    else { lab = "never reaches zero"; }
+    chip(lab, P.x1 - 8, P.y0 + 14, "right", G.fsAx, labCol, C, P.x0 + 2, P.x1 - 2);
+    axlabel("0", P.x0, P.y1 + G.axisH - 4, "left", C);
+    axlabel(G.NARROW ? "cycles/sample" : "frequency, cycles per sample", (P.x0 + P.x1)/2, P.y1 + G.axisH - 4, "center", C);
+    axlabel("0.5", P.x1, P.y1 + G.axisH - 4, "right", C);
+    axlabel(cHi.toFixed(2), P.x0 - 3, P.y0 + 10, "right", C);
+    axlabel("0", P.x0 - 3, cy(0) + 3.5, "right", C);
+    if (cLo < -1e-6 && P.y1 - 3 - cy(0) > 11) axlabel(cLo.toFixed(2), P.x0 - 3, P.y1 - 3, "right", C);
+  }
+
+  hit = { A: A, ax: ax, ay: ay, aLo: aLo, aHi: aHi };
+
+  /* ---------- readouts ---------- */
+  el("widthout").textContent = state.width.toFixed(1);
+  el("repeatout").textContent = String(state.repeat);
+  el("rTaps").textContent = String(D.k.taps.length);
+  el("rSum").textContent = Math.abs(D.mo.m0) < 5e-13 ? "0" : D.mo.m0.toFixed(3);
+  el("rSd").textContent = "±" + D.k.r;
+  el("rNyq").textContent = D.nyq.toFixed(3);
+  el("rOver").textContent = D.over > 1e-9 ? D.over.toFixed(3) : "0 — never";
+  el("rZero").textContent = D.verdict === "grazes" ? "grazes"
+    : (D.verdict === "none" ? "no zero" : D.zeros[0].toFixed(3));
+}
+
+/* ---- drawing on the top pane ------------------------------------------- */
+let painting = false, lastIdx = -1;
+function paintAt(ev){
+  if (!hit) return;
+  const rect = cv.getBoundingClientRect();
+  const px = (ev.clientX - rect.left)*(G.W/rect.width);
+  const py = (ev.clientY - rect.top)*(G.H/rect.height);
+  const A = hit.A;
+  if (py < A.y0 - 10 || py > A.y1 + 10) return;
+  const t = (px - (A.x0 + 6))/(A.x1 - A.x0 - 12);
+  const idx = Math.max(0, Math.min(N - 1, Math.round(t*(N - 1))));
+  const v = hit.aLo + (hit.aHi - hit.aLo)*((A.y1 - 6 - py)/(A.y1 - A.y0 - 12));
+  const val = Math.max(-0.4, Math.min(1.4, v));
+  if (state.signal !== "mine"){
+    drawn = inputSignal();
+    state.signal = "mine";
+    el("signal").value = "mine";
+  }
+  if (lastIdx >= 0 && Math.abs(idx - lastIdx) > 1){
+    const a = Math.min(idx, lastIdx), b = Math.max(idx, lastIdx);
+    const va = lastIdx < idx ? drawn[lastIdx] : val, vb = lastIdx < idx ? val : drawn[lastIdx];
+    for (let i = a; i <= b; i++) drawn[i] = va + (vb - va)*((i - a)/Math.max(1, b - a));
+  } else {
+    drawn[idx] = val;
+  }
+  lastIdx = idx;
+  render();
+}
+cv.addEventListener("pointerdown", (ev) => {
+  painting = true; lastIdx = -1;
+  if (cv.setPointerCapture) { try { cv.setPointerCapture(ev.pointerId); } catch (e) {} }
+  paintAt(ev); ev.preventDefault();
+});
+cv.addEventListener("pointermove", (ev) => { if (painting) { paintAt(ev); ev.preventDefault(); } });
+cv.addEventListener("pointerup", () => { painting = false; lastIdx = -1; });
+cv.addEventListener("pointercancel", () => { painting = false; lastIdx = -1; });
+
+/* ---- bindings ----------------------------------------------------------- */
+function bindRange(id, key, parse){
+  const input = el(id);
+  input.addEventListener("input", () => { state[key] = parse(input.value); fitCanvas(); render(); });
+}
+bindRange("width", "width", parseFloat);
+bindRange("repeat", "repeat", (v) => parseInt(v, 10));
+el("kernel").addEventListener("change", () => { state.kernel = el("kernel").value; fitCanvas(); render(); });
+el("signal").addEventListener("change", () => {
+  state.signal = el("signal").value;
+  if (state.signal === "mine") drawn = drawn.slice();
+  fitCanvas(); render();
+});
+el("band").addEventListener("change", () => { state.band = el("band").checked; fitCanvas(); render(); });
+el("marks").addEventListener("change", () => { state.marks = el("marks").checked; fitCanvas(); render(); });
+el("rough").addEventListener("click", () => {
+  state.rough = !state.rough;
+  el("rough").textContent = state.rough ? "Smooth the signal again" : "Roughen the signal";
+  if (state.signal === "mine"){ state.signal = "edge"; el("signal").value = "edge"; }
+  fitCanvas(); render();
+});
+el("reset").addEventListener("click", () => {
+  Object.assign(state, defaults);
+  drawn = Model.signal("mine", false);
+  el("kernel").value = defaults.kernel; el("width").value = String(defaults.width);
+  el("repeat").value = String(defaults.repeat); el("signal").value = defaults.signal;
+  el("band").checked = defaults.band; el("marks").checked = defaults.marks;
+  el("rough").textContent = "Roughen the signal";
+  fitCanvas(); render();
+});
+
+let rt = null;
+function relayout(){ clearTimeout(rt); rt = setTimeout(() => { fitCanvas(); render(); }, 110); }
+window.addEventListener("resize", relayout);
+if (window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", () => { fitCanvas(); render(); });
+}
+fitCanvas();
+render();
+
+/* ---- SELFTEST ----------------------------------------------------------- */
+function near(a, b, tol){ return Number.isFinite(a) && Math.abs(a - b) <= tol; }
+const memo = Object.create(null);
+function once(key, fn){ if (!(key in memo)) memo[key] = fn(); return memo[key]; }
+const SDS = [0.6, 1, 2, 3.5, 6];
+const KINDS = ["box", "tri", "gauss", "deriv", "lap", "sharp"];
+function sum(a){ let s = 0; for (const v of a) s += v; return s; }
+function gaussRad(sd, rad){
+  const r = Math.max(1, Math.round(rad*sd)), a = [];
+  for (let u = -r; u <= r; u++) a.push(Math.exp(-u*u/(2*sd*sd)));
+  return norm(a);
+}
+
+window.__SELFTEST = function(){
+  const t = [];
+  const push = (name, pass, detail) => t.push({ name: name, pass: !!pass, detail: String(detail) });
+
+  /* 1. Convolution is commutative, and the areas multiply. Both to the
+        arithmetic floor over 200 seeded pairs.                            */
+  const comm = once("comm", function(){
+    const rng = mulberry32(SEED); let wc = 0, wa = 0;
+    for (let q = 0; q < 200; q++){
+      const n = 6 + Math.floor(rng()*14), m = 3 + Math.floor(rng()*12);
+      const f = [], g = [];
+      for (let i = 0; i < n; i++) f.push(rng()*4 - 2);
+      for (let i = 0; i < m; i++) g.push(rng()*4 - 2);
+      const a = Model.conv(f, g), b = Model.conv(g, f);
+      for (let i = 0; i < a.length; i++) wc = Math.max(wc, Math.abs(a[i] - b[i]));
+      const sf = sum(f), sg = sum(g);
+      wa = Math.max(wa, Math.abs(sum(a) - sf*sg)/Math.max(1, Math.abs(sf*sg)));
+    }
+    return { wc: wc, wa: wa };
+  });
+  push("f*g equals g*f, and the areas multiply",
+       comm.wc <= 1e-12 && comm.wa <= 1e-12,
+       "over 200 seeded pairs: worst sample gap " + comm.wc.toExponential(2) +
+       ", worst relative area error " + comm.wa.toExponential(2));
+
+  /* 2. The area law holds for the FULL output only. The trimmed output on
+        screen loses exactly the mass the kernel pushed past the ends.      */
+  const trim = once("trim", function(){
+    const k = Model.kernel("box", 3), r = k.r;
+    const f = []; for (let i = 0; i < N; i++) f.push(0.4 + 0.03*i);
+    const full = Model.conv(f, k.taps), same = Model.same(f, k.taps);
+    const want = sum(f)*sum(k.taps);
+    let spill = 0, align = 0;
+    for (let i = 0; i < full.length; i++) if (i < r || i >= r + N) spill += full[i];
+    for (let i = 0; i < N; i++) align = Math.max(align, Math.abs(same[i] - full[i + r]));
+    return { full: sum(full), want: want, same: sum(same), spill: spill, align: align };
+  });
+  push("the law is about the full output, and the trimmed one is short by what fell off",
+       near(trim.full, trim.want, 1e-9) && trim.align <= 1e-15 &&
+       near(trim.want - trim.same, trim.spill, 1e-9) && trim.want - trim.same > 2,
+       "full area " + trim.full.toFixed(6) + " equals input area times kernel sum " +
+       trim.want.toFixed(6) + "; the trimmed output totals " + trim.same.toFixed(6) +
+       ", short by " + (trim.want - trim.same).toFixed(6) + ", which is exactly the mass past the ends");
+
+  /* 3. Gaussian convolved with Gaussian: variances add — but only once the
+        tails are actually included. This page's kernels stop at four sigma. */
+  const comp = once("comp", function(){
+    const out = {};
+    for (const rad of [4, 6, 8]){
+      const a = gaussRad(2, rad), b = gaussRad(3, rad), c = Model.conv(a, b);
+      const ref = gaussRad(Math.sqrt(13), rad);
+      const cc = (c.length - 1)/2, cr = (ref.length - 1)/2;
+      let v = 0, gap = 0;
+      for (let i = 0; i < c.length; i++) v += c[i]*(i - cc)*(i - cc);
+      for (let i = 0; i < ref.length; i++) gap = Math.max(gap, Math.abs(ref[i] - c[Math.round(cc + i - cr)]));
+      out[rad] = { v: v, gap: gap };
+    }
+    return out;
+  });
+  push("variances add, but only if you keep enough of the tail",
+       comp[8].gap <= 1e-12 && near(comp[8].v, 13, 1e-9) && comp[4].gap > 1e-8 && comp[6].gap < 1e-8,
+       "sigma 2 with sigma 3 should give variance 13: at eight sigma of tail the taps match a single " +
+       "Gaussian to " + comp[8].gap.toExponential(2) + " and the variance is " + comp[8].v.toFixed(9) +
+       "; at the four sigma this page draws, the gap is " + comp[4].gap.toExponential(2) +
+       " and the variance only reaches " + comp[4].v.toFixed(6));
+
+  /* 4. The box kernel's gain is exactly zero at every multiple of 1/N. */
+  const bz = once("bz", function(){
+    let worst = 0, count = 0;
+    for (const sd of SDS){
+      const k = Model.kernel("box", sd), L = k.taps.length;
+      for (let m = 1; m*2 < L; m++){
+        const g = Model.gain(k.taps, m/L);
+        worst = Math.max(worst, Math.abs(g.re), Math.abs(g.im)); count++;
+      }
+    }
+    return { worst: worst, count: count };
+  });
+  push("a box of N weights kills every frequency at a multiple of 1/N",
+       bz.worst <= 1e-12 && bz.count >= 12,
+       "largest |gain| at the " + bz.count + " predicted zeros is " + bz.worst.toExponential(2));
+
+  /* 5. Between those zeros the gain goes negative — that is the ringing. */
+  const bn = once("bn", function(){
+    const mins = [];
+    for (const sd of SDS){
+      const k = Model.kernel("box", sd); let mn = 1;
+      for (let q = 0; q <= 4000; q++) mn = Math.min(mn, Model.gain(k.taps, 0.5*q/4000).re);
+      mins.push({ N: k.taps.length, mn: mn });
+    }
+    return mins;
+  });
+  push("and between the zeros it inverts, which is what ringing is",
+       bn.every((m) => m.mn < -0.2) && near(bn[0].mn, -1/3, 1e-9),
+       "every box dips below -0.2; the three tap box hits its closed form -1/3 at the Nyquist " +
+       "limit (" + bn[0].mn.toFixed(9) + "), and a 21 tap box still reaches " + bn[4].mn.toFixed(4));
+
+  /* 6. A triangle is a box run twice, so its gain is a square and cannot
+        be negative. Two crude averages beat one.                          */
+  const tri = once("tri", function(){
+    let tapGap = 0, gainGap = 0, mn = 1;
+    for (const sd of SDS){
+      const k = Model.kernel("tri", sd), n = k.r + 1;
+      const b = new Array(n).fill(1/n), bb = Model.conv(b, b);
+      for (let i = 0; i < bb.length; i++) tapGap = Math.max(tapGap, Math.abs(bb[i] - k.taps[i]));
+      for (let q = 0; q <= 400; q++){
+        const f = 0.5*q/400, g = Model.gain(k.taps, f).re, gb = Model.gain(b, f);
+        gainGap = Math.max(gainGap, Math.abs(g - (gb.re*gb.re + gb.im*gb.im)));
+        mn = Math.min(mn, g);
+      }
+    }
+    /* the located positions and the gain actually attained there. A double
+       zero is flat, so minimising |gain| cannot place it better than about
+       the square root of machine epsilon — the VALUE is the sharp check,
+       the position is only good to a few parts in a million.              */
+    let zerr = 0, zval = 0, zn = 0;
+    for (const sd of SDS){
+      const k = Model.kernel("tri", sd), n = k.r + 1;
+      const zs = Model.zeros(k.taps, false, 240);
+      const want = []; for (let m = 1; m/n <= 0.5 + 1e-12; m++) want.push(m/n);
+      if (zs.length !== want.length){ zerr = 1; zval = 1; continue; }
+      for (let i = 0; i < want.length; i++){
+        zerr = Math.max(zerr, Math.abs(zs[i] - want[i]));
+        zval = Math.max(zval, Math.abs(Model.gain(k.taps, want[i]).re));
+      }
+      zn += want.length;
+    }
+    return { tapGap: tapGap, gainGap: gainGap, mn: mn, zerr: zerr, zval: zval, zn: zn };
+  });
+  push("a triangle is two boxes, so its gain is a square and never inverts",
+       tri.tapGap <= 1e-14 && tri.gainGap <= 1e-12 && tri.mn >= -1e-12 &&
+       tri.zval <= 1e-14 && tri.zerr <= 1e-6 && tri.zn >= 16,
+       "taps match a box convolved with itself to " + tri.tapGap.toExponential(2) +
+       ", the gain matches that box's squared magnitude to " + tri.gainGap.toExponential(2) +
+       ", and the least gain anywhere is " + tri.mn.toExponential(2) +
+       "; its " + tri.zn + " zeros are touches at multiples of 1/n, where the gain is " +
+       tri.zval.toExponential(2) + " and the search places them to " + tri.zerr.toExponential(2) +
+       " — a double zero is flat, so the position cannot be pinned harder than that");
+
+  /* 7. The ideal Gaussian never inverts either; the sampled, truncated one
+        this page draws inverts by a few parts in a hundred thousand.       */
+  const gn = once("gn", function(){
+    let ideal = 1, idealMono = true;
+    for (const sd of SDS){
+      let prev = Infinity;
+      for (let q = 0; q <= 2000; q++){
+        const f = 0.5*q/2000, g = Math.exp(-2*PI*PI*f*f*sd*sd);
+        ideal = Math.min(ideal, g);
+        if (g > prev + 1e-18) idealMono = false;
+        prev = g;
+      }
+    }
+    const cut = {};
+    for (const rad of [4, 6, 8]){
+      let mn = 1;
+      for (const sd of SDS){
+        const k = gaussRad(sd, rad);
+        for (let q = 0; q <= 2000; q++) mn = Math.min(mn, Model.gain(k, 0.5*q/2000).re);
+      }
+      cut[rad] = mn;
+    }
+    return { ideal: ideal, idealMono: idealMono, cut: cut };
+  });
+  push("the Gaussian's gain is positive and falling — the page's dips, and only because it is cut short",
+       gn.ideal > 0 && gn.idealMono && cutOrder(gn.cut) &&
+       Math.abs(gn.cut[4]) < 1e-4 && Math.abs(gn.cut[8]) < 1e-12,
+       "the untruncated gain exp(-2 pi^2 f^2 sigma^2) never rises and never reaches zero (least value " +
+       gn.ideal.toExponential(2) + "); cut at four sigma it reaches " + gn.cut[4].toExponential(2) +
+       ", at six " + gn.cut[6].toExponential(2) + ", at eight " + gn.cut[8].toExponential(2));
+  function cutOrder(c){ return c[4] < c[6] && c[6] < c[8] && c[8] <= 0; }
+
+  /* 8. The derivative kernel reports the slope of a ramp exactly — but only
+        where the window fits inside the data.                             */
+  const rmp = once("rmp", function(){
+    const slope = 0.37, f = [];
+    for (let i = 0; i < N; i++) f.push(1.2 + slope*i);
+    let inner = 0, margin = 0;
+    for (const sd of SDS){
+      const k = Model.kernel("deriv", sd), y = Model.same(f, k.taps);
+      for (let i = k.r; i < N - k.r; i++) inner = Math.max(inner, Math.abs(y[i] - slope));
+      for (let i = 0; i < k.r; i++) margin = Math.max(margin, Math.abs(y[i] - slope));
+    }
+    const k2 = Model.kernel("deriv", 2), y2 = Model.same(f, k2.taps);
+    return { inner: inner, margin: margin, edge: y2[0], last: y2[N - 1], slope: slope };
+  });
+  push("on a ramp it returns the slope exactly, everywhere the window fits",
+       rmp.inner <= 1e-12 && rmp.margin > 0.01,
+       "interior worst error " + rmp.inner.toExponential(2) + " against a slope of " + rmp.slope +
+       "; inside the padded margin it is wrong by up to " + rmp.margin.toFixed(4) +
+       " — at reach 2 the first output sample reads " + rmp.edge.toFixed(4) +
+       " and the last reads " + rmp.last.toFixed(4));
+
+  /* 9. The second difference reports curvature: a parabola has second
+        derivative 2 everywhere.                                           */
+  const par = once("par", function(){
+    const f = []; for (let i = 0; i < N; i++){ const x = i - (N - 1)/2; f.push(x*x); }
+    let worst = 0;
+    for (const sd of SDS){
+      const k = Model.kernel("lap", sd), y = Model.same(f, k.taps);
+      for (let i = k.r; i < N - k.r; i++) worst = Math.max(worst, Math.abs(y[i] - 2));
+    }
+    return worst;
+  });
+  push("the second difference returns 2 on x squared, at every reach",
+       par <= 1e-11, "worst interior departure from 2 is " + par.toExponential(2));
+
+  /* 10. Positive weights that add to one cannot leave the input's range;
+         one negative weight is all it takes to escape it.                 */
+  const rng2 = once("range", function(){
+    const rng = mulberry32(SEED + 7); let pos = 0, sh = 0;
+    for (let q = 0; q < 200; q++){
+      const f = []; for (let i = 0; i < 60; i++) f.push(rng()*2 - 1);
+      const lo = Math.min.apply(null, f), hi = Math.max.apply(null, f);
+      for (const kind of ["box", "tri", "gauss"]){
+        const k = Model.kernel(kind, 2), y = Model.same(f, k.taps);
+        for (let i = k.r; i < 60 - k.r; i++) pos = Math.max(pos, y[i] - hi, lo - y[i]);
+      }
+      const ks = Model.kernel("sharp", 2), ys = Model.same(f, ks.taps);
+      for (let i = ks.r; i < 60 - ks.r; i++) sh = Math.max(sh, ys[i] - hi, lo - ys[i]);
+    }
+    return { pos: pos, sh: sh };
+  });
+  push("all positive weights cannot overshoot; one negative weight can",
+       rng2.pos <= 1e-12 && rng2.sh > 0.5,
+       "over 200 seeded signals the box, triangle and bell never leave the input's range (" +
+       rng2.pos.toExponential(2) + " at worst), while sharpen leaves it by " + rng2.sh.toFixed(4));
+
+  /* 11. Repeat a box and the variances add exactly while the shape walks
+         toward a bell. The central limit theorem, inside a filter.        */
+  const clt = once("clt", function(){
+    const k0 = Model.kernel("box", 2), L0 = k0.taps.length, vb = (L0*L0 - 1)/12;
+    const rows = [];
+    for (let rep = 1; rep <= 6; rep++){
+      const k = Model.power(k0.taps, rep), mo = Model.moments(k), L = k.length, c = (L - 1)/2;
+      const s = Math.sqrt(mo.m2); let dev = 0, peak = 0;
+      for (const v of k) peak = Math.max(peak, v);
+      for (let i = 0; i < L; i++){
+        const u = i - c, g = Math.exp(-u*u/(2*mo.m2))/(s*Math.sqrt(2*PI));
+        dev = Math.max(dev, Math.abs(k[i] - g)/peak);
+      }
+      rows.push({ rep: rep, m0: mo.m0, m2: mo.m2, want: rep*vb, dev: dev });
+    }
+    return rows;
+  });
+  push("repeating a box adds variances exactly and walks the shape to a bell",
+       clt.every((r) => near(r.m2, r.want, 1e-9) && near(r.m0, 1, 1e-12)) &&
+       clt.every((r, i) => i === 0 || r.dev < clt[i - 1].dev),
+       "variance after n passes is n times " + clt[0].want.toFixed(4) +
+       " to " + Math.max.apply(null, clt.map((r) => Math.abs(r.m2 - r.want))).toExponential(2) +
+       ", and the departure from a matching Gaussian falls " + clt[0].dev.toFixed(3) +
+       " to " + clt[5].dev.toFixed(3) + " across six passes");
+
+  /* 12. SECOND ROUTE: convolve by transforming, multiplying and inverting.
+         Two independent implementations must agree.                       */
+  const dft = once("dft", function(){
+    const rng = mulberry32(SEED + 11); let worst = 0, cases = 0;
+    for (let q = 0; q < 12; q++){
+      const f = []; for (let i = 0; i < 40; i++) f.push(rng()*2 - 1);
+      const k = Model.kernel(KINDS[q % KINDS.length], 1.5).taps;
+      const a = Model.conv(f, k), b = Model.convByDFT(f, k);
+      for (let i = 0; i < a.length; i++) worst = Math.max(worst, Math.abs(a[i] - b[i]));
+      cases++;
+    }
+    return { worst: worst, cases: cases };
+  });
+  push("multiplying the transforms gives the same answer as sliding the window",
+       dft.worst <= 1e-12 && dft.cases === 12,
+       "direct convolution against transform, multiply, invert over " + dft.cases +
+       " signal and kernel pairs: worst sample gap " + dft.worst.toExponential(2));
+
+  /* 13. Nothing anywhere in the control ranges goes non-finite. */
+  const fin = once("fin", function(){
+    for (const kind of KINDS)
+      for (let w = 0.6; w <= 6.001; w += 0.2)
+        for (let rep = 1; rep <= 6; rep++){
+          const k = Model.power(Model.kernel(kind, w).taps, rep);
+          const mo = Model.moments(k);
+          if (!Number.isFinite(mo.m0) || !Number.isFinite(mo.m2)) return false;
+          for (let q = 0; q <= 8; q++) if (!Number.isFinite(Model.gain(k, 0.5*q/8).re)) return false;
+        }
+    for (const s of ["edge", "bumps", "pulses", "noisyramp", "spike", "mine"])
+      for (const rough of [false, true]){
+        const f = Model.signal(s, rough);
+        for (const v of f) if (!Number.isFinite(v)) return false;
+        const y = Model.same(f, Model.kernel("sharp", 3).taps);
+        for (const v of y) if (!Number.isFinite(v)) return false;
+      }
+    return true;
+  });
+  push("finite everywhere the controls reach", fin,
+       "six kernels by 28 reaches by six passes, and every preset signal, all finite");
+
+  return t;
+};
+
+window.__ATLAS = { state: state, render: render, Model: Model, seed: SEED, rng: mulberry32(SEED) };
+
+})();
+</script>
+</body>
+</html>
