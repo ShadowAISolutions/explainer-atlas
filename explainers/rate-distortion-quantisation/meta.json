@@ -1,0 +1,18 @@
+{
+  "slug": "rate-distortion-quantisation",
+  "title": "Three Ways To Spend A Bit, And The Floor None Of Them Reaches",
+  "domain": "information-theory",
+  "difficulty": 3,
+  "summary": "Every extra bit buys six decibels. Three quantisers race a bound that none of them reaches, and the last 1.53 decibels turn out not to be a coding failure at all.",
+  "prerequisites": [],
+  "tags": ["quantisation", "rate-distortion", "lloyd-max", "entropy-coding", "shannon-bound", "signal-to-noise"],
+  "interaction_pattern": "race-two-methods",
+  "sources": [
+    { "title": "Lloyd, Least squares quantization in PCM, IEEE Transactions on Information Theory 28 (1982) 129-137", "url": "https://doi.org/10.1109/TIT.1982.1056489" },
+    { "title": "Max, Quantizing for minimum distortion, IRE Transactions on Information Theory 6 (1960) 7-12", "url": "https://doi.org/10.1109/TIT.1960.1057548" },
+    { "title": "Gish and Pierce, Asymptotically efficient quantizing, IEEE Transactions on Information Theory 14 (1968) 676-683", "url": "https://doi.org/10.1109/TIT.1968.1054193" },
+    { "title": "Cover and Thomas, Elements of Information Theory, 2nd edition, chapter 10", "url": "https://doi.org/10.1002/047174882X" }
+  ],
+  "created_at": "2026-09-20",
+  "assertions_count": 12
+}
